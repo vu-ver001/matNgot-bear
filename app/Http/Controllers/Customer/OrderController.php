@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    public function __construct(
+        private OrderService $orderService
+    ) {}
+
     public function index(Request $request)
     {
         $query = Order::where('customer_id', auth()->id())->with(['latestPayment', 'details']);
@@ -38,21 +43,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        if (!in_array($order->order_status, ['PENDING'])) {
-            return redirect()->back()->with('error', 'Không thể hủy đơn hàng ở trạng thái hiện tại.');
-        }
-
-        $order->update([
-            'order_status' => 'CANCELLED',
-            'cancelled_at' => now(),
-        ]);
-
-        if (!$order->stock_restored) {
-            foreach ($order->details as $detail) {
-                $detail->product->increment('stock_quantity', $detail->quantity);
-            }
-            $order->update(['stock_restored' => true]);
-        }
+        $this->orderService->cancelOrder($order, auth()->id(), 'Khách hàng yêu cầu hủy');
 
         return redirect()->route('customer.orders.show', $order)->with('success', 'Đã hủy đơn hàng thành công.');
     }
