@@ -1,29 +1,34 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->group(function () {
-    // Dashboard
-    // Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Category management
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+
+    Route::patch('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])->name('payments.updateStatus');
+
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.updateStatus');
+    Route::patch('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
+
+    Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
+    Route::patch('/reviews/{review}/toggle', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+    // Category management (Person 2)
     // Route::resource('categories', CategoryController::class)->except(['show']);
 
-    // Product management
+    // Product management (Person 2)
     // Route::resource('products', ProductController::class)->except(['show']);
 
-    // Voucher management
+    // Voucher management (Person 3)
     // Route::resource('vouchers', VoucherController::class)->except(['show']);
-
-    // Order management
-    // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-
-    // User management
-    // Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    // Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.updateStatus');
-
-    // Review management
-    // Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
-    // Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 });
