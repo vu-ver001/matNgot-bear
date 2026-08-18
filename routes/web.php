@@ -9,12 +9,13 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
+
     return match ($user->role) {
         'ADMIN' => redirect()->route('admin.dashboard'),
         'STAFF' => redirect()->route('staff.dashboard'),
-        default => redirect()->route('customer.products.index'),
+        default => redirect()->route('customer.orders.index'),
     };
-})->middleware(['auth', 'verified']);
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
