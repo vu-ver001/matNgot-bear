@@ -19,12 +19,16 @@ class PaymentController extends Controller
             'status' => 'required|in:PENDING,PAID,FAILED,REFUNDED',
         ]);
 
-        match ($validated['status']) {
-            'PAID' => $this->orderService->confirmPayment($payment, auth()->id()),
-            'FAILED' => $this->orderService->markPaymentFailed($payment),
-            'REFUNDED' => $this->orderService->refundPayment($payment),
-            default => null,
-        };
+        try {
+            match ($validated['status']) {
+                'PAID' => $this->orderService->confirmPayment($payment, auth()->id()),
+                'FAILED' => $this->orderService->markPaymentFailed($payment),
+                'REFUNDED' => $this->orderService->refundPayment($payment),
+                default => null,
+            };
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Cập nhật trạng thái thanh toán thành công.');
     }

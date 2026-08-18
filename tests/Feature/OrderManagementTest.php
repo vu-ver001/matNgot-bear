@@ -107,6 +107,89 @@ class OrderManagementTest extends TestCase
             ->assertSessionHasErrors('cancel_reason');
     }
 
+    public function test_invalid_status_transition_is_blocked(): void
+    {
+        $order = $this->createOrder($this->customer);
+
+        $this->actingAs($this->staff);
+
+        $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'PREPARING'])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => 'PENDING']);
+
+        $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'CANCELLED', 'cancel_reason' => 'Hết hàng'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => 'CANCELLED']);
+
+        $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'CONFIRMED', 'cancel_reason' => 'Lý do'])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => 'CANCELLED']);
+    }
+
+    public function test_full_order_flow_reaches_completed(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $payment = $this->createPayment($order);
+
+        $this->actingAs($this->staff);
+
+        foreach (['CONFIRMED', 'PREPARING', 'SHIPPING', 'COMPLETED'] as $status) {
+            $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => $status])
+                ->assertRedirect();
+        }
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => 'COMPLETED']);
+        $this->assertDatabaseHas('products', ['id' => $this->product->id, 'sold_count' => 2]);
+
+        $this->patch('/staff/payments/'.$payment->id.'/status', ['status' => 'REFUNDED'])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'PENDING']);
+    }
+
+    public function test_customer_cannot_cancel_confirmed_order(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $this->createPayment($order);
+
+        $this->actingAs($this->staff);
+        $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'CONFIRMED'])
+            ->assertRedirect();
+
+        $this->actingAs($this->customer);
+
+        $this->post('/customer/orders/'.$order->id.'/cancel')->assertSessionHas('error');
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => 'CONFIRMED']);
+    }
+
+    public function test_payment_refund_requires_paid_payment(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $payment = $this->createPayment($order);
+
+        $this->actingAs($this->staff);
+
+        $this->patch('/staff/payments/'.$payment->id.'/status', ['status' => 'REFUNDED'])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'PENDING']);
+
+        $this->patch('/staff/payments/'.$payment->id.'/status', ['status' => 'PAID'])
+            ->assertRedirect();
+
+        $this->patch('/staff/payments/'.$payment->id.'/status', ['status' => 'PAID'])
+            ->assertSessionHas('error');
+
+        $this->patch('/staff/payments/'.$payment->id.'/status', ['status' => 'REFUNDED'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'REFUNDED']);
+    }
+
     public function test_customer_cancel_restores_stock(): void
     {
         $order = $this->createOrder($this->customer);

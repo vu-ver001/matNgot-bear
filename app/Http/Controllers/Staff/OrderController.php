@@ -53,12 +53,16 @@ class OrderController extends Controller
             'cancel_reason' => 'required_if:order_status,CANCELLED|nullable|string|max:255',
         ]);
 
-        $this->orderService->updateStatus(
-            $order,
-            $validated['order_status'],
-            auth()->id(),
-            $validated['cancel_reason'] ?? null
-        );
+        try {
+            $this->orderService->updateStatus(
+                $order,
+                $validated['order_status'],
+                auth()->id(),
+                $validated['cancel_reason'] ?? null
+            );
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
     }

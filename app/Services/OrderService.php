@@ -23,7 +23,8 @@ class OrderService
                 $product = Product::lockForUpdate()->find($cartItem->product_id);
 
                 if (!$product || $product->stock_quantity < $cartItem->quantity) {
-                    throw new \Exception("Sản phẩm '{$product->name}' không đủ tồn kho.");
+                    $productName = $product->name ?? 'không xác định';
+                    throw new \Exception("Sản phẩm '{$productName}' không đủ tồn kho.");
                 }
 
                 $price = $product->sale_price ?? $product->price;
@@ -97,6 +98,10 @@ class OrderService
                 throw new \Exception('Không thể hủy đơn hàng ở trạng thái hiện tại.');
             }
 
+            if (blank($reason)) {
+                throw new \Exception('Lý do hủy đơn là bắt buộc.');
+            }
+
             $oldStatus = $order->order_status;
 
             $order->update([
@@ -128,6 +133,8 @@ class OrderService
     {
         return DB::transaction(function () use ($order, $newStatus, $changedBy, $note) {
             $oldStatus = $order->order_status;
+
+            $this->assertValidTransition($oldStatus, $newStatus, $note);
 
             $updateData = ['order_status' => $newStatus];
 
@@ -174,6 +181,34 @@ class OrderService
         }
     }
 
+    private function assertValidTransition(string $oldStatus, string $newStatus, ?string $note = null): void
+    {
+        $allowedTransitions = [
+            'PENDING' => ['CONFIRMED', 'CANCELLED'],
+            'CONFIRMED' => ['PREPARING', 'CANCELLED'],
+            'PREPARING' => ['SHIPPING'],
+            'SHIPPING' => ['COMPLETED'],
+            'COMPLETED' => [],
+            'CANCELLED' => [],
+        ];
+
+        if ($oldStatus === $newStatus) {
+            throw new \Exception('Đơn hàng đã ở trạng thái này rồi.');
+        }
+
+        if (!isset($allowedTransitions[$oldStatus])) {
+            throw new \Exception("Trạng thái đơn hàng '{$oldStatus}' không hợp lệ.");
+        }
+
+        if (!in_array($newStatus, $allowedTransitions[$oldStatus])) {
+            throw new \Exception("Không thể chuyển đơn hàng từ '{$oldStatus}' sang '{$newStatus}'.");
+        }
+
+        if ($newStatus === 'CANCELLED' && blank($note)) {
+            throw new \Exception('Lý do hủy đơn là bắt buộc.');
+        }
+    }
+
     public function createPayment(Order $order, array $data): Payment
     {
         return Payment::create([
@@ -188,6 +223,10 @@ class OrderService
 
     public function confirmPayment(Payment $payment, ?int $confirmedBy = null): Payment
     {
+        if ($payment->status !== 'PENDING') {
+            throw new \Exception('Chỉ xác nhận được giao dịch đang chờ thanh toán.');
+        }
+
         $payment->update([
             'status' => 'PAID',
             'confirmed_by' => $confirmedBy,
@@ -201,6 +240,10 @@ class OrderService
 
     public function markPaymentFailed(Payment $payment): Payment
     {
+        if ($payment->status !== 'PENDING') {
+            throw new \Exception('Chỉ đánh dấu thất bại cho giao dịch đang chờ thanh toán.');
+        }
+
         $payment->update(['status' => 'FAILED']);
         $payment->order->update(['payment_status' => 'FAILED']);
 
@@ -209,6 +252,10 @@ class OrderService
 
     public function refundPayment(Payment $payment): Payment
     {
+        if ($payment->status !== 'PAID') {
+            throw new \Exception('Chỉ hoàn tiền cho giao dịch đã thanh toán.');
+        }
+
         $payment->update(['status' => 'REFUNDED']);
         $payment->order->update(['payment_status' => 'REFUNDED']);
 

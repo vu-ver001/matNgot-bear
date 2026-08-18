@@ -43,7 +43,15 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $this->orderService->cancelOrder($order, auth()->id(), 'Khách hàng yêu cầu hủy');
+        if ($order->order_status !== 'PENDING') {
+            return redirect()->back()->with('error', 'Bạn chỉ có thể hủy đơn hàng đang chờ xác nhận.');
+        }
+
+        try {
+            $this->orderService->cancelOrder($order, auth()->id(), 'Khách hàng yêu cầu hủy');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('customer.orders.show', $order)->with('success', 'Đã hủy đơn hàng thành công.');
     }
