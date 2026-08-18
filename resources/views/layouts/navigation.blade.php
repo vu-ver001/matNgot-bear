@@ -26,6 +26,9 @@
                         <x-nav-link :href="route('admin.reviews.index')" :active="request()->routeIs('admin.reviews.*')">
                             {{ __('Đánh giá') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.reports.revenue')" :active="request()->routeIs('admin.reports.*')">
+                            {{ __('Báo cáo') }}
+                        </x-nav-link>
                     @elseif (auth()->user()->role === 'STAFF')
                         <x-nav-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')">
                             {{ __('Dashboard') }}
@@ -102,6 +105,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.reviews.index')" :active="request()->routeIs('admin.reviews.*')">
                     {{ __('Đánh giá') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.reports.revenue')" :active="request()->routeIs('admin.reports.*')">
+                    {{ __('Báo cáo') }}
                 </x-responsive-nav-link>
             @elseif (auth()->user()->role === 'STAFF')
                 <x-responsive-nav-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')">

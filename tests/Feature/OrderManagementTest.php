@@ -250,6 +250,57 @@ class OrderManagementTest extends TestCase
         $this->get('/admin')->assertForbidden();
     }
 
+    public function test_admin_revenue_report_renders_and_filters_by_date(): void
+    {
+        $this->actingAs($this->admin);
+
+        $this->get('/admin/reports/revenue')->assertOk();
+        $this->get('/admin/reports/revenue?from_date=2026-01-01&to_date=2026-12-31')->assertOk();
+        $this->get('/admin/reports/revenue?from_date=2026-12-31&to_date=2026-01-01')->assertSessionHasErrors('to_date');
+    }
+
+    public function test_revenue_report_only_counts_completed_paid_orders_in_range(): void
+    {
+        $this->actingAs($this->admin);
+
+        $from = now()->startOfMonth();
+        $to = now()->endOfMonth();
+
+        $inRange = $this->createOrder($this->customer);
+        $inRange->update(['created_at' => $from->copy()->addDays(1)]);
+        $this->advanceOrderToCompleted($inRange);
+
+        $otherStatus = $this->createOrder($this->customer);
+        $this->advanceOrderToCompleted($otherStatus);
+        $otherStatus->update(['payment_status' => 'PENDING']);
+
+        $outside = $this->createOrder($this->customer);
+        $outside->update(['created_at' => $from->copy()->subMonth(2)]);
+        $this->advanceOrderToCompleted($outside);
+
+        $this->get('/admin/reports/revenue?from_date='.$from->format('Y-m-d').'&to_date='.$to->format('Y-m-d'))
+            ->assertOk()
+            ->assertSee('Doanh thu theo ngày')
+            ->assertSee($inRange->order_code);
+    }
+
+    public function test_admin_can_export_revenue_csv(): void
+    {
+        $this->actingAs($this->admin);
+
+        $order = $this->createOrder($this->customer);
+        $this->advanceOrderToCompleted($order);
+
+        $from = now()->startOfMonth()->format('Y-m-d');
+        $to = now()->endOfMonth()->format('Y-m-d');
+
+        $response = $this->get("/admin/reports/revenue/export?from_date={$from}&to_date={$to}")
+            ->assertOk()
+            ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        $this->assertStringContainsString($order->order_code, $response->streamedContent());
+    }
+
     private function createOrder(User $customer): Order
     {
         return app(OrderService::class)->createOrder([
@@ -270,5 +321,16 @@ class OrderManagementTest extends TestCase
             'method' => 'COD',
             'transaction_ref' => 'TXN-TEST',
         ]);
+    }
+
+    private function advanceOrderToCompleted(Order $order): void
+    {
+        $payment = $this->createPayment($order);
+
+        foreach (['CONFIRMED', 'PREPARING', 'SHIPPING', 'COMPLETED'] as $status) {
+            app(OrderService::class)->updateStatus($order, $status, $this->admin->id, null);
+        }
+
+        app(OrderService::class)->confirmPayment($payment, $this->admin->id);
     }
 }
