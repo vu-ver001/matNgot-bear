@@ -2,7 +2,7 @@
 
 @php
     $colors = [
-        'PENDING' => 'bg-yellow-100 text-yellow-800',
+        'PENDING' => 'bg-amber-100 text-amber-800',
         'CONFIRMED' => 'bg-blue-100 text-blue-800',
         'PREPARING' => 'bg-indigo-100 text-indigo-800',
         'SHIPPING' => 'bg-cyan-100 text-cyan-800',
