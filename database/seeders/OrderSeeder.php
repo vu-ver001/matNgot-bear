@@ -41,12 +41,20 @@ class OrderSeeder extends Seeder
 
         foreach ($scenarios as $scenario) {
             for ($i = 0; $i < $scenario['count']; $i++) {
+                $availableProducts = $products->filter(fn (Product $p) => $p->stock_quantity > 0);
+
+                if ($availableProducts->isEmpty()) {
+                    $this->command->warn('Hết hàng, dừng tạo đơn mẫu.');
+
+                    return;
+                }
+
                 $customer = $customers->random();
-                $selectedProducts = $products->random(rand(1, 3));
+                $selectedProducts = $availableProducts->random(rand(1, min(3, $availableProducts->count())));
 
                 $cartItems = $selectedProducts->map(fn (Product $product) => (object) [
                     'product_id' => $product->id,
-                    'quantity' => rand(1, 3),
+                    'quantity' => rand(1, min(3, $product->stock_quantity)),
                 ])->all();
 
                 $subtotal = collect($cartItems)->sum(function ($item) {
@@ -55,10 +63,8 @@ class OrderSeeder extends Seeder
                     return ($product->sale_price ?? $product->price) * $item->quantity;
                 });
 
-                $voucher = $vouchers
-                    ->filter(fn (Voucher $v) => $subtotal >= $v->min_order_value)
-                    ->random(rand(0, 1) ? 1 : 0)
-                    ->first();
+                $eligibleVouchers = $vouchers->filter(fn (Voucher $v) => $subtotal >= $v->min_order_value);
+                $voucher = $eligibleVouchers->isEmpty() ? null : $eligibleVouchers->random();
 
                 try {
                     $order = $orderService->createOrder([
