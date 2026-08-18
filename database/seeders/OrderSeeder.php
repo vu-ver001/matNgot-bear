@@ -83,6 +83,11 @@ class OrderSeeder extends Seeder
                 }
 
                 $this->advanceOrder($orderService, $order, $scenario['status']);
+
+                $order->update([
+                    'created_at' => now()->subMonths(rand(0, 11))->setTime(rand(8, 21), rand(0, 59), rand(0, 59)),
+                    'updated_at' => now(),
+                ]);
             }
         }
     }
