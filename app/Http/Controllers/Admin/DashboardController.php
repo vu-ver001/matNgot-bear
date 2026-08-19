@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\User;
 use App\Models\Product;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -35,7 +36,9 @@ class DashboardController extends Controller
         $monthlyRows = Order::where('order_status', 'COMPLETED')
             ->where('payment_status', 'PAID')
             ->where('created_at', '>=', $start)
-            ->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(total_amount) as total')
+            ->selectRaw(DB::getDriverName() === 'sqlite'
+                ? "CAST(strftime('%m', created_at) AS INTEGER) as month, CAST(strftime('%Y', created_at) AS INTEGER) as year, SUM(total_amount) as total"
+                : 'MONTH(created_at) as month, YEAR(created_at) as year, SUM(total_amount) as total')
             ->groupBy('year', 'month')
             ->orderBy('year')
             ->orderBy('month')

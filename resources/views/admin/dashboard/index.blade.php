@@ -138,9 +138,9 @@
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
-                                            @foreach ($chunk as $index => $product)
+                                            @foreach ($chunk as $product)
                                                 <tr>
-                                                    <td class="px-4 py-3 text-sm text-[#64748B]">{{ $chunkIndex * 5 + $index + 1 }}</td>
+                                                    <td class="px-4 py-3 text-sm text-[#64748B]">{{ $chunkIndex * 5 + $loop->iteration }}</td>
                                                     <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ $product->name }}</td>
                                                     <td class="px-4 py-3 text-sm text-[#64748B] text-right">{{ $product->sold_count }}</td>
                                                 </tr>
