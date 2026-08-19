@@ -17,6 +17,11 @@
         <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
         <p class="text-sm font-medium text-red-700">Đơn hàng đã bị hủy</p>
     </div>
+@elseif ($status === 'RETURNED')
+    <div class="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0"></span>
+        <p class="text-sm font-medium text-orange-700">Đơn hàng đã trả / hoàn tiền</p>
+    </div>
 @else
     <ol class="flex items-center">
         @foreach ($steps as $key => $label)

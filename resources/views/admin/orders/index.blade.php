@@ -19,21 +19,32 @@
 
             <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
                 <div class="p-6">
-                    <form method="GET" class="mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="mb-6 flex flex-wrap gap-2">
+                        @php
+                            $tabs = [
+                                '' => 'Tất cả',
+                                'PENDING' => 'Chờ xác nhận',
+                                'PREPARING' => 'Chờ lấy hàng',
+                                'SHIPPING' => 'Chờ giao hàng',
+                                'COMPLETED' => 'Đã giao',
+                                'RETURNED' => 'Trả hàng',
+                                'CANCELLED' => 'Đã hủy',
+                            ];
+                        @endphp
+                        @foreach ($tabs as $value => $label)
+                            <a href="{{ route('admin.orders.index', array_merge(request()->except('order_status', 'page'), $value ? ['order_status' => $value] : [])) }}"
+                               class="px-3 py-1.5 rounded-full text-sm font-medium {{ request('order_status') === $value ? 'bg-amber-500 text-white' : 'bg-amber-50 text-[#8B5A2B] hover:bg-amber-100' }}">
+                                {{ $label }}
+                            </a>
+                        @endforeach
+                    </div>
+
+                    <form method="GET" class="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-[#64748B] mb-1">Tìm kiếm</label>
                             <input type="text" name="search" value="{{ request('search') }}"
                                    placeholder="Mã đơn / Tên / SĐT"
                                    class="w-full rounded-xl border-amber-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-[#64748B] mb-1">Trạng thái đơn</label>
-                            <select name="order_status" class="w-full rounded-xl border-amber-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm">
-                                <option value="">Tất cả</option>
-                                @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Đang giao', 'COMPLETED' => 'Hoàn thành', 'CANCELLED' => 'Đã hủy'] as $value => $label)
-                                    <option value="{{ $value }}" @selected(request('order_status') === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-[#64748B] mb-1">Trạng thái thanh toán</label>

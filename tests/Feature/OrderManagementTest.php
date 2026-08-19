@@ -150,6 +150,36 @@ class OrderManagementTest extends TestCase
         $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'PENDING']);
     }
 
+    public function test_completed_order_can_be_returned_and_refunded(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $payment = $this->createPayment($order);
+
+        $this->actingAs($this->staff);
+
+        foreach (['CONFIRMED', 'PREPARING', 'SHIPPING', 'COMPLETED'] as $status) {
+            $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => $status])
+                ->assertRedirect();
+        }
+
+        $this->patch('/staff/payments/'.$payment->id.'/status', ['status' => 'PAID'])
+            ->assertRedirect();
+
+        $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'RETURNED'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'order_status' => 'RETURNED',
+            'payment_status' => 'REFUNDED',
+        ]);
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'REFUNDED']);
+        $this->assertDatabaseHas('order_status_histories', [
+            'order_id' => $order->id,
+            'to_status' => 'RETURNED',
+        ]);
+    }
+
     public function test_customer_cannot_cancel_confirmed_order(): void
     {
         $order = $this->createOrder($this->customer);

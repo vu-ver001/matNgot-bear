@@ -34,6 +34,7 @@ class OrderSeeder extends Seeder
             ['status' => 'PREPARING', 'count' => 2],
             ['status' => 'SHIPPING', 'count' => 2],
             ['status' => 'COMPLETED', 'count' => 4],
+            ['status' => 'RETURNED', 'count' => 1],
             ['status' => 'CANCELLED', 'count' => 2],
         ];
 
@@ -94,7 +95,7 @@ class OrderSeeder extends Seeder
 
     private function advanceOrder(OrderService $orderService, Order $order, string $targetStatus): void
     {
-        $flow = ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING', 'COMPLETED'];
+        $flow = ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING', 'COMPLETED', 'RETURNED'];
         $targetIndex = array_search($targetStatus, $flow);
 
         if ($targetStatus === 'CANCELLED') {
@@ -113,7 +114,7 @@ class OrderSeeder extends Seeder
                 'transaction_ref' => 'TXN'.strtoupper(uniqid()),
             ]);
 
-            if ($targetStatus === 'COMPLETED') {
+            if ($targetStatus === 'COMPLETED' || $targetStatus === 'RETURNED') {
                 $orderService->confirmPayment($payment, null);
             }
         }

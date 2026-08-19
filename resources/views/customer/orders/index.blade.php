@@ -24,10 +24,10 @@
                             $tabs = [
                                 '' => 'Tất cả',
                                 'PENDING' => 'Chờ xác nhận',
-                                'CONFIRMED' => 'Đã xác nhận',
-                                'PREPARING' => 'Đang đóng gói',
-                                'SHIPPING' => 'Đang giao',
-                                'COMPLETED' => 'Hoàn thành',
+                                'PREPARING' => 'Chờ lấy hàng',
+                                'SHIPPING' => 'Chờ giao hàng',
+                                'COMPLETED' => 'Đã giao',
+                                'RETURNED' => 'Trả hàng',
                                 'CANCELLED' => 'Đã hủy',
                             ];
                         @endphp

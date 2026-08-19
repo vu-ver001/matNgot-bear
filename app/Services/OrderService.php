@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\OrderStatusHistory;
@@ -22,7 +21,7 @@ class OrderService
             foreach ($cartItems as $cartItem) {
                 $product = Product::lockForUpdate()->find($cartItem->product_id);
 
-                if (!$product || $product->stock_quantity < $cartItem->quantity) {
+                if (! $product || $product->stock_quantity < $cartItem->quantity) {
                     $productName = $product->name ?? 'không xác định';
                     throw new \Exception("Sản phẩm '{$productName}' không đủ tồn kho.");
                 }
@@ -43,7 +42,7 @@ class OrderService
             }
 
             $discountAmount = 0;
-            if (!empty($data['voucher_id'])) {
+            if (! empty($data['voucher_id'])) {
                 $voucher = Voucher::find($data['voucher_id']);
                 if ($voucher && $this->isVoucherValid($voucher, $subtotal)) {
                     $discountAmount = $this->calculateDiscount($voucher, $subtotal);
@@ -83,7 +82,7 @@ class OrderService
                 'changed_at' => now(),
             ]);
 
-            if (!empty($data['voucher_id']) && $discountAmount > 0) {
+            if (! empty($data['voucher_id']) && $discountAmount > 0) {
                 Voucher::where('id', $data['voucher_id'])->increment('used_count');
             }
 
@@ -94,7 +93,7 @@ class OrderService
     public function cancelOrder(Order $order, ?int $cancelledBy = null, ?string $reason = null): Order
     {
         return DB::transaction(function () use ($order, $cancelledBy, $reason) {
-            if (!in_array($order->order_status, ['PENDING', 'CONFIRMED'])) {
+            if (! in_array($order->order_status, ['PENDING', 'CONFIRMED'])) {
                 throw new \Exception('Không thể hủy đơn hàng ở trạng thái hiện tại.');
             }
 
@@ -120,7 +119,7 @@ class OrderService
                 'changed_at' => now(),
             ]);
 
-            if (!$order->stock_restored) {
+            if (! $order->stock_restored) {
                 $this->restoreStock($order);
                 $order->update(['stock_restored' => true]);
             }
@@ -146,6 +145,12 @@ class OrderService
                 $updateData['cancelled_at'] = now();
                 $updateData['cancelled_by'] = $changedBy;
                 $updateData['cancel_reason'] = $note;
+            } elseif ($newStatus === 'RETURNED') {
+                $paidPayment = $order->payments->firstWhere('status', 'PAID');
+
+                if ($paidPayment) {
+                    $this->refundPayment($paidPayment);
+                }
             }
 
             $order->update($updateData);
@@ -159,7 +164,7 @@ class OrderService
                 'changed_at' => now(),
             ]);
 
-            if ($newStatus === 'CANCELLED' && !$order->stock_restored) {
+            if ($newStatus === 'CANCELLED' && ! $order->stock_restored) {
                 $this->restoreStock($order);
                 $order->update(['stock_restored' => true]);
             }
@@ -188,7 +193,8 @@ class OrderService
             'CONFIRMED' => ['PREPARING', 'CANCELLED'],
             'PREPARING' => ['SHIPPING'],
             'SHIPPING' => ['COMPLETED'],
-            'COMPLETED' => [],
+            'COMPLETED' => ['RETURNED'],
+            'RETURNED' => [],
             'CANCELLED' => [],
         ];
 
@@ -196,11 +202,11 @@ class OrderService
             throw new \Exception('Đơn hàng đã ở trạng thái này rồi.');
         }
 
-        if (!isset($allowedTransitions[$oldStatus])) {
+        if (! isset($allowedTransitions[$oldStatus])) {
             throw new \Exception("Trạng thái đơn hàng '{$oldStatus}' không hợp lệ.");
         }
 
-        if (!in_array($newStatus, $allowedTransitions[$oldStatus])) {
+        if (! in_array($newStatus, $allowedTransitions[$oldStatus])) {
             throw new \Exception("Không thể chuyển đơn hàng từ '{$oldStatus}' sang '{$newStatus}'.");
         }
 
@@ -299,6 +305,6 @@ class OrderService
 
     private function generateOrderCode(): string
     {
-        return 'MNB' . strtoupper(uniqid());
+        return 'MNB'.strtoupper(uniqid());
     }
 }

@@ -8,6 +8,7 @@
         'SHIPPING' => 'bg-cyan-100 text-cyan-800',
         'COMPLETED' => 'bg-green-100 text-green-800',
         'CANCELLED' => 'bg-red-100 text-red-800',
+        'RETURNED' => 'bg-orange-100 text-orange-800',
     ];
 
     $labels = [
@@ -15,8 +16,9 @@
         'CONFIRMED' => 'Đã xác nhận',
         'PREPARING' => 'Đang đóng gói',
         'SHIPPING' => 'Đang giao hàng',
-        'COMPLETED' => 'Hoàn thành',
+        'COMPLETED' => 'Đã giao',
         'CANCELLED' => 'Đã hủy',
+        'RETURNED' => 'Trả hàng',
     ];
 @endphp
 

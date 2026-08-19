@@ -184,7 +184,7 @@
                     <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Cập nhật trạng thái</h3>
-                            @if (in_array($order->order_status, ['COMPLETED', 'CANCELLED']))
+                            @if (in_array($order->order_status, ['CANCELLED', 'RETURNED']))
                                 <p class="text-sm text-[#64748B]">Đơn hàng đã ở trạng thái kết thúc, không thể thay đổi.</p>
                             @else
                                 <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" x-data="{ status: '{{ $order->order_status }}' }">
@@ -194,7 +194,7 @@
                                         <label class="block text-sm font-medium text-[#64748B] mb-1">Trạng thái mới</label>
                                         <select name="order_status" x-model="status"
                                                 class="w-full rounded-xl border-amber-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm">
-                                            @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Đang giao', 'COMPLETED' => 'Hoàn thành', 'CANCELLED' => 'Hủy đơn'] as $value => $label)
+                                            @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Chờ giao hàng', 'COMPLETED' => 'Đã giao', 'RETURNED' => 'Trả hàng', 'CANCELLED' => 'Hủy đơn'] as $value => $label)
                                                 <option value="{{ $value }}" @selected($order->order_status === $value)>{{ $label }}</option>
                                             @endforeach
                                         </select>
