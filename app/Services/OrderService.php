@@ -145,6 +145,12 @@ class OrderService
                 $updateData['cancelled_at'] = now();
                 $updateData['cancelled_by'] = $changedBy;
                 $updateData['cancel_reason'] = $note;
+
+                $paidPayment = $order->payments->firstWhere('status', 'PAID');
+
+                if ($paidPayment) {
+                    $this->refundPayment($paidPayment);
+                }
             } elseif ($newStatus === 'RETURNED') {
                 $paidPayment = $order->payments->firstWhere('status', 'PAID');
 
@@ -191,8 +197,8 @@ class OrderService
         $allowedTransitions = [
             'PENDING' => ['CONFIRMED', 'CANCELLED'],
             'CONFIRMED' => ['PREPARING', 'CANCELLED'],
-            'PREPARING' => ['SHIPPING'],
-            'SHIPPING' => ['COMPLETED'],
+            'PREPARING' => ['SHIPPING', 'CANCELLED'],
+            'SHIPPING' => ['COMPLETED', 'CANCELLED'],
             'COMPLETED' => ['RETURNED'],
             'RETURNED' => [],
             'CANCELLED' => [],
