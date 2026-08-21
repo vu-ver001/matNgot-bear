@@ -42,7 +42,7 @@
                 <i class="fa-solid fa-box-open"></i>
                 <span class="sidebar-link-text">Quản lý Sản phẩm</span>
             </a>
-            <a href="{{ route('admin.categories.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'categories' ? 'active' : '' }}" data-title="Quản lý Danh mục" onclick="handleSidebarItemClick(event, this)">
+            <a href="{{ route('admin.categories.index') }}" class="sidebar-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" data-title="Quản lý Danh mục" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-folder-tree"></i>
                 <span class="sidebar-link-text">Quản lý Danh mục</span>
             </a>
