@@ -102,7 +102,7 @@ class VoucherController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:vouchers,code|regex:/^[A-Z0-9_\-]+$/i',
+            'code' => ['required', 'string', 'max:50', Rule::unique('vouchers', 'code')->whereNull('deleted_at'), 'regex:/^[A-Z0-9_\-]+$/i'],
             'voucher_type' => 'required|in:ORDER,SHIPPING',
             'apply_scope' => 'required|in:ALL,CATEGORY,PRODUCT',
             'category_ids' => 'nullable|array',
@@ -195,7 +195,7 @@ class VoucherController extends Controller
                 'string',
                 'max:50',
                 'regex:/^[A-Z0-9_\-]+$/i',
-                Rule::unique('vouchers', 'code')->ignore($voucher->id),
+                Rule::unique('vouchers', 'code')->ignore($voucher->id)->whereNull('deleted_at'),
             ],
             'voucher_type' => 'required|in:ORDER,SHIPPING',
             'apply_scope' => 'required|in:ALL,CATEGORY,PRODUCT',
