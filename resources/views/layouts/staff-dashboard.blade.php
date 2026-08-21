@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
         :root {
             --bg-page: #FDFBF7;
@@ -482,25 +484,25 @@
 
         <nav class="sidebar-nav">
             <div class="sidebar-section-label">Vận Hành & Đơn Hàng</div>
-            <a href="{{ route('staff.page', 'dashboard') }}" class="sidebar-link {{ ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard vận hành" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.dashboard') }}" class="sidebar-link {{ request()->routeIs('staff.dashboard') ? 'active' : '' }}" data-title="Dashboard vận hành" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-chart-line"></i>
                 <span class="sidebar-link-text">Dashboard vận hành</span>
             </a>
-            <a href="{{ route('staff.page', 'orders') }}" class="sidebar-link {{ ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý đơn hàng" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ request()->routeIs('staff.orders.*') ? 'active' : '' }}" data-title="Quản lý đơn hàng" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="sidebar-link-text">Quản lý đơn hàng</span>
             </a>
-            <a href="{{ route('staff.page', 'order-status') }}" class="sidebar-link {{ ($currentPage ?? '') === 'order-status' ? 'active' : '' }}" data-title="Xử lý trạng thái đơn" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ request()->routeIs('staff.orders.*') ? 'active' : '' }}" data-title="Xử lý trạng thái đơn" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-truck-ramp-box"></i>
                 <span class="sidebar-link-text">Xử lý trạng thái đơn</span>
             </a>
 
             <div class="sidebar-section-label">Thanh Toán & Hỗ Trợ</div>
-            <a href="{{ route('staff.page', 'payments') }}" class="sidebar-link {{ ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Xử lý thanh toán" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.page', 'payments') }}" class="sidebar-link {{ request()->routeIs('staff.payments.*') ? 'active' : '' }}" data-title="Xử lý thanh toán" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-receipt"></i>
                 <span class="sidebar-link-text">Xử lý thanh toán</span>
             </a>
-            <a href="{{ route('staff.page', 'support') }}" class="sidebar-link {{ ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ khách hàng" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.page', 'support') }}" class="sidebar-link {{ request()->routeIs('staff.support.*') ? 'active' : '' }}" data-title="Hỗ trợ khách hàng" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-comments"></i>
                 <span class="sidebar-link-text">Hỗ trợ khách hàng</span>
             </a>
