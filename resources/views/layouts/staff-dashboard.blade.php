@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -31,26 +31,26 @@
         <nav class="sidebar-nav">
             <div class="sidebar-section-label">Vận Hành & Đơn Hàng</div>
             <!-- Các mục của bạn nhóm (Trang trống chờ code) -->
-            <a href="{{ route('staff.dashboard') }}" class="sidebar-link {{ ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard vận hành" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.dashboard') }}" class="sidebar-link {{ request()->routeIs('staff.dashboard*') || ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard vận hành" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-chart-line"></i>
                 <span class="sidebar-link-text">Dashboard vận hành</span>
             </a>
-            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý đơn hàng" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ request()->routeIs('staff.orders*') || ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý đơn hàng" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="sidebar-link-text">Quản lý đơn hàng</span>
             </a>
-            <a href="{{ route('staff.order-status.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'order-status' ? 'active' : '' }}" data-title="Xử lý trạng thái đơn" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.order-status.index') }}" class="sidebar-link {{ request()->routeIs('staff.order-status*') || ($currentPage ?? '') === 'order-status' ? 'active' : '' }}" data-title="Xử lý trạng thái đơn" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-truck-ramp-box"></i>
                 <span class="sidebar-link-text">Xử lý trạng thái đơn</span>
             </a>
 
             <div class="sidebar-section-label">Thanh Toán & Hỗ Trợ</div>
             <!-- Các mục của bạn nhóm (Trang trống chờ code) -->
-            <a href="{{ route('staff.payments.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Xử lý thanh toán" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.payments.index') }}" class="sidebar-link {{ request()->routeIs('staff.payments*') || ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Xử lý thanh toán" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-receipt"></i>
                 <span class="sidebar-link-text">Xử lý thanh toán</span>
             </a>
-            <a href="{{ route('staff.support.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ khách hàng" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.support.index') }}" class="sidebar-link {{ request()->routeIs('staff.support*') || ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ khách hàng" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-comments"></i>
                 <span class="sidebar-link-text">Hỗ trợ khách hàng</span>
             </a>

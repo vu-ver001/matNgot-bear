@@ -1,13 +1,12 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-[#1E293B] leading-tight">Xử lý đơn hàng {{ $order->order_code }}</h2>
-            <a href="{{ route('staff.orders.index') }}" class="text-sm text-amber-700 hover:text-[#8B5A2B]">← Quay lại danh sách</a>
-        </div>
-    </x-slot>
+@extends('layouts.staff-dashboard')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+@section('page-title', 'Xử Lý Đơn Hàng ' . $order->order_code)
+
+@section('content')
+<div>
+    <div class="mb-4">
+        <a href="{{ route('staff.orders.index') }}" class="inline-flex items-center text-sm font-bold text-amber-700 hover:text-[#8B5A2B]">← Quay lại danh sách đơn hàng</a>
+    </div>
             @if (session('success'))
                 <div class="mb-4 bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-xl">
                     {{ session('success') }}
@@ -246,5 +245,5 @@
                 </div>
             </div>
         </div>
-    </div>
-</x-app-layout>
+</div>
+@endsection
