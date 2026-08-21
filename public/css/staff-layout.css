@@ -1,5 +1,5 @@
 /* ==========================================================================
-   MAT NGOT BEAR - ADMIN DASHBOARD LAYOUT CSS
+   MAT NGOT BEAR - STAFF DASHBOARD LAYOUT CSS
    Pastel Brown Theme, Mini/Full Sidebar, Topbar, Content & Responsive
    Phụ trách: Khánh Vân
    ========================================================================== */
@@ -10,7 +10,6 @@
     --bg-surface: #F8F4EE;
     --bg-cream: #F5EFEB;
     
-    /* Pastel Brown Theme */
     --pastel-brown-main: #8D6E63;
     --pastel-brown-dark: #5D4037;
     --pastel-brown-deep: #4E342E;
@@ -58,8 +57,8 @@ body {
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ====== SIDEBAR (NÂU PASTEL THEME) ====== */
-.admin-sidebar {
+/* ====== STAFF SIDEBAR (NÂU PASTEL THEME) ====== */
+.staff-sidebar {
     width: var(--sidebar-width);
     background: linear-gradient(180deg, #795548 0%, #5D4037 100%);
     color: #FDFBF7;
@@ -76,8 +75,7 @@ body {
     box-shadow: 4px 0 24px rgba(78, 52, 46, 0.12);
 }
 
-/* Khi Sidebar Thu Gọn (Mini Sidebar) */
-.admin-sidebar.collapsed {
+.staff-sidebar.collapsed {
     width: var(--sidebar-collapsed-width);
 }
 
@@ -113,7 +111,7 @@ body {
     transition: opacity 0.2s ease;
 }
 
-.admin-sidebar.collapsed .sidebar-brand-text {
+.staff-sidebar.collapsed .sidebar-brand-text {
     opacity: 0;
     display: none;
 }
@@ -149,7 +147,7 @@ body {
     transition: opacity 0.2s ease;
 }
 
-.admin-sidebar.collapsed .sidebar-section-label {
+.staff-sidebar.collapsed .sidebar-section-label {
     opacity: 0;
     display: none;
 }
@@ -196,13 +194,13 @@ body {
     transition: opacity 0.2s ease;
 }
 
-.admin-sidebar.collapsed .sidebar-link-text {
+.staff-sidebar.collapsed .sidebar-link-text {
     opacity: 0;
     display: none;
 }
 
-/* Tooltip khi hover trên mini sidebar */
-.admin-sidebar.collapsed .sidebar-link:hover::after {
+/* Tooltip khi thu gọn */
+.staff-sidebar.collapsed .sidebar-link:hover::after {
     content: attr(data-title);
     position: absolute;
     left: 100%;
@@ -251,7 +249,7 @@ body {
     white-space: nowrap;
 }
 
-.admin-sidebar.collapsed .sidebar-user-info {
+.staff-sidebar.collapsed .sidebar-user-info {
     display: none;
 }
 
@@ -289,12 +287,12 @@ body {
     color: #FFFFFF;
 }
 
-.admin-sidebar.collapsed .sidebar-logout-btn span {
+.staff-sidebar.collapsed .sidebar-logout-btn span {
     display: none;
 }
 
 /* ====== MAIN AREA ====== */
-.admin-main {
+.staff-main {
     margin-left: var(--sidebar-width);
     flex: 1;
     min-height: 100vh;
@@ -303,11 +301,11 @@ body {
     transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.admin-main.expanded {
+.staff-main.expanded {
     margin-left: var(--sidebar-collapsed-width);
 }
 
-.admin-topbar {
+.staff-topbar {
     background: #FFFFFF;
     border-bottom: 1px solid var(--border);
     padding: 0.85rem 2rem;
@@ -326,7 +324,6 @@ body {
     gap: 16px;
 }
 
-/* Nút Toggle Sidebar */
 .btn-sidebar-toggle {
     width: 38px;
     height: 38px;
@@ -385,7 +382,7 @@ body {
     color: #FFFFFF;
 }
 
-.admin-content {
+.staff-content {
     padding: 2rem;
     flex: 1;
 }
@@ -450,13 +447,13 @@ body {
 }
 
 @media (max-width: 992px) {
-    .admin-sidebar {
+    .staff-sidebar {
         transform: translateX(-100%);
     }
-    .admin-sidebar.mobile-open {
+    .staff-sidebar.mobile-open {
         transform: translateX(0);
     }
-    .admin-main {
+    .staff-main {
         margin-left: 0 !important;
     }
 }

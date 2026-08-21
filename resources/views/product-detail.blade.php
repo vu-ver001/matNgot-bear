@@ -170,7 +170,7 @@
                 {{ $product->description ?: 'Chú gấu bông ' . $product->name . ' là món quà tuyệt vời dành tặng cho bản thân, người yêu hoặc bạn bè trong những dịp đặc biệt. Lớp vải nhung bên ngoài siêu mềm mịn, không gây kích ứng cho da nhạy cảm hay trẻ nhỏ.' }}
             </p>
 
-            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 700; color: var(--primary-dark); margin: 1.5rem 0 10px 0;">
+            <h4 style="font-family: 'Be Vietnam Pro', sans-serif; font-size: 18px; font-weight: 700; color: var(--primary-dark); margin: 1.5rem 0 10px 0;">
                 🧸 Hướng dẫn giặt & vệ sinh gấu bông:
             </h4>
             <ul style="padding-left: 1.5rem; display: flex; flex-direction: column; gap: 8px;">

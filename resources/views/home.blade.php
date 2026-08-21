@@ -179,7 +179,7 @@
         <div class="gift-promo-banner">
             <div>
                 <span style="background: rgba(246, 216, 155, 0.2); color: var(--honey-gold); padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase;">Dịch Vụ Quà Tặng Độc Quyền</span>
-                <h3 style="font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 800; margin: 12px 0; color: #FFFFFF;">Bạn Muốn Gửi Gắm Yêu Thương Đến Người Ấy?</h3>
+                <h3 style="font-family: 'Be Vietnam Pro', sans-serif; font-size: 32px; font-weight: 800; margin: 12px 0; color: #FFFFFF;">Bạn Muốn Gửi Gắm Yêu Thương Đến Người Ấy?</h3>
                 <p style="color: #D7CCC8; font-size: 15px; line-height: 1.6; margin-bottom: 1.5rem;">
                     Mật Ngọt Bear hỗ trợ gói hộp quà nơ sang trọng, xịt nước hoa thơm dịu và đính kèm thiệp viết tay theo lời nhắn của bạn. Giao hàng chuẩn giờ cho ngày kỷ niệm và sinh nhật!
                 </p>

@@ -123,7 +123,7 @@
 }
 
 .detail-product-title {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 32px;
     font-weight: 800;
     color: var(--primary-dark);
@@ -162,7 +162,7 @@
 }
 
 .detail-price-current {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 32px;
     font-weight: 800;
     color: #D32F2F;
@@ -368,7 +368,7 @@
 }
 
 .detail-tab-header {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 22px;
     font-weight: 800;
     color: var(--primary-dark);
@@ -388,7 +388,7 @@
 
 /* Related Products */
 .related-section-title {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 26px;
     font-weight: 800;
     color: var(--primary-dark);
