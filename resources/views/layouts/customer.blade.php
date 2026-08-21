@@ -1004,7 +1004,7 @@
                                 <a href="#" class="dropdown-item">
                                     <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
                                 </a>
-                                <a href="{{ route('staff.dashboard') }}" class="dropdown-item">
+                                <a href="#" class="dropdown-item">
                                     <span><i class="fa-solid fa-boxes-packing" style="color: #8D6E63; margin-right: 6px;"></i> Xử Lý</span>
                                     <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
                                 </a>
