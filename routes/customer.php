@@ -1,18 +1,24 @@
 <?php
 
+use App\Http\Controllers\Customer\CartController;
+use App\Http\Controllers\Customer\CheckoutController;
+use App\Http\Controllers\Customer\OrderController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Customer Routes (Khách hàng)
-|--------------------------------------------------------------------------
-| Các trang do bạn trong nhóm phụ trách: Giỏ hàng, Wishlist, Đơn hàng, Profile.
-| Được tạo khung sẵn (Placeholder) để bạn nhóm dễ dàng cắm view/controller vào.
-*/
-
 Route::prefix('customer')->name('customer.')->group(function () {
-    
-    // 1. Danh sách Yêu Thích (Wishlist)
+    // 1. Cart routes (hỗ trợ cả customer.cart và customer.cart.index)
+    Route::get('/cart', [CartController::class, 'index'])->name('cart');
+    Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
+    Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::delete('/cart-clear', [CartController::class, 'clear'])->name('cart.clear');
+
+    // 2. Checkout routes
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+
+    // 3. Wishlist
     Route::get('/wishlist', function () {
         return view('customer.placeholder', [
             'pageTitle' => 'Danh Sách Yêu Thích (Wishlist)',
@@ -22,33 +28,20 @@ Route::prefix('customer')->name('customer.')->group(function () {
         ]);
     })->name('wishlist');
 
-    // 2. Giỏ Hàng (Cart)
-    Route::get('/cart', function () {
-        return view('customer.placeholder', [
-            'pageTitle' => 'Giỏ Hàng Của Bạn',
-            'pageIcon'  => 'fa-solid fa-bag-shopping',
-            'pageDesc'  => 'Trang quản lý các sản phẩm gấu bông đã thêm vào giỏ và tiến hành thanh toán đặt hàng.',
-            'routeCode' => "Route::get('/customer/cart', [CartController::class, 'index'])->name('customer.cart');",
-        ]);
-    })->name('cart');
+    // 4. Orders (Anh Vũ)
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    });
 
-    // 3. Đơn Hàng Của Tôi (My Orders)
-    Route::get('/orders', function () {
-        return view('customer.placeholder', [
-            'pageTitle' => 'Đơn Hàng Của Tôi',
-            'pageIcon'  => 'fa-solid fa-clipboard-list',
-            'pageDesc'  => 'Trang theo dõi lịch sử và tiến độ giao nhận các đơn hàng bạn đã đặt mua.',
-            'routeCode' => "Route::get('/customer/orders', [OrderController::class, 'myOrders'])->name('customer.orders');",
-        ]);
-    })->name('orders');
-
-    // 4. Hồ sơ khách hàng
+    // 5. Profile
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
     })->name('profile');
 });
 
-// Shortcut alias routes tiện lợi
+// Shortcut alias routes tiện lợi ngoài root
 Route::get('/wishlist', fn() => redirect()->route('customer.wishlist'));
 Route::get('/cart', fn() => redirect()->route('customer.cart'));
-Route::get('/my-orders', fn() => redirect()->route('customer.orders'));
+Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));

@@ -1,0 +1,250 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-xl text-[#1E293B] leading-tight">Chi tiết đơn hàng {{ $order->order_code }}</h2>
+            <a href="{{ route('admin.orders.index') }}" class="text-sm text-amber-700 hover:text-[#8B5A2B]">← Quay lại danh sách</a>
+        </div>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            @if (session('success'))
+                <div class="mb-4 bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-xl">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3 rounded-xl">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3 rounded-xl">
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="mb-6 bg-white rounded-2xl border border-amber-100 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Tiến trình đơn hàng</h3>
+                <x-order-timeline :status="$order->order_status" />
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-[#1E293B]">Thông tin đơn hàng</h3>
+                                <div class="flex gap-2">
+                                    <x-order-status-badge :status="$order->order_status" />
+                                    <x-payment-status-badge :status="$order->payment_status" />
+                                </div>
+                            </div>
+                            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <dt class="text-[#64748B]">Người nhận</dt>
+                                    <dd class="font-medium text-[#1E293B]">{{ $order->recipient_name }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-[#64748B]">Số điện thoại</dt>
+                                    <dd class="font-medium text-[#1E293B]">{{ $order->recipient_phone }}</dd>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <dt class="text-[#64748B]">Địa chỉ</dt>
+                                    <dd class="font-medium text-[#1E293B]">{{ $order->recipient_address }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-[#64748B]">Phương thức thanh toán</dt>
+                                    <dd class="font-medium text-[#1E293B]">{{ $order->payment_method }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-[#64748B]">Ngày đặt</dt>
+                                    <dd class="font-medium text-[#1E293B]">{{ $order->created_at->format('d/m/Y H:i') }}</dd>
+                                </div>
+                                @if ($order->note)
+                                    <div class="sm:col-span-2">
+                                        <dt class="text-[#64748B]">Ghi chú của khách</dt>
+                                        <dd class="font-medium text-[#1E293B]">{{ $order->note }}</dd>
+                                    </div>
+                                @endif
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Sản phẩm</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-amber-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Sản phẩm</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Đơn giá</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Số lượng</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach ($order->details as $detail)
+                                            <tr>
+                                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B]">{{ $detail->product_name }}</td>
+                                                <td class="px-4 py-4 text-sm text-[#64748B] text-right">{{ number_format($detail->product_price, 0, ',', '.') }} đ</td>
+                                                <td class="px-4 py-4 text-sm text-[#64748B] text-right">{{ $detail->quantity }}</td>
+                                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right">{{ number_format($detail->line_total, 0, ',', '.') }} đ</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <dl class="mt-6 space-y-2 text-sm border-t border-amber-100 pt-4">
+                                <div class="flex justify-between">
+                                    <dt class="text-[#64748B]">Tạm tính</dt>
+                                    <dd class="font-medium text-[#1E293B]">{{ number_format($order->subtotal, 0, ',', '.') }} đ</dd>
+                                </div>
+                                @if ($order->discount_amount > 0)
+                                    <div class="flex justify-between">
+                                        <dt class="text-[#64748B]">Giảm giá {{ $order->voucher?->code ? "({$order->voucher->code})" : '' }}</dt>
+                                        <dd class="font-medium text-rose-600">-{{ number_format($order->discount_amount, 0, ',', '.') }} đ</dd>
+                                    </div>
+                                @endif
+                                <div class="flex justify-between">
+                                    <dt class="text-[#64748B]">Phí vận chuyển</dt>
+                                    <dd class="font-medium text-[#1E293B]">{{ number_format($order->shipping_fee, 0, ',', '.') }} đ</dd>
+                                </div>
+                                <div class="flex justify-between text-base pt-2 border-t border-amber-100">
+                                    <dt class="font-semibold text-[#1E293B]">Tổng cộng</dt>
+                                    <dd class="font-bold text-amber-600">{{ number_format($order->total_amount, 0, ',', '.') }} đ</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Giao dịch thanh toán</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-amber-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Phương thức</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Số tiền</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Trạng thái</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Mã GD</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Thời gian</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Xác nhận</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @forelse ($order->payments as $payment)
+                                            <tr>
+                                                <td class="px-4 py-4 text-sm text-[#64748B]">{{ $payment->method }}</td>
+                                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
+                                                <td class="px-4 py-4"><x-payment-status-badge :status="$payment->status" /></td>
+                                                <td class="px-4 py-4 text-sm text-[#64748B]">{{ $payment->transaction_ref ?? '—' }}</td>
+                                                <td class="px-4 py-4 text-sm text-[#64748B]">{{ $payment->paid_at?->format('d/m/Y H:i') ?? $payment->created_at->format('d/m/Y H:i') }}</td>
+                                                <td class="px-4 py-4 text-right">
+                                                    @if ($payment->status === 'PENDING')
+                                                        <div class="flex justify-end gap-2">
+                                                            <form method="POST" action="{{ route('admin.payments.updateStatus', $payment) }}">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <input type="hidden" name="status" value="PAID">
+                                                                <button class="px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-full hover:bg-green-700">Đã nhận</button>
+                                                            </form>
+                                                            <form method="POST" action="{{ route('admin.payments.updateStatus', $payment) }}">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <input type="hidden" name="status" value="FAILED">
+                                                                <button class="px-3 py-1.5 text-xs font-medium text-white bg-rose-600 rounded-full hover:bg-rose-700">Thất bại</button>
+                                                            </form>
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="px-4 py-10 text-center text-sm text-[#64748B]">Chưa có giao dịch thanh toán nào.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Cập nhật trạng thái</h3>
+                            @if (in_array($order->order_status, ['CANCELLED', 'RETURNED']))
+                                <p class="text-sm text-[#64748B]">Đơn hàng đã ở trạng thái kết thúc, không thể thay đổi.</p>
+                            @else
+                                <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" x-data="{ status: '{{ $order->order_status }}' }">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#64748B] mb-1">Trạng thái mới</label>
+                                        <select name="order_status" x-model="status"
+                                                class="w-full rounded-xl border-amber-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm">
+                                            @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Chờ giao hàng', 'COMPLETED' => 'Đã giao', 'RETURNED' => 'Trả hàng', 'CANCELLED' => 'Hủy đơn'] as $value => $label)
+                                                <option value="{{ $value }}" @selected($order->order_status === $value)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div x-show="status === 'CANCELLED'" x-cloak class="mt-3" style="display: none;">
+                                        <label class="block text-sm font-medium text-[#64748B] mb-1">Lý do hủy <span class="text-rose-600">*</span></label>
+                                        <textarea name="cancel_reason" rows="3" placeholder="Nhập lý do hủy đơn..."
+                                                  class="w-full rounded-xl border-amber-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm"></textarea>
+                                    </div>
+                                    <button type="submit" class="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-full hover:bg-[#8B5A2B]">
+                                        Lưu thay đổi
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Lịch sử trạng thái</h3>
+                            <ol class="relative border-l border-amber-200 ml-3 space-y-6">
+                                @forelse ($order->statusHistories->sortBy('changed_at') as $history)
+                                    <li class="ml-6">
+                                        <span class="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white {{ $loop->first ? 'bg-amber-500' : 'bg-amber-100' }}"></span>
+                                        <p class="text-sm font-medium text-[#1E293B]">
+                                            {{ $history->from_status ? "{$history->from_status} → " : '' }}{{ $history->to_status }}
+                                        </p>
+                                        <p class="text-xs text-[#64748B] mt-0.5">
+                                            {{ $history->changed_at->format('d/m/Y H:i') }}
+                                            {{ $history->changedByUser ? '• ' . $history->changedByUser->full_name : '' }}
+                                        </p>
+                                        @if ($history->note)
+                                            <p class="text-xs text-gray-400 mt-0.5">{{ $history->note }}</p>
+                                        @endif
+                                    </li>
+                                @empty
+                                    <li class="ml-6 text-sm text-[#64748B]">Chưa có cập nhật nào.</li>
+                                @endforelse
+                            </ol>
+                        </div>
+                    </div>
+
+                    @if ($order->cancel_reason)
+                        <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4">
+                            <h4 class="text-sm font-semibold text-rose-800 mb-1">Lý do hủy đơn</h4>
+                            <p class="text-sm text-rose-700">{{ $order->cancel_reason }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
