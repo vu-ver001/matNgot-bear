@@ -27,7 +27,7 @@ Route::get('/dashboard', function () {
         'STAFF' => redirect()->route('staff.dashboard'),
         default => redirect()->route('home'),
     };
-})->middleware(['auth', 'verified']);
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 // Tiện ích chuyển nhanh vai trò (Admin / Staff / Khách hàng / Guest) để test giao diện
 Route::get('/switch-role/{role}', function (string $role) {

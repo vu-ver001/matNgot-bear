@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\VoucherController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    
+
     // 1. Dashboard & Thống kê
     Route::get('/', function () {
         return view('admin.placeholder', ['currentPage' => 'dashboard']);
@@ -21,6 +22,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         return view('admin.placeholder', ['currentPage' => 'dashboard']);
     });
 
+    // Voucher management
+    Route::patch('/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
+    Route::resource('vouchers', VoucherController::class)->except(['show']);
     // 2. PHẦN CỦA KHÁNH VÂN: Quản lý Sản phẩm (Trang riêng)
     Route::get('/products', function () {
         return view('admin.products.index', ['currentPage' => 'products']);
@@ -37,11 +41,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     })->name('page');
 
     // Shortcut routes cho từng mục để tiện link
-    Route::get('/vouchers', fn() => view('admin.placeholder', ['currentPage' => 'vouchers']))->name('vouchers.index');
-    Route::get('/orders', fn() => view('admin.placeholder', ['currentPage' => 'orders']))->name('orders.index');
-    Route::get('/payments', fn() => view('admin.placeholder', ['currentPage' => 'payments']))->name('payments.index');
-    Route::get('/customers', fn() => view('admin.placeholder', ['currentPage' => 'customers']))->name('customers.index');
-    Route::get('/staff', fn() => view('admin.placeholder', ['currentPage' => 'staff']))->name('staff.index');
-    Route::get('/reviews', fn() => view('admin.placeholder', ['currentPage' => 'reviews']))->name('reviews.index');
-    Route::get('/support', fn() => view('admin.placeholder', ['currentPage' => 'support']))->name('support.index');
+    Route::get('/vouchers', fn () => view('admin.placeholder', ['currentPage' => 'vouchers']))->name('vouchers.index');
+    Route::get('/orders', fn () => view('admin.placeholder', ['currentPage' => 'orders']))->name('orders.index');
+    Route::get('/payments', fn () => view('admin.placeholder', ['currentPage' => 'payments']))->name('payments.index');
+    Route::get('/customers', fn () => view('admin.placeholder', ['currentPage' => 'customers']))->name('customers.index');
+    Route::get('/staff', fn () => view('admin.placeholder', ['currentPage' => 'staff']))->name('staff.index');
+    Route::get('/reviews', fn () => view('admin.placeholder', ['currentPage' => 'reviews']))->name('reviews.index');
+    Route::get('/support', fn () => view('admin.placeholder', ['currentPage' => 'support']))->name('support.index');
 });

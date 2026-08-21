@@ -49,6 +49,11 @@ class Product extends Model
         return $this->hasMany(WishlistItem::class);
     }
 
+    public function vouchers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Voucher::class, 'voucher_products');
+    }
+
     public function orderDetails(): HasMany
     {
         return $this->hasMany(OrderDetail::class);
