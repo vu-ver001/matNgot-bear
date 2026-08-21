@@ -6,30 +6,44 @@ use App\Http\Controllers\Customer\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('customer')->name('customer.')->group(function () {
-    // Product browsing (Customer)
-    // Route::get('/', [ProductController::class, 'index'])->name('products.index');
-    // Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-
-    // Cart routes
+    // 1. Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
     Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
     Route::delete('/cart-clear', [CartController::class, 'clear'])->name('cart.clear');
 
-    // Checkout routes
+    // 2. Checkout routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 
-    // Wishlist
-    // Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
-    // Route::post('/wishlist/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    // 3. Wishlist (Placeholder)
+    Route::get('/wishlist', function () {
+        return view('customer.placeholder', [
+            'pageTitle' => 'Danh Sách Yêu Thích (Wishlist)',
+            'pageIcon'  => 'fa-solid fa-heart',
+            'pageDesc'  => 'Trang lưu trữ các sản phẩm gấu bông bạn yêu thích để dễ dàng mua sau.',
+            'routeCode' => "Route::get('/customer/wishlist', [WishlistController::class, 'index'])->name('customer.wishlist');",
+        ]);
+    })->name('wishlist');
 
-    // Review
-    // Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    // 4. Orders (Placeholder)
+    Route::get('/orders', function () {
+        return view('customer.placeholder', [
+            'pageTitle' => 'Đơn Hàng Của Tôi',
+            'pageIcon'  => 'fa-solid fa-clipboard-list',
+            'pageDesc'  => 'Trang theo dõi lịch sử và tiến độ giao nhận các đơn hàng bạn đã đặt mua.',
+            'routeCode' => "Route::get('/customer/orders', [OrderController::class, 'myOrders'])->name('customer.orders');",
+        ]);
+    })->name('orders');
 
-    // Chat
-    // Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
-    // Route::post('/chat', [ChatController::class, 'send'])->name('chat.send');
+    // 5. Profile
+    Route::get('/profile', function () {
+        return redirect()->route('profile.edit');
+    })->name('profile');
 });
 
+// Shortcut alias routes tiện lợi
+Route::get('/wishlist', fn() => redirect()->route('customer.wishlist'));
+Route::get('/cart', fn() => redirect()->route('customer.cart.index'));
+Route::get('/my-orders', fn() => redirect()->route('customer.orders'));

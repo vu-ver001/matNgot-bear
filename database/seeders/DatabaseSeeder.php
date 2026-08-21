@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\User;
+use App\Models\Voucher;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -119,7 +120,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 6. Tạo Các Mã Voucher Mẫu (Phân Loại ORDER & SHIPPING)
-        \App\Models\Voucher::updateOrCreate(
+        Voucher::updateOrCreate(
             ['code' => 'BEAR10'],
             [
                 'voucher_type' => 'ORDER',
@@ -135,7 +136,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        \App\Models\Voucher::updateOrCreate(
+        Voucher::updateOrCreate(
             ['code' => 'CHAOBANMOI'],
             [
                 'voucher_type' => 'ORDER',
@@ -151,7 +152,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        \App\Models\Voucher::updateOrCreate(
+        Voucher::updateOrCreate(
             ['code' => 'FREESHIP30K'],
             [
                 'voucher_type' => 'SHIPPING',
@@ -167,7 +168,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        \App\Models\Voucher::updateOrCreate(
+        Voucher::updateOrCreate(
             ['code' => 'SHIP50PCT'],
             [
                 'voucher_type' => 'SHIPPING',
@@ -183,7 +184,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        \App\Models\Voucher::updateOrCreate(
+        Voucher::updateOrCreate(
             ['code' => 'FLASHSALE50'],
             [
                 'voucher_type' => 'ORDER',
@@ -200,5 +201,3 @@ class DatabaseSeeder extends Seeder
         );
     }
 }
-
-

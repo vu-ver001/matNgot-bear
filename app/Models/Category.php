@@ -11,11 +11,28 @@ class Category extends Model
         'name',
         'description',
         'is_active',
+        'is_pinned',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_pinned' => 'boolean',
     ];
+
+    protected $appends = [
+        'slug',
+        'status',
+    ];
+
+    public function getSlugAttribute(): string
+    {
+        return \Illuminate\Support\Str::slug($this->name);
+    }
+
+    public function getStatusAttribute(): string
+    {
+        return $this->is_active ? 'ACTIVE' : 'INACTIVE';
+    }
 
     public function products(): HasMany
     {

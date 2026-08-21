@@ -3,29 +3,49 @@
 use App\Http\Controllers\Admin\VoucherController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Admin Routes (Phân quyền Admin)
+|--------------------------------------------------------------------------
+| Phần của bạn Khánh Vân: Quản lý Sản phẩm & Danh mục.
+| Các mục khác được tạo khung sẵn (Placeholder) để bạn trong nhóm cắm link vào.
+*/
+
 Route::prefix('admin')->name('admin.')->group(function () {
-    // Dashboard
-    // Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Category management
-    // Route::resource('categories', CategoryController::class)->except(['show']);
+    // 1. Dashboard & Thống kê
+    Route::get('/', function () {
+        return view('admin.placeholder', ['currentPage' => 'dashboard']);
+    })->name('dashboard');
 
-    // Product management
-    // Route::resource('products', ProductController::class)->except(['show']);
+    Route::get('/dashboard', function () {
+        return view('admin.placeholder', ['currentPage' => 'dashboard']);
+    });
 
     // Voucher management
     Route::patch('/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
     Route::resource('vouchers', VoucherController::class)->except(['show']);
+    // 2. PHẦN CỦA KHÁNH VÂN: Quản lý Sản phẩm (Trang riêng)
+    Route::get('/products', function () {
+        return view('admin.products.index', ['currentPage' => 'products']);
+    })->name('products.index');
 
-    // Order management
-    // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    // 3. PHẦN CỦA KHÁNH VÂN: Quản lý Danh mục (Trang riêng)
+    Route::get('/categories', function () {
+        return view('admin.categories.index', ['currentPage' => 'categories']);
+    })->name('categories.index');
 
-    // User management
-    // Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    // Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.updateStatus');
+    // 4. Các mục của bạn trong nhóm (Khung hiển thị placeholder)
+    Route::get('/page/{page}', function (string $page) {
+        return view('admin.placeholder', ['currentPage' => $page]);
+    })->name('page');
 
-    // Review management
-    // Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
-    // Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+    // Shortcut routes cho từng mục để tiện link
+    Route::get('/vouchers', fn () => view('admin.placeholder', ['currentPage' => 'vouchers']))->name('vouchers.index');
+    Route::get('/orders', fn () => view('admin.placeholder', ['currentPage' => 'orders']))->name('orders.index');
+    Route::get('/payments', fn () => view('admin.placeholder', ['currentPage' => 'payments']))->name('payments.index');
+    Route::get('/customers', fn () => view('admin.placeholder', ['currentPage' => 'customers']))->name('customers.index');
+    Route::get('/staff', fn () => view('admin.placeholder', ['currentPage' => 'staff']))->name('staff.index');
+    Route::get('/reviews', fn () => view('admin.placeholder', ['currentPage' => 'reviews']))->name('reviews.index');
+    Route::get('/support', fn () => view('admin.placeholder', ['currentPage' => 'support']))->name('support.index');
 });

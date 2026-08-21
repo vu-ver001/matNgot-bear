@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap');
 @import 'flatpickr/dist/flatpickr.min.css';
 
 @tailwind base;
@@ -28,13 +28,12 @@
 
 @layer base {
     *, ::before, ::after {
-        font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     }
 
     html, body {
-        font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         font-weight: 400;
-        letter-spacing: -0.018em;
         line-height: 1.5;
         background-color: var(--cream-bg);
         color: var(--text-body);
@@ -42,10 +41,9 @@
         -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Tiêu đề gọn gàng, sắc nét, không bị bè chữ */
+    /* Tiêu đề đậm và sắc nét */
     h1, h2, h3, h4, h5, h6 {
-        font-weight: 700;
-        letter-spacing: -0.025em;
+        font-weight: 600;
         color: var(--text-title);
     }
 
@@ -71,7 +69,7 @@
     border: 2px solid #FDE68A !important;
     border-radius: 1.5rem !important;
     box-shadow: 0 20px 25px -5px rgba(217, 119, 6, 0.18), 0 8px 10px -6px rgba(120, 53, 15, 0.12) !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Fredoka', sans-serif !important;
     padding: 0.85rem !important;
     width: 320px !important;
     box-sizing: border-box !important;
