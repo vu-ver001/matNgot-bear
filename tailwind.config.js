@@ -13,7 +13,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Fredoka', 'sans-serif'],
+                sans: ['Montserrat', 'sans-serif'],
             },
             colors: {
                 // Tone màu Nâu - Be Sữa - Mật Ong thương hiệu Mật Ngọt Bear

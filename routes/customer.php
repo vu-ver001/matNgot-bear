@@ -6,8 +6,9 @@ use App\Http\Controllers\Customer\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('customer')->name('customer.')->group(function () {
-    // 1. Cart routes
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    // 1. Cart routes (hỗ trợ cả customer.cart và customer.cart.index)
+    Route::get('/cart', [CartController::class, 'index'])->name('cart');
+    Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
     Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
@@ -17,7 +18,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 
-    // 3. Wishlist (Placeholder)
+    // 3. Wishlist
     Route::get('/wishlist', function () {
         return view('customer.placeholder', [
             'pageTitle' => 'Danh Sách Yêu Thích (Wishlist)',
@@ -27,7 +28,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         ]);
     })->name('wishlist');
 
-    // 4. Orders (Placeholder)
+    // 4. Orders
     Route::get('/orders', function () {
         return view('customer.placeholder', [
             'pageTitle' => 'Đơn Hàng Của Tôi',
@@ -43,7 +44,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     })->name('profile');
 });
 
-// Shortcut alias routes tiện lợi
+// Shortcut alias routes tiện lợi ngoài root
 Route::get('/wishlist', fn() => redirect()->route('customer.wishlist'));
-Route::get('/cart', fn() => redirect()->route('customer.cart.index'));
+Route::get('/cart', fn() => redirect()->route('customer.cart'));
 Route::get('/my-orders', fn() => redirect()->route('customer.orders'));
