@@ -6,19 +6,19 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Admin Routes (Phân quyền Admin)
 |--------------------------------------------------------------------------
-| Phần của bạn Khánh Vân: Quản lý Sản phẩm & Danh mục.
-| Các mục khác được tạo khung sẵn (Placeholder) để bạn trong nhóm cắm link vào.
+| Phần của Khánh Vân: Quản lý Sản phẩm & Danh mục.
+| Các mục khác để trống chờ bạn trong nhóm gắn route/controller vào.
 */
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
-    // 1. Dashboard & Thống kê
+    // 1. Mặc định vào thẳng Quản lý Sản phẩm (Phần của Khánh Vân)
     Route::get('/', function () {
-        return view('admin.placeholder', ['currentPage' => 'dashboard']);
+        return redirect()->route('admin.products.index');
     })->name('dashboard');
 
     Route::get('/dashboard', function () {
-        return view('admin.placeholder', ['currentPage' => 'dashboard']);
+        return redirect()->route('admin.products.index');
     });
 
     // 2. PHẦN CỦA KHÁNH VÂN: Quản lý Sản phẩm (Trang riêng)
@@ -31,12 +31,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         return view('admin.categories.index', ['currentPage' => 'categories']);
     })->name('categories.index');
 
-    // 4. Các mục của bạn trong nhóm (Khung hiển thị placeholder)
+    // 4. Các mục của bạn trong nhóm (Chờ gắn route/controller)
     Route::get('/page/{page}', function (string $page) {
         return view('admin.placeholder', ['currentPage' => $page]);
     })->name('page');
 
-    // Shortcut routes cho từng mục để tiện link
     Route::get('/vouchers', fn() => view('admin.placeholder', ['currentPage' => 'vouchers']))->name('vouchers.index');
     Route::get('/orders', fn() => view('admin.placeholder', ['currentPage' => 'orders']))->name('orders.index');
     Route::get('/payments', fn() => view('admin.placeholder', ['currentPage' => 'payments']))->name('payments.index');
