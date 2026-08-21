@@ -485,12 +485,14 @@
 
         <nav class="sidebar-nav">
             <div class="sidebar-section-label">Tổng Quan</div>
-            <a href="{{ route('admin.page', 'dashboard') }}" class="sidebar-link {{ ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard & Thống kê" onclick="handleSidebarItemClick(event, this)">
+            <!-- Mục của bạn nhóm (Chờ đường dẫn) -->
+            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard & Thống kê" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-chart-pie"></i>
                 <span class="sidebar-link-text">Dashboard & Thống kê</span>
             </a>
 
             <div class="sidebar-section-label">Sản Phẩm & Danh Mục</div>
+            <!-- Phần của Khánh Vân -->
             <a href="{{ route('admin.products.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'products' ? 'active' : '' }}" data-title="Quản lý Sản phẩm" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-box-open"></i>
                 <span class="sidebar-link-text">Quản lý Sản phẩm</span>
@@ -501,35 +503,38 @@
             </a>
 
             <div class="sidebar-section-label">Bán Hàng & Tài Chính</div>
-            <a href="{{ route('admin.page', 'vouchers') }}" class="sidebar-link {{ ($currentPage ?? '') === 'vouchers' ? 'active' : '' }}" data-title="Quản lý Voucher" onclick="handleSidebarItemClick(event, this)">
+            <!-- Các mục của bạn nhóm (Chờ đường dẫn) -->
+            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'vouchers' ? 'active' : '' }}" data-title="Quản lý Voucher" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-ticket"></i>
                 <span class="sidebar-link-text">Quản lý Voucher</span>
             </a>
-            <a href="{{ route('admin.page', 'orders') }}" class="sidebar-link {{ ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý Đơn hàng" onclick="handleSidebarItemClick(event, this)">
+            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý Đơn hàng" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="sidebar-link-text">Quản lý Đơn hàng</span>
             </a>
-            <a href="{{ route('admin.page', 'payments') }}" class="sidebar-link {{ ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Quản lý Thanh toán" onclick="handleSidebarItemClick(event, this)">
+            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Quản lý Thanh toán" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-credit-card"></i>
                 <span class="sidebar-link-text">Quản lý Thanh toán</span>
             </a>
 
             <div class="sidebar-section-label">Người Dùng</div>
-            <a href="{{ route('admin.page', 'customers') }}" class="sidebar-link {{ ($currentPage ?? '') === 'customers' ? 'active' : '' }}" data-title="Quản lý Customer" onclick="handleSidebarItemClick(event, this)">
+            <!-- Các mục của bạn nhóm (Chờ đường dẫn) -->
+            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'customers' ? 'active' : '' }}" data-title="Quản lý Customer" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-users"></i>
                 <span class="sidebar-link-text">Quản lý Customer</span>
             </a>
-            <a href="{{ route('admin.page', 'staff') }}" class="sidebar-link {{ ($currentPage ?? '') === 'staff' ? 'active' : '' }}" data-title="Quản lý Staff" onclick="handleSidebarItemClick(event, this)">
+            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'staff' ? 'active' : '' }}" data-title="Quản lý Staff" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-user-tie"></i>
                 <span class="sidebar-link-text">Quản lý Staff</span>
             </a>
 
             <div class="sidebar-section-label">Hỗ Trợ</div>
-            <a href="{{ route('admin.page', 'reviews') }}" class="sidebar-link {{ ($currentPage ?? '') === 'reviews' ? 'active' : '' }}" data-title="Quản lý Review" onclick="handleSidebarItemClick(event, this)">
+            <!-- Các mục của bạn nhóm (Chờ đường dẫn) -->
+            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'reviews' ? 'active' : '' }}" data-title="Quản lý Review" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-star-half-stroke"></i>
                 <span class="sidebar-link-text">Quản lý Review</span>
             </a>
-            <a href="{{ route('admin.page', 'support') }}" class="sidebar-link {{ ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ Khách hàng" onclick="handleSidebarItemClick(event, this)">
+            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ Khách hàng" onclick="handleSidebarItemClick(event, this)">
                 <i class="fa-solid fa-headset"></i>
                 <span class="sidebar-link-text">Hỗ trợ Khách hàng</span>
             </a>
