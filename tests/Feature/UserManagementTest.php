@@ -112,7 +112,7 @@ class UserManagementTest extends TestCase
 
         $this->delete('/admin/users/'.$customer->id)->assertRedirect('/admin/users');
 
-        $this->assertDatabaseMissing('users', ['id' => $customer->id]);
+        $this->assertSoftDeleted('users', ['id' => $customer->id]);
     }
 
     public function test_cannot_delete_user_with_orders(): void

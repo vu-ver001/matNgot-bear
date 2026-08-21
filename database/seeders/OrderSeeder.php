@@ -65,7 +65,7 @@ class OrderSeeder extends Seeder
                 });
 
                 $eligibleVouchers = $vouchers->filter(fn (Voucher $v) => $v->voucher_type === 'ORDER' && $subtotal >= $v->min_order_value);
-                $voucher = $eligibleVouchers->isEmpty() ? null : $eligibleVouchers->random();
+                $voucher = $eligibleVouchers->first(fn (Voucher $v) => ! $v->isUsedByCustomer($customer->id));
 
                 try {
                     $order = $orderService->createOrder([

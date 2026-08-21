@@ -41,16 +41,41 @@ class OrderService
                 $product->decrement('stock_quantity', $cartItem->quantity);
             }
 
+            $shippingFee = 30000;
             $discountAmount = 0;
+            $shippingDiscountAmount = 0;
+
+            // Voucher giảm giá đơn hàng (voucher_type = ORDER)
             if (! empty($data['voucher_id'])) {
                 $voucher = Voucher::find($data['voucher_id']);
-                if ($voucher && $this->isVoucherValid($voucher, $subtotal)) {
-                    $discountAmount = $this->calculateDiscount($voucher, $subtotal);
+
+                if ($voucher && $voucher->voucher_type === 'ORDER') {
+                    $result = $voucher->validateForCustomer((int) $data['customer_id'], $subtotal, $shippingFee, $cartItems);
+
+                    if (! $result['valid']) {
+                        throw new \Exception($result['message']);
+                    }
+
+                    $discountAmount = (float) $result['discount_amount'];
                 }
             }
 
-            $shippingFee = 30000;
-            $totalAmount = $subtotal - $discountAmount + $shippingFee;
+            // Voucher freeship (voucher_type = SHIPPING)
+            if (! empty($data['shipping_voucher_id'])) {
+                $shippingVoucher = Voucher::find($data['shipping_voucher_id']);
+
+                if ($shippingVoucher && $shippingVoucher->voucher_type === 'SHIPPING') {
+                    $result = $shippingVoucher->validateForCustomer((int) $data['customer_id'], $subtotal, $shippingFee, $cartItems);
+
+                    if (! $result['valid']) {
+                        throw new \Exception($result['message']);
+                    }
+
+                    $shippingDiscountAmount = min((float) $result['discount_amount'], $shippingFee);
+                }
+            }
+
+            $totalAmount = max(0, $subtotal - $discountAmount) + $shippingFee - $shippingDiscountAmount;
 
             $order = Order::create([
                 'order_code' => $this->generateOrderCode(),
@@ -60,8 +85,10 @@ class OrderService
                 'recipient_address' => $data['recipient_address'],
                 'note' => $data['note'] ?? null,
                 'voucher_id' => $data['voucher_id'] ?? null,
+                'shipping_voucher_id' => $data['shipping_voucher_id'] ?? null,
                 'subtotal' => $subtotal,
                 'discount_amount' => $discountAmount,
+                'shipping_discount_amount' => $shippingDiscountAmount,
                 'shipping_fee' => $shippingFee,
                 'total_amount' => $totalAmount,
                 'order_status' => 'PENDING',
@@ -82,11 +109,15 @@ class OrderService
                 'changed_at' => now(),
             ]);
 
-            if (! empty($data['voucher_id']) && $discountAmount > 0) {
+            if ($discountAmount > 0 && ! empty($data['voucher_id'])) {
                 Voucher::where('id', $data['voucher_id'])->increment('used_count');
             }
 
-            return $order->load(['details.product', 'voucher']);
+            if ($shippingDiscountAmount > 0 && ! empty($data['shipping_voucher_id'])) {
+                Voucher::where('id', $data['shipping_voucher_id'])->increment('used_count');
+            }
+
+            return $order->load(['details.product', 'voucher', 'shippingVoucher']);
         });
     }
 
@@ -177,7 +208,7 @@ class OrderService
 
             if ($newStatus === 'COMPLETED') {
                 foreach ($order->details as $detail) {
-                    $detail->product->increment('sold_count', $detail->quantity);
+                    $detail->product()->withTrashed()->first()?->increment('sold_count', $detail->quantity);
                 }
             }
 
@@ -188,7 +219,7 @@ class OrderService
     public function restoreStock(Order $order): void
     {
         foreach ($order->details as $detail) {
-            $detail->product->increment('stock_quantity', $detail->quantity);
+            $detail->product()->withTrashed()->first()?->increment('stock_quantity', $detail->quantity);
         }
     }
 
@@ -272,41 +303,6 @@ class OrderService
         $payment->order->update(['payment_status' => 'REFUNDED']);
 
         return $payment->fresh();
-    }
-
-    private function isVoucherValid(Voucher $voucher, float $subtotal): bool
-    {
-        if ($voucher->status !== 'ACTIVE') {
-            return false;
-        }
-
-        if ($voucher->usage_limit && $voucher->used_count >= $voucher->usage_limit) {
-            return false;
-        }
-
-        $now = now();
-        if ($now->lt($voucher->start_date) || $now->gt($voucher->end_date)) {
-            return false;
-        }
-
-        if ($subtotal < $voucher->min_order_value) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private function calculateDiscount(Voucher $voucher, float $subtotal): float
-    {
-        $discount = $voucher->discount_type === 'PERCENTAGE'
-            ? $subtotal * ($voucher->discount_value / 100)
-            : $voucher->discount_value;
-
-        if ($voucher->max_discount_value && $discount > $voucher->max_discount_value) {
-            $discount = $voucher->max_discount_value;
-        }
-
-        return min($discount, $subtotal);
     }
 
     private function generateOrderCode(): string

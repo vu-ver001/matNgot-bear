@@ -947,7 +947,7 @@
                 </a>
 
                 <!-- My Orders (Đơn của tôi) -->
-                <a href="{{ route('customer.orders') }}" class="utility-icon-btn" title="Đơn hàng của tôi">
+                <a href="{{ route('customer.orders.index') }}" class="utility-icon-btn" title="Đơn hàng của tôi">
                     <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
                 </a>
 
@@ -1032,7 +1032,7 @@
                                 <a href="{{ route('profile.edit') }}" class="dropdown-item">
                                     <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
                                 </a>
-                                <a href="{{ route('customer.orders') }}" class="dropdown-item">
+                                <a href="{{ route('customer.orders.index') }}" class="dropdown-item">
                                     <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 6px;"></i> Đơn Hàng Của Tôi</span>
                                 </a>
                                 <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
