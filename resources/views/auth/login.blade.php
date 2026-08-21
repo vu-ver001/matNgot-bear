@@ -44,7 +44,7 @@
 
         <div class="auth-form-options flex justify-between gap-4">
             <label class="auth-checkbox flex cursor-pointer items-center gap-2" for="remember_me">
-                <input id="remember_me" type="checkbox" name="remember">
+                <input id="remember_me" type="checkbox" name="remember" value="1" @checked(old('remember'))>
                 <span>Ghi nhớ đăng nhập</span>
             </label>
 
@@ -63,11 +63,10 @@
         <span></span><small>hoặc</small><span></span>
     </div>
 
-    {{-- TODO: Connect Google OAuth when the backend is available. --}}
-    <button type="button" class="auth-google flex w-full items-center justify-center gap-3">
+    <a href="{{ route('auth.google.redirect') }}" class="auth-google flex w-full items-center justify-center gap-3">
         <span class="auth-google__mark" aria-hidden="true">G</span>
         <span>Tiếp tục với Google</span>
-    </button>
+    </a>
 
     <p class="auth-footer">
         Chưa có tài khoản?

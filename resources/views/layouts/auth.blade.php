@@ -17,6 +17,16 @@
             class="auth-page min-h-screen"
             style="--auth-hero-image: url('{{ asset('images/auth/bear-hero.png') }}'); --auth-panel-image: url('{{ asset('images/auth/auth-panel-background.png') }}')"
         >
+            <a
+                href="#"
+                class="auth-home-link"
+                data-placeholder-link
+                title="Liên kết trang chủ sẽ được cập nhật sau"
+            >
+                <span>Mật Ngọt Bear</span>
+                <span aria-hidden="true">⌂</span>
+            </a>
+
             @include('auth.partials.hero')
 
             <main class="auth-panel flex min-h-screen justify-center">

@@ -35,9 +35,118 @@ const setupRegisterFlow = () => {
     const steps = [...form.querySelectorAll('[data-register-step]')];
     const progressItems = [...document.querySelectorAll('[data-register-progress-item]')];
     const emailInput = form.querySelector('#register_email');
+    const emailMessage = form.querySelector('[data-register-email-message]');
     const otpInputs = [...form.querySelectorAll('[data-otp-input]')];
     const otpMessage = form.querySelector('[data-otp-message]');
+    const sendCodeButton = form.querySelector('[data-register-next="otp"]');
+    const verifyCodeButton = form.querySelector('[data-register-next="details"]');
+    const resendCodeButton = form.querySelector('[data-register-resend]');
+    const countdown = form.querySelector('[data-register-countdown]');
+    const countdownValue = form.querySelector('[data-register-countdown-value]');
+    let countdownTimer = null;
+    let countdownRemaining = 0;
     let currentStep = stepNames.includes(form.dataset.initialStep) ? form.dataset.initialStep : 'email';
+
+    const setMessage = (element, message = '', isSuccess = false) => {
+        if (!element) {
+            return;
+        }
+
+        element.textContent = message;
+        element.hidden = message === '';
+        element.classList.toggle('is-success', isSuccess);
+    };
+
+    const requestJson = async (url, payload) => {
+        const response = await fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+            },
+            body: JSON.stringify(payload),
+        });
+        const body = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            const validationMessage = Object.values(body.errors ?? {}).flat()[0];
+            throw new Error(validationMessage ?? body.message ?? 'Không thể xử lý yêu cầu. Vui lòng thử lại.');
+        }
+
+        return body;
+    };
+
+    const withPendingState = async (button, callback) => {
+        if (!button) {
+            return;
+        }
+
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+
+        try {
+            await callback();
+        } finally {
+            if (button !== resendCodeButton || countdownRemaining <= 0) {
+                button.disabled = false;
+            }
+            button.removeAttribute('aria-busy');
+        }
+    };
+
+    const renderCountdown = () => {
+        if (!countdownValue) {
+            return;
+        }
+
+        const minutes = Math.floor(countdownRemaining / 60);
+        const seconds = countdownRemaining % 60;
+
+        countdownValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+
+    const stopCountdown = (hide = false) => {
+        if (countdownTimer !== null) {
+            window.clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+
+        countdownRemaining = 0;
+        resendCodeButton?.removeAttribute('disabled');
+
+        if (countdown) {
+            countdown.hidden = hide;
+        }
+    };
+
+    const startCountdown = (seconds = 60) => {
+        stopCountdown();
+        countdownRemaining = Math.max(0, Number.parseInt(seconds, 10) || 60);
+
+        if (countdown) {
+            countdown.hidden = false;
+            countdown.classList.remove('is-expired');
+        }
+
+        if (resendCodeButton) {
+            resendCodeButton.disabled = true;
+        }
+
+        renderCountdown();
+
+        countdownTimer = window.setInterval(() => {
+            countdownRemaining -= 1;
+            renderCountdown();
+
+            if (countdownRemaining <= 0) {
+                stopCountdown();
+                countdown?.classList.add('is-expired');
+                setMessage(otpMessage, 'Mã xác nhận đã hết hạn. Bạn hãy gửi lại mã mới.');
+            }
+        }, 1000);
+    };
 
     const updateEmailLabels = () => {
         form.querySelectorAll('[data-register-email-value]').forEach((label) => {
@@ -78,56 +187,106 @@ const setupRegisterFlow = () => {
             if (stepName === 'otp') {
                 otpInputs[0]?.focus();
             } else if (stepName === 'details') {
-                form.querySelector('#name')?.focus();
+                form.querySelector('#full_name')?.focus();
             } else {
                 emailInput?.focus();
             }
         }
     };
 
-    const openOtpStep = () => {
+    const openOtpStep = async () => {
         if (!emailInput?.reportValidity()) {
             return;
         }
 
-        showStep('otp');
+        setMessage(emailMessage);
+
+        await withPendingState(sendCodeButton, async () => {
+            try {
+                const result = await requestJson(form.dataset.sendCodeUrl, {
+                    email: emailInput.value,
+                });
+
+                showStep('otp');
+                startCountdown(result.expires_in);
+                setMessage(otpMessage, result.message, true);
+            } catch (error) {
+                setMessage(emailMessage, error.message);
+            }
+        });
     };
 
-    const openDetailsStep = () => {
+    const openDetailsStep = async () => {
         const otp = otpInputs.map((input) => input.value).join('');
 
         if (!/^\d{6}$/.test(otp)) {
-            otpMessage.textContent = 'Vui lòng nhập đủ 6 chữ số để xem bước tiếp theo.';
+            setMessage(otpMessage, 'Vui lòng nhập đủ 6 chữ số để xem bước tiếp theo.');
             otpInputs.find((input) => !input.value)?.focus();
             return;
         }
 
-        otpMessage.textContent = '';
-        showStep('details');
+        setMessage(otpMessage);
+
+        await withPendingState(verifyCodeButton, async () => {
+            try {
+                await requestJson(form.dataset.verifyCodeUrl, {
+                    email: emailInput.value,
+                    code: otp,
+                });
+
+                stopCountdown(true);
+                showStep('details');
+            } catch (error) {
+                setMessage(otpMessage, error.message);
+            }
+        });
     };
 
     form.querySelectorAll('[data-register-next]').forEach((button) => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', async () => {
             if (button.dataset.registerNext === 'otp') {
-                openOtpStep();
+                await openOtpStep();
             } else {
-                openDetailsStep();
+                await openDetailsStep();
             }
         });
     });
 
     form.querySelectorAll('[data-register-back]').forEach((button) => {
-        button.addEventListener('click', () => showStep(button.dataset.registerBack));
+        button.addEventListener('click', () => {
+            if (button.dataset.registerBack === 'email') {
+                stopCountdown(true);
+            }
+
+            showStep(button.dataset.registerBack);
+        });
     });
 
-    form.querySelector('[data-register-resend]')?.addEventListener('click', () => {
-        otpMessage.textContent = 'Chức năng gửi lại mã sẽ hoạt động sau khi kết nối backend.';
+    resendCodeButton?.addEventListener('click', async () => {
+        setMessage(otpMessage);
+
+        await withPendingState(resendCodeButton, async () => {
+            try {
+                const result = await requestJson(form.dataset.sendCodeUrl, {
+                    email: emailInput.value,
+                });
+
+                otpInputs.forEach((input) => {
+                    input.value = '';
+                });
+                startCountdown(result.expires_in);
+                setMessage(otpMessage, result.message, true);
+                otpInputs[0]?.focus();
+            } catch (error) {
+                setMessage(otpMessage, error.message);
+            }
+        });
     });
 
     otpInputs.forEach((input, index) => {
         input.addEventListener('input', () => {
             input.value = input.value.replace(/\D/g, '').slice(-1);
-            otpMessage.textContent = '';
+            setMessage(otpMessage);
 
             if (input.value) {
                 otpInputs[index + 1]?.focus();
@@ -163,7 +322,7 @@ const setupRegisterFlow = () => {
         }
 
         event.preventDefault();
-        currentStep === 'email' ? openOtpStep() : openDetailsStep();
+        currentStep === 'email' ? void openOtpStep() : void openDetailsStep();
     });
 
     // Do not focus on first paint: focusing the form would move a narrow

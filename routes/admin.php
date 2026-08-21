@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->group(function () {
+    Route::view('/', 'dashboard')->name('dashboard');
     // Dashboard
     // Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 

@@ -4,7 +4,7 @@
 @section('card-class', 'auth-card--register')
 
 @php
-    $initialRegisterStep = $errors->has('name') || $errors->has('password') || $errors->has('password_confirmation')
+    $initialRegisterStep = $errors->has('full_name') || $errors->has('phone') || $errors->has('password') || $errors->has('password_confirmation')
         ? 'details'
         : 'email';
 @endphp
@@ -27,6 +27,8 @@
         class="auth-form auth-form--register"
         data-register-flow
         data-initial-step="{{ $initialRegisterStep }}"
+        data-send-code-url="{{ route('register.email.send') }}"
+        data-verify-code-url="{{ route('register.email.verify') }}"
     >
         @csrf
 
@@ -53,9 +55,12 @@
                         autocomplete="username"
                     >
                 </div>
-                @error('email')
-                    <p class="auth-error" role="alert">{{ $message }}</p>
-                @enderror
+                <p
+                    class="auth-error"
+                    role="alert"
+                    data-register-email-message
+                    @if (! $errors->has('email')) hidden @endif
+                >{{ $errors->first('email') }}</p>
             </div>
 
             <button type="button" class="auth-submit flex w-full items-center justify-center gap-2" data-register-next="otp">
@@ -90,6 +95,10 @@
                 @endfor
             </div>
 
+            <p class="register-countdown" data-register-countdown aria-live="polite" hidden>
+                Mã có hiệu lực trong <strong data-register-countdown-value>01:00</strong>
+            </p>
+
             <p class="register-otp__message" data-otp-message aria-live="polite"></p>
 
             <button type="button" class="auth-submit flex w-full items-center justify-center gap-2" data-register-next="details">
@@ -112,23 +121,25 @@
             </div>
 
             <div class="auth-field">
-                <label for="name">Họ và tên</label>
-                <div @class(['auth-input-wrap', 'has-error' => $errors->has('name')])>
+                <label for="full_name">Họ và tên</label>
+                <div @class(['auth-input-wrap', 'has-error' => $errors->has('full_name')])>
                     <x-auth-icon name="user" class="auth-input-icon" />
-                    <input id="name" type="text" name="name" value="{{ old('name') }}" placeholder="Nhập họ và tên của bạn" required autocomplete="name">
+                    <input id="full_name" type="text" name="full_name" value="{{ old('full_name') }}" placeholder="Nhập họ và tên của bạn" required autocomplete="name">
                 </div>
-                @error('name')
+                @error('full_name')
                     <p class="auth-error" role="alert">{{ $message }}</p>
                 @enderror
             </div>
 
             <div class="auth-field">
                 <label for="phone">Số điện thoại <span>(tùy chọn)</span></label>
-                <div class="auth-input-wrap">
+                <div @class(['auth-input-wrap', 'has-error' => $errors->has('phone')])>
                     <x-auth-icon name="phone" class="auth-input-icon" />
-                    {{-- UI only: the current registration controller does not store phone yet. --}}
-                    <input id="phone" type="tel" placeholder="Nhập số điện thoại của bạn" autocomplete="tel" data-backend-field-pending>
+                    <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" placeholder="Nhập số điện thoại của bạn" autocomplete="tel">
                 </div>
+                @error('phone')
+                    <p class="auth-error" role="alert">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="auth-field">
@@ -181,11 +192,10 @@
         <span></span><small>hoặc</small><span></span>
     </div>
 
-    {{-- TODO: Connect Google OAuth when the backend is available. --}}
-    <button type="button" class="auth-google flex w-full items-center justify-center gap-3">
+    <a href="{{ route('auth.google.redirect') }}" class="auth-google flex w-full items-center justify-center gap-3">
         <span class="auth-google__mark" aria-hidden="true">G</span>
         <span>Đăng ký với Google</span>
-    </button>
+    </a>
 
     <p class="auth-footer">
         Đã có tài khoản?

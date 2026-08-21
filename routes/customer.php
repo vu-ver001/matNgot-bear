@@ -2,7 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('customer')->name('customer.')->middleware(['auth'])->group(function () {
+Route::prefix('customer')->name('customer.')->middleware(['auth', 'role:CUSTOMER'])->group(function () {
+    Route::view('/', 'dashboard')->name('dashboard');
     // Product browsing (Customer)
     // Route::get('/', [ProductController::class, 'index'])->name('products.index');
     // Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');

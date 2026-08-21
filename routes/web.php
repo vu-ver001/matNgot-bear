@@ -1,20 +1,17 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Support\RoleRedirect;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
 
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    return match ($user->role) {
-        'ADMIN' => redirect()->route('admin.dashboard'),
-        'STAFF' => redirect()->route('staff.dashboard'),
-        default => redirect()->route('customer.products.index'),
-    };
-})->middleware(['auth', 'verified']);
+Route::get('/dashboard', function (Request $request) {
+    return redirect()->route(RoleRedirect::routeName($request->user()));
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

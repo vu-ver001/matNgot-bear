@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->group(function () {
+    Route::view('/', 'dashboard')->name('dashboard');
     // Dashboard
     // Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 

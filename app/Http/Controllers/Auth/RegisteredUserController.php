@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterCustomerRequest;
+use App\Models\EmailVerificationCode;
 use App\Models\User;
+use App\Support\RoleRedirect;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -28,24 +30,51 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(RegisterCustomerRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        $data = $request->validated();
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        if ($request->session()->get('registration.verified_email') !== $data['email']) {
+            throw ValidationException::withMessages([
+                'email' => 'Vui lòng xác minh email trước khi đăng ký.',
+            ]);
+        }
+
+        $user = DB::transaction(function () use ($data): User {
+            $verification = EmailVerificationCode::query()
+                ->where('email', $data['email'])
+                ->whereNotNull('verified_at')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $verification) {
+                throw ValidationException::withMessages([
+                    'email' => 'Vui lòng xác minh email trước khi đăng ký.',
+                ]);
+            }
+
+            $user = User::query()->create([
+                'full_name' => $data['full_name'],
+                'email' => $data['email'],
+                'email_verified_at' => now(),
+                'phone' => $data['phone'] ?? null,
+                'password' => Hash::make($data['password']),
+                'role' => User::ROLE_CUSTOMER,
+                'status' => User::STATUS_ACTIVE,
+            ]);
+
+            $verification->delete();
+
+            return $user;
+        });
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        $request->session()->regenerate();
+        $request->session()->forget('registration.verified_email');
+
+        return redirect()->route(RoleRedirect::routeName($user));
     }
 }

@@ -264,12 +264,39 @@
     --tw-ring-shadow: 0 0 #0000;
 }
 
+.register-countdown {
+    margin-top: -4px;
+    color: var(--bear-muted);
+    font-size: clamp(10px, calc(1.02vmin + 3px), 17px);
+    text-align: center;
+}
+
+.register-countdown strong {
+    color: var(--bear-caramel);
+    font-variant-numeric: tabular-nums;
+}
+
+.register-countdown.is-expired,
+.register-countdown.is-expired strong {
+    color: var(--bear-error);
+}
+
+.register-resend:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    text-decoration: none;
+}
+
 .register-otp__message {
     min-height: 16px;
     margin-top: -7px;
     color: var(--bear-error);
     font-size: 13px;
     text-align: center;
+}
+
+.register-otp__message.is-success {
+    color: #2e6b32;
 }
 
 .register-email-summary {
@@ -497,7 +524,7 @@
 .auth-error {
     margin-top: 6px;
     color: var(--bear-error);
-    font-size: 15px;
+    font-size: 12px;
     line-height: 1.4;
 }
 
@@ -564,6 +591,32 @@
     font-size: clamp(11px, calc(1.25vmin + 3px), 19px);
     font-weight: 600;
     transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.auth-home-link {
+    position: fixed;
+    z-index: 20;
+    top: clamp(12px, 1.6vmin, 24px);
+    right: clamp(12px, 1.6vmin, 24px);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid rgba(169, 83, 28, 0.2);
+    border-radius: 999px;
+    color: var(--bear-dark);
+    background: rgba(255, 255, 255, 0.82);
+    font-size: clamp(11px, calc(1vmin + 3px), 16px);
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(91, 43, 13, 0.08);
+    backdrop-filter: blur(8px);
+}
+
+.auth-home-link:hover {
+    color: var(--bear-caramel);
+    border-color: rgba(169, 83, 28, 0.4);
+    transform: translateY(-1px);
 }
 
 .auth-submit {
@@ -658,7 +711,7 @@
 }
 
 .auth-benefits {
-    width: 40%;
+    width: min(58%, 300px);
 }
 
 .auth-hero__eyebrow {
@@ -799,5 +852,5 @@
 }
 
 .auth-page small {
-    font-size: 80%;
+    font-size: 100%;
 }
