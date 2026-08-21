@@ -934,27 +934,27 @@
                     </div>
                 </a>
 
-                <!-- Wishlist (Yêu thích) -->
-                <a href="{{ route('customer.wishlist') }}" class="utility-icon-btn" title="Danh sách yêu thích">
+                <!-- Wishlist (Yêu thích - Chờ đường dẫn của bạn nhóm) -->
+                <a href="#" class="utility-icon-btn" title="Danh sách yêu thích">
                     <i class="fa-regular fa-heart" style="font-size: 16px; color: #E57373;"></i>
                     <span class="badge-count" id="wishlist-count">0</span>
                 </a>
 
-                <!-- Cart (Giỏ hàng - Chỉ để icon) -->
-                <a href="{{ route('customer.cart') }}" class="utility-icon-btn" title="Giỏ hàng">
+                <!-- Cart (Giỏ hàng - Chờ đường dẫn của bạn nhóm) -->
+                <a href="#" class="utility-icon-btn" title="Giỏ hàng">
                     <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
                     <span class="badge-count" id="cart-count">0</span>
                 </a>
 
-                <!-- My Orders (Đơn của tôi) -->
-                <a href="{{ route('customer.orders') }}" class="utility-icon-btn" title="Đơn hàng của tôi">
+                <!-- My Orders (Đơn của tôi - Chờ đường dẫn của bạn nhóm) -->
+                <a href="#" class="utility-icon-btn" title="Đơn hàng của tôi">
                     <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
                 </a>
 
-                <!-- Nút Đăng nhập / Đăng xuất & Tài khoản cạnh icon "Đơn của tôi" -->
+                <!-- Nút Đăng nhập / Đăng xuất & Tài khoản (Chờ đường dẫn của bạn nhóm) -->
                 <div style="position: relative;">
                     @guest
-                        <a href="{{ route('login') }}" class="btn-auth-pill" title="Đăng nhập tài khoản">
+                        <a href="#" class="btn-auth-pill" title="Đăng nhập">
                             <i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP
                         </a>
                     @endguest
@@ -973,7 +973,7 @@
                                         <div style="font-size: 10.5px; color: var(--text-light);">Quản trị viên</div>
                                     </div>
                                 </div>
-                                <a href="{{ route('profile.edit') }}" class="dropdown-item">
+                                <a href="#" class="dropdown-item">
                                     <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
                                 </a>
                                 <a href="{{ route('admin.dashboard') }}" class="dropdown-item">
@@ -1001,11 +1001,11 @@
                                         <div style="font-size: 10.5px; color: var(--text-light);">Nhân viên</div>
                                     </div>
                                 </div>
-                                <a href="{{ route('profile.edit') }}" class="dropdown-item">
+                                <a href="#" class="dropdown-item">
                                     <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
                                 </a>
                                 <a href="{{ route('staff.dashboard') }}" class="dropdown-item">
-                                    <span><i class="fa-solid fa-boxes-packing" style="color: #8D6E63; margin-right: 6px;"></i> Xử Lý Đơn Hàng</span>
+                                    <span><i class="fa-solid fa-boxes-packing" style="color: #8D6E63; margin-right: 6px;"></i> Xử Lý</span>
                                     <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
                                 </a>
                                 <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
@@ -1029,10 +1029,10 @@
                                         <div style="font-size: 10.5px; color: var(--text-light);">Khách hàng thân thiết</div>
                                     </div>
                                 </div>
-                                <a href="{{ route('profile.edit') }}" class="dropdown-item">
+                                <a href="#" class="dropdown-item">
                                     <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
                                 </a>
-                                <a href="{{ route('customer.orders') }}" class="dropdown-item">
+                                <a href="#" class="dropdown-item">
                                     <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 6px;"></i> Đơn Hàng Của Tôi</span>
                                 </a>
                                 <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
@@ -1320,14 +1320,14 @@
                 </ul>
             </div>
 
-            <!-- Col 3: Customer Service -->
+            <!-- Col 3: Customer Service (Chờ đường dẫn của bạn nhóm) -->
             <div class="footer-col">
                 <h4>CHÍNH SÁCH BÁN HÀNG</h4>
                 <ul class="footer-links">
-                    <li><a href="javascript:void(0)" onclick="Swal.fire({title:'Chính sách đổi trả', text:'Đổi trả miễn phí trong 7 ngày nếu lỗi sản xuất hoặc không đúng mẫu.', icon:'info', confirmButtonColor:'#5D4037'})"><i class="fa-solid fa-angle-right"></i> Đổi Trả Trong 7 Ngày</a></li>
-                    <li><a href="javascript:void(0)" onclick="Swal.fire({title:'Phí giao hàng', text:'Đồng giá ship 30.000đ toàn quốc. Miễn phí ship đơn từ 500k.', icon:'info', confirmButtonColor:'#5D4037'})"><i class="fa-solid fa-angle-right"></i> Giao Hàng Toàn Quốc 30k</a></li>
-                    <li><a href="javascript:void(0)" onclick="Swal.fire({title:'Bảo hành gấu bông', text:'Bảo hành đường chỉ may và bông nhồi trọn đời tại cửa hàng.', icon:'info', confirmButtonColor:'#5D4037'})"><i class="fa-solid fa-angle-right"></i> Bảo Hành Đường May Trọn Đời</a></li>
-                    <li><a href="javascript:void(0)" onclick="Swal.fire({title:'Dịch vụ gói quà', text:'Miễn phí gói quà tặng kèm nơ và thiệp viết tay xinh xắn.', icon:'info', confirmButtonColor:'#5D4037'})"><i class="fa-solid fa-angle-right"></i> Gói Quà & Tặng Thiệp Xinh</a></li>
+                    <li><a href="#"><i class="fa-solid fa-angle-right"></i> Đổi Trả Trong 7 Ngày</a></li>
+                    <li><a href="#"><i class="fa-solid fa-angle-right"></i> Giao Hàng Toàn Quốc 30k</a></li>
+                    <li><a href="#"><i class="fa-solid fa-angle-right"></i> Bảo Hành Đường May Trọn Đời</a></li>
+                    <li><a href="#"><i class="fa-solid fa-angle-right"></i> Gói Quà & Tặng Thiệp Xinh</a></li>
                 </ul>
             </div>
 
