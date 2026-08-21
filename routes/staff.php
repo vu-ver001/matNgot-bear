@@ -6,23 +6,13 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Staff Routes (Phân quyền Nhân viên)
 |--------------------------------------------------------------------------
-| Khung nghiệp vụ cho Staff: Dashboard, Đơn hàng, Trạng thái, Thanh toán, Hỗ trợ.
-| Khi bạn nhóm bàn giao, thay các closure bằng Controller tương ứng.
+| Các mục nghiệp vụ của Staff có route đầy đủ và trang trống để bạn nhóm tự code sau.
 */
 
 Route::prefix('staff')->name('staff.')->group(function () {
     
-    // Trang chủ Staff (mặc định vào Dashboard vận hành)
-    Route::get('/', function () {
-        return view('staff.placeholder', ['currentPage' => 'dashboard']);
-    })->name('dashboard');
-
-    // Route động cho các trang mục
-    Route::get('/page/{page}', function (string $page) {
-        return view('staff.placeholder', ['currentPage' => $page]);
-    })->name('page');
-
-    // Các routes tường minh cho từng mục
+    // Trang chủ Staff & các mục nghiệp vụ (Trang trống chờ bạn nhóm)
+    Route::get('/', fn() => view('staff.placeholder', ['currentPage' => 'dashboard']))->name('dashboard');
     Route::get('/orders', fn() => view('staff.placeholder', ['currentPage' => 'orders']))->name('orders.index');
     Route::get('/order-status', fn() => view('staff.placeholder', ['currentPage' => 'order-status']))->name('order-status.index');
     Route::get('/payments', fn() => view('staff.placeholder', ['currentPage' => 'payments']))->name('payments.index');

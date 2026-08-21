@@ -482,27 +482,27 @@
 
         <nav class="sidebar-nav">
             <div class="sidebar-section-label">Vận Hành & Đơn Hàng</div>
-            <!-- Các mục của bạn nhóm (Chờ đường dẫn) -->
-            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard vận hành" onclick="handleStaffSidebarItemClick(event, this)">
+            <!-- Các mục của bạn nhóm (Trang trống chờ code) -->
+            <a href="{{ route('staff.dashboard') }}" class="sidebar-link {{ ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard vận hành" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-chart-line"></i>
                 <span class="sidebar-link-text">Dashboard vận hành</span>
             </a>
-            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý đơn hàng" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý đơn hàng" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="sidebar-link-text">Quản lý đơn hàng</span>
             </a>
-            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'order-status' ? 'active' : '' }}" data-title="Xử lý trạng thái đơn" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.order-status.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'order-status' ? 'active' : '' }}" data-title="Xử lý trạng thái đơn" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-truck-ramp-box"></i>
                 <span class="sidebar-link-text">Xử lý trạng thái đơn</span>
             </a>
 
             <div class="sidebar-section-label">Thanh Toán & Hỗ Trợ</div>
-            <!-- Các mục của bạn nhóm (Chờ đường dẫn) -->
-            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Xử lý thanh toán" onclick="handleStaffSidebarItemClick(event, this)">
+            <!-- Các mục của bạn nhóm (Trang trống chờ code) -->
+            <a href="{{ route('staff.payments.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Xử lý thanh toán" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-receipt"></i>
                 <span class="sidebar-link-text">Xử lý thanh toán</span>
             </a>
-            <a href="#" class="sidebar-link {{ ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ khách hàng" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.support.index') }}" class="sidebar-link {{ ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ khách hàng" onclick="handleStaffSidebarItemClick(event, this)">
                 <i class="fa-solid fa-comments"></i>
                 <span class="sidebar-link-text">Hỗ trợ khách hàng</span>
             </a>
