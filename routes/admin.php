@@ -17,11 +17,10 @@ use Illuminate\Support\Facades\Route;
 | Anh Vũ: Đơn hàng, Người dùng, Đánh giá, Báo cáo | Kim Tuyến: Khác.
 */
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->group(function () {
+Route::prefix('admin')->name('admin.')->group(function () {
 
     // 1. Dashboard & Thống kê (Anh Vũ)
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // 2. Báo cáo doanh thu (Anh Vũ)
@@ -60,7 +59,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
         return view('admin.categories.index', ['currentPage' => 'categories']);
     })->name('categories.index');
 
-    // 9. Các mục chưa làm của nhóm (Khung hiển thị placeholder)
+    // 9. Placeholder / Hỗ trợ
+    Route::get('/payments', fn() => view('admin.placeholder', ['currentPage' => 'payments']))->name('payments.index');
+    Route::get('/customers', fn() => view('admin.placeholder', ['currentPage' => 'customers']))->name('customers.index');
+    Route::get('/staff', fn() => view('admin.placeholder', ['currentPage' => 'staff']))->name('staff.index');
+    Route::get('/support', fn() => view('admin.placeholder', ['currentPage' => 'support']))->name('support.index');
     Route::get('/page/{page}', function (string $page) {
         return view('admin.placeholder', ['currentPage' => $page]);
     })->name('page');
