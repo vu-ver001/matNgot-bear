@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\VoucherController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->group(function () {
+Route::prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     // Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -13,7 +14,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
     // Route::resource('products', ProductController::class)->except(['show']);
 
     // Voucher management
-    // Route::resource('vouchers', VoucherController::class)->except(['show']);
+    Route::patch('/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
+    Route::resource('vouchers', VoucherController::class)->except(['show']);
 
     // Order management
     // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

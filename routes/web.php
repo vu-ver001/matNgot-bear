@@ -4,17 +4,12 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('customer.cart.index');
 });
 
 Route::get('/dashboard', function () {
-    $user = auth()->user();
-    return match ($user->role) {
-        'ADMIN' => redirect()->route('admin.dashboard'),
-        'STAFF' => redirect()->route('staff.dashboard'),
-        default => redirect()->route('customer.products.index'),
-    };
-})->middleware(['auth', 'verified']);
+    return redirect()->route('customer.cart.index');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

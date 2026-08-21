@@ -21,4 +21,9 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function vouchers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Voucher::class, 'voucher_categories');
+    }
 }
