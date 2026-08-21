@@ -366,4 +366,17 @@ span.flatpickr-weekday {
     padding: 0 8px !important;
 }
 
+[x-cloak] {
+    display: none !important;
+}
 
+@layer components {
+    .product-card {
+        @apply bg-white rounded-2xl border border-amber-100 overflow-hidden transition-all duration-200;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(139, 90, 43, 0.08);
+    }
+}

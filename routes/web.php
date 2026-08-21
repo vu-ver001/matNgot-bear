@@ -22,6 +22,7 @@ Route::get('/products/{id}', [CustomerProductController::class, 'show'])->name('
 // ==========================================
 Route::get('/dashboard', function () {
     $user = auth()->user();
+
     return match ($user->role) {
         'ADMIN' => redirect()->route('admin.dashboard'),
         'STAFF' => redirect()->route('staff.dashboard'),
@@ -40,9 +41,9 @@ Route::get('/switch-role/{role}', function (string $role) {
 
     $email = match ($role) {
         'admin'    => 'admin@matngotbear.com',
-        'staff'    => 'staff@matngotbear.com',
-        'customer' => 'customer@matngotbear.com',
-        default    => 'customer@matngotbear.com',
+        'staff'    => 'staff1@matngotbear.com',
+        'customer' => 'nguyenvana@example.com',
+        default    => 'nguyenvana@example.com',
     };
 
     $user = \App\Models\User::where('email', $email)->first();

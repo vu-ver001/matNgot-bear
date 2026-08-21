@@ -5,10 +5,13 @@ namespace Database\Seeders;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
 {
+    use WithoutModelEvents;
+
     /**
      * Tạo sản phẩm mẫu gấu bông thực tế, ảnh đẹp sang trọng cho 5 danh mục.
      */

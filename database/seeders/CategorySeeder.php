@@ -3,10 +3,13 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
 {
+    use WithoutModelEvents;
+
     /**
      * Tạo dữ liệu danh mục chuẩn theo yêu cầu:
      * TEDDY CLASSIC, BUTTER BEAR, TEDDY MR. BEAN, TEDDY COUPLE, GỐI BÔNG TEDDY
