@@ -1,5 +1,5 @@
 import Alpine from 'alpinejs';
-import './auth';
+import './auth/index.js';
 
 window.Alpine = Alpine;
 

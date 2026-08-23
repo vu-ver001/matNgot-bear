@@ -1,4 +1,4 @@
-@import './auth.css';
+@import './auth/index.css';
 
 @tailwind base;
 @tailwind components;

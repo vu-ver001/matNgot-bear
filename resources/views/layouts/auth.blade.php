@@ -27,7 +27,7 @@
                 <span aria-hidden="true">⌂</span>
             </a>
 
-            @include('auth.partials.hero')
+            @include('auth.sharedKT.hero')
 
             <main class="auth-panel flex min-h-screen justify-center">
                 <section class="auth-card @yield('card-class')">

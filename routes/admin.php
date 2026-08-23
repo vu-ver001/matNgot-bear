@@ -4,27 +4,27 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::view('/', 'dashboard')->name('dashboard');
-    // Dashboard
+    // Trang tổng quan của quản trị viên
     // Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Category management
+    // Quản lý danh mục
     // Route::resource('categories', CategoryController::class)->except(['show']);
 
-    // Product management
+    // Quản lý sản phẩm
     // Route::resource('products', ProductController::class)->except(['show']);
 
-    // Voucher management
+    // Quản lý mã giảm giá
     // Route::resource('vouchers', VoucherController::class)->except(['show']);
 
-    // Order management
+    // Quản lý đơn hàng
     // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
-    // User management
+    // Quản lý người dùng
     // Route::get('/users', [UserController::class, 'index'])->name('users.index');
     // Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.updateStatus');
 
-    // Review management
+    // Quản lý đánh giá
     // Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
     // Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 });
