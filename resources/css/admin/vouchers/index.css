@@ -1,43 +1,28 @@
 /* ==========================================================================
-   Admin Voucher Index Page Styles - Mật Ngọt Bear
+   Admin Voucher Index Page Styles - Mật Ngọt Bear (Replication of Design)
    ========================================================================== */
-
-/* 1. Statistics Cards */
-.voucher-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.875rem;
-    width: 100%;
-}
-
-@media (max-width: 768px) {
-    .voucher-stat-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
 
 .voucher-stat-card {
     background-color: #FFFFFF;
-    border-radius: 1rem;
-    padding: 1rem 1.25rem;
+    border-radius: 1.25rem;
+    padding: 1.25rem 1.5rem;
     border: 1px solid #EBDDCD;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(92, 50, 25, 0.04);
     display: flex;
     align-items: center;
-    gap: 0.875rem;
-    min-width: 0;
+    gap: 1.25rem;
     transition: all 0.2s ease-in-out;
 }
 
 .voucher-stat-card:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 16px rgba(92, 50, 25, 0.08);
     border-color: #DDA760;
 }
 
 .voucher-stat-icon {
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 1rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1.125rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -45,37 +30,61 @@
     flex-shrink: 0;
 }
 
-/* 2. Filter & Search Bar */
+/* Search & Filter Bar */
 .voucher-filter-card {
-    background-color: #FFFFFF;
-    border-radius: 1rem;
-    padding: 0.875rem 1rem;
-    border: 1px solid #EBDDCD;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
 }
 
 .voucher-filter-input,
 .voucher-filter-select {
-    border-radius: 0.75rem;
-    border-color: #EBDDCD;
-    font-size: 0.875rem;
-    color: #2E190E;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    background-color: #FFFFFF;
+    border: 1px solid #EBDDCD;
+    border-radius: 1rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #2C1408;
+    outline: none;
+    transition: all 0.15s ease-in-out;
 }
 
 .voucher-filter-input:focus,
 .voucher-filter-select:focus {
-    border-color: #DDA760;
-    --tw-ring-color: #DDA760;
-    outline: none;
+    border-color: #E08A1E;
+    box-shadow: 0 0 0 2px rgba(224, 138, 30, 0.15);
 }
 
-/* 3. Table Layout & Rows */
+.voucher-filter-btn {
+    background-color: #5C3219;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 1rem;
+    padding: 0.65rem 1.5rem;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(92, 50, 25, 0.2);
+}
+
+.voucher-filter-btn:hover {
+    background-color: #4A2612;
+    transform: translateY(-1px);
+}
+
+/* Modern Vouchers Table */
 .voucher-table-wrapper {
     background-color: #FFFFFF;
-    border-radius: 1rem;
-    border: 1px solid #FEF3C7;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    border-radius: 1.5rem;
+    border: 1px solid #F0E6D8;
+    box-shadow: 0 2px 8px rgba(92, 50, 25, 0.04);
     overflow: hidden;
 }
 
@@ -86,62 +95,73 @@
     font-size: 0.875rem;
 }
 
-.voucher-table-head {
-    background-color: rgba(254, 243, 199, 0.7);
-    border-bottom: 1px solid #FEF3C7;
-    color: #78350F;
-    font-weight: 700;
-    text-transform: uppercase;
+.voucher-table th {
+    background-color: #FFF9EE;
+    color: #786B61;
+    font-weight: 800;
     font-size: 0.75rem;
     letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border-bottom: 1px solid #F0E6D8;
+    white-space: nowrap;
 }
 
-.voucher-table-row {
-    transition: background-color 0.15s ease-in-out;
+.voucher-table td {
+    padding: 12px;
+    border-bottom: 1px solid #F5EFEB;
+    vertical-align: middle;
 }
 
-.voucher-table-row:hover {
-    background-color: rgba(254, 243, 199, 0.3);
+.voucher-table tr:last-child td {
+    border-bottom: none;
 }
 
-/* 4. Badges */
+.voucher-table tr:hover td {
+    background-color: #FAF6EE;
+}
+
+/* Code Badge */
 .voucher-code-badge {
+    border: 1.5px solid #E08A1E;
+    background-color: #FFFBF4;
+    color: #2C1408;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 800;
-    font-size: 0.95rem;
-    color: #78350F;
-    background-color: rgba(254, 243, 199, 0.8);
-    padding: 0.25rem 0.625rem;
-    border-radius: 0.5rem;
-    border: 1px solid rgba(252, 211, 77, 0.6);
-    letter-spacing: 0.05em;
+    font-size: 0.9375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-/* 5. Progress Bars */
-.voucher-progress-container {
-    width: 100%;
-    background-color: #E5E7EB;
+/* Toggle Switch */
+.voucher-toggle-track {
+    width: 2.75rem;
+    height: 1.5rem;
     border-radius: 9999px;
-    height: 0.375rem;
-    overflow: hidden;
+    padding: 0.125rem;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.voucher-progress-fill {
-    height: 0.375rem;
-    border-radius: 9999px;
-    transition: width 0.3s ease;
+.voucher-toggle-track.is-active {
+    background-color: #10B981;
+    justify-content: flex-end;
 }
 
-/* 6. Custom Pagination */
-.voucher-pagination nav svg {
+.voucher-toggle-track.is-inactive {
+    background-color: #CBD5E1;
+    justify-content: flex-start;
+}
+
+.voucher-toggle-thumb {
     width: 1.25rem;
     height: 1.25rem;
-}
-
-.voucher-pagination nav [aria-current="page"] span {
-    background-color: #E09028 !important;
-    border-color: #E09028 !important;
-    color: #FFFFFF !important;
-    font-weight: 700;
-    border-radius: 0.5rem;
+    background-color: #FFFFFF;
+    border-radius: 9999px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }

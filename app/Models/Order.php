@@ -53,12 +53,12 @@ class Order extends Model
 
     public function voucher(): BelongsTo
     {
-        return $this->belongsTo(Voucher::class, 'voucher_id');
+        return $this->belongsTo(Voucher::class, 'voucher_id')->withTrashed();
     }
 
     public function shippingVoucher(): BelongsTo
     {
-        return $this->belongsTo(Voucher::class, 'shipping_voucher_id');
+        return $this->belongsTo(Voucher::class, 'shipping_voucher_id')->withTrashed();
     }
 
     public function cancelledByUser(): BelongsTo

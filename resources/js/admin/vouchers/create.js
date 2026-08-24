@@ -104,12 +104,16 @@ export function voucherForm(initialData = {}) {
         },
 
         get previewScopeText() {
-            if (this.voucher_type === 'SHIPPING') return '🚚 Toàn đơn hàng (Phí ship)';
             if (this.apply_scope === 'CATEGORY') {
-                return `📁 ${this.selectedCategories.length} Danh mục được chọn`;
+                const count = this.selectedCategories.length;
+                return count > 0 ? `📁 ${count} Danh mục được chọn` : '📁 Áp dụng theo danh mục';
             }
             if (this.apply_scope === 'PRODUCT') {
-                return `📦 ${this.selectedProducts.length} Sản phẩm cụ thể`;
+                const count = this.selectedProducts.length;
+                return count > 0 ? `📦 ${count} Sản phẩm được chọn` : '📦 Áp dụng sản phẩm cụ thể';
+            }
+            if (this.voucher_type === 'SHIPPING') {
+                return '🚚 Toàn đơn hàng (Phí ship)';
             }
             return '🌐 Áp dụng toàn bộ shop';
         },

@@ -23,7 +23,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 
     // Voucher management
-    Route::patch('/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
+    Route::post('/vouchers/{id}/restore', [VoucherController::class, 'restore'])->name('vouchers.restore');
+    Route::delete('/vouchers/{id}/force-delete', [VoucherController::class, 'forceDelete'])->name('vouchers.force-delete');
+    Route::match(['POST', 'PATCH'], '/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
     Route::resource('vouchers', VoucherController::class)->except(['show']);
     // 2. PHẦN CỦA KHÁNH VÂN: Quản lý Sản phẩm (Trang riêng)
     Route::get('/products', function () {

@@ -2,21 +2,36 @@
     <div class="py-8 bg-[#FAF6EE] min-h-screen">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-            {{-- 1. Header Title Section --}}
-            <div class="flex items-center gap-4">
-                <div
-                    class="w-12 h-12 rounded-2xl bg-[#5C3219] flex items-center justify-center text-[#F6D89B] shadow-sm shrink-0">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                        </path>
+            {{-- 1. Breadcrumb & Header --}}
+            <x-breadcrumb :items="[
+                ['label' => 'Quản Lý Mã Voucher', 'url' => route('admin.vouchers.index')],
+                ['label' => 'Tạo Voucher Mới']
+            ]" />
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-[#5C3219] flex items-center justify-center text-[#F6D89B] shadow-sm shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#2C1408] tracking-tight">Tạo Mã Giảm Giá Mới</h1>
+                        <p class="text-xs sm:text-sm font-medium text-[#786B61] mt-0.5">Thiết lập chương trình khuyến mãi giảm
+                            giá đơn hàng hoặc phí vận chuyển</p>
+                    </div>
+                </div>
+
+                <a href="{{ route('admin.vouchers.index') }}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FFF5E6] text-[#5C3219] border border-[#EBDDCD] rounded-xl font-bold text-xs shadow-xs transition shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                </div>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#2C1408] tracking-tight">Tạo Mã Giảm Giá Mới</h1>
-                    <p class="text-xs sm:text-sm font-medium text-[#786B61] mt-0.5">Thiết lập chương trình khuyến mãi giảm
-                        giá đơn hàng hoặc phí vận chuyển</p>
-                </div>
+                    <span>Quay lại danh sách</span>
+                </a>
             </div>
 
             {{-- 2. Form Container --}}
