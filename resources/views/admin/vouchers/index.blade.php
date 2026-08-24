@@ -23,11 +23,11 @@
     <div class="py-8 bg-[#F9F5EE] min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            {{-- 1. Statistics Cards (Cùng nằm trên 1 dòng với SVG Icons hiện đại) --}}
-            <div class="grid grid-cols-4 gap-3.5 w-full">
+            {{-- 1. Statistics Cards (Sử dụng CSS Class riêng) --}}
+            <div class="voucher-stat-grid">
                 {{-- Card 1: Tổng Voucher --}}
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-[#EBDDCD] shadow-xs flex items-center gap-3 sm:gap-4 min-w-0 transition hover:shadow-md hover:border-[#DDA760]">
-                    <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#F4B860] to-[#E09028] text-white flex items-center justify-center shadow-md shadow-[#E09028]/25 shrink-0">
+                <div class="voucher-stat-card">
+                    <div class="voucher-stat-icon bg-gradient-to-br from-[#F4B860] to-[#E09028] shadow-md shadow-[#E09028]/25">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
                         </svg>
@@ -39,8 +39,8 @@
                 </div>
 
                 {{-- Card 2: Đang Diễn Ra --}}
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-100 shadow-xs flex items-center gap-3 sm:gap-4 min-w-0 transition hover:shadow-md hover:border-emerald-300">
-                    <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/25 shrink-0">
+                <div class="voucher-stat-card border-emerald-100 hover:border-emerald-300">
+                    <div class="voucher-stat-icon bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md shadow-emerald-500/25">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
@@ -52,8 +52,8 @@
                 </div>
 
                 {{-- Card 3: Hết Hạn / Lượt --}}
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-rose-100 shadow-xs flex items-center gap-3 sm:gap-4 min-w-0 transition hover:shadow-md hover:border-rose-300">
-                    <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-500/25 shrink-0">
+                <div class="voucher-stat-card border-rose-100 hover:border-rose-300">
+                    <div class="voucher-stat-icon bg-gradient-to-br from-rose-400 to-rose-600 shadow-md shadow-rose-500/25">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
@@ -65,8 +65,8 @@
                 </div>
 
                 {{-- Card 4: Vô Hiệu Hóa --}}
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-xs flex items-center gap-3 sm:gap-4 min-w-0 transition hover:shadow-md hover:border-gray-400">
-                    <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center shadow-md shadow-slate-500/20 shrink-0">
+                <div class="voucher-stat-card border-gray-200 hover:border-gray-400">
+                    <div class="voucher-stat-icon bg-gradient-to-br from-slate-400 to-slate-600 shadow-md shadow-slate-500/20">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
                         </svg>
@@ -78,8 +78,8 @@
                 </div>
             </div>
 
-            {{-- 2. Filters & Search Bar (Dàn ngang trên 1 dòng) --}}
-            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#EBDDCD] shadow-xs">
+            {{-- 2. Filters & Search Bar --}}
+            <div class="voucher-filter-card">
                 <form method="GET" action="{{ route('admin.vouchers.index') }}" class="flex flex-row flex-wrap lg:flex-nowrap items-center gap-2.5 w-full">
                     
                     {{-- Search by code --}}
@@ -88,7 +88,7 @@
                                name="search" 
                                value="{{ request('search') }}" 
                                placeholder="Tìm theo mã voucher (VD: BEAR-10K)..."
-                               class="w-full pl-9 pr-3 py-2 rounded-xl border-[#EBDDCD] focus:border-[#DDA760] focus:ring-[#DDA760] text-xs sm:text-sm text-[#2E190E]">
+                               class="voucher-filter-input w-full pl-9 pr-3 py-2">
                         <div class="absolute left-3 top-2.5 text-[#8E8076]">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
@@ -96,7 +96,7 @@
 
                     {{-- Filter by voucher type --}}
                     <div class="w-auto min-w-[155px]">
-                        <select name="voucher_type" class="w-full py-2 px-3 rounded-xl border-[#EBDDCD] focus:border-[#DDA760] focus:ring-[#DDA760] text-xs sm:text-sm text-[#2E190E]">
+                        <select name="voucher_type" class="voucher-filter-select w-full py-2 px-3">
                             <option value="">-- Phân loại --</option>
                             <option value="ORDER" {{ request('voucher_type') === 'ORDER' ? 'selected' : '' }}>Mã Đơn Hàng</option>
                             <option value="SHIPPING" {{ request('voucher_type') === 'SHIPPING' ? 'selected' : '' }}>Mã Vận Chuyển</option>
@@ -105,7 +105,7 @@
 
                     {{-- Filter by real status --}}
                     <div class="w-auto min-w-[150px]">
-                        <select name="status" class="w-full py-2 px-3 rounded-xl border-[#EBDDCD] focus:border-[#DDA760] focus:ring-[#DDA760] text-xs sm:text-sm text-[#2E190E]">
+                        <select name="status" class="voucher-filter-select w-full py-2 px-3">
                             <option value="">-- Trạng thái --</option>
                             <option value="RUNNING" {{ request('status') === 'RUNNING' ? 'selected' : '' }}>Đang diễn ra</option>
                             <option value="UPCOMING" {{ request('status') === 'UPCOMING' ? 'selected' : '' }}>Sắp diễn ra</option>
@@ -117,7 +117,7 @@
 
                     {{-- Filter by discount type --}}
                     <div class="w-auto min-w-[125px]">
-                        <select name="discount_type" class="w-full py-2 px-3 rounded-xl border-[#EBDDCD] focus:border-[#DDA760] focus:ring-[#DDA760] text-xs sm:text-sm text-[#2E190E]">
+                        <select name="discount_type" class="voucher-filter-select w-full py-2 px-3">
                             <option value="">-- Mức giảm --</option>
                             <option value="PERCENTAGE" {{ request('discount_type') === 'PERCENTAGE' ? 'selected' : '' }}>Phần trăm (%)</option>
                             <option value="FIXED" {{ request('discount_type') === 'FIXED' ? 'selected' : '' }}>Cố định (VNĐ)</option>
@@ -139,12 +139,12 @@
                 </form>
             </div>
 
-            {{-- Vouchers Table --}}
-            <div class="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden" x-data="vouchersList()">
+            {{-- 3. Vouchers Table --}}
+            <div class="voucher-table-wrapper" x-data="vouchersList()">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
+                    <table class="voucher-table">
                         <thead>
-                            <tr class="bg-amber-50/70 border-b border-amber-100 text-amber-900 font-bold uppercase text-xs tracking-wider">
+                            <tr class="voucher-table-head">
                                 <th class="py-4 px-5">Mã Voucher</th>
                                 <th class="py-4 px-5">Mức Giảm & Điều Kiện</th>
                                 <th class="py-4 px-5">Thời Gian Áp Dụng</th>
@@ -163,11 +163,11 @@
                                     $usagePercent = min(100, round(($voucher->used_count / max(1, $voucher->usage_limit)) * 100));
                                 @endphp
 
-                                <tr class="hover:bg-amber-50/30 transition">
+                                <tr class="voucher-table-row">
                                     {{-- Code & Type --}}
                                     <td class="py-4 px-5">
                                         <div class="flex items-center gap-2">
-                                            <span class="font-mono font-extrabold text-base text-amber-900 bg-amber-100/80 px-2.5 py-1 rounded-lg border border-amber-300/60 tracking-wider">
+                                            <span class="voucher-code-badge">
                                                 {{ $voucher->code }}
                                             </span>
                                             <button type="button" 
@@ -181,18 +181,19 @@
                                             {{-- Voucher Type Badge --}}
                                             @if($voucher->voucher_type === 'SHIPPING')
                                                 <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-100 text-teal-800 border border-teal-200">
-                                                    🚚 Vận Chuyển
+                                                    <svg class="w-3 h-3 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                                                    <span>Vận Chuyển</span>
                                                 </span>
                                             @else
-                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200">
-                                                    🏷️ Đơn Hàng
+                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#FFF5E6] text-[#5C3219] border border-[#EBDDCD]">
+                                                    <svg class="w-3 h-3 text-[#E09028]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                                                    <span>Đơn Hàng</span>
                                                 </span>
                                             @endif
 
                                             {{-- Scope Badge --}}
                                             @php $scopeBadge = $voucher->apply_scope_badge; @endphp
                                             <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md border {{ $scopeBadge['bg'] }}">
-                                                <span>{{ $scopeBadge['icon'] }}</span>
                                                 <span>{{ $scopeBadge['label'] }}</span>
                                             </span>
 
@@ -244,8 +245,8 @@
                                         <div class="font-bold text-gray-800 text-xs mb-1">
                                             {{ $voucher->used_count }} / {{ $voucher->usage_limit }}
                                         </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                                            <div class="h-1.5 rounded-full {{ $usagePercent >= 100 ? 'bg-rose-500' : ($usagePercent > 70 ? 'bg-amber-500' : 'bg-emerald-500') }}" 
+                                        <div class="voucher-progress-container">
+                                            <div class="voucher-progress-fill {{ $usagePercent >= 100 ? 'bg-rose-500' : ($usagePercent > 70 ? 'bg-amber-500' : 'bg-emerald-500') }}" 
                                                  style="width: {{ $usagePercent }}%"></div>
                                         </div>
                                         @if($isOutOfLimit)
@@ -288,10 +289,11 @@
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                             </a>
                                             
-                                            <form method="POST" action="{{ route('admin.vouchers.destroy', $voucher) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa voucher [{{ $voucher->code }}]?');">
+                                            <form id="delete-voucher-{{ $voucher->id }}" method="POST" action="{{ route('admin.vouchers.destroy', $voucher) }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" 
+                                                <button type="button" 
+                                                        @click="confirmDelete('{{ $voucher->code }}', 'delete-voucher-{{ $voucher->id }}')"
                                                         class="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" 
                                                         title="Xóa voucher">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -303,9 +305,11 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="py-12 text-center text-gray-400">
-                                        <div class="text-4xl mb-3">🏷️</div>
-                                        <div class="text-base font-bold text-gray-700">Chưa có mã giảm giá nào!</div>
-                                        <p class="text-xs text-gray-400 mt-1">Bấm nút "Tạo Voucher Mới" ở trên để thiết lập chương trình khuyến mãi đầu tiên.</p>
+                                        <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-[#FFF5E6] text-[#E09028] flex items-center justify-center border border-[#EBDDCD]">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                        </div>
+                                        <div class="text-base font-bold text-[#2E190E]">Chưa có mã giảm giá nào!</div>
+                                        <p class="text-xs text-[#8E8076] mt-1 font-normal">Bấm nút "Tạo Voucher Mới" ở trên để thiết lập chương trình khuyến mãi đầu tiên.</p>
                                     </td>
                                 </tr>
                             @endforelse

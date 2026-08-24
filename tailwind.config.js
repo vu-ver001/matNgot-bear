@@ -13,7 +13,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Montserrat', 'sans-serif'],
+                sans: ['"Be Vietnam Pro"', 'sans-serif'],
             },
             colors: {
                 // Tone màu Nâu - Be Sữa - Mật Ong thương hiệu Mật Ngọt Bear

@@ -36,12 +36,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
     })->name('categories.index');
 
     // 4. Các mục của bạn trong nhóm (Khung hiển thị placeholder)
+    Route::get('/page/vouchers', fn () => redirect()->route('admin.vouchers.index'));
     Route::get('/page/{page}', function (string $page) {
+        if ($page === 'vouchers') {
+            return redirect()->route('admin.vouchers.index');
+        }
         return view('admin.placeholder', ['currentPage' => $page]);
     })->name('page');
 
     // Shortcut routes cho từng mục để tiện link
-    Route::get('/vouchers', fn () => view('admin.placeholder', ['currentPage' => 'vouchers']))->name('vouchers.index');
     Route::get('/orders', fn () => view('admin.placeholder', ['currentPage' => 'orders']))->name('orders.index');
     Route::get('/payments', fn () => view('admin.placeholder', ['currentPage' => 'payments']))->name('payments.index');
     Route::get('/customers', fn () => view('admin.placeholder', ['currentPage' => 'customers']))->name('customers.index');

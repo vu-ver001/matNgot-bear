@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Mật Ngọt Bear - Thế Giới Gấu Bông Cao Cấp')</title>
 
-    <!-- Google Fonts Montserrat -->
+    <!-- Google Fonts Be Vietnam Pro -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://googleapis.com" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -23,34 +27,34 @@
             --bg-card: #FFFFFF;
             --bg-surface: #F8F4EE;
             --bg-cream: #F5EFEB;
-            
+
             --primary: #8D6E63;
             --primary-dark: #5D4037;
             --primary-light: #BCAAA4;
             --primary-pastel: #A1887F;
-            
+
             --honey: #E59819;
             --honey-light: #FFF8E7;
             --honey-dark: #B87309;
             --honey-gold: #F6D89B;
-            
+
             --text-main: #4E342E;
             --text-muted: #795548;
             --text-light: #9E8076;
-            
+
             --border: #EADFCF;
             --border-light: #F2EAE0;
-            
+
             --success: #2E7D32;
             --success-bg: #E8F5E9;
             --danger: #C62828;
             --danger-bg: #FFEBEE;
-            
+
             --radius-sm: 8px;
             --radius-md: 14px;
             --radius-lg: 20px;
             --radius-xl: 28px;
-            
+
             --shadow-subtle: 0 4px 16px rgba(109, 76, 65, 0.05);
             --shadow-card: 0 10px 30px rgba(109, 76, 65, 0.08);
             --shadow-hover: 0 16px 40px rgba(109, 76, 65, 0.14);
@@ -60,7 +64,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
@@ -397,7 +401,8 @@
             white-space: nowrap;
         }
 
-        .nav-link:hover, .nav-link.active {
+        .nav-link:hover,
+        .nav-link.active {
             color: var(--honey-dark);
             border-bottom-color: var(--honey);
             background: rgba(255, 255, 255, 0.8);
@@ -847,32 +852,73 @@
         }
 
         @keyframes fadeInMenu {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Responsive */
         @media (max-width: 1200px) {
-            .nav-link { font-size: 11.5px; padding: 12px 8px; }
+            .nav-link {
+                font-size: 11.5px;
+                padding: 12px 8px;
+            }
         }
 
         @media (max-width: 992px) {
-            .header-main-row { flex-wrap: wrap; gap: 1rem; }
-            .header-search-form { order: 3; max-width: 100%; width: 100%; }
-            .footer-container { grid-template-columns: 1fr 1fr; }
-            .nav-menu { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-            .nav-menu::-webkit-scrollbar { display: none; }
-            .nav-container { flex-wrap: wrap; }
-            .megamenu-panel { display: none !important; }
+            .header-main-row {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .header-search-form {
+                order: 3;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .nav-menu {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            .nav-menu::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-container {
+                flex-wrap: wrap;
+            }
+
+            .megamenu-panel {
+                display: none !important;
+            }
         }
 
         @media (max-width: 576px) {
-            .footer-container { grid-template-columns: 1fr; }
-            .hotline-pill { display: none; }
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+
+            .hotline-pill {
+                display: none;
+            }
         }
     </style>
     @yield('styles')
 </head>
+
 <body>
 
     <!-- Top Announcement Bar with Quick Role Switcher for Testing -->
@@ -883,10 +929,18 @@
         </div>
         <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
             <span style="color: #D7CCC8;">[Test vai trò]:</span>
-            <a href="{{ route('switch-role', 'admin') }}" style="color: {{ auth()->check() && auth()->user()->role === 'ADMIN' ? '#4CAF50' : '#F6D89B' }}; font-weight: 700; text-decoration: underline;" title="Đăng nhập tài khoản Admin">Admin</a> &bull;
-            <a href="{{ route('switch-role', 'staff') }}" style="color: {{ auth()->check() && auth()->user()->role === 'STAFF' ? '#4CAF50' : '#F6D89B' }}; font-weight: 700; text-decoration: underline;" title="Đăng nhập tài khoản Staff">Staff</a> &bull;
-            <a href="{{ route('switch-role', 'customer') }}" style="color: {{ auth()->check() && auth()->user()->role === 'CUSTOMER' ? '#4CAF50' : '#F6D89B' }}; font-weight: 700; text-decoration: underline;" title="Đăng nhập tài khoản Khách hàng">Khách hàng</a> &bull;
-            <a href="{{ route('switch-role', 'guest') }}" style="color: {{ !auth()->check() ? '#4CAF50' : '#D7CCC8' }}; text-decoration: underline;" title="Chưa đăng nhập">Khách vãng lai</a>
+            <a href="{{ route('switch-role', 'admin') }}"
+                style="color: {{ auth()->check() && auth()->user()->role === 'ADMIN' ? '#4CAF50' : '#F6D89B' }}; font-weight: 700; text-decoration: underline;"
+                title="Đăng nhập tài khoản Admin">Admin</a> &bull;
+            <a href="{{ route('switch-role', 'staff') }}"
+                style="color: {{ auth()->check() && auth()->user()->role === 'STAFF' ? '#4CAF50' : '#F6D89B' }}; font-weight: 700; text-decoration: underline;"
+                title="Đăng nhập tài khoản Staff">Staff</a> &bull;
+            <a href="{{ route('switch-role', 'customer') }}"
+                style="color: {{ auth()->check() && auth()->user()->role === 'CUSTOMER' ? '#4CAF50' : '#F6D89B' }}; font-weight: 700; text-decoration: underline;"
+                title="Đăng nhập tài khoản Khách hàng">Khách hàng</a> &bull;
+            <a href="{{ route('switch-role', 'guest') }}"
+                style="color: {{ !auth()->check() ? '#4CAF50' : '#D7CCC8' }}; text-decoration: underline;"
+                title="Chưa đăng nhập">Khách vãng lai</a>
         </div>
     </div>
 
@@ -907,14 +961,9 @@
             <!-- Central Search Bar -->
             <form action="{{ route('products.index') }}" method="GET" class="header-search-form">
                 <div class="search-input-wrapper">
-                    <input 
-                        type="text" 
-                        name="search" 
-                        class="search-input" 
+                    <input type="text" name="search" class="search-input"
                         placeholder="Tìm kiếm gấu bông yêu thích (Teddy, Capybara, Loopy...)"
-                        value="{{ request('search') }}"
-                        autocomplete="off"
-                    >
+                        value="{{ request('search') }}" autocomplete="off">
                     <button type="submit" class="search-submit-btn" title="Tìm kiếm">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
@@ -940,10 +989,14 @@
                     <span class="badge-count" id="wishlist-count">0</span>
                 </a>
 
+                @php
+                    $headerUserId = auth()->id() ?? (\App\Models\User::where('role', 'CUSTOMER')->first()?->id ?? 1);
+                    $realCartCount = \App\Models\CartItem::where('user_id', $headerUserId)->count();
+                @endphp
                 <!-- Cart (Giỏ hàng - Chỉ để icon) -->
                 <a href="{{ route('customer.cart') }}" class="utility-icon-btn" title="Giỏ hàng">
                     <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
-                    <span class="badge-count" id="cart-count">0</span>
+                    <span class="badge-count" id="cart-count">{{ $realCartCount }}</span>
                 </a>
 
                 <!-- My Orders (Đơn của tôi) -->
@@ -961,85 +1014,121 @@
 
                     @auth
                         @php $userRole = auth()->user()->role; @endphp
-                        @if($userRole === 'ADMIN')
-                            <a href="javascript:void(0)" class="btn-auth-pill" style="background: linear-gradient(135deg, #8D6E63 0%, #6D4C41 100%);" onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')">
-                                <i class="fa-solid fa-shield-halved"></i> ADMIN <i class="fa-solid fa-chevron-down" style="font-size: 9px;"></i>
+                        @if ($userRole === 'ADMIN')
+                            <a href="javascript:void(0)" class="btn-auth-pill"
+                                style="background: linear-gradient(135deg, #8D6E63 0%, #6D4C41 100%);"
+                                onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')">
+                                <i class="fa-solid fa-shield-halved"></i> ADMIN <i class="fa-solid fa-chevron-down"
+                                    style="font-size: 9px;"></i>
                             </a>
                             <div class="dropdown-menu role-dropdown" style="right: 0; left: auto; min-width: 220px;">
-                                <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #8D6E63, #6D4C41); color: #fff; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-user-shield"></i></div>
+                                <div
+                                    style="padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px;">
+                                    <div
+                                        style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #8D6E63, #6D4C41); color: #fff; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fa-solid fa-user-shield"></i></div>
                                     <div>
-                                        <div style="font-weight: 700; font-size: 12.5px; color: #5D4037;">{{ auth()->user()->full_name }}</div>
+                                        <div style="font-weight: 700; font-size: 12.5px; color: #5D4037;">
+                                            {{ auth()->user()->full_name }}</div>
                                         <div style="font-size: 10.5px; color: var(--text-light);">Quản trị viên</div>
                                     </div>
                                 </div>
                                 <a href="{{ route('profile.edit') }}" class="dropdown-item">
-                                    <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
+                                    <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i>
+                                        Hồ Sơ Cá Nhân</span>
                                 </a>
                                 <a href="{{ route('admin.dashboard') }}" class="dropdown-item">
-                                    <span><i class="fa-solid fa-gauge-high" style="color: #8D6E63; margin-right: 6px;"></i> Quản Lý</span>
-                                    <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
+                                    <span><i class="fa-solid fa-gauge-high"
+                                            style="color: #8D6E63; margin-right: 6px;"></i> Quản Lý</span>
+                                    <i class="fa-solid fa-arrow-right"
+                                        style="font-size: 10px; color: var(--text-light);"></i>
                                 </a>
                                 <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="dropdown-item" style="width: 100%; border: none; background: none; cursor: pointer; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--danger);">
-                                            <span><i class="fa-solid fa-right-from-bracket" style="margin-right: 6px;"></i> Đăng Xuất</span>
+                                        <button type="submit" class="dropdown-item"
+                                            style="width: 100%; border: none; background: none; cursor: pointer; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--danger);">
+                                            <span><i class="fa-solid fa-right-from-bracket"
+                                                    style="margin-right: 6px;"></i> Đăng Xuất</span>
                                         </button>
                                     </form>
                                 </div>
                             </div>
                         @elseif($userRole === 'STAFF')
-                            <a href="javascript:void(0)" class="btn-auth-pill" style="background: linear-gradient(135deg, #A1887F 0%, #795548 100%);" onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')">
-                                <i class="fa-solid fa-user-tag"></i> STAFF <i class="fa-solid fa-chevron-down" style="font-size: 9px;"></i>
+                            <a href="javascript:void(0)" class="btn-auth-pill"
+                                style="background: linear-gradient(135deg, #A1887F 0%, #795548 100%);"
+                                onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')">
+                                <i class="fa-solid fa-user-tag"></i> STAFF <i class="fa-solid fa-chevron-down"
+                                    style="font-size: 9px;"></i>
                             </a>
                             <div class="dropdown-menu role-dropdown" style="right: 0; left: auto; min-width: 220px;">
-                                <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #A1887F, #795548); color: #fff; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-user-tie"></i></div>
+                                <div
+                                    style="padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px;">
+                                    <div
+                                        style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #A1887F, #795548); color: #fff; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fa-solid fa-user-tie"></i></div>
                                     <div>
-                                        <div style="font-weight: 700; font-size: 12.5px; color: #5D4037;">{{ auth()->user()->full_name }}</div>
+                                        <div style="font-weight: 700; font-size: 12.5px; color: #5D4037;">
+                                            {{ auth()->user()->full_name }}</div>
                                         <div style="font-size: 10.5px; color: var(--text-light);">Nhân viên</div>
                                     </div>
                                 </div>
                                 <a href="{{ route('profile.edit') }}" class="dropdown-item">
-                                    <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
+                                    <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i>
+                                        Hồ Sơ Cá Nhân</span>
                                 </a>
                                 <a href="{{ route('staff.dashboard') }}" class="dropdown-item">
-                                    <span><i class="fa-solid fa-boxes-packing" style="color: #8D6E63; margin-right: 6px;"></i> Xử Lý Đơn Hàng</span>
-                                    <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
+                                    <span><i class="fa-solid fa-boxes-packing"
+                                            style="color: #8D6E63; margin-right: 6px;"></i> Xử Lý Đơn Hàng</span>
+                                    <i class="fa-solid fa-arrow-right"
+                                        style="font-size: 10px; color: var(--text-light);"></i>
                                 </a>
                                 <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="dropdown-item" style="width: 100%; border: none; background: none; cursor: pointer; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--danger);">
-                                            <span><i class="fa-solid fa-right-from-bracket" style="margin-right: 6px;"></i> Đăng Xuất</span>
+                                        <button type="submit" class="dropdown-item"
+                                            style="width: 100%; border: none; background: none; cursor: pointer; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--danger);">
+                                            <span><i class="fa-solid fa-right-from-bracket"
+                                                    style="margin-right: 6px;"></i> Đăng Xuất</span>
                                         </button>
                                     </form>
                                 </div>
                             </div>
                         @else
-                            <a href="javascript:void(0)" class="btn-auth-pill" style="background: linear-gradient(135deg, #D7CCC8 0%, #BCAAA4 100%); color: #4E342E !important;" onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')">
-                                <i class="fa-solid fa-user"></i> KHÁCH HÀNG <i class="fa-solid fa-chevron-down" style="font-size: 9px;"></i>
+                            <a href="javascript:void(0)" class="btn-auth-pill"
+                                style="background: linear-gradient(135deg, #D7CCC8 0%, #BCAAA4 100%); color: #4E342E !important;"
+                                onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')">
+                                <i class="fa-solid fa-user"></i> KHÁCH HÀNG <i class="fa-solid fa-chevron-down"
+                                    style="font-size: 9px;"></i>
                             </a>
                             <div class="dropdown-menu role-dropdown" style="right: 0; left: auto; min-width: 220px;">
-                                <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #D7CCC8, #BCAAA4); color: #4E342E; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-user"></i></div>
+                                <div
+                                    style="padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px;">
+                                    <div
+                                        style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #D7CCC8, #BCAAA4); color: #4E342E; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fa-solid fa-user"></i></div>
                                     <div>
-                                        <div style="font-weight: 700; font-size: 12.5px; color: #5D4037;">{{ auth()->user()->full_name }}</div>
-                                        <div style="font-size: 10.5px; color: var(--text-light);">Khách hàng thân thiết</div>
+                                        <div style="font-weight: 700; font-size: 12.5px; color: #5D4037;">
+                                            {{ auth()->user()->full_name }}</div>
+                                        <div style="font-size: 10.5px; color: var(--text-light);">Khách hàng thân thiết
+                                        </div>
                                     </div>
                                 </div>
                                 <a href="{{ route('profile.edit') }}" class="dropdown-item">
-                                    <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
+                                    <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i>
+                                        Hồ Sơ Cá Nhân</span>
                                 </a>
                                 <a href="{{ route('customer.orders') }}" class="dropdown-item">
-                                    <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 6px;"></i> Đơn Hàng Của Tôi</span>
+                                    <span><i class="fa-solid fa-clipboard-list"
+                                            style="color: #8D6E63; margin-right: 6px;"></i> Đơn Hàng Của Tôi</span>
                                 </a>
                                 <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="dropdown-item" style="width: 100%; border: none; background: none; cursor: pointer; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--danger);">
-                                            <span><i class="fa-solid fa-right-from-bracket" style="margin-right: 6px;"></i> Đăng Xuất</span>
+                                        <button type="submit" class="dropdown-item"
+                                            style="width: 100%; border: none; background: none; cursor: pointer; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--danger);">
+                                            <span><i class="fa-solid fa-right-from-bracket"
+                                                    style="margin-right: 6px;"></i> Đăng Xuất</span>
                                         </button>
                                     </form>
                                 </div>
@@ -1056,14 +1145,16 @@
                 <ul class="nav-menu">
                     <!-- 1. TRANG CHỦ -->
                     <li class="nav-item">
-                        <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                        <a href="{{ route('home') }}"
+                            class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
                             <i class="fa-solid fa-house"></i> TRANG CHỦ
                         </a>
                     </li>
 
                     <!-- 2. TEDDY CLASSIC (Mega Dropdown) -->
                     <li class="nav-item has-megamenu">
-                        <a href="{{ route('products.index', ['category_id' => 1]) }}" class="nav-link {{ request('category_id') == 1 ? 'active' : '' }}">
+                        <a href="{{ route('products.index', ['category_id' => 1]) }}"
+                            class="nav-link {{ request('category_id') == 1 ? 'active' : '' }}">
                             TEDDY CLASSIC <i class="fa-solid fa-chevron-down"></i>
                         </a>
                         <div class="megamenu-panel">
@@ -1071,33 +1162,57 @@
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">GẤU BÔNG TEDDY CAO CẤP</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Teddy 1m4 - 1m5', 'size' => '1m4']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Teddy 1m4 – 1m5</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Teddy 1m - 1m2', 'size' => '1m2']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông Teddy 1m – 1m2</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Teddy Nhỏ', 'size' => '30cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông Teddy Nhỏ</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Teddy 1m4 - 1m5', 'size' => '1m4']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu
+                                                Teddy 1m4 – 1m5</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Teddy 1m - 1m2', 'size' => '1m2']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông
+                                                Teddy 1m – 1m2</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Teddy Nhỏ', 'size' => '30cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông
+                                                Teddy Nhỏ</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">GẤU TEDDY TO BỰ</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông 1m8 - 2m', 'size' => '1m8']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Teddy 1m8 – 2m</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Teddy 1m6', 'size' => '1m6']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông Teddy 1m6</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Khổng Lồ 1m7', 'size' => '1m7']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông Khổng Lồ 1m7</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông 1m8 - 2m', 'size' => '1m8']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu
+                                                Teddy 1m8 – 2m</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Teddy 1m6', 'size' => '1m6']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông
+                                                Teddy 1m6</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Khổng Lồ 1m7', 'size' => '1m7']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông
+                                                Khổng Lồ 1m7</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">GẤU TEDDY GIÁ RẺ</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu 100K - 200K', 'max_price' => 200000]) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu 100K – 200K</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu 65K - 100K', 'max_price' => 100000]) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu 65K – 100K</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Mini 50K']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mini Bỏ Túi</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu 100K - 200K', 'max_price' => 200000]) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu 100K
+                                                – 200K</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu 65K - 100K', 'max_price' => 100000]) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu 65K
+                                                – 100K</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Mini 50K']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mini
+                                                Bỏ Túi</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">GẤU BÔNG DỄ THƯƠNG</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Ghi Âm', 'search' => 'ghi âm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông Ghi Âm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Búp Bê Bông']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Búp Bê Bông</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Teddy Áo Len', 'search' => 'áo len']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Teddy Áo Len</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Bông Ghi Âm', 'search' => 'ghi âm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông
+                                                Ghi Âm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Búp Bê Bông']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Búp Bê
+                                                Bông</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 1, 'sub' => 'Gấu Teddy Áo Len', 'search' => 'áo len']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu
+                                                Teddy Áo Len</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -1106,7 +1221,8 @@
 
                     <!-- 3. BUTTER BEAR (Mega Dropdown) -->
                     <li class="nav-item has-megamenu">
-                        <a href="{{ route('products.index', ['category_id' => 2]) }}" class="nav-link {{ request('category_id') == 2 ? 'active' : '' }}">
+                        <a href="{{ route('products.index', ['category_id' => 2]) }}"
+                            class="nav-link {{ request('category_id') == 2 ? 'active' : '' }}">
                             BUTTER BEAR <i class="fa-solid fa-chevron-down"></i>
                         </a>
                         <div class="megamenu-panel">
@@ -1114,33 +1230,57 @@
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">BUTTER BEAR NỔI BẬT</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear Đội Mũ Bơ']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter Bear Đội Mũ Bơ</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear Váy Hồng']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter Bear Váy Hồng</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear Cầm Bánh Mì']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter Bear Cầm Bánh Mì</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear Đội Mũ Bơ']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter
+                                                Bear Đội Mũ Bơ</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear Váy Hồng']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter
+                                                Bear Váy Hồng</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear Cầm Bánh Mì']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter
+                                                Bear Cầm Bánh Mì</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">KÍCH THƯỚC PHỔ BIẾN</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear 35cm', 'size' => '35cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter Bear 35cm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear 45cm', 'size' => '45cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter Bear 45cm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear 60cm', 'size' => '60cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter Bear 60cm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear 35cm', 'size' => '35cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter
+                                                Bear 35cm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear 45cm', 'size' => '45cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter
+                                                Bear 45cm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Butter Bear 60cm', 'size' => '60cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Butter
+                                                Bear 60cm</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">PHỤ KIỆN GẤU BƠ</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Móc Khóa Butter Bear']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Móc Khóa Gấu Bơ</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Túi Đeo Chéo Gấu Bơ']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Túi Đeo Chéo Gấu Bơ</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Kẹp Tóc Gấu Butter Bear']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Kẹp Tóc Gấu Bơ</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Móc Khóa Butter Bear']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Móc Khóa
+                                                Gấu Bơ</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Túi Đeo Chéo Gấu Bơ']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Túi Đeo
+                                                Chéo Gấu Bơ</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Kẹp Tóc Gấu Butter Bear']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Kẹp Tóc
+                                                Gấu Bơ</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">SET QUÀ TẶNG BƠ</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Hộp Quà Butter Bear']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Quà Butter Bear</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Combo Gấu Bơ + Hoa Sáp']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Combo Gấu Bơ + Hoa Sáp</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Gấu Bơ Kèm Thiệp']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bơ Kèm Thiệp</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Hộp Quà Butter Bear']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Quà
+                                                Butter Bear</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Combo Gấu Bơ + Hoa Sáp']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Combo
+                                                Gấu Bơ + Hoa Sáp</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Gấu Bơ Kèm Thiệp']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bơ
+                                                Kèm Thiệp</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -1149,7 +1289,8 @@
 
                     <!-- 4. TEDDY MR. BEAN (Mega Dropdown) -->
                     <li class="nav-item has-megamenu">
-                        <a href="{{ route('products.index', ['category_id' => 3]) }}" class="nav-link {{ request('category_id') == 3 ? 'active' : '' }}">
+                        <a href="{{ route('products.index', ['category_id' => 3]) }}"
+                            class="nav-link {{ request('category_id') == 3 ? 'active' : '' }}">
                             TEDDY MR. BEAN <i class="fa-solid fa-chevron-down"></i>
                         </a>
                         <div class="megamenu-panel">
@@ -1157,33 +1298,57 @@
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">MR. BEAN CỔ ĐIỂN</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Mắt Cúc 40cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr. Bean Mắt Cúc</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Đan Len']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr. Bean Đan Len</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Vintage']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr. Bean Vintage</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Mắt Cúc 40cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr.
+                                                Bean Mắt Cúc</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Đan Len']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr.
+                                                Bean Đan Len</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Vintage']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr.
+                                                Bean Vintage</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">SIZE ĐẶC BIỆT</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Nhỏ 25cm', 'size' => '25cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean Nhỏ 25cm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Vừa 40cm', 'size' => '40cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean Vừa 40cm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Khổng Lồ 80cm', 'size' => '80cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean Khổng Lồ 80cm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Nhỏ 25cm', 'size' => '25cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean
+                                                Nhỏ 25cm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Vừa 40cm', 'size' => '40cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean
+                                                Vừa 40cm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Khổng Lồ 80cm', 'size' => '80cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean
+                                                Khổng Lồ 80cm</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">PHỤ KIỆN MR. BEAN</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Móc Khóa Gấu Nâu']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Móc Khóa Gấu Nâu</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Áo Len Cho Gấu Mr. Bean']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Áo Len Cho Gấu</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Cà Vạt Đỏ Mr. Bean']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cà Vạt Đỏ Mr. Bean</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Móc Khóa Gấu Nâu']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Móc Khóa
+                                                Gấu Nâu</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Áo Len Cho Gấu Mr. Bean']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Áo Len
+                                                Cho Gấu</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Cà Vạt Đỏ Mr. Bean']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cà Vạt
+                                                Đỏ Mr. Bean</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">QUÀ TẶNG ĐỘC ĐÁO</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Set Quà Mr. Bean Vintage']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Set Quà Mr. Bean Vintage</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Combo Fan Mr. Bean']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Combo Fan Mr. Bean</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Hộp Quà Kỷ Niệm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Quà Kỷ Niệm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Set Quà Mr. Bean Vintage']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Set Quà
+                                                Mr. Bean Vintage</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Combo Fan Mr. Bean']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Combo
+                                                Fan Mr. Bean</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Hộp Quà Kỷ Niệm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Quà
+                                                Kỷ Niệm</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -1192,7 +1357,8 @@
 
                     <!-- 5. TEDDY COUPLE (Mega Dropdown) -->
                     <li class="nav-item has-megamenu">
-                        <a href="{{ route('products.index', ['category_id' => 4]) }}" class="nav-link {{ request('category_id') == 4 ? 'active' : '' }}">
+                        <a href="{{ route('products.index', ['category_id' => 4]) }}"
+                            class="nav-link {{ request('category_id') == 4 ? 'active' : '' }}">
                             TEDDY COUPLE <i class="fa-solid fa-chevron-down"></i>
                         </a>
                         <div class="megamenu-panel">
@@ -1200,33 +1366,57 @@
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">CẶP ĐÔI TÌNH YÊU</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Gấu Cô Dâu Chú Rể']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Cô Dâu Chú Rể</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Teddy Áo Đôi Trái Tim']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Teddy Áo Đôi</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Gấu Ôm Bó Hoa']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Gấu Ôm Bó Hoa</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Gấu Cô Dâu Chú Rể']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Cô
+                                                Dâu Chú Rể</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Teddy Áo Đôi Trái Tim']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp
+                                                Teddy Áo Đôi</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Gấu Ôm Bó Hoa']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Gấu
+                                                Ôm Bó Hoa</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">QUÀ TẶNG VALENTINE</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Set Kỷ Niệm 100 Ngày']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Set Kỷ Niệm 100 Ngày</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Hộp Mica Couple Sang Trọng']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Mica Sang Trọng</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Gấu Bông Tỏ Tình']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông Tỏ Tình</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Set Kỷ Niệm 100 Ngày']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Set Kỷ
+                                                Niệm 100 Ngày</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Hộp Mica Couple Sang Trọng']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Mica
+                                                Sang Trọng</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Gấu Bông Tỏ Tình']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông
+                                                Tỏ Tình</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">KÍCH THƯỚC COUPLE</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple 40cm Dễ Thương', 'size' => '40cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple 40cm Dễ Thương</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple 50cm - 60cm', 'size' => '50cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple 50cm – 60cm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple Khổng Lồ 1m2', 'size' => '1m2']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple Khổng Lồ 1m2</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple 40cm Dễ Thương', 'size' => '40cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple
+                                                40cm Dễ Thương</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple 50cm - 60cm', 'size' => '50cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple
+                                                50cm – 60cm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple Khổng Lồ 1m2', 'size' => '1m2']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple
+                                                Khổng Lồ 1m2</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">CẶP ĐÔI THEO MÀU</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Hồng - Trắng Pastel']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Hồng – Trắng Pastel</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Nâu Socola - Kem Bơ']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Nâu Socola – Kem</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Nâu Đất Vintage']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Nâu Đất Vintage</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Hồng - Trắng Pastel']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Hồng
+                                                – Trắng Pastel</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Nâu Socola - Kem Bơ']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Nâu
+                                                Socola – Kem</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Nâu Đất Vintage']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Nâu
+                                                Đất Vintage</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -1235,7 +1425,8 @@
 
                     <!-- 6. GỐI BÔNG TEDDY (Mega Dropdown) -->
                     <li class="nav-item has-megamenu">
-                        <a href="{{ route('products.index', ['category_id' => 5]) }}" class="nav-link {{ request('category_id') == 5 ? 'active' : '' }}">
+                        <a href="{{ route('products.index', ['category_id' => 5]) }}"
+                            class="nav-link {{ request('category_id') == 5 ? 'active' : '' }}">
                             GỐI BÔNG TEDDY <i class="fa-solid fa-chevron-down"></i>
                         </a>
                         <div class="megamenu-panel">
@@ -1243,33 +1434,57 @@
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">GỐI ÔM DÀI</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Ôm Dài 1m2 - 1m5']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Ôm Dài 1m2 – 1m5</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Ôm Hình Trụ Khủng']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Ôm Hình Trụ Khủng</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Ôm Bông Bi Thái']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Ôm Bông Bi Thái</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Ôm Dài 1m2 - 1m5']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Ôm
+                                                Dài 1m2 – 1m5</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Ôm Hình Trụ Khủng']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Ôm
+                                                Hình Trụ Khủng</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Ôm Bông Bi Thái']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Ôm
+                                                Bông Bi Thái</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">GỐI TỰA & VĂN PHÒNG</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Tựa Lưng Mặt Gấu 40cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Tựa Lưng Mặt Gấu</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Đệm Ngồi Bông Êm Ái']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Đệm Ngồi Bông Êm Ái</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Kê Cổ Chữ U']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Kê Cổ Chữ U</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Tựa Lưng Mặt Gấu 40cm']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Tựa
+                                                Lưng Mặt Gấu</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Đệm Ngồi Bông Êm Ái']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Đệm Ngồi
+                                                Bông Êm Ái</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Kê Cổ Chữ U']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Kê
+                                                Cổ Chữ U</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">GỐI MỀN 2 TRONG 1</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Mền Gấu Bông 2 Trong 1']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Mền Gấu Kèm Chăn</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Đút Tay Mùa Đông']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Đút Tay Giữ Ấm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Chăn Nỉ Tuyết']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Chăn Nỉ Tuyết</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Mền Gấu Bông 2 Trong 1']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Mền
+                                                Gấu Kèm Chăn</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Đút Tay Mùa Đông']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Đút
+                                                Tay Giữ Ấm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Chăn Nỉ Tuyết']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Chăn
+                                                Nỉ Tuyết</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
                                     <div class="megamenu-heading">GỐI TRÒN & CUTE</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Tròn Mặt Gấu Cười']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Tròn Mặt Gấu Cười</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Bánh Mì Teddy']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Bánh Mì Teddy</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Trái Tim Teddy']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Trái Tim Teddy</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Tròn Mặt Gấu Cười']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Tròn
+                                                Mặt Gấu Cười</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Bánh Mì Teddy']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Bánh
+                                                Mì Teddy</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 5, 'sub' => 'Gối Trái Tim Teddy']) }}"
+                                                class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gối Trái
+                                                Tim Teddy</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -1278,7 +1493,8 @@
 
                     <!-- 7. TẤT CẢ SẢN PHẨM -->
                     <li class="nav-item">
-                        <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.index') && !request('category_id') ? 'active' : '' }}">
+                        <a href="{{ route('products.index') }}"
+                            class="nav-link {{ request()->routeIs('products.index') && !request('category_id') ? 'active' : '' }}">
                             <i class="fa-solid fa-boxes-stacked"></i> TẤT CẢ SẢN PHẨM
                         </a>
                     </li>
@@ -1301,22 +1517,31 @@
                     <div class="brand-icon" style="width: 40px; height: 40px; font-size: 20px;">
                         <i class="fa-solid fa-paw"></i>
                     </div>
-                    <span style="font-size: 20px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.5px;">Mật Ngọt Bear</span>
+                    <span style="font-size: 20px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.5px;">Mật Ngọt
+                        Bear</span>
                 </div>
-                <p>Thương hiệu gấu bông cao cấp hàng đầu Việt Nam. Chúng mình mang đến những người bạn nhồi bông mềm mại, êm ái, an toàn 100% cho làn da và chất lượng thêu tỉ mỉ chuẩn từng đường kim mũi chỉ.</p>
-                <p><i class="fa-solid fa-location-dot" style="color: var(--honey-gold); margin-right: 8px;"></i> Showroom: 123 Đường Cầu Giấy, Quận Cầu Giấy, Hà Nội</p>
-                <p><i class="fa-solid fa-phone" style="color: var(--honey-gold); margin-right: 8px;"></i> Hotline tư vấn & đặt hàng: <strong>097.989.6616</strong></p>
+                <p>Thương hiệu gấu bông cao cấp hàng đầu Việt Nam. Chúng mình mang đến những người bạn nhồi bông mềm
+                    mại, êm ái, an toàn 100% cho làn da và chất lượng thêu tỉ mỉ chuẩn từng đường kim mũi chỉ.</p>
+                <p><i class="fa-solid fa-location-dot" style="color: var(--honey-gold); margin-right: 8px;"></i>
+                    Showroom: 123 Đường Cầu Giấy, Quận Cầu Giấy, Hà Nội</p>
+                <p><i class="fa-solid fa-phone" style="color: var(--honey-gold); margin-right: 8px;"></i> Hotline tư
+                    vấn & đặt hàng: <strong>097.989.6616</strong></p>
             </div>
 
             <!-- Col 2: Categories -->
             <div class="footer-col">
                 <h4>BỘ SƯU TẬP TEDDY</h4>
                 <ul class="footer-links" id="footer-categories-list">
-                    <li><a href="{{ route('products.index', ['category_id' => 1]) }}"><i class="fa-solid fa-angle-right"></i> Teddy Classic Cổ Điển</a></li>
-                    <li><a href="{{ route('products.index', ['category_id' => 2]) }}"><i class="fa-solid fa-angle-right"></i> Butter Bear Siêu Hot</a></li>
-                    <li><a href="{{ route('products.index', ['category_id' => 3]) }}"><i class="fa-solid fa-angle-right"></i> Teddy Mr. Bean Vintage</a></li>
-                    <li><a href="{{ route('products.index', ['category_id' => 4]) }}"><i class="fa-solid fa-angle-right"></i> Teddy Couple Đôi Bạn</a></li>
-                    <li><a href="{{ route('products.index', ['category_id' => 5]) }}"><i class="fa-solid fa-angle-right"></i> Gối Bông Teddy Đa Năng</a></li>
+                    <li><a href="{{ route('products.index', ['category_id' => 1]) }}"><i
+                                class="fa-solid fa-angle-right"></i> Teddy Classic Cổ Điển</a></li>
+                    <li><a href="{{ route('products.index', ['category_id' => 2]) }}"><i
+                                class="fa-solid fa-angle-right"></i> Butter Bear Siêu Hot</a></li>
+                    <li><a href="{{ route('products.index', ['category_id' => 3]) }}"><i
+                                class="fa-solid fa-angle-right"></i> Teddy Mr. Bean Vintage</a></li>
+                    <li><a href="{{ route('products.index', ['category_id' => 4]) }}"><i
+                                class="fa-solid fa-angle-right"></i> Teddy Couple Đôi Bạn</a></li>
+                    <li><a href="{{ route('products.index', ['category_id' => 5]) }}"><i
+                                class="fa-solid fa-angle-right"></i> Gối Bông Teddy Đa Năng</a></li>
                 </ul>
             </div>
 
@@ -1324,10 +1549,18 @@
             <div class="footer-col">
                 <h4>CHÍNH SÁCH BÁN HÀNG</h4>
                 <ul class="footer-links">
-                    <li><a href="javascript:void(0)" onclick="Swal.fire({title:'Chính sách đổi trả', text:'Đổi trả miễn phí trong 7 ngày nếu lỗi sản xuất hoặc không đúng mẫu.', icon:'info', confirmButtonColor:'#5D4037'})"><i class="fa-solid fa-angle-right"></i> Đổi Trả Trong 7 Ngày</a></li>
-                    <li><a href="javascript:void(0)" onclick="Swal.fire({title:'Phí giao hàng', text:'Đồng giá ship 30.000đ toàn quốc. Miễn phí ship đơn từ 500k.', icon:'info', confirmButtonColor:'#5D4037'})"><i class="fa-solid fa-angle-right"></i> Giao Hàng Toàn Quốc 30k</a></li>
-                    <li><a href="javascript:void(0)" onclick="Swal.fire({title:'Bảo hành gấu bông', text:'Bảo hành đường chỉ may và bông nhồi trọn đời tại cửa hàng.', icon:'info', confirmButtonColor:'#5D4037'})"><i class="fa-solid fa-angle-right"></i> Bảo Hành Đường May Trọn Đời</a></li>
-                    <li><a href="javascript:void(0)" onclick="Swal.fire({title:'Dịch vụ gói quà', text:'Miễn phí gói quà tặng kèm nơ và thiệp viết tay xinh xắn.', icon:'info', confirmButtonColor:'#5D4037'})"><i class="fa-solid fa-angle-right"></i> Gói Quà & Tặng Thiệp Xinh</a></li>
+                    <li><a href="javascript:void(0)"
+                            onclick="Swal.fire({title:'Chính sách đổi trả', text:'Đổi trả miễn phí trong 7 ngày nếu lỗi sản xuất hoặc không đúng mẫu.', icon:'info', confirmButtonColor:'#5D4037'})"><i
+                                class="fa-solid fa-angle-right"></i> Đổi Trả Trong 7 Ngày</a></li>
+                    <li><a href="javascript:void(0)"
+                            onclick="Swal.fire({title:'Phí giao hàng', text:'Đồng giá ship 30.000đ toàn quốc. Miễn phí ship đơn từ 500k.', icon:'info', confirmButtonColor:'#5D4037'})"><i
+                                class="fa-solid fa-angle-right"></i> Giao Hàng Toàn Quốc 30k</a></li>
+                    <li><a href="javascript:void(0)"
+                            onclick="Swal.fire({title:'Bảo hành gấu bông', text:'Bảo hành đường chỉ may và bông nhồi trọn đời tại cửa hàng.', icon:'info', confirmButtonColor:'#5D4037'})"><i
+                                class="fa-solid fa-angle-right"></i> Bảo Hành Đường May Trọn Đời</a></li>
+                    <li><a href="javascript:void(0)"
+                            onclick="Swal.fire({title:'Dịch vụ gói quà', text:'Miễn phí gói quà tặng kèm nơ và thiệp viết tay xinh xắn.', icon:'info', confirmButtonColor:'#5D4037'})"><i
+                                class="fa-solid fa-angle-right"></i> Gói Quà & Tặng Thiệp Xinh</a></li>
                 </ul>
             </div>
 
@@ -1336,9 +1569,15 @@
                 <h4>KẾT NỐI VỚI CHÚNG MÌNH</h4>
                 <p>Theo dõi fanpage Mật Ngọt Bear để nhận voucher giảm giá 15% cho đơn hàng đầu tiên!</p>
                 <div style="display: flex; gap: 10px;">
-                    <a href="https://facebook.com" target="_blank" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="https://tiktok.com" target="_blank" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i class="fa-brands fa-tiktok"></i></a>
-                    <a href="https://instagram.com" target="_blank" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://facebook.com" target="_blank"
+                        style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i
+                            class="fa-brands fa-facebook-f"></i></a>
+                    <a href="https://tiktok.com" target="_blank"
+                        style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i
+                            class="fa-brands fa-tiktok"></i></a>
+                    <a href="https://instagram.com" target="_blank"
+                        style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i
+                            class="fa-brands fa-instagram"></i></a>
                 </div>
             </div>
         </div>
@@ -1346,8 +1585,10 @@
         <div class="footer-bottom">
             <div>&copy; 2026 Mật Ngọt Bear. Bản quyền thuộc về Mật Ngọt Bear - Thế giới gấu bông mềm mịn.</div>
             <div style="display: flex; gap: 16px;">
-                <span><i class="fa-solid fa-shield-halved" style="color: var(--honey-gold);"></i> 100% Bông Sạch Kháng Khuẩn</span>
-                <span><i class="fa-solid fa-truck-fast" style="color: var(--honey-gold);"></i> Đóng Gói Hút Chân Không Gọn Gàng</span>
+                <span><i class="fa-solid fa-shield-halved" style="color: var(--honey-gold);"></i> 100% Bông Sạch Kháng
+                    Khuẩn</span>
+                <span><i class="fa-solid fa-truck-fast" style="color: var(--honey-gold);"></i> Đóng Gói Hút Chân Không
+                    Gọn Gàng</span>
             </div>
         </div>
     </footer>
@@ -1374,7 +1615,7 @@
         });
 
         // Cart & Wishlist state
-        let cartItemsCount = parseInt(localStorage.getItem('mn_cart_count') || '0');
+        let cartItemsCount = {{ (int) ($realCartCount ?? 0) }};
         let wishlistCount = parseInt(localStorage.getItem('mn_wishlist_count') || '0');
         updateCartBadge();
 
@@ -1385,14 +1626,57 @@
             if (wBadge) wBadge.innerText = wishlistCount;
         }
 
-        function addToCart(productId, productName = 'Gấu bông', qty = 1) {
-            cartItemsCount += qty;
-            localStorage.setItem('mn_cart_count', cartItemsCount);
-            updateCartBadge();
-            Toast.fire({
-                icon: 'success',
-                title: `Đã thêm "${productName}" vào giỏ hàng!`
-            });
+        function addToCart(productId, productName = 'Gấu bông', qty = 1, redirectAfter = false) {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            return fetch('{{ route('customer.cart.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken || ''
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: qty
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.cart_count !== undefined) {
+                            cartItemsCount = data.cart_count;
+                        } else {
+                            cartItemsCount++;
+                        }
+                        updateCartBadge();
+                        Toast.fire({
+                            icon: 'success',
+                            title: `Đã thêm "${productName}" vào giỏ hàng!`
+                        });
+
+                        if (redirectAfter) {
+                            setTimeout(() => {
+                                window.location.href = "{{ route('customer.cart') }}";
+                            }, 300);
+                        }
+                        return true;
+                    } else {
+                        Toast.fire({
+                            icon: 'error',
+                            title: data.message || 'Không thể thêm sản phẩm vào giỏ hàng'
+                        });
+                        return false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding to cart:', error);
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Có lỗi xảy ra khi thêm vào giỏ hàng!'
+                    });
+                    return false;
+                });
         }
 
         function showToastCart() {
@@ -1429,4 +1713,5 @@
     </script>
     @yield('scripts')
 </body>
+
 </html>

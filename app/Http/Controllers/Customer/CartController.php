@@ -33,6 +33,8 @@ class CartController extends Controller
                     $q->orderBy('is_primary', 'desc')->orderBy('sort_order', 'asc');
                 }]);
             }])
+            ->orderBy('updated_at', 'desc')
+            ->orderBy('id', 'desc')
             ->get();
 
         if ($request->wantsJson()) {
@@ -91,11 +93,16 @@ class CartController extends Controller
             ]
         );
 
+        $cartItem->touch();
+
+        $cartCount = CartItem::where('user_id', $userId)->count();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Đã thêm sản phẩm vào giỏ hàng!',
                 'cartItem' => $cartItem,
+                'cart_count' => $cartCount,
             ]);
         }
 
@@ -181,6 +188,37 @@ class CartController extends Controller
         }
 
         return back()->with('success', 'Đã xóa toàn bộ giỏ hàng.');
+    }
+
+    /**
+     * Log immediately when a user unchecks/deselects a product in the cart.
+     */
+    public function logUncheck(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'cart_item_id' => 'nullable|integer',
+            'product_name' => 'nullable|string',
+            'action' => 'nullable|string', // 'uncheck_single' or 'uncheck_all'
+            'remaining_count' => 'nullable|integer',
+        ]);
+
+        $userId = auth()->id() ?? $this->getUserId();
+        $userEmail = auth()->user()?->email ?? ('Khách vãng lai (ID: ' . $userId . ')');
+        $time = now()->format('d/m/Y H:i:s');
+
+        if (($validated['action'] ?? '') === 'uncheck_all') {
+            \Illuminate\Support\Facades\Log::info("🛒 [CART LOG] Người dùng {$userEmail} đã BỎ CHỌN TẤT CẢ sản phẩm trong giỏ hàng lúc {$time}.");
+        } else {
+            $productName = $validated['product_name'] ?? ('Mã giỏ: #' . ($validated['cart_item_id'] ?? ''));
+            $remaining = $validated['remaining_count'] ?? 0;
+            \Illuminate\Support\Facades\Log::info("🛒 [CART LOG] Người dùng {$userEmail} đã BỎ TÍCH sản phẩm '{$productName}' (CartItem ID: {$validated['cart_item_id']}) lúc {$time}. Số sản phẩm còn được chọn: {$remaining}.");
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã ghi nhận log bỏ tích sản phẩm thành công.',
+            'logged_at' => $time,
+        ]);
     }
 }
 

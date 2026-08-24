@@ -1,0 +1,147 @@
+/* ==========================================================================
+   Admin Voucher Index Page Styles - Mật Ngọt Bear
+   ========================================================================== */
+
+/* 1. Statistics Cards */
+.voucher-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.875rem;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .voucher-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.voucher-stat-card {
+    background-color: #FFFFFF;
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #EBDDCD;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    min-width: 0;
+    transition: all 0.2s ease-in-out;
+}
+
+.voucher-stat-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-color: #DDA760;
+}
+
+.voucher-stat-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+/* 2. Filter & Search Bar */
+.voucher-filter-card {
+    background-color: #FFFFFF;
+    border-radius: 1rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid #EBDDCD;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.voucher-filter-input,
+.voucher-filter-select {
+    border-radius: 0.75rem;
+    border-color: #EBDDCD;
+    font-size: 0.875rem;
+    color: #2E190E;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.voucher-filter-input:focus,
+.voucher-filter-select:focus {
+    border-color: #DDA760;
+    --tw-ring-color: #DDA760;
+    outline: none;
+}
+
+/* 3. Table Layout & Rows */
+.voucher-table-wrapper {
+    background-color: #FFFFFF;
+    border-radius: 1rem;
+    border: 1px solid #FEF3C7;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.voucher-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.voucher-table-head {
+    background-color: rgba(254, 243, 199, 0.7);
+    border-bottom: 1px solid #FEF3C7;
+    color: #78350F;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.voucher-table-row {
+    transition: background-color 0.15s ease-in-out;
+}
+
+.voucher-table-row:hover {
+    background-color: rgba(254, 243, 199, 0.3);
+}
+
+/* 4. Badges */
+.voucher-code-badge {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #78350F;
+    background-color: rgba(254, 243, 199, 0.8);
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(252, 211, 77, 0.6);
+    letter-spacing: 0.05em;
+}
+
+/* 5. Progress Bars */
+.voucher-progress-container {
+    width: 100%;
+    background-color: #E5E7EB;
+    border-radius: 9999px;
+    height: 0.375rem;
+    overflow: hidden;
+}
+
+.voucher-progress-fill {
+    height: 0.375rem;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+/* 6. Custom Pagination */
+.voucher-pagination nav svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.voucher-pagination nav [aria-current="page"] span {
+    background-color: #E09028 !important;
+    border-color: #E09028 !important;
+    color: #FFFFFF !important;
+    font-weight: 700;
+    border-radius: 0.5rem;
+}

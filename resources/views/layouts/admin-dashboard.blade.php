@@ -501,7 +501,7 @@
             </a>
 
             <div class="sidebar-section-label">Bán Hàng & Tài Chính</div>
-            <a href="{{ route('admin.page', 'vouchers') }}" class="sidebar-link {{ ($currentPage ?? '') === 'vouchers' ? 'active' : '' }}" data-title="Quản lý Voucher" onclick="handleSidebarItemClick(event, this)">
+            <a href="{{ route('admin.vouchers.index') }}" class="sidebar-link {{ request()->routeIs('admin.vouchers.*') || ($currentPage ?? '') === 'vouchers' ? 'active' : '' }}" data-title="Quản lý Voucher">
                 <i class="fa-solid fa-ticket"></i>
                 <span class="sidebar-link-text">Quản lý Voucher</span>
             </a>
