@@ -4,11 +4,19 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
+use App\Models\User;
+use App\Models\Voucher;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CheckoutController extends Controller
 {
+    public function __construct(protected OrderService $orderService)
+    {
+    }
+
     /**
      * Display checkout page with selected cart items.
      */
@@ -20,7 +28,8 @@ class CheckoutController extends Controller
             return redirect()->route('customer.cart.index')->with('error', 'Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.');
         }
 
-        $userId = auth()->id() ?? \App\Models\User::where('role', 'CUSTOMER')->first()?->id ?? 1;
+        $userId = auth()->id() ?? User::where('role', 'CUSTOMER')->first()?->id ?? 1;
+        $user = auth()->user() ?? User::find($userId);
 
         $cartItems = CartItem::where('user_id', $userId)
             ->whereIn('id', $selectedItemIds)
@@ -37,9 +46,30 @@ class CheckoutController extends Controller
             return $price * $item->quantity;
         });
 
-        $shippingFee = 30000; // Mặc định 30.000đ
+        $shippingFee = $subtotal >= 500000 ? 0 : 30000;
 
-        return view('customer.checkout.index', compact('cartItems', 'subtotal', 'shippingFee'));
+        // Fetch active vouchers
+        $orderVouchers = Voucher::where('status', 'ACTIVE')
+            ->where('voucher_type', 'ORDER')
+            ->where(fn($q) => $q->whereNull('start_date')->orWhere('start_date', '<=', now()))
+            ->where(fn($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', now()))
+            ->get();
+
+        $shippingVouchers = Voucher::where('status', 'ACTIVE')
+            ->where('voucher_type', 'SHIPPING')
+            ->where(fn($q) => $q->whereNull('start_date')->orWhere('start_date', '<=', now()))
+            ->where(fn($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', now()))
+            ->get();
+
+        return view('customer.checkout.index', compact(
+            'cartItems',
+            'subtotal',
+            'shippingFee',
+            'user',
+            'selectedItemIds',
+            'orderVouchers',
+            'shippingVouchers'
+        ));
     }
 
     /**
@@ -47,7 +77,51 @@ class CheckoutController extends Controller
      */
     public function process(Request $request)
     {
-        // TODO: Will be fully implemented in Order Creation step
+        $validated = $request->validate([
+            'recipient_name' => 'required|string|max:255',
+            'recipient_phone' => 'required|string|max:20',
+            'recipient_address' => 'required|string|max:500',
+            'note' => 'nullable|string|max:500',
+            'payment_method' => 'required|in:COD,BANKING,VNPAY,MOMO',
+            'selected_items' => 'required|array|min:1',
+            'selected_items.*' => 'required|integer',
+            'voucher_id' => 'nullable|exists:vouchers,id',
+            'shipping_voucher_id' => 'nullable|exists:vouchers,id',
+        ], [
+            'recipient_name.required' => 'Vui lòng nhập họ và tên người nhận.',
+            'recipient_phone.required' => 'Vui lòng nhập số điện thoại người nhận.',
+            'recipient_address.required' => 'Vui lòng nhập địa chỉ giao hàng.',
+            'payment_method.required' => 'Vui lòng chọn phương thức thanh toán.',
+            'selected_items.required' => 'Không có sản phẩm nào được chọn.',
+        ]);
+
+        $userId = auth()->id() ?? User::where('role', 'CUSTOMER')->first()?->id ?? 1;
+
+        $cartItems = CartItem::where('user_id', $userId)
+            ->whereIn('id', $validated['selected_items'])
+            ->with(['product'])
+            ->get();
+
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('customer.cart.index')->with('error', 'Sản phẩm trong giỏ hàng không tồn tại.');
+        }
+
+        try {
+            $data = array_merge($validated, [
+                'customer_id' => $userId,
+            ]);
+
+            $order = $this->orderService->createOrder($data, $cartItems->all());
+
+            // Delete purchased items from cart
+            CartItem::where('user_id', $userId)
+                ->whereIn('id', $validated['selected_items'])
+                ->delete();
+
+            return redirect()->route('customer.orders.show', $order->id)
+                ->with('success', 'Đặt hàng thành công! Mã đơn hàng của bạn là: ' . $order->order_code);
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Lỗi đặt hàng: ' . $e->getMessage());
+        }
     }
 }
-
