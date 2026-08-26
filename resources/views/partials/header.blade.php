@@ -47,8 +47,8 @@
             <span class="badge-count" id="wishlist-count">0</span>
         </a>
 
-        <!-- Cart (Giỏ hàng - Chờ đường dẫn của bạn nhóm) -->
-        <a href="#" class="utility-icon-btn" title="Giỏ hàng">
+        <!-- Cart (Giỏ hàng) -->
+        <a href="{{ route('customer.cart') }}" class="utility-icon-btn" title="Giỏ hàng">
             <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
             <span class="badge-count" id="cart-count">0</span>
         </a>

@@ -4,7 +4,8 @@ import { Vietnamese } from 'flatpickr/dist/l10n/vn.js';
 
 import { toastManager } from './toast.js';
 import { cuteDateTimePicker } from './datetime-picker.js';
-import { voucherForm, vouchersList } from './admin/vouchers.js';
+import { voucherForm } from './admin/vouchers/create.js';
+import { vouchersList } from './admin/vouchers/index.js';
 import { cartComponent } from './customer/cart.js';
 
 flatpickr.localize(Vietnamese);

@@ -46,7 +46,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::patch('/reviews/{review}/toggle', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
     // 6. Voucher management (Ngọc Anh)
-    Route::patch('/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
+    Route::post('/vouchers/{id}/restore', [VoucherController::class, 'restore'])->name('vouchers.restore');
+    Route::delete('/vouchers/{id}/force-delete', [VoucherController::class, 'forceDelete'])->name('vouchers.force-delete');
+    Route::match(['POST', 'PATCH'], '/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
     Route::resource('vouchers', VoucherController::class)->except(['show']);
 
     // 7. PHẦN CỦA KHÁNH VÂN: Quản lý Sản phẩm (Trang riêng)
@@ -64,7 +66,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/customers', fn() => view('admin.placeholder', ['currentPage' => 'customers']))->name('customers.index');
     Route::get('/staff', fn() => view('admin.placeholder', ['currentPage' => 'staff']))->name('staff.index');
     Route::get('/support', fn() => view('admin.placeholder', ['currentPage' => 'support']))->name('support.index');
+
     Route::get('/page/{page}', function (string $page) {
+        if ($page === 'vouchers') {
+            return redirect()->route('admin.vouchers.index');
+        }
         return view('admin.placeholder', ['currentPage' => $page]);
     })->name('page');
 });

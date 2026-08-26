@@ -9,7 +9,7 @@
     <!-- Google Fonts Be Vietnam Pro -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -121,108 +121,89 @@
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
-                                    <div class="megamenu-heading">PHỤ KIỆN GẤU BƠ</div>
+                                    <div class="megamenu-heading">PHỤ KIỆN BUTTER BEAR</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Móc Khóa Butter Bear']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Móc Khóa Gấu Bơ</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Móc Khóa Butter Bear', 'search' => 'móc khóa']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Móc Khóa Butter Bear</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Balo Butter Bear']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Balo Butter Bear</a></li>
                                         <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Túi Đeo Chéo Gấu Bơ']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Túi Đeo Chéo Gấu Bơ</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Kẹp Tóc Gấu Butter Bear']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Kẹp Tóc Gấu Bơ</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
-                                    <div class="megamenu-heading">SET QUÀ TẶNG BƠ</div>
+                                    <div class="megamenu-heading">COMBO QUÀ TẶNG</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Hộp Quà Butter Bear']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Quà Butter Bear</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Combo Gấu Bơ + Hoa Sáp']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Combo Gấu Bơ + Hoa Sáp</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Gấu Bơ Kèm Thiệp']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bơ Kèm Thiệp</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Set Quà Sinh Nhật Butter Bear']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Set Quà Sinh Nhật Butter Bear</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Combo Gấu Bơ Kèm Hộp Đèn']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Combo Kèm Hộp Đèn Led</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 2, 'sub' => 'Set Butter Bear Tốt Nghiệp']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Set Tốt Nghiệp</a></li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </li>
 
-                    <!-- 4. TEDDY MR. BEAN (Mega Dropdown) -->
+                    <!-- 4. CAPYBARA & TREND (Mega Dropdown) -->
                     <li class="nav-item has-megamenu">
                         <a href="{{ route('products.index', ['category_id' => 3]) }}" class="nav-link {{ request('category_id') == 3 ? 'active' : '' }}">
-                            TEDDY MR. BEAN <i class="fa-solid fa-chevron-down"></i>
+                            CAPYBARA &amp; TREND <i class="fa-solid fa-chevron-down"></i>
                         </a>
                         <div class="megamenu-panel">
                             <div class="megamenu-container">
                                 <div class="megamenu-col">
-                                    <div class="megamenu-heading">MR. BEAN CỔ ĐIỂN</div>
+                                    <div class="megamenu-heading">CAPYBARA ĐÌNH ĐÁM</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Mắt Cúc 40cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr. Bean Mắt Cúc</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Đan Len']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr. Bean Đan Len</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Mr. Bean Vintage']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Mr. Bean Vintage</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Capybara Rút Nước Mũi']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Capybara Rút Nước Mũi</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Capybara Balo Rùa']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Capybara Balo Rùa Xanh</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Capybara Đội Mũ Cam']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Capybara Đội Quả Cam</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Capybara Bánh Mì Bơ']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Capybara Bánh Mì</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
-                                    <div class="megamenu-heading">SIZE ĐẶC BIỆT</div>
+                                    <div class="megamenu-heading">HOT TREND TIKTOK</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Nhỏ 25cm', 'size' => '25cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean Nhỏ 25cm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Vừa 40cm', 'size' => '40cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean Vừa 40cm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mr. Bean Khổng Lồ 80cm', 'size' => '80cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mr. Bean Khổng Lồ 80cm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Bông Loopy Hồng', 'search' => 'loopy']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hải Ly Loopy Hồng</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Gấu Dâu Lotso Thơm Mùi Dâu', 'search' => 'lotso']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Dâu Lotso Hương Dâu</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Vịt Trắng Trầm Cảm Lalafanfan']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Vịt Má Hồng Lalafanfan</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Mèo Hoàng Thượng Mặt Quạu']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Mèo Mặt Quạu</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
-                                    <div class="megamenu-heading">PHỤ KIỆN MR. BEAN</div>
+                                    <div class="megamenu-heading">NHÂN VẬT HOẠT HÌNH</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Móc Khóa Gấu Nâu']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Móc Khóa Gấu Nâu</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Áo Len Cho Gấu Mr. Bean']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Áo Len Cho Gấu</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Cà Vạt Đỏ Mr. Bean']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cà Vạt Đỏ Mr. Bean</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Thỏ Bảy Màu & Shin']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Shin Cậu Bé Bút Chì</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Doraemon Đội Chuông Vàng']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Doraemon Chuông Vàng</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Pikachu & Pokemon']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Pikachu Pokemon Siêu Cấp</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Stitch Xanh Tai To']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Stitch Xanh Tai To</a></li>
                                     </ul>
                                 </div>
                                 <div class="megamenu-col">
-                                    <div class="megamenu-heading">QUÀ TẶNG ĐỘC ĐÁO</div>
+                                    <div class="megamenu-heading">SIZE SIÊU KHỔNG LỒ</div>
                                     <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Set Quà Mr. Bean Vintage']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Set Quà Mr. Bean Vintage</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Combo Fan Mr. Bean']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Combo Fan Mr. Bean</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Hộp Quà Kỷ Niệm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Quà Kỷ Niệm</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Capybara Khổng Lồ 1m2']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Capybara 1m2 Khổng Lồ</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Loopy Khổng Lồ 1m']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Loopy 1m Ôm Cực Đã</a></li>
+                                        <li><a href="{{ route('products.index', ['category_id' => 3, 'sub' => 'Lotso Đại 1m4']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Lotso Đại 1m4</a></li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </li>
 
-                    <!-- 5. TEDDY COUPLE (Mega Dropdown) -->
-                    <li class="nav-item has-megamenu">
+                    <!-- 5. BỘ SƯU TẬP THEO MÙA (Dropdown Thường) -->
+                    <li class="nav-item has-dropdown">
                         <a href="{{ route('products.index', ['category_id' => 4]) }}" class="nav-link {{ request('category_id') == 4 ? 'active' : '' }}">
-                            TEDDY COUPLE <i class="fa-solid fa-chevron-down"></i>
+                            BST THEO MÙA <i class="fa-solid fa-chevron-down"></i>
                         </a>
-                        <div class="megamenu-panel">
-                            <div class="megamenu-container">
-                                <div class="megamenu-col">
-                                    <div class="megamenu-heading">CẶP ĐÔI TÌNH YÊU</div>
-                                    <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Gấu Cô Dâu Chú Rể']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Cô Dâu Chú Rể</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Teddy Áo Đôi Trái Tim']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Teddy Áo Đôi</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Gấu Ôm Bó Hoa']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Gấu Ôm Bó Hoa</a></li>
-                                    </ul>
-                                </div>
-                                <div class="megamenu-col">
-                                    <div class="megamenu-heading">QUÀ TẶNG VALENTINE</div>
-                                    <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Set Kỷ Niệm 100 Ngày']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Set Kỷ Niệm 100 Ngày</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Hộp Mica Couple Sang Trọng']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Hộp Mica Sang Trọng</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Gấu Bông Tỏ Tình']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Gấu Bông Tỏ Tình</a></li>
-                                    </ul>
-                                </div>
-                                <div class="megamenu-col">
-                                    <div class="megamenu-heading">KÍCH THƯỚC COUPLE</div>
-                                    <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple 40cm Dễ Thương', 'size' => '40cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple 40cm Dễ Thương</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple 50cm - 60cm', 'size' => '50cm']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple 50cm – 60cm</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Couple Khổng Lồ 1m2', 'size' => '1m2']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Couple Khổng Lồ 1m2</a></li>
-                                    </ul>
-                                </div>
-                                <div class="megamenu-col">
-                                    <div class="megamenu-heading">CẶP ĐÔI THEO MÀU</div>
-                                    <ul class="megamenu-list">
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Hồng - Trắng Pastel']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Hồng – Trắng Pastel</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Nâu Socola - Kem Bơ']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Nâu Socola – Kem</a></li>
-                                        <li><a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'Cặp Nâu Đất Vintage']) }}" class="megamenu-link"><i class="fa-solid fa-angle-right"></i> Cặp Nâu Đất Vintage</a></li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <div class="dropdown-menu">
+                            <a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'BST Valentine Tỏ Tình']) }}" class="dropdown-item">
+                                <i class="fa-solid fa-heart" style="color: #E91E63; margin-right: 8px;"></i> BST Valentine Tỏ Tình
+                            </a>
+                            <a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'BST Giáng Sinh Ấm Áp']) }}" class="dropdown-item">
+                                <i class="fa-solid fa-tree" style="color: #2E7D32; margin-right: 8px;"></i> BST Giáng Sinh Noel
+                            </a>
+                            <a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'BST Tốt Nghiệp Trưởng Thành']) }}" class="dropdown-item">
+                                <i class="fa-solid fa-graduation-cap" style="color: #1976D2; margin-right: 8px;"></i> BST Gấu Tốt Nghiệp
+                            </a>
+                            <a href="{{ route('products.index', ['category_id' => 4, 'sub' => 'BST Sinh Nhật Đáng Yêu']) }}" class="dropdown-item">
+                                <i class="fa-solid fa-cake-candles" style="color: #E59819; margin-right: 8px;"></i> BST Quà Tặng Sinh Nhật
+                            </a>
                         </div>
                     </li>
 
@@ -310,7 +291,7 @@
         });
 
         // Cart & Wishlist state
-        let cartItemsCount = parseInt(localStorage.getItem('mn_cart_count') || '0');
+        let cartItemsCount = {{ (int) ($realCartCount ?? 0) }};
         let wishlistCount = parseInt(localStorage.getItem('mn_wishlist_count') || '0');
         updateCartBadge();
 
@@ -321,14 +302,57 @@
             if (wBadge) wBadge.innerText = wishlistCount;
         }
 
-        function addToCart(productId, productName = 'Gấu bông', qty = 1) {
-            cartItemsCount += qty;
-            localStorage.setItem('mn_cart_count', cartItemsCount);
-            updateCartBadge();
-            Toast.fire({
-                icon: 'success',
-                title: `Đã thêm "${productName}" vào giỏ hàng!`
-            });
+        function addToCart(productId, productName = 'Gấu bông', qty = 1, redirectAfter = false) {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            return fetch('{{ route('customer.cart.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken || ''
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: qty
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.cart_count !== undefined) {
+                            cartItemsCount = data.cart_count;
+                        } else {
+                            cartItemsCount++;
+                        }
+                        updateCartBadge();
+                        Toast.fire({
+                            icon: 'success',
+                            title: `Đã thêm "${productName}" vào giỏ hàng!`
+                        });
+
+                        if (redirectAfter) {
+                            setTimeout(() => {
+                                window.location.href = "{{ route('customer.cart') }}";
+                            }, 300);
+                        }
+                        return true;
+                    } else {
+                        Toast.fire({
+                            icon: 'error',
+                            title: data.message || 'Không thể thêm sản phẩm vào giỏ hàng'
+                        });
+                        return false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding to cart:', error);
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Có lỗi xảy ra khi thêm vào giỏ hàng!'
+                    });
+                    return false;
+                });
         }
 
         function showToastCart() {
@@ -343,13 +367,7 @@
                     window.location.href = "{{ route('products.index') }}";
                 });
             } else {
-                Swal.fire({
-                    icon: 'success',
-                    title: `Giỏ hàng (${cartItemsCount} sản phẩm)`,
-                    text: 'Bạn đã chọn ' + cartItemsCount + ' món đồ dễ thương. Hãy tiến hành thanh toán nhé!',
-                    confirmButtonColor: '#5D4037',
-                    confirmButtonText: 'Xem thêm sản phẩm'
-                });
+                window.location.href = "{{ route('customer.cart') }}";
             }
         }
 

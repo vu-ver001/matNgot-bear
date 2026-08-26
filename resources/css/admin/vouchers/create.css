@@ -1,0 +1,165 @@
+/* ==========================================================================
+   Admin Voucher Create / Edit Page - Mật Ngọt Bear
+   ========================================================================== */
+
+.voucher-form-card {
+    background-color: #FFFFFF;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid #EBDDCD;
+    box-shadow: 0 2px 8px rgba(92, 50, 25, 0.04);
+}
+
+.voucher-section-badge {
+    width: 1.625rem;
+    height: 1.625rem;
+    border-radius: 9999px;
+    border: 1.5px solid #E08A1E;
+    color: #E08A1E;
+    font-weight: 800;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.voucher-section-title {
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #2C1408;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Custom Option Card */
+.voucher-option-card {
+    border-radius: 1.25rem;
+    padding: 1.125rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease-in-out;
+    background-color: #FFFFFF;
+    border: 1.5px solid #EBDDCD;
+}
+
+.voucher-option-card:hover {
+    border-color: #DDA760;
+}
+
+.voucher-option-card.is-active {
+    border: 2px solid #E08A1E;
+    background-color: #FFFBF4;
+}
+
+/* Radio Indicator */
+.custom-radio-dot {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    border: 2px solid #D1C4B5;
+    background-color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.custom-radio-dot.is-active {
+    border-color: #E08A1E;
+}
+
+.custom-radio-dot.is-active::after {
+    content: '';
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 9999px;
+    background-color: #E08A1E;
+}
+
+/* Live Voucher Ticket Preview */
+.voucher-ticket-preview {
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 1. Theme Đơn Hàng: Nâu đậm mix Nâu pastel */
+.voucher-ticket-preview.theme-order {
+    background: linear-gradient(145deg, #2A1408 0%, #452413 50%, #683F28 100%);
+    box-shadow: 0 16px 36px -8px rgba(42, 20, 8, 0.45);
+    border: 1px solid rgba(246, 216, 155, 0.18);
+}
+
+.voucher-ticket-preview.theme-order .ticket-pill-scope {
+    background-color: rgba(74, 39, 21, 0.85);
+    border: 1px solid #844C2E;
+    color: #F6D89B;
+}
+
+.voucher-ticket-preview.theme-order .ticket-code-text {
+    color: #F6D89B;
+}
+
+.voucher-ticket-preview.theme-order .ticket-divider-line {
+    border-top: 1.5px dashed #5C3219;
+}
+
+.voucher-ticket-preview.theme-order .ticket-footer {
+    border-top: 1px solid rgba(92, 50, 25, 0.6);
+}
+
+/* 2. Theme Vận Chuyển: Xanh lá đậm mix Xanh ngọc / Xanh pastel */
+.voucher-ticket-preview.theme-shipping {
+    background: linear-gradient(145deg, #063A2A 0%, #0D543D 50%, #177858 100%);
+    box-shadow: 0 16px 36px -8px rgba(6, 58, 42, 0.45);
+    border: 1px solid rgba(167, 243, 208, 0.25);
+}
+
+.voucher-ticket-preview.theme-shipping .ticket-pill-scope {
+    background-color: rgba(13, 84, 61, 0.85);
+    border: 1px solid #1E916B;
+    color: #A7F3D0;
+}
+
+.voucher-ticket-preview.theme-shipping .ticket-code-text {
+    color: #A7F3D0;
+}
+
+.voucher-ticket-preview.theme-shipping .ticket-divider-line {
+    border-top: 1.5px dashed #146B4E;
+}
+
+.voucher-ticket-preview.theme-shipping .ticket-footer {
+    border-top: 1px solid rgba(20, 107, 78, 0.6);
+}
+
+.ticket-cutout-left {
+    position: absolute;
+    left: -0.75rem;
+    top: 62%;
+    transform: translateY(-50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: #FAF6EE;
+    border-radius: 9999px;
+}
+
+.ticket-cutout-right {
+    position: absolute;
+    right: -0.75rem;
+    top: 62%;
+    transform: translateY(-50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: #FAF6EE;
+    border-radius: 9999px;
+}
+
+.ticket-divider-line {
+    margin: 1.25rem 0.25rem;
+}
