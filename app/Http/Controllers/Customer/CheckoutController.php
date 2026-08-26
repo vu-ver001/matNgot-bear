@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
+use App\Models\Payment;
 use App\Models\User;
 use App\Models\Voucher;
 use App\Services\OrderService;
@@ -82,7 +83,7 @@ class CheckoutController extends Controller
             'recipient_phone' => 'required|string|max:20',
             'recipient_address' => 'required|string|max:500',
             'note' => 'nullable|string|max:500',
-            'payment_method' => 'required|in:COD,BANKING,VNPAY,MOMO',
+            'payment_method' => 'required|in:COD,BANK_TRANSFER,MOMO,VNPAY,E_WALLET,CARD',
             'selected_items' => 'required|array|min:1',
             'selected_items.*' => 'required|integer',
             'voucher_id' => 'nullable|exists:vouchers,id',
@@ -106,17 +107,44 @@ class CheckoutController extends Controller
             return redirect()->route('customer.cart.index')->with('error', 'Sản phẩm trong giỏ hàng không tồn tại.');
         }
 
+        // Map selected payment option to database enum
+        $rawMethod = $validated['payment_method'];
+        $dbPaymentMethod = match ($rawMethod) {
+            'MOMO' => 'E_WALLET',
+            'VNPAY' => 'CARD',
+            'BANK_TRANSFER' => 'BANK_TRANSFER',
+            'CARD' => 'CARD',
+            'E_WALLET' => 'E_WALLET',
+            default => 'COD',
+        };
+
         try {
             $data = array_merge($validated, [
                 'customer_id' => $userId,
+                'payment_method' => $dbPaymentMethod,
             ]);
 
             $order = $this->orderService->createOrder($data, $cartItems->all());
+
+            // Create initial payment tracking
+            Payment::create([
+                'order_id' => $order->id,
+                'method' => $dbPaymentMethod,
+                'status' => $dbPaymentMethod === 'COD' ? 'PENDING' : 'PENDING',
+                'amount' => $order->total_amount,
+                'transaction_ref' => 'TXN' . strtoupper(uniqid()),
+            ]);
 
             // Delete purchased items from cart
             CartItem::where('user_id', $userId)
                 ->whereIn('id', $validated['selected_items'])
                 ->delete();
+
+            // If online payment (MOMO, VNPAY, BANK_TRANSFER), redirect to interactive QR payment gateway
+            if (in_array($rawMethod, ['MOMO', 'VNPAY', 'BANK_TRANSFER', 'E_WALLET', 'CARD'])) {
+                return redirect()->route('customer.payment.qr', $order->id)
+                    ->with('info', 'Đơn hàng ' . $order->order_code . ' đã tạo! Vui lòng quét mã để hoàn tất thanh toán.');
+            }
 
             return redirect()->route('customer.orders.show', $order->id)
                 ->with('success', 'Đặt hàng thành công! Mã đơn hàng của bạn là: ' . $order->order_code);

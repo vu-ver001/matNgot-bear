@@ -137,7 +137,7 @@
                             </div>
                         </div>
 
-                        {{-- 3. Payment Method --}}
+                        {{-- 3. Payment Method with MoMo, VNPay, VietQR & COD --}}
                         <div class="bg-white rounded-3xl p-6 sm:p-7 border border-[#EBDDCD] shadow-sm">
                             <div class="flex items-center gap-3 pb-4 mb-5 border-b border-[#F0E6D8]">
                                 <div class="w-8 h-8 rounded-xl bg-[#FFF5E6] text-[#E08A1E] flex items-center justify-center font-bold text-sm">
@@ -146,32 +146,86 @@
                                 <h2 class="text-lg font-bold text-[#2C1408]">3. Phương thức thanh toán</h2>
                             </div>
 
-                            <div class="space-y-3" x-data="{ paymentMethod: 'COD' }">
-                                {{-- COD --}}
-                                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition"
-                                       :class="paymentMethod === 'COD' ? 'border-[#E08A1E] bg-[#FFF8E7]' : 'border-[#EBDDCD] bg-white hover:border-[#E08A1E]/50'">
-                                    <input type="radio" name="payment_method" value="COD" x-model="paymentMethod" class="text-[#E08A1E] focus:ring-[#E08A1E]">
-                                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                                        <i class="fa-solid fa-hand-holding-dollar text-lg"></i>
+                            <div class="space-y-3">
+                                {{-- Option 1: MoMo --}}
+                                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition relative overflow-hidden"
+                                       :class="paymentMethod === 'MOMO' ? 'border-[#A50064] bg-[#FFF0F5] shadow-xs' : 'border-[#EBDDCD] bg-white hover:border-[#A50064]/50'">
+                                    <input type="radio" name="payment_method" value="MOMO" x-model="paymentMethod" class="text-[#A50064] focus:ring-[#A50064]">
+                                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF4D88] to-[#A50064] text-white flex items-center justify-center shrink-0 shadow-sm">
+                                        <span class="font-black text-xs">MoMo</span>
                                     </div>
                                     <div class="flex-1">
-                                        <div class="text-sm font-bold text-[#2C1408]">Thanh toán khi nhận hàng (COD)</div>
-                                        <div class="text-xs text-[#786B61] mt-0.5">Nhận gấu bông, kiểm tra hàng rồi thanh toán tiền mặt</div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-bold text-[#2C1408]">Ví Điện Tử MoMo</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#A50064]/10 text-[#A50064]">Khuyên dùng</span>
+                                        </div>
+                                        <div class="text-xs text-[#786B61] mt-0.5">Quét mã QR MoMo nhanh chóng hoặc chuyển ví 24/7</div>
                                     </div>
                                 </label>
 
-                                {{-- Banking / QR --}}
-                                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition"
-                                       :class="paymentMethod === 'BANKING' ? 'border-[#E08A1E] bg-[#FFF8E7]' : 'border-[#EBDDCD] bg-white hover:border-[#E08A1E]/50'">
-                                    <input type="radio" name="payment_method" value="BANKING" x-model="paymentMethod" class="text-[#E08A1E] focus:ring-[#E08A1E]">
-                                    <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                                {{-- Option 2: VNPay --}}
+                                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition relative overflow-hidden"
+                                       :class="paymentMethod === 'VNPAY' ? 'border-[#0066CC] bg-[#F0F7FF] shadow-xs' : 'border-[#EBDDCD] bg-white hover:border-[#0066CC]/50'">
+                                    <input type="radio" name="payment_method" value="VNPAY" x-model="paymentMethod" class="text-[#0066CC] focus:ring-[#0066CC]">
+                                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0066CC] to-[#E31837] text-white flex items-center justify-center shrink-0 shadow-sm">
+                                        <span class="font-black text-xs tracking-tighter">VNPAY</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-bold text-[#2C1408]">Cổng Thanh Toán VNPAY</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#0066CC]">VNPAY-QR / ATM / Visa</span>
+                                        </div>
+                                        <div class="text-xs text-[#786B61] mt-0.5">Hỗ trợ 40+ ngân hàng nội địa, VNPAY-QR và thẻ quốc tế</div>
+                                    </div>
+                                </label>
+
+                                {{-- Option 3: VietQR Banking --}}
+                                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition relative overflow-hidden"
+                                       :class="paymentMethod === 'BANK_TRANSFER' ? 'border-[#E08A1E] bg-[#FFF8E7] shadow-xs' : 'border-[#EBDDCD] bg-white hover:border-[#E08A1E]/50'">
+                                    <input type="radio" name="payment_method" value="BANK_TRANSFER" x-model="paymentMethod" class="text-[#E08A1E] focus:ring-[#E08A1E]">
+                                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#E08A1E] to-[#5C3219] text-white flex items-center justify-center shrink-0 shadow-sm">
                                         <i class="fa-solid fa-qrcode text-lg"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <div class="text-sm font-bold text-[#2C1408]">Chuyển khoản Ngân hàng / QR Pay</div>
-                                        <div class="text-xs text-[#786B61] mt-0.5">Quét mã QR chuyển khoản nhanh 24/7 sau khi đặt hàng</div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-bold text-[#2C1408]">Chuyển Khoản Ngân Hàng (VietQR 24/7)</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Miễn phí</span>
+                                        </div>
+                                        <div class="text-xs text-[#786B61] mt-0.5">Quét mã VietQR tự động điền STK, số tiền & nội dung đơn hàng</div>
                                     </div>
                                 </label>
+
+                                {{-- Option 4: COD --}}
+                                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition relative overflow-hidden"
+                                       :class="paymentMethod === 'COD' ? 'border-[#5C3219] bg-[#FAF6EE] shadow-xs' : 'border-[#EBDDCD] bg-white hover:border-[#5C3219]/50'">
+                                    <input type="radio" name="payment_method" value="COD" x-model="paymentMethod" class="text-[#5C3219] focus:ring-[#5C3219]">
+                                    <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 shadow-sm">
+                                        <i class="fa-solid fa-hand-holding-dollar text-lg"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm font-bold text-[#2C1408]">Thanh Toán Khi Nhận Hàng (COD)</div>
+                                        <div class="text-xs text-[#786B61] mt-0.5">Nhận gấu bông, kiểm tra hàng hài lòng rồi mới thanh toán tiền mặt</div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            {{-- Dynamic Note Box --}}
+                            <div class="mt-4 p-4 rounded-2xl bg-[#FAF6EE] border border-[#EBDDCD] text-xs text-[#786B61] leading-relaxed flex items-start gap-3">
+                                <i class="fa-solid fa-circle-info text-[#E08A1E] text-sm shrink-0 mt-0.5"></i>
+                                <div>
+                                    <template x-if="paymentMethod === 'MOMO'">
+                                        <span>Bạn sẽ được chuyển sang trang quét mã QR MoMo ngay sau khi bấm đặt hàng.</span>
+                                    </template>
+                                    <template x-if="paymentMethod === 'VNPAY'">
+                                        <span>Bạn sẽ quét mã VNPAY-QR hoặc chọn ngân hàng nội địa để hoàn tất thanh toán.</span>
+                                    </template>
+                                    <template x-if="paymentMethod === 'BANK_TRANSFER'">
+                                        <span>Mã VietQR chứa thông tin tài khoản MB Bank sẽ được hiển thị ngay sau khi xác nhận.</span>
+                                    </template>
+                                    <template x-if="paymentMethod === 'COD'">
+                                        <span>Shipper sẽ liên hệ trước khi giao hàng. Vui lòng chuẩn bị sẵn tiền mặt.</span>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
@@ -278,6 +332,7 @@
                 shippingVouchers: config.shippingVouchers,
                 selectedOrderVoucher: null,
                 selectedShippingVoucher: null,
+                paymentMethod: 'MOMO',
 
                 selectOrderVoucher(id) {
                     this.selectedOrderVoucher = this.orderVouchers.find(v => v.id == id) || null;

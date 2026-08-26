@@ -3,6 +3,7 @@
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\OrderController;
+use App\Http\Controllers\Customer\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('customer')->name('customer.')->group(function () {
@@ -19,7 +20,11 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 
-    // 3. Wishlist
+    // 3. Payment Gateway / QR routes
+    Route::get('/payment/qr/{order}', [PaymentController::class, 'showQR'])->name('payment.qr');
+    Route::post('/payment/confirm/{order}', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
+
+    // 4. Wishlist
     Route::get('/wishlist', function () {
         return view('customer.placeholder', [
             'pageTitle' => 'Danh Sách Yêu Thích (Wishlist)',
@@ -29,14 +34,14 @@ Route::prefix('customer')->name('customer.')->group(function () {
         ]);
     })->name('wishlist');
 
-    // 4. Orders (Anh Vũ)
+    // 5. Orders (Anh Vũ)
     Route::middleware(['auth'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     });
 
-    // 5. Profile
+    // 6. Profile
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
     })->name('profile');
@@ -46,3 +51,4 @@ Route::prefix('customer')->name('customer.')->group(function () {
 Route::get('/wishlist', fn() => redirect()->route('customer.wishlist'));
 Route::get('/cart', fn() => redirect()->route('customer.cart'));
 Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
+Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));
