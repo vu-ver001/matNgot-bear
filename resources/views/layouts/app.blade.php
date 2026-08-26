@@ -178,6 +178,9 @@
             </div>
         </template>
     </div>
+
+    <!-- Scripts stack -->
+    @stack('scripts')
 </body>
 
 </html>
