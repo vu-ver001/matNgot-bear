@@ -1,15 +1,19 @@
-<x-app-layout>
-    <div class="py-8 bg-[#FAF6EE] min-h-screen font-sans" x-data="vouchersList()">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+@extends('layouts.admin-dashboard')
 
-            {{-- 1. Header Title Section --}}
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-[#5C3219] flex items-center justify-center text-[#F6D89B] shadow-sm shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+@section('page-title', 'Quản Lý Voucher')
+
+@section('content')
+<div x-data="vouchersList()">
+    <div class="space-y-6">
+
+        {{-- 1. Header Title Section --}}
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-12 h-12 rounded-2xl bg-[#5C3219] flex items-center justify-center text-[#F6D89B] shadow-sm shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
                             </path>
                         </svg>
                     </div>
@@ -465,7 +469,7 @@
                     <x-pagination :paginator="$vouchers" />
                 </div>
             </div>
-
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

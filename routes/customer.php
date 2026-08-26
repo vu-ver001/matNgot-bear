@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
-use App\Http\Controllers\Customer\ProductController;
+use App\Http\Controllers\Customer\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('customer')->name('customer.')->group(function () {
@@ -29,15 +29,12 @@ Route::prefix('customer')->name('customer.')->group(function () {
         ]);
     })->name('wishlist');
 
-    // 4. Orders
-    Route::get('/orders', function () {
-        return view('customer.placeholder', [
-            'pageTitle' => 'Đơn Hàng Của Tôi',
-            'pageIcon'  => 'fa-solid fa-clipboard-list',
-            'pageDesc'  => 'Trang theo dõi lịch sử và tiến độ giao nhận các đơn hàng bạn đã đặt mua.',
-            'routeCode' => "Route::get('/customer/orders', [OrderController::class, 'myOrders'])->name('customer.orders');",
-        ]);
-    })->name('orders');
+    // 4. Orders (Anh Vũ)
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    });
 
     // 5. Profile
     Route::get('/profile', function () {
@@ -48,4 +45,4 @@ Route::prefix('customer')->name('customer.')->group(function () {
 // Shortcut alias routes tiện lợi ngoài root
 Route::get('/wishlist', fn() => redirect()->route('customer.wishlist'));
 Route::get('/cart', fn() => redirect()->route('customer.cart'));
-Route::get('/my-orders', fn() => redirect()->route('customer.orders'));
+Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));

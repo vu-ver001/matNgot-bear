@@ -11,7 +11,7 @@
             <i class="fa-solid fa-right-to-bracket"></i>
         </div>
 
-        <h2 style="font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">
+        <h2 style="font-family: 'Be Vietnam Pro', sans-serif; font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">
             Đăng Nhập Tài Khoản
         </h2>
         <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6; max-width: 500px; margin: 0 auto 1.5rem auto;">

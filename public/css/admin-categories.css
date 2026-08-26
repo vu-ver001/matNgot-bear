@@ -1,0 +1,436 @@
+/* ==========================================================================
+   MAT NGOT BEAR - ADMIN CATEGORIES MANAGEMENT CSS
+   Category Slider, Data Table, Pin to Header, Modals & Controls
+   Phụ trách: Khánh Vân
+   ========================================================================== */
+
+/* Category Slider Carousel (5 ô trên 1 hàng + nút < >) */
+.category-slider-wrapper {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.category-slider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.category-slider-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-slider-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.slider-btn-nav {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: #FFFFFF;
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-subtle);
+    font-size: 13px;
+}
+
+.slider-btn-nav:hover {
+    background: var(--honey-light);
+    border-color: var(--honey);
+    color: var(--honey-dark);
+    transform: scale(1.08);
+}
+
+.category-slider-track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 4px 2px 14px 2px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.category-slider-track::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hiển thị chính xác 5 ô danh mục vừa vặn trên 1 hàng */
+.category-card {
+    flex: 0 0 calc((100% - 4rem) / 5);
+    min-width: calc((100% - 4rem) / 5);
+    max-width: calc((100% - 4rem) / 5);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.25s ease;
+    box-shadow: var(--shadow-subtle);
+    user-select: none;
+}
+
+@media (max-width: 1300px) {
+    .category-card {
+        flex: 0 0 calc((100% - 3rem) / 4);
+        min-width: calc((100% - 3rem) / 4);
+        max-width: calc((100% - 3rem) / 4);
+    }
+}
+
+@media (max-width: 992px) {
+    .category-card {
+        flex: 0 0 calc((100% - 2rem) / 3);
+        min-width: calc((100% - 2rem) / 3);
+        max-width: calc((100% - 2rem) / 3);
+    }
+}
+
+@media (max-width: 640px) {
+    .category-card {
+        flex: 0 0 calc((100% - 1rem) / 2);
+        min-width: calc((100% - 1rem) / 2);
+        max-width: calc((100% - 1rem) / 2);
+    }
+}
+
+.category-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+    border-color: #D7CCC8;
+}
+
+.category-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.category-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background: var(--honey-light);
+    color: var(--honey-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.category-name {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Panel Card */
+.panel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-card);
+}
+
+.panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.panel-title {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Toolbar & Filters */
+.toolbar-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.input-control, .select-control {
+    width: 100%;
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.search-box .input-control {
+    padding-left: 38px;
+}
+
+.input-control:focus, .select-control:focus {
+    border-color: #8D6E63;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(141, 110, 99, 0.12);
+}
+
+.filter-select {
+    min-width: 160px;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 13.5px;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8D6E63 0%, #5D4037 100%);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(109, 76, 65, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(109, 76, 65, 0.3);
+    background: linear-gradient(135deg, #795548 0%, #4E342E 100%);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.btn-outline:hover {
+    background: var(--bg-surface);
+    border-color: #D7CCC8;
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: var(--bg-card);
+    border-color: #D7CCC8;
+    transform: scale(1.05);
+}
+
+.btn-icon.delete:hover {
+    background: #FFEBEE;
+    border-color: #EF9A9A;
+    color: var(--danger);
+}
+
+.btn-icon.edit:hover {
+    background: var(--honey-light);
+    border-color: var(--honey);
+    color: var(--honey-dark);
+}
+
+/* Pin to header button style */
+.btn-icon.pin-btn {
+    color: #BCAAA4;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.btn-icon.pin-btn:hover {
+    background: var(--honey-light);
+    border-color: var(--honey);
+    color: var(--honey-dark);
+}
+
+.btn-icon.pin-btn.is-pinned {
+    background: linear-gradient(135deg, #F6D89B 0%, #E59819 100%);
+    border-color: var(--honey);
+    color: #4E342E;
+    box-shadow: 0 2px 8px rgba(229, 152, 25, 0.35);
+}
+
+/* Data Table */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+}
+
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13.5px;
+}
+
+table.data-table th {
+    background: #FDFBF7;
+    color: var(--text-muted);
+    font-weight: 700;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-size: 11.5px;
+    letter-spacing: 0.5px;
+}
+
+table.data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+table.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+table.data-table tbody tr:hover {
+    background: #FAF6F0;
+}
+
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.badge-status.active { background: #E8F5E9; color: #2E7D32; }
+.badge-status.inactive { background: #FFEBEE; color: #C62828; }
+
+/* Modal */
+.modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.modal-backdrop.show { opacity: 1; pointer-events: auto; }
+
+.modal-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    transform: translateY(20px) scale(0.98);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+.modal-backdrop.show .modal-box { transform: translateY(0) scale(1); }
+
+.modal-header {
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-surface);
+}
+
+.modal-title { font-size: 18px; font-weight: 800; color: var(--text-main); }
+.modal-body { padding: 1.5rem 1.75rem; overflow-y: auto; flex: 1; }
+.modal-footer {
+    padding: 1.25rem 1.75rem;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--bg-surface);
+}
+
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+.form-label span.req { color: var(--danger); }
+textarea.input-control { resize: vertical; min-height: 80px; }

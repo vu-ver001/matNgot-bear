@@ -10,8 +10,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -115,7 +114,7 @@
         }
 
         .brand-title {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Be Vietnam Pro', sans-serif;
             font-size: 22px;
             font-weight: 800;
             letter-spacing: -0.5px;
@@ -208,7 +207,7 @@
         }
 
         .stat-info .stat-value {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Be Vietnam Pro', sans-serif;
             font-size: 26px;
             font-weight: 700;
             color: var(--text-main);
@@ -304,7 +303,7 @@
         }
 
         .panel-title {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Be Vietnam Pro', sans-serif;
             font-size: 20px;
             font-weight: 700;
             color: var(--text-main);
@@ -679,7 +678,7 @@
         }
 
         .category-name {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Be Vietnam Pro', sans-serif;
             font-size: 16px;
             font-weight: 700;
             color: var(--text-main);
@@ -795,7 +794,7 @@
         }
 
         .modal-title {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Be Vietnam Pro', sans-serif;
             font-size: 20px;
             font-weight: 700;
             color: var(--text-main);

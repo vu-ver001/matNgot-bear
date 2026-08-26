@@ -1,6 +1,10 @@
-<x-app-layout>
-    <div class="py-8 bg-[#FAF6EE] min-h-screen">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+@extends('layouts.admin-dashboard')
+
+@section('page-title', 'Tạo Voucher Mới')
+
+@section('content')
+<div>
+    <div class="space-y-6">
 
             {{-- 1. Breadcrumb & Header --}}
             <x-breadcrumb :items="[
@@ -561,4 +565,5 @@
             </form>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

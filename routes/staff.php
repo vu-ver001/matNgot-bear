@@ -1,30 +1,34 @@
 <?php
 
+use App\Http\Controllers\Staff\DashboardController;
+use App\Http\Controllers\Staff\OrderController;
+use App\Http\Controllers\Staff\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
 | Staff Routes (Phân quyền Nhân viên)
 |--------------------------------------------------------------------------
-| Khung nghiệp vụ cho Staff: Dashboard, Đơn hàng, Trạng thái, Thanh toán, Hỗ trợ.
-| Khi bạn nhóm bàn giao, thay các closure bằng Controller tương ứng.
+| Anh Vũ: Dashboard vận hành, Đơn hàng, Thanh toán.
 */
 
 Route::prefix('staff')->name('staff.')->group(function () {
-    
+
     // Trang chủ Staff (mặc định vào Dashboard vận hành)
-    Route::get('/', function () {
-        return view('staff.placeholder', ['currentPage' => 'dashboard']);
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Route động cho các trang mục
-    Route::get('/page/{page}', function (string $page) {
-        return view('staff.placeholder', ['currentPage' => $page]);
-    })->name('page');
+    // Quản lý đơn hàng
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
 
-    // Các routes tường minh cho từng mục
-    Route::get('/orders', fn() => view('staff.placeholder', ['currentPage' => 'orders']))->name('orders.index');
+    Route::patch('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])->name('payments.updateStatus');
+
+    // Các trang mục phụ & placeholder
     Route::get('/order-status', fn() => view('staff.placeholder', ['currentPage' => 'order-status']))->name('order-status.index');
     Route::get('/payments', fn() => view('staff.placeholder', ['currentPage' => 'payments']))->name('payments.index');
     Route::get('/support', fn() => view('staff.placeholder', ['currentPage' => 'support']))->name('support.index');
+    Route::get('/page/{page}', function (string $page) {
+        return view('staff.placeholder', ['currentPage' => $page]);
+    })->name('page');
 });

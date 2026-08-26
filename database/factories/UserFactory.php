@@ -26,10 +26,12 @@ class UserFactory extends Factory
         return [
             'full_name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->phoneNumber(),
+            'email_verified_at' => now(),
+            'phone' => fake()->numerify('09########'),
             'password' => static::$password ??= Hash::make('password'),
             'role' => 'CUSTOMER',
             'status' => 'ACTIVE',
+            'address' => fake()->address(),
         ];
     }
 
@@ -40,6 +42,26 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => 'ADMIN',
+        ]);
+    }
+
+    /**
+     * Indicate that the model's role should be staff.
+     */
+    public function staff(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'STAFF',
+        ]);
+    }
+
+    /**
+     * Indicate that the model's email address should be unverified.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
         ]);
     }
 }
