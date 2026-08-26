@@ -1,8 +1,35 @@
 export function cartComponent(initialItems = []) {
+    // Load persisted selection from localStorage if available
+    let initialSelected = [];
+    try {
+        const saved = localStorage.getItem('mn_selected_cart_items');
+        if (saved !== null) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+                initialSelected = initialItems
+                    .map(i => i.id)
+                    .filter(id => parsed.includes(id));
+            }
+        } else {
+            initialSelected = initialItems.map(i => i.id);
+        }
+    } catch (e) {
+        initialSelected = initialItems.map(i => i.id);
+    }
+
     return {
         items: initialItems,
-        // Mặc định tích chọn tất cả sản phẩm khi truy cập giỏ hàng (Shopee style)
-        selectedItems: initialItems.map(i => i.id),
+        selectedItems: initialSelected,
+
+        init() {
+            this.saveSelection();
+        },
+
+        saveSelection() {
+            try {
+                localStorage.setItem('mn_selected_cart_items', JSON.stringify(this.selectedItems));
+            } catch (e) {}
+        },
 
         isSelected(itemId) {
             return this.selectedItems.includes(itemId);
@@ -27,6 +54,7 @@ export function cartComponent(initialItems = []) {
                     remaining_count: 0
                 });
             }
+            this.saveSelection();
         },
 
         toggleItem(itemId, checked, productName = '') {
@@ -51,6 +79,7 @@ export function cartComponent(initialItems = []) {
                     remaining_count: this.selectedItems.length
                 });
             }
+            this.saveSelection();
         },
 
         async sendUncheckLog(payload) {
@@ -165,6 +194,7 @@ export function cartComponent(initialItems = []) {
                 if (data.success) {
                     this.items = this.items.filter(i => i.id !== itemId);
                     this.selectedItems = this.selectedItems.filter(id => id !== itemId);
+                    this.saveSelection();
                     
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
@@ -226,11 +256,41 @@ export function cartComponent(initialItems = []) {
 
                 const data = await response.json();
                 if (data.success) {
+                    this.selectedItems = [];
+                    this.saveSelection();
                     location.reload();
                 }
             } catch (error) {
                 console.error('Error clearing cart:', error);
             }
+        },
+
+        handleCheckoutSubmit(e) {
+            if (this.selectedItems.length === 0) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Chưa chọn sản phẩm',
+                        text: 'Vui lòng tích chọn ít nhất 1 sản phẩm để tiến hành thanh toán.',
+                        confirmButtonColor: '#E08A1E'
+                    });
+                }
+                return;
+            }
+
+            if (typeof window.isCustomerAuthenticated !== 'undefined' && !window.isCustomerAuthenticated) {
+                const params = new URLSearchParams();
+                this.selectedItems.forEach(id => params.append('selected_items[]', id));
+                const targetUrl = '/customer/checkout?' + params.toString();
+                if (typeof window.openAuthModal === 'function') {
+                    window.openAuthModal(targetUrl);
+                } else {
+                    window.location.href = '/login?redirect=' + encodeURIComponent(targetUrl);
+                }
+                return;
+            }
+
+            document.getElementById('checkoutForm').submit();
         }
     };
 }

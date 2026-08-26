@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'google_maps' => [
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
+        'origin_address' => env('SHOP_ORIGIN_ADDRESS', 'Số 41A, Phú Diễn, Bắc Từ Liêm, Hà Nội'),
+        'origin_lat' => env('SHOP_ORIGIN_LAT', 21.0456),
+        'origin_lng' => env('SHOP_ORIGIN_LNG', 105.7628),
+    ],
+
 ];

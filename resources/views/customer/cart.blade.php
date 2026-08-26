@@ -112,7 +112,7 @@
                     </a>
                 </div>
             @else
-                <form id="checkoutForm" action="{{ route('customer.checkout.index') }}" method="GET">
+                <form id="checkoutForm" action="{{ route('customer.checkout.index') }}" method="GET" @submit.prevent="handleCheckoutSubmit($event)">
 
                     {{-- Hidden inputs for selected items --}}
                     <template x-for="itemId in selectedItems" :key="itemId">

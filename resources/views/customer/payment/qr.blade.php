@@ -19,26 +19,35 @@
             <div class="bg-white rounded-3xl border border-[#EBDDCD] shadow-xl overflow-hidden">
                 
                 {{-- Top Header --}}
-                <div class="p-6 sm:p-8 bg-gradient-to-r from-[#5C3219] via-[#7E4A28] to-[#5C3219] text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-4
+                     {{ $order->payment_method === 'CARD' ? 'bg-gradient-to-r from-[#003B73] via-[#005BAA] to-[#003B73]' : ($order->payment_method === 'E_WALLET' ? 'bg-gradient-to-r from-[#800040] via-[#A50064] to-[#800040]' : 'bg-gradient-to-r from-[#5C3219] via-[#7E4A28] to-[#5C3219]') }}">
                     <div class="flex items-center gap-4">
                         <div class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-[#F6D89B] text-2xl shrink-0 border border-white/20">
                             @if($order->payment_method === 'E_WALLET')
-                                <i class="fa-solid fa-wallet text-[#FF4D88]"></i>
+                                <i class="fa-solid fa-wallet text-[#FF80AB]"></i>
                             @elseif($order->payment_method === 'CARD')
-                                <i class="fa-solid fa-credit-card text-[#0066CC]"></i>
+                                <i class="fa-solid fa-qrcode text-[#64B5F6]"></i>
                             @else
-                                <i class="fa-solid fa-building-columns text-[#E08A1E]"></i>
+                                <i class="fa-solid fa-building-columns text-[#F6D89B]"></i>
                             @endif
                         </div>
                         <div>
-                            <div class="text-xs font-bold uppercase tracking-widest text-[#F6D89B]">Cổng thanh toán trực tuyến</div>
+                            <div class="text-xs font-bold uppercase tracking-widest text-[#F6D89B]">
+                                @if($order->payment_method === 'CARD')
+                                    Cổng thanh toán điện tử VNPAY
+                                @elseif($order->payment_method === 'E_WALLET')
+                                    Cổng thanh toán Ví điện tử MoMo
+                                @else
+                                    Chuyển khoản trực tuyến 24/7
+                                @endif
+                            </div>
                             <h1 class="text-xl sm:text-2xl font-black mt-0.5">
                                 @if($order->payment_method === 'E_WALLET')
                                     Thanh toán qua Ví MoMo
                                 @elseif($order->payment_method === 'CARD')
                                     Thanh toán qua Cổng VNPAY-QR
                                 @else
-                                    Chuyển khoản VietQR 24/7
+                                    Chuyển khoản VietQR (MB Bank)
                                 @endif
                             </h1>
                         </div>
@@ -65,23 +74,29 @@
                                         Quét bằng ứng dụng MoMo
                                     </div>
                                 @elseif($order->payment_method === 'CARD')
-                                    <img src="{{ $vietQrUrl }}" alt="VNPay QR Code" class="w-56 h-56 object-contain rounded-xl">
-                                    <div class="mt-2 text-center text-xs font-bold text-[#0066CC] flex items-center justify-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-[#0066CC] animate-ping"></span>
-                                        Quét bằng App Ngân hàng / VNPAY
+                                    <img src="{{ $vnpayQrUrl }}" alt="VNPAY QR Code" class="w-56 h-56 object-contain rounded-xl">
+                                    <div class="mt-2 text-center text-xs font-bold text-[#005BAA] flex items-center justify-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-[#005BAA] animate-ping"></span>
+                                        Quét bằng App Ngân hàng hoặc Ví VNPAY
                                     </div>
                                 @else
-                                    <img src="{{ $vietQrUrl }}" alt="VietQR Code" class="w-56 h-56 object-contain rounded-xl">
+                                    <img src="{{ $vietQrUrl }}" alt="VietQR MB Bank" class="w-56 h-56 object-contain rounded-xl">
                                     <div class="mt-2 text-center text-xs font-bold text-[#5C3219] flex items-center justify-center gap-1.5">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                        VietQR Napas 247 Miễn Phí
+                                        VietQR Napas 24/7 (MB Bank)
                                     </div>
                                 @endif
                             </div>
                         </div>
 
                         <div class="mt-4 text-xs text-[#786B61] leading-relaxed">
-                            Mở ứng dụng ngân hàng hoặc ví điện tử để quét mã thanh toán tự động điền số tiền & cú pháp.
+                            @if($order->payment_method === 'CARD')
+                                Mở ứng dụng <strong>Mobile Banking</strong> (VCB, BIDV, VietinBank, MB, Agribank, Techcombank...) hoặc <strong>Ví VNPAY</strong> để quét mã.
+                            @elseif($order->payment_method === 'E_WALLET')
+                                Mở ứng dụng <strong>Ví MoMo</strong> trên điện thoại để quét mã thanh toán tự động.
+                            @else
+                                Mở ứng dụng ngân hàng bất kỳ để quét mã <strong>VietQR Napas 24/7</strong> nhanh chóng.
+                            @endif
                         </div>
                     </div>
 
@@ -103,15 +118,15 @@
                             </button>
                         </div>
 
-                        {{-- Bank & Account Info Details --}}
+                        {{-- Payment Info Details --}}
                         <div class="space-y-3 bg-[#FDFBF7] p-5 rounded-2xl border border-[#EBDDCD]">
                             
                             {{-- Order Code / Transfer Content --}}
                             <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
-                                <span class="text-[#786B61] font-medium">Nội dung chuyển khoản (bắt buộc):</span>
+                                <span class="text-[#786B61] font-medium">Mã đơn hàng / Cú pháp:</span>
                                 <div class="flex items-center gap-2">
                                     <span class="font-mono font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">{{ $transferContent }}</span>
-                                    <button type="button" @click="copyText('{{ $transferContent }}', 'Nội dung CK')" 
+                                    <button type="button" @click="copyText('{{ $transferContent }}', 'Mã đơn hàng')" 
                                             class="text-[#E08A1E] hover:text-[#5C3219] text-xs font-bold transition p-1" title="Sao chép mã">
                                         <i class="fa-regular fa-copy"></i>
                                     </button>
@@ -121,9 +136,9 @@
                             @if($order->payment_method === 'E_WALLET')
                                 {{-- MoMo Specific details --}}
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
-                                    <span class="text-[#786B61] font-medium">Ví điện tử:</span>
+                                    <span class="text-[#786B61] font-medium">Hình thức:</span>
                                     <span class="font-bold text-[#A50064] flex items-center gap-1">
-                                        <i class="fa-solid fa-wallet"></i> MoMo E-Wallet
+                                        <i class="fa-solid fa-wallet"></i> Ví điện tử MoMo
                                     </span>
                                 </div>
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
@@ -135,12 +150,35 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="flex items-center justify-between text-sm py-2">
-                                    <span class="text-[#786B61] font-medium">Chủ ví MoMo:</span>
+                                <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
+                                    <span class="text-[#786B61] font-medium">Chủ tài khoản ví:</span>
                                     <span class="font-bold text-[#2C1408]">{{ $paymentConfig['momo_name'] }}</span>
                                 </div>
+                                <div class="pt-1">
+                                    <a href="https://nhantien.momo.vn/{{ $paymentConfig['momo_phone'] }}" target="_blank"
+                                       class="w-full bg-gradient-to-r from-[#A50064] to-[#C2185B] hover:from-[#880052] hover:to-[#AD1457] text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-sm">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                        <span>Bấm để mở App MoMo chuyển tiền</span>
+                                    </a>
+                                </div>
+                            @elseif($order->payment_method === 'CARD')
+                                {{-- VNPAY Specific details --}}
+                                <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
+                                    <span class="text-[#786B61] font-medium">Cổng thanh toán:</span>
+                                    <span class="font-bold text-[#005BAA] flex items-center gap-1">
+                                        <i class="fa-solid fa-shield-halved"></i> Cổng VNPAY-QR Quốc Gia
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
+                                    <span class="text-[#786B61] font-medium">Đơn vị thụ hưởng:</span>
+                                    <span class="font-bold text-[#2C1408]">{{ $paymentConfig['vnpay_merchant'] ?? 'MẬT NGỌT BEAR' }}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm py-2">
+                                    <span class="text-[#786B61] font-medium">Mã điểm bán (Terminal ID):</span>
+                                    <span class="font-mono font-bold text-[#2C1408]">{{ $paymentConfig['vnpay_tmn_code'] ?? 'MNBEAR01' }}</span>
+                                </div>
                             @else
-                                {{-- Bank / VNPay details --}}
+                                {{-- Bank Transfer (MB Bank) details --}}
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
                                     <span class="text-[#786B61] font-medium">Ngân hàng thụ hưởng:</span>
                                     <span class="font-bold text-[#2C1408]">{{ $paymentConfig['bank_name'] }}</span>

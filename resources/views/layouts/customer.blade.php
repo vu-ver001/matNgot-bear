@@ -290,19 +290,38 @@
             });
         });
 
-        // Cart & Wishlist state
+        // Cart & Wishlist state (distinct item count)
         let cartItemsCount = {{ (int) ($realCartCount ?? 0) }};
         let wishlistCount = parseInt(localStorage.getItem('mn_wishlist_count') || '0');
         updateCartBadge();
 
         function updateCartBadge() {
             const badge = document.getElementById('cart-count');
-            if (badge) badge.innerText = cartItemsCount;
+            if (badge) {
+                badge.innerText = cartItemsCount;
+                badge.style.display = cartItemsCount > 0 ? 'flex' : 'flex';
+            }
             const wBadge = document.getElementById('wishlist-count');
             if (wBadge) wBadge.innerText = wishlistCount;
         }
 
-        function addToCart(productId, productName = 'Gấu bông', qty = 1, redirectAfter = false) {
+        function fetchCartCount() {
+            fetch('{{ route('customer.cart.count') }}')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.cart_count !== undefined) {
+                        cartItemsCount = data.cart_count;
+                        updateCartBadge();
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // Auto sync when page gains focus or is restored from bfcache
+        window.addEventListener('focus', fetchCartCount);
+        window.addEventListener('pageshow', fetchCartCount);
+
+        function addToCart(productId, productName = 'Gấu bông', qty = 1, redirectMode = false) {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             return fetch('{{ route('customer.cart.store') }}', {
@@ -326,15 +345,40 @@
                             cartItemsCount++;
                         }
                         updateCartBadge();
-                        Toast.fire({
-                            icon: 'success',
-                            title: `Đã thêm "${productName}" vào giỏ hàng!`
-                        });
 
-                        if (redirectAfter) {
-                            setTimeout(() => {
-                                window.location.href = "{{ route('customer.cart') }}";
-                            }, 300);
+                        // Ensure newly added item is added to persisted selected list
+                        if (data.cartItem && data.cartItem.id) {
+                            try {
+                                const saved = localStorage.getItem('mn_selected_cart_items');
+                                if (saved !== null) {
+                                    const arr = JSON.parse(saved);
+                                    if (Array.isArray(arr) && !arr.includes(data.cartItem.id)) {
+                                        arr.push(data.cartItem.id);
+                                        localStorage.setItem('mn_selected_cart_items', JSON.stringify(arr));
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+
+                        if (redirectMode === 'checkout' || redirectMode === true) {
+                            const cartItemId = data.cartItem?.id;
+                            const targetCheckoutUrl = cartItemId 
+                                ? "{{ route('customer.checkout.index') }}?selected_items[]=" + cartItemId
+                                : "{{ route('customer.checkout.index') }}?product_id=" + productId + "&quantity=" + qty;
+
+                            if (!window.isCustomerAuthenticated) {
+                                openAuthModal(targetCheckoutUrl);
+                                return true;
+                            }
+
+                            window.location.href = targetCheckoutUrl;
+                        } else if (redirectMode === 'cart') {
+                            window.location.href = "{{ route('customer.cart') }}";
+                        } else {
+                            Toast.fire({
+                                icon: 'success',
+                                title: `Đã thêm "${productName}" vào giỏ hàng!`
+                            });
                         }
                         return true;
                     } else {
@@ -380,6 +424,109 @@
                 title: 'Đã lưu vào danh sách yêu thích!'
             });
         }
+
+        // Global Auth Modal Helper
+        window.isCustomerAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+
+        function openAuthModal(targetUrl = null) {
+            const modal = document.getElementById('mn-auth-modal');
+            if (!modal) return;
+            
+            const loginBtn = document.getElementById('mn-auth-login-btn');
+            const registerBtn = document.getElementById('mn-auth-register-btn');
+            const baseLogin = "{{ route('login') }}";
+            const baseRegister = "{{ route('register') }}";
+            
+            if (targetUrl) {
+                loginBtn.href = `${baseLogin}?redirect=${encodeURIComponent(targetUrl)}`;
+                registerBtn.href = `${baseRegister}?redirect=${encodeURIComponent(targetUrl)}`;
+            } else {
+                loginBtn.href = baseLogin;
+                registerBtn.href = baseRegister;
+            }
+            
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                const card = modal.querySelector('.mn-auth-card');
+                if (card) {
+                    card.classList.remove('scale-95');
+                    card.classList.add('scale-100');
+                }
+            });
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('mn-auth-modal');
+            if (!modal) return;
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            const card = modal.querySelector('.mn-auth-card');
+            if (card) {
+                card.classList.remove('scale-100');
+                card.classList.add('scale-95');
+            }
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 250);
+        }
+    </script>
+
+    {{-- Global Auth Required Modal for Checkout / Buy Now --}}
+    <div id="mn-auth-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300 opacity-0 pointer-events-none" style="display: none;" onclick="if(event.target === this) closeAuthModal();">
+        <div class="mn-auth-card relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-[#F2DECA] p-6 sm:p-8 text-center transform scale-95 transition-transform duration-300">
+            {{-- Close button --}}
+            <button type="button" onclick="closeAuthModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#FFF9F2] hover:bg-[#F2DECA] text-[#7D6B5D] flex items-center justify-center text-lg transition cursor-pointer">
+                ✕
+            </button>
+
+            {{-- Cute Icon / Badge --}}
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#FFF0DC] to-[#FFE3BA] flex items-center justify-center text-3xl shadow-md shadow-[#E08A1E]/15 mb-4">
+                🧸
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black text-[#2B1810] mb-2 tracking-tight">
+                Đăng nhập để thanh toán
+            </h3>
+            <p class="text-xs sm:text-sm text-[#7D6B5D] leading-relaxed mb-5 font-medium">
+                Đăng nhập hoặc tạo tài khoản <strong class="text-[#2B1810]">Mật Ngọt Bear</strong> để tiếp tục đặt hàng, nhận voucher ưu đãi và tích lũy điểm thưởng!
+            </p>
+
+            {{-- Value Props Checklist --}}
+            <div class="bg-[#FFFDF9] border border-[#F2DECA] rounded-2xl p-3.5 mb-6 text-left space-y-2 text-xs font-semibold text-[#5D4037]">
+                <div class="flex items-center gap-2">
+                    <span class="text-base">🎟️</span>
+                    <span>Áp dụng mã giảm giá voucher & miễn phí vận chuyển</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-base">📍</span>
+                    <span>Lưu địa chỉ giao hàng tiện lợi cho các lần mua sau</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-base">📦</span>
+                    <span>Theo dõi trạng thái và tiến độ giao hàng chi tiết</span>
+                </div>
+            </div>
+
+            {{-- Action Buttons --}}
+            <div class="space-y-3">
+                <a id="mn-auth-login-btn" href="{{ route('login') }}" class="w-full bg-gradient-to-r from-[#E08A1E] to-[#D68729] hover:from-[#D17E17] hover:to-[#C2751D] text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg shadow-[#E08A1E]/30 flex items-center justify-center gap-2 text-sm transition transform hover:-translate-y-0.5 active:translate-y-0">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span>Đăng nhập tài khoản</span>
+                </a>
+                
+                <a id="mn-auth-register-btn" href="{{ route('register') }}" class="w-full bg-[#FFF9F2] hover:bg-[#FFF0DC] text-[#8C4A19] font-extrabold py-3.5 px-6 rounded-2xl border border-[#F2DECA] flex items-center justify-center gap-2 text-sm transition transform hover:-translate-y-0.5 active:translate-y-0">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Đăng ký tài khoản mới</span>
+                </a>
+            </div>
+
+            <div class="mt-5 text-center">
+                <button type="button" onclick="closeAuthModal()" class="text-xs font-bold text-[#A8988A] hover:text-[#7D6B5D] transition cursor-pointer">
+                    Tiếp tục xem sản phẩm
+                </button>
+            </div>
+        </div>
+    </div>
     </script>
     @yield('scripts')
 </body>

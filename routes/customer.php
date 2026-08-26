@@ -10,15 +10,18 @@ Route::prefix('customer')->name('customer.')->group(function () {
     // 1. Cart routes (hỗ trợ cả customer.cart và customer.cart.index)
     Route::get('/cart', [CartController::class, 'index'])->name('cart');
     Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
     Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
     Route::post('/cart/log-uncheck', [CartController::class, 'logUncheck'])->name('cart.log_uncheck');
     Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
     Route::delete('/cart-clear', [CartController::class, 'clear'])->name('cart.clear');
 
-    // 2. Checkout routes
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    // 2. Checkout routes (hỗ trợ cả customer.checkout và customer.checkout.index)
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::get('/checkout-index', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::match(['GET', 'POST'], '/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculate_shipping');
 
     // 3. Payment Gateway / QR routes
     Route::get('/payment/qr/{order}', [PaymentController::class, 'showQR'])->name('payment.qr');

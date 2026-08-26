@@ -271,7 +271,7 @@
 
     function handleBuyNow() {
         const qty = parseInt(document.getElementById('detail-quantity').value) || 1;
-        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, true);
+        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, 'checkout');
     }
 </script>
 @endsection

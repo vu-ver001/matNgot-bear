@@ -161,11 +161,13 @@ class CartController extends Controller
         }
 
         $cartItem->delete();
+        $cartCount = CartItem::where('user_id', $userId)->count();
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.',
+                'cart_count' => $cartCount,
             ]);
         }
 
@@ -184,10 +186,25 @@ class CartController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Đã xóa toàn bộ giỏ hàng.',
+                'cart_count' => 0,
             ]);
         }
 
         return back()->with('success', 'Đã xóa toàn bộ giỏ hàng.');
+    }
+
+    /**
+     * Get real-time distinct cart item count.
+     */
+    public function count(Request $request): JsonResponse
+    {
+        $userId = $this->getUserId();
+        $cartCount = CartItem::where('user_id', $userId)->count();
+
+        return response()->json([
+            'success' => true,
+            'cart_count' => $cartCount,
+        ]);
     }
 
     /**
