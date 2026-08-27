@@ -73,10 +73,20 @@ class ProductController extends Controller
             ->with([
                 'category',
                 'images' => fn($q) => $q->orderBy('sort_order', 'asc'),
+                'reviews' => fn($q) => $q->where('is_hidden', false)->with('user:id,full_name,email')->latest(),
             ])
             ->withAvg(['reviews as avg_rating' => fn($q) => $q->where('is_hidden', false)], 'rating')
             ->withCount(['reviews' => fn($q) => $q->where('is_hidden', false)])
             ->firstOrFail();
+
+        // Rating breakdown (Số lượng theo từng mức sao 5, 4, 3, 2, 1)
+        $ratingCounts = [
+            5 => $product->reviews->where('rating', 5)->count(),
+            4 => $product->reviews->where('rating', 4)->count(),
+            3 => $product->reviews->where('rating', 3)->count(),
+            2 => $product->reviews->where('rating', 2)->count(),
+            1 => $product->reviews->where('rating', 1)->count(),
+        ];
 
         // Lấy các sản phẩm liên quan cùng danh mục
         $relatedProducts = Product::query()
@@ -90,6 +100,6 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('product-detail', compact('product', 'relatedProducts'));
+        return view('product-detail', compact('product', 'relatedProducts', 'ratingCounts'));
     }
 }

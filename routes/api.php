@@ -41,6 +41,10 @@ Route::prefix('admin')->name('api.admin.')->group(function () {
     Route::patch('categories/{category}/toggle-pin', [AdminCategoryController::class, 'togglePin'])->name('categories.toggle-pin');
     Route::apiResource('categories', AdminCategoryController::class);
 
-    // Product CRUD
+    // Product CRUD & Image Management
+    Route::post('products/{product}/images', [AdminProductController::class, 'addImage'])->name('products.images.add');
+    Route::patch('products/{product}/images/{image}/primary', [AdminProductController::class, 'setPrimaryImage'])->name('products.images.primary');
+    Route::delete('products/{product}/images/{image}', [AdminProductController::class, 'deleteImage'])->name('products.images.delete');
     Route::apiResource('products', AdminProductController::class);
 });
+

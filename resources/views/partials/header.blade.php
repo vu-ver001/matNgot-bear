@@ -41,9 +41,9 @@
             </div>
         </a>
 
-        <!-- Wishlist (Yêu thích - Chờ đường dẫn của bạn nhóm) -->
-        <a href="#" class="utility-icon-btn" title="Danh sách yêu thích">
-            <i class="fa-regular fa-heart" style="font-size: 16px; color: #E57373;"></i>
+        <!-- Wishlist (Yêu thích - Chờ bạn nhóm gắn link trang riêng) -->
+        <a href="#" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+            <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
             <span class="badge-count" id="wishlist-count">0</span>
         </a>
 
@@ -152,13 +152,8 @@
                                 <div style="font-size: 10.5px; color: var(--text-light);">Khách hàng thân thiết</div>
                             </div>
                         </div>
-                        <a href="{{ route('customer.orders.index') }}" class="dropdown-item">
-                            <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 6px;"></i> Đơn Hàng Của Tôi</span>
-                            <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
-                        </a>
-                        <a href="{{ route('customer.cart') }}" class="dropdown-item">
-                            <span><i class="fa-solid fa-bag-shopping" style="color: #8D6E63; margin-right: 6px;"></i> Giỏ Hàng Của Tôi</span>
-                            <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
+                        <a href="#" class="dropdown-item">
+                            <span><i class="fa-solid fa-user-gear" style="color: #8D6E63; margin-right: 6px;"></i> Tài Khoản Của Tôi</span>
                         </a>
                         <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
                             <form method="POST" action="{{ route('logout') }}">

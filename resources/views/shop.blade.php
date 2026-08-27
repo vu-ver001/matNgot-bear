@@ -329,75 +329,102 @@
     }
 
     function renderCatalogGrid(products, meta) {
-        const grid = document.getElementById('catalog-products-grid');
-        const info = document.getElementById('catalog-results-info');
-        const pagWrap = document.getElementById('catalog-pagination-wrap');
+        try {
+            const grid = document.getElementById('catalog-products-grid');
+            const info = document.getElementById('catalog-results-info');
+            const pagWrap = document.getElementById('catalog-pagination-wrap');
 
-        if (!products || products.length === 0) {
-            info.innerText = 'Không tìm thấy sản phẩm nào';
-            grid.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; background: #FFFFFF; border-radius: var(--radius-xl); border: 1px dashed var(--border);">
-                    <i class="fa-solid fa-box-open" style="font-size: 48px; color: var(--border); margin-bottom: 1rem;"></i>
-                    <h4 style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Không tìm thấy chú gấu bông nào phù hợp!</h4>
-                    <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 1.5rem;">Hãy thử xóa bớt tiêu chí lọc hoặc tìm kiếm với từ khóa khác nhé.</p>
-                    <button class="btn-honey-main" onclick="resetAllFilters()">
-                        <i class="fa-solid fa-rotate-left"></i> Xóa Tất Cả Bộ Lọc
-                    </button>
-                </div>
-            `;
-            pagWrap.innerHTML = '';
-            return;
-        }
+            if (!grid) return;
 
-        info.innerHTML = `Hiển thị tất cả <strong>${meta.total}</strong> kết quả (Trang ${meta.current_page}/${meta.last_page})`;
-
-        grid.innerHTML = products.map(p => {
-            const primaryImg = (p.images && p.images.find(img => img.is_primary)) || (p.images && p.images[0]) || { image_url: 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80' };
-            const hasSale = p.sale_price && Number(p.sale_price) < Number(p.price);
-            const discountPct = hasSale ? Math.round(((Number(p.price) - Number(p.sale_price)) / Number(p.price)) * 100) : 0;
-
-            return `
-                <div class="product-grid-item">
-                    <div class="product-photo-wrap">
-                        ${hasSale ? `<span class="card-badge-sale">-${discountPct}%</span>` : ''}
-                        <a href="/products/${p.id}">
-                            <img src="${primaryImg.image_url}" alt="${p.name}" class="product-photo-img" onerror="this.src='https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80'">
-                        </a>
+            if (!products || products.length === 0) {
+                if (info) info.innerText = 'Không tìm thấy sản phẩm nào';
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; background: #FFFFFF; border-radius: var(--radius-xl); border: 1px dashed var(--border);">
+                        <i class="fa-solid fa-box-open" style="font-size: 48px; color: var(--border); margin-bottom: 1rem;"></i>
+                        <h4 style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Không tìm thấy chú gấu bông nào phù hợp!</h4>
+                        <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 1.5rem;">Hãy thử xóa bớt tiêu chí lọc hoặc tìm kiếm với từ khóa khác nhé.</p>
+                        <button class="btn-honey-main" onclick="resetAllFilters()">
+                            <i class="fa-solid fa-rotate-left"></i> Xóa Tất Cả Bộ Lọc
+                        </button>
                     </div>
-                    <div class="product-info-wrap">
-                        <div>
-                            <div style="font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; margin-bottom: 4px;">
-                                ${p.category ? p.category.name : 'Gấu Bông'}
-                            </div>
+                `;
+                if (pagWrap) pagWrap.innerHTML = '';
+                return;
+            }
+
+            if (info && meta) {
+                info.innerHTML = `Hiển thị tất cả <strong>${meta.total}</strong> kết quả (Trang ${meta.current_page}/${meta.last_page})`;
+            }
+
+            grid.innerHTML = products.map(p => {
+                const primaryImg = (p.images && p.images.find(img => img && img.is_primary)) || (p.images && p.images[0]) || null;
+                const imgUrl = (primaryImg && primaryImg.image_url) ? primaryImg.image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' + encodeURIComponent(p.name || 'Gau Bong');
+                const price = Number(p.price || 0);
+                const salePrice = p.sale_price ? Number(p.sale_price) : null;
+                const isOnSale = p.is_on_sale !== undefined ? Boolean(p.is_on_sale) : (salePrice !== null && salePrice < price);
+                const discountPct = (isOnSale && price > 0 && salePrice) ? Math.round(((price - salePrice) / price) * 100) : 0;
+                const nameEscaped = (p.name || 'Gấu bông').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const catName = (p.category && p.category.name) ? p.category.name : 'Gấu Bông';
+
+                return `
+                    <div class="product-grid-item">
+                        <div class="product-photo-wrap">
+                            ${isOnSale ? `<span class="card-badge-sale">-${discountPct}%</span>` : ''}
+                            <button type="button" class="btn-wishlist-card" data-product-id="${p.id}" onclick="toggleWishlist({ id: ${p.id}, name: '${nameEscaped}', price: ${price}, sale_price: ${salePrice || 'null'}, image_url: '${imgUrl}' }, event)" title="Lưu vào yêu thích">
+                                <i class="fa-regular fa-heart"></i>
+                            </button>
                             <a href="/products/${p.id}">
-                                <h3 class="product-item-title">${p.name}</h3>
+                                <img src="${imgUrl}" alt="${nameEscaped}" class="product-photo-img" onerror="this.src='https://placehold.co/600x600/f5e6ca/7c4a2d?text=Gau+Bong'">
                             </a>
                         </div>
-                        <div>
-                            <div class="product-card-prices">
-                                ${hasSale 
-                                    ? `<span class="price-current">${Number(p.sale_price).toLocaleString('vi-VN')} đ</span><span class="price-old">${Number(p.price).toLocaleString('vi-VN')} đ</span>`
-                                    : `<span class="price-current" style="color: var(--primary-dark);">${Number(p.price).toLocaleString('vi-VN')} đ</span>`
-                                }
+                        <div class="product-info-wrap">
+                            <div>
+                                <div style="font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; margin-bottom: 4px;">
+                                    ${catName}
+                                </div>
+                                <a href="/products/${p.id}">
+                                    <h3 class="product-item-title">${p.name || ''}</h3>
+                                </a>
                             </div>
-                            <div class="product-card-footer">
-                                <span><i class="fa-solid fa-ruler" style="color: var(--text-light);"></i> ${p.size || 'Size chuẩn'}</span>
-                                <button type="button" class="btn-add-cart-quick" onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Thêm vào giỏ hàng">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
+                            <div>
+                                <div class="product-card-prices">
+                                    ${isOnSale && salePrice
+                                        ? `<span class="price-current">${salePrice.toLocaleString('vi-VN')} đ</span><span class="price-old">${price.toLocaleString('vi-VN')} đ</span>`
+                                        : `<span class="price-current" style="color: var(--primary-dark);">${price.toLocaleString('vi-VN')} đ</span>`
+                                    }
+                                </div>
+                                <div class="product-card-footer">
+                                    <span><i class="fa-solid fa-ruler" style="color: var(--text-light);"></i> ${p.size || 'Size chuẩn'}</span>
+                                    <button type="button" class="btn-add-cart-quick" onclick="addToCart(${p.id}, '${nameEscaped}')" title="Thêm vào giỏ hàng">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
 
-        renderCatalogPagination(meta);
+            try {
+                if (typeof updateWishlistBadge === 'function') {
+                    updateWishlistBadge();
+                }
+            } catch(e) {
+                console.warn('Wishlist sync skipped:', e);
+            }
+
+            if (meta) {
+                renderCatalogPagination(meta);
+            }
+        } catch (e) {
+            console.error('Error rendering catalog grid:', e);
+        }
     }
 
     function renderCatalogPagination(meta) {
         const wrap = document.getElementById('catalog-pagination-wrap');
-        if (meta.last_page <= 1) {
+        if (!wrap) return;
+        if (!meta || meta.last_page <= 1) {
             wrap.innerHTML = '';
             return;
         }
