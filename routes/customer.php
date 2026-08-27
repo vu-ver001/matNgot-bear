@@ -4,9 +4,11 @@ use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\PaymentController;
+use App\Http\Controllers\Customer\WishlistKT\WishlistController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('customer')->name('customer.')->group(function () {
+Route::prefix('customer')->name('customer.')->middleware(['auth', 'role:CUSTOMER'])->group(function () {
+
     // 1. Cart routes (hỗ trợ cả customer.cart và customer.cart.index)
     Route::get('/cart', [CartController::class, 'index'])->name('cart');
     Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
@@ -29,15 +31,12 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/payment/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('payment.vnpay.return');
     Route::post('/payment/confirm/{order}', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
 
-    // 4. Wishlist
-    Route::get('/wishlist', function () {
-        return view('customer.placeholder', [
-            'pageTitle' => 'Danh Sách Yêu Thích (Wishlist)',
-            'pageIcon'  => 'fa-solid fa-heart',
-            'pageDesc'  => 'Trang lưu trữ các sản phẩm gấu bông bạn yêu thích để dễ dàng mua sau.',
-            'routeCode' => "Route::get('/customer/wishlist', [WishlistController::class, 'index'])->name('customer.wishlist');",
-        ]);
-    })->name('wishlist');
+    // 4. Wishlist (Kim Tuyến)
+    Route::prefix('wishlist')->name('wishlist.')->group(function () {
+        Route::get('/', [WishlistController::class, 'index'])->name('index');
+        Route::delete('/', [WishlistController::class, 'clear'])->name('clear');
+        Route::delete('/{product}', [WishlistController::class, 'destroy'])->name('destroy');
+    });
 
     // 5. Orders (Anh Vũ)
     Route::middleware(['auth'])->group(function () {
@@ -53,7 +52,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
 });
 
 // Shortcut alias routes tiện lợi ngoài root
-Route::get('/wishlist', fn() => redirect()->route('customer.wishlist'));
+Route::get('/wishlist', fn() => redirect()->route('customer.wishlist.index'));
 Route::get('/cart', fn() => redirect()->route('customer.cart'));
 Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
 Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));

@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 | Anh Vũ: Đơn hàng, Người dùng, Đánh giá, Báo cáo | Kim Tuyến: Khác.
 */
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->group(function () {
 
     // 1. Dashboard & Thống kê (Anh Vũ)
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

@@ -215,7 +215,7 @@ class CartController extends Controller
         $validated = $request->validate([
             'cart_item_id' => 'nullable|integer',
             'product_name' => 'nullable|string',
-            'action' => 'nullable|string', // 'uncheck_single' or 'uncheck_all'
+            'action' => 'nullable|string',
             'remaining_count' => 'nullable|integer',
         ]);
 
@@ -238,4 +238,3 @@ class CartController extends Controller
         ]);
     }
 }
-

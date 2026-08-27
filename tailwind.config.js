@@ -13,7 +13,8 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['"Be Vietnam Pro"', ...defaultTheme.fontFamily.sans],
+                sans: ['"Be Vietnam Pro"', '"Montserrat"', ...defaultTheme.fontFamily.sans],
+                cursive: ['Caveat', 'Dancing Script', 'cursive'],
             },
             colors: {
                 // Tone màu Nâu - Be Sữa - Mật Ong thương hiệu Mật Ngọt Bear
@@ -41,7 +42,14 @@ export default {
                     muted: 'var(--text-muted, #8E8076)',
                     error: 'var(--error-color, #E53E3E)',
                     errorBg: 'var(--error-bg, #FFF5F5)',
-                }
+                    dark: '#4A240D',
+                    brown: '#6B3718',
+                    honey: '#E7A13B',
+                    'honey-light': '#FDF3E7',
+                    cream: '#FFF8EF',
+                    'cream-light': '#FFFCF8',
+                    success: '#2E7D32',
+                },
             },
         },
     },

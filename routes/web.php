@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileKT\ProfileController;
+use App\Http\Controllers\ProfileKT\ProfileEmailController;
+use App\Support\RoleRedirect;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,14 +23,19 @@ Route::get('/products/{id}', [CustomerProductController::class, 'show'])->name('
 // ==========================================
 // 2. AUTH & DASHBOARD
 // ==========================================
-Route::get('/dashboard', function () {
-    $user = auth()->user();
+Route::get('/dashboard', function (Request $request) {
+    $user = $request->user();
 
-    return match ($user->role) {
-        'ADMIN' => redirect()->route('admin.dashboard'),
-        'STAFF' => redirect()->route('staff.dashboard'),
-        default => redirect()->route('home'),
-    };
+    // Redirect by role if user is logged in
+    if ($user) {
+        return match ($user->role) {
+            'ADMIN' => redirect()->route('admin.dashboard'),
+            'STAFF' => redirect()->route('staff.dashboard'),
+            default => redirect()->route('home'),
+        };
+    }
+
+    return redirect()->route(RoleRedirect::routeName($user));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Tiện ích chuyển nhanh vai trò (Admin / Staff / Khách hàng / Guest) để test giao diện
@@ -56,6 +64,9 @@ Route::get('/switch-role/{role}', function (string $role) {
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/email/code', [ProfileEmailController::class, 'sendCode'])->name('profile.email.code');
+    Route::patch('/profile/email', [ProfileEmailController::class, 'verifyCode'])->name('profile.email.verify');
+    Route::delete('/profile/email', [ProfileEmailController::class, 'cancel'])->name('profile.email.cancel');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

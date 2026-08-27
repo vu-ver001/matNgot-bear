@@ -2,6 +2,10 @@
 @import 'flatpickr/dist/flatpickr.min.css';
 @import './admin/vouchers/index.css';
 @import './admin/vouchers/create.css';
+@import './auth/index.css';
+@import './customer-account/index.css';
+@import './ProfileKT/index.css';
+@import './wishlistKT/index.css';
 
 @tailwind base;
 @tailwind components;
