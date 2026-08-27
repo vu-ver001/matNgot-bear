@@ -25,6 +25,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
     // 3. Payment Gateway / QR routes
     Route::get('/payment/qr/{order}', [PaymentController::class, 'showQR'])->name('payment.qr');
+    Route::get('/payment/vnpay/redirect/{order}', [PaymentController::class, 'redirectToVnpay'])->name('payment.vnpay.redirect');
+    Route::get('/payment/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('payment.vnpay.return');
     Route::post('/payment/confirm/{order}', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
 
     // 4. Wishlist

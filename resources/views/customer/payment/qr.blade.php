@@ -166,8 +166,12 @@
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
                                     <span class="text-[#786B61] font-medium">Cổng thanh toán:</span>
                                     <span class="font-bold text-[#005BAA] flex items-center gap-1">
-                                        <i class="fa-solid fa-shield-halved"></i> Cổng VNPAY-QR Quốc Gia
+                                        <i class="fa-solid fa-shield-halved"></i> Cổng VNPAY Gateway Quốc Gia
                                     </span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
+                                    <span class="text-[#786B61] font-medium">Hình thức hỗ trợ:</span>
+                                    <span class="text-xs font-semibold text-[#2C1408]">Thẻ Visa, Mastercard, ATM & VNPAY-QR</span>
                                 </div>
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
                                     <span class="text-[#786B61] font-medium">Đơn vị thụ hưởng:</span>
@@ -176,6 +180,15 @@
                                 <div class="flex items-center justify-between text-sm py-2">
                                     <span class="text-[#786B61] font-medium">Mã điểm bán (Terminal ID):</span>
                                     <span class="font-mono font-bold text-[#2C1408]">{{ $paymentConfig['vnpay_tmn_code'] ?? 'MNBEAR01' }}</span>
+                                </div>
+                                <div class="pt-2">
+                                    <a href="{{ route('customer.payment.vnpay.redirect', $order->id) }}"
+                                       class="w-full bg-gradient-to-r from-[#005BAA] to-[#0088CC] hover:from-[#004B8C] hover:to-[#0077B3] text-white font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md shadow-[#005BAA]/25 tracking-wide">
+                                        <i class="fa-brands fa-cc-visa text-base"></i>
+                                        <i class="fa-brands fa-cc-mastercard text-base"></i>
+                                        <span>CHUYỂN ĐẾN CỔNG VNPAY (THẺ VISA / ATM)</span>
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
                                 </div>
                             @else
                                 {{-- Bank Transfer (MB Bank) details --}}

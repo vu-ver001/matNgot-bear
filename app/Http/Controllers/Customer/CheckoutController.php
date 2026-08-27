@@ -316,10 +316,15 @@ class CheckoutController extends Controller
                 ->whereIn('id', $validated['selected_items'])
                 ->delete();
 
-            // If online payment (MOMO, VNPAY, BANK_TRANSFER), redirect to interactive QR payment gateway
-            if (in_array($rawMethod, ['MOMO', 'VNPAY', 'BANK_TRANSFER', 'E_WALLET', 'CARD'])) {
+            // If VNPAY / CARD, redirect directly to official VNPAY Gateway (Visa/Mastercard/ATM/QR)
+            if ($rawMethod === 'VNPAY' || $rawMethod === 'CARD') {
+                return redirect()->route('customer.payment.vnpay.redirect', $order->id);
+            }
+
+            // If MoMo or Bank Transfer, redirect to interactive payment gateway page
+            if (in_array($rawMethod, ['MOMO', 'BANK_TRANSFER', 'E_WALLET'])) {
                 return redirect()->route('customer.payment.qr', $order->id)
-                    ->with('info', 'Đơn hàng ' . $order->order_code . ' đã tạo! Vui lòng quét mã để hoàn tất thanh toán.');
+                    ->with('info', 'Đơn hàng ' . $order->order_code . ' đã tạo! Vui lòng hoàn tất thanh toán.');
             }
 
             return redirect()->route('customer.orders.show', $order->id)
