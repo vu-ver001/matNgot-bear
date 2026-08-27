@@ -48,7 +48,8 @@
             {{ $slot }}
         </main>
 
-        <!-- Footer -->
+        <!-- Footer (Hidden on Checkout, Cart, Payment, and Orders) -->
+        @if (!request()->routeIs('customer.cart*') && !request()->routeIs('customer.checkout*') && !request()->routeIs('customer.payment.*') && !request()->routeIs('customer.orders.*') && !isset($hideFooter))
         <footer class="bg-white border-t border-amber-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div>
@@ -93,6 +94,7 @@
                 </p>
             </div>
         </footer>
+        @endif
     </div>
 
     <!-- Real-time Toast Notifications at Top-Right Corner -->

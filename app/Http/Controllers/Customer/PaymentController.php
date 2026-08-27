@@ -104,7 +104,7 @@ class PaymentController extends Controller
                 'confirmed_at' => now(),
             ]);
 
-            return redirect()->route('customer.orders.show', $order->id)
+            return redirect()->route('customer.checkout.success', $order->id)
                 ->with('success', "Thanh toán thành công qua cổng VNPAY ({$cardType} - {$bankCode})! Đơn hàng đã được xác nhận.");
         }
 
@@ -142,7 +142,7 @@ class PaymentController extends Controller
             'confirmed_at' => now(),
         ]);
 
-        return redirect()->route('customer.orders.show', $order->id)
+        return redirect()->route('customer.checkout.success', $order->id)
             ->with('success', 'Thanh toán thành công! Đơn hàng của bạn đã được chuyển sang trạng thái ĐÃ XÁC NHẬN.');
     }
 }

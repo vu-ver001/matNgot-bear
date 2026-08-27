@@ -705,7 +705,7 @@
                                                 <span class="text-[10.5px] text-[#7D6B5D]" x-text="distanceInfo.duration_text ? ('(' + distanceInfo.duration_text + ' vận chuyển)') : ''"></span>
                                             </div>
                                             <div class="text-[10px] text-[#7D6B5D] mt-0.5">
-                                                <span x-text="distanceInfo.source === 'GOOGLE_MAPS_API' ? '✨ Tính toán qua Google Maps API' : '📦 Tính theo bản đồ khoảng cách từ kho Mật Ngọt Bear (Số 41A, Phú Diễn, Bắc Từ Liêm, Hà Nội)'"></span>
+                                                <span x-text="distanceInfo.source === 'GOOGLE_MAPS_API' ? '✨ Tính toán qua Google Maps API' : '📦 Tính theo bản đồ khoảng cách từ kho Mật Ngọt Bear (Số 41A, P.Phú Diễn, Hà Nội)'"></span>
                                             </div>
                                         </div>
                                     </div>
