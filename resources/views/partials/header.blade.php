@@ -61,7 +61,7 @@
         <!-- Nút Đăng nhập / Đăng xuất & Tài khoản (Chờ đường dẫn của bạn nhóm) -->
         <div style="position: relative;">
             @guest
-                <a href="#" class="btn-auth-pill" title="Đăng nhập">
+                <a href="/login" class="btn-auth-pill" title="Đăng nhập">
                     <i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP
                 </a>
             @endguest

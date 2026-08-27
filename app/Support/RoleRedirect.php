@@ -11,7 +11,7 @@ final class RoleRedirect
         return match ($user->role) {
             User::ROLE_ADMIN => 'admin.dashboard',
             User::ROLE_STAFF => 'staff.dashboard',
-            default => 'customer.dashboard',
+            default => 'home',
         };
     }
 }

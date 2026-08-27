@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (! Schema::hasColumn('users', 'email_verified_at')) {
-                $table->timestamp('email_verified_at')->nullable()->after('email');
-            }
             if (! Schema::hasColumn('users', 'remember_token')) {
                 $table->rememberToken()->after('password');
+            }
+            if (! Schema::hasColumn('users', 'email_verified_at')) {
+                $table->timestamp('email_verified_at')->nullable()->after('email');
             }
         });
     }
@@ -21,7 +21,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['email_verified_at', 'remember_token']);
+            $columns = ['remember_token', 'email_verified_at'];
+            $existing = array_filter($columns, fn ($col) => Schema::hasColumn('users', $col));
+            if ($existing) {
+                $table->dropColumn($existing);
+            }
         });
     }
 };
