@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('customer')->name('customer.')->group(function () {
     // 1. Cart routes (hỗ trợ cả customer.cart và customer.cart.index)
     Route::get('/cart', [CartController::class, 'index'])->name('cart');
-    Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
     Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');

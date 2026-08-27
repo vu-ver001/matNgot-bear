@@ -132,7 +132,7 @@
                 @php
                     $primaryImg = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
-                    $hasSale = !empty($product->sale_price) && $product->sale_price < $product->price;
+                    $hasSale = $product->is_on_sale;
                     $discountPct = $hasSale ? round((($product->price - $product->sale_price) / $product->price) * 100) : 0;
                 @endphp
                 <div class="product-card">
@@ -141,6 +141,9 @@
                             <span class="card-badge-sale">-{{ $discountPct }}%</span>
                         @endif
                         <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
+                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $product->price }}, sale_price: {{ $product->sale_price ?? 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
+                            <i class="fa-regular fa-heart"></i>
+                        </button>
                         <a href="{{ route('products.show', $product->id) }}">
                             <img src="{{ $imgUrl }}" alt="{{ $product->name }}" class="product-card-img" onerror="this.src='https://placehold.co/600x600/f5e6ca/7c4a2d?text=Gau+Bong'">
                         </a>
@@ -213,13 +216,16 @@
                 @php
                     $primaryImg = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
-                    $hasSale = !empty($product->sale_price) && $product->sale_price < $product->price;
+                    $hasSale = $product->is_on_sale;
                 @endphp
                 <div class="product-card">
                     <div class="product-card-img-wrap">
                         @if($hasSale)
                             <span class="card-badge-sale">Sale</span>
                         @endif
+                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $product->price }}, sale_price: {{ $product->sale_price ?? 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
+                            <i class="fa-regular fa-heart"></i>
+                        </button>
                         <a href="{{ route('products.show', $product->id) }}">
                             <img src="{{ $imgUrl }}" alt="{{ $product->name }}" class="product-card-img" onerror="this.src='https://placehold.co/600x600/f5e6ca/7c4a2d?text=Gau+Bong'">
                         </a>

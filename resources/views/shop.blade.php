@@ -353,13 +353,16 @@
 
         grid.innerHTML = products.map(p => {
             const primaryImg = (p.images && p.images.find(img => img.is_primary)) || (p.images && p.images[0]) || { image_url: 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80' };
-            const hasSale = p.sale_price && Number(p.sale_price) < Number(p.price);
+            const hasSale = p.is_on_sale !== undefined ? Boolean(p.is_on_sale) : (p.sale_price && Number(p.sale_price) < Number(p.price));
             const discountPct = hasSale ? Math.round(((Number(p.price) - Number(p.sale_price)) / Number(p.price)) * 100) : 0;
 
             return `
                 <div class="product-grid-item">
                     <div class="product-photo-wrap">
                         ${hasSale ? `<span class="card-badge-sale">-${discountPct}%</span>` : ''}
+                        <button type="button" class="btn-wishlist-card" data-product-id="${p.id}" onclick="toggleWishlist({ id: ${p.id}, name: '${p.name.replace(/'/g, "\\'")}', price: ${p.price}, sale_price: ${p.sale_price || 'null'}, image_url: '${primaryImg.image_url}' }, event)" title="Lưu vào yêu thích">
+                            <i class="fa-regular fa-heart"></i>
+                        </button>
                         <a href="/products/${p.id}">
                             <img src="${primaryImg.image_url}" alt="${p.name}" class="product-photo-img" onerror="this.src='https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80'">
                         </a>
@@ -392,6 +395,7 @@
             `;
         }).join('');
 
+        updateWishlistBadge();
         renderCatalogPagination(meta);
     }
 

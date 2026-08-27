@@ -17,6 +17,8 @@ class Product extends Model
         'description',
         'price',
         'sale_price',
+        'sale_start_at',
+        'sale_end_at',
         'size',
         'color',
         'material',
@@ -28,9 +30,48 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'sale_price' => 'decimal:2',
+        'sale_start_at' => 'datetime',
+        'sale_end_at' => 'datetime',
         'stock_quantity' => 'integer',
         'sold_count' => 'integer',
     ];
+
+    protected $appends = [
+        'is_on_sale',
+        'effective_price',
+    ];
+
+    /**
+     * Kiểm tra xem sản phẩm có đang trong thời gian khuyến mãi hợp lệ hay không.
+     * Khi hết hạn thời gian kết thúc hoặc chưa tới ngày bắt đầu, giá gốc sẽ tự động áp dụng trở lại.
+     */
+    public function getIsOnSaleAttribute(): bool
+    {
+        if (empty($this->sale_price) || $this->sale_price >= $this->price) {
+            return false;
+        }
+
+        $now = now();
+
+        if ($this->sale_start_at && $now->lt($this->sale_start_at)) {
+            return false;
+        }
+
+        if ($this->sale_end_at && $now->gt($this->sale_end_at)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Lấy giá bán thực tế hiện tại (nếu đang sale thì lấy sale_price, nếu hết hạn sale thì lấy price gốc).
+     */
+    public function getEffectivePriceAttribute(): float
+    {
+        return $this->is_on_sale ? (float) $this->sale_price : (float) $this->price;
+    }
+
 
     public function category(): BelongsTo
     {
