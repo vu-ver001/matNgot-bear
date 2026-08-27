@@ -407,14 +407,7 @@
 
     function handleBuyNow() {
         const qty = parseInt(document.getElementById('detail-quantity').value) || 1;
-        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty);
-        Swal.fire({
-            title: 'Đặt Hàng Thành Công!',
-            html: `Bạn đã chọn mua <strong>${qty} x {{ $product->name }}</strong>.<br>Nhân viên Mật Ngọt Bear sẽ liên hệ xác nhận đơn hàng qua hotline ngay nhé! 🧸`,
-            icon: 'success',
-            confirmButtonColor: '#5D4037',
-            confirmButtonText: 'Tiếp tục mua sắm'
-        });
+        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, 'checkout');
     }
 
     function filterReviews(star, btn) {

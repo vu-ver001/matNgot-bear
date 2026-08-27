@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,32 +20,39 @@
 
     <style>
         :root {
+            --bg-page: #FDFBF7;
+            --bg-card: #FFFFFF;
+            --bg-surface: #F8F4EE;
+            --bg-cream: #F5EFEB;
+
             --primary: #8D6E63;
-            
+            --primary-dark: #5D4037;
+            --primary-light: #BCAAA4;
+
             --honey: #E59819;
             --honey-light: #FFF8E7;
             --honey-dark: #B87309;
             --honey-gold: #F6D89B;
-            
+
             --text-main: #4E342E;
             --text-muted: #795548;
             --text-light: #9E8076;
-            
+
             --border: #EADFCF;
             --border-light: #F0E7DB;
-            
+
             --success: #2E7D32;
             --success-bg: #E8F5E9;
             --warning: #EF6C00;
             --warning-bg: #FFF3E0;
             --danger: #C62828;
             --danger-bg: #FFEBEE;
-            
+
             --radius-sm: 8px;
             --radius-md: 14px;
             --radius-lg: 20px;
             --radius-xl: 28px;
-            
+
             --shadow-subtle: 0 2px 8px rgba(109, 76, 65, 0.04);
             --shadow-card: 0 8px 24px rgba(109, 76, 65, 0.07);
             --shadow-hover: 0 14px 32px rgba(109, 76, 65, 0.12);
@@ -215,10 +223,25 @@
             font-size: 20px;
         }
 
-        .stat-icon.brown { background: #EFEBE9; color: #5D4037; }
-        .stat-icon.honey { background: var(--honey-light); color: var(--honey-dark); }
-        .stat-icon.green { background: var(--success-bg); color: var(--success); }
-        .stat-icon.red { background: var(--danger-bg); color: var(--danger); }
+        .stat-icon.brown {
+            background: #EFEBE9;
+            color: #5D4037;
+        }
+
+        .stat-icon.honey {
+            background: var(--honey-light);
+            color: var(--honey-dark);
+        }
+
+        .stat-icon.green {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .stat-icon.red {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
 
         /* Tabs Navigation */
         .tabs-nav {
@@ -313,7 +336,8 @@
             font-size: 14px;
         }
 
-        .input-control, .select-control {
+        .input-control,
+        .select-control {
             width: 100%;
             background: var(--bg-page);
             border: 1px solid var(--border);
@@ -329,7 +353,8 @@
             padding-left: 38px;
         }
 
-        .input-control:focus, .select-control:focus {
+        .input-control:focus,
+        .select-control:focus {
             border-color: var(--primary-light);
             background: #FFFFFF;
             box-shadow: 0 0 0 3px rgba(93, 64, 55, 0.1);
@@ -541,9 +566,17 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         /* Price Formatting */
@@ -741,8 +774,15 @@
         }
 
         @keyframes modalPop {
-            0% { transform: scale(0.94); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(0.94);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .modal-header {
@@ -896,12 +936,23 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            main.admin-main { padding: 1rem; }
-            .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
-            .header-container { flex-direction: column; gap: 12px; }
+            main.admin-main {
+                padding: 1rem;
+            }
+
+            .form-grid-2,
+            .form-grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .header-container {
+                flex-direction: column;
+                gap: 12px;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- Header -->
@@ -918,10 +969,12 @@
             </a>
 
             <div class="header-actions">
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline" style="color: #FFFFFF; border-color: rgba(255,255,255,0.3); font-size: 13px; padding: 6px 14px; background: rgba(255,255,255,0.1);">
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline"
+                    style="color: #FFFFFF; border-color: rgba(255,255,255,0.3); font-size: 13px; padding: 6px 14px; background: rgba(255,255,255,0.1);">
                     <i class="fa-solid fa-bars-staggered"></i> Menu Quản Trị
                 </a>
-                <a href="/" target="_blank" class="btn btn-outline" style="color: #FFFFFF; border-color: rgba(255,255,255,0.25); font-size: 13px; padding: 6px 14px;">
+                <a href="/" target="_blank" class="btn btn-outline"
+                    style="color: #FFFFFF; border-color: rgba(255,255,255,0.25); font-size: 13px; padding: 6px 14px;">
                     <i class="fa-solid fa-store"></i> Xem Cửa Hàng
                 </a>
                 <div class="user-pill">
@@ -934,7 +987,7 @@
 
     <!-- Main Content -->
     <main class="admin-main">
-        
+
         <!-- Stats Summary -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -1006,7 +1059,8 @@
             <div class="toolbar-grid">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="prod-search" class="input-control" placeholder="Tìm theo tên sản phẩm..." oninput="debounceSearchProduct()">
+                    <input type="text" id="prod-search" class="input-control" placeholder="Tìm theo tên sản phẩm..."
+                        oninput="debounceSearchProduct()">
                 </div>
 
                 <div class="filter-select">
@@ -1056,8 +1110,10 @@
                     <tbody id="products-table-body">
                         <tr>
                             <td colspan="8" style="text-align: center; padding: 2rem;">
-                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i>
-                                <div style="margin-top: 8px; color: var(--text-muted);">Đang tải danh sách sản phẩm...</div>
+                                <i class="fa-solid fa-spinner fa-spin"
+                                    style="font-size: 24px; color: var(--primary);"></i>
+                                <div style="margin-top: 8px; color: var(--text-muted);">Đang tải danh sách sản phẩm...
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -1093,10 +1149,12 @@
                         Danh Sách Danh Mục
                     </div>
                     <div class="category-slider-controls">
-                        <button type="button" class="btn-icon" id="cat-btn-prev" onclick="slideCategories(-1)" title="Xem danh mục trước">
+                        <button type="button" class="btn-icon" id="cat-btn-prev" onclick="slideCategories(-1)"
+                            title="Xem danh mục trước">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
-                        <button type="button" class="btn-icon" id="cat-btn-next" onclick="slideCategories(1)" title="Xem danh mục tiếp theo">
+                        <button type="button" class="btn-icon" id="cat-btn-next" onclick="slideCategories(1)"
+                            title="Xem danh mục tiếp theo">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                     </div>
@@ -1147,7 +1205,8 @@
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label class="form-label">Tên sản phẩm <span class="req">*</span></label>
-                            <input type="text" id="prod-form-name" class="input-control" required placeholder="Ví dụ: Gấu Teddy Nơ Hồng 30cm">
+                            <input type="text" id="prod-form-name" class="input-control" required
+                                placeholder="Ví dụ: Gấu Teddy Nơ Hồng 30cm">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Danh mục cha <span class="req">*</span></label>
@@ -1161,15 +1220,18 @@
                     <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label">Giá gốc (VNĐ) <span class="req">*</span></label>
-                            <input type="number" id="prod-form-price" class="input-control" required min="0" step="1000" placeholder="189000">
+                            <input type="number" id="prod-form-price" class="input-control" required min="0"
+                                step="1000" placeholder="189000">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Giá khuyến mãi (VNĐ)</label>
-                            <input type="number" id="prod-form-sale-price" class="input-control" min="0" step="1000" placeholder="149000 (nếu có)">
+                            <input type="number" id="prod-form-sale-price" class="input-control" min="0"
+                                step="1000" placeholder="149000 (nếu có)">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Số lượng tồn kho <span class="req">*</span></label>
-                            <input type="number" id="prod-form-stock" class="input-control" required min="0" placeholder="50">
+                            <input type="number" id="prod-form-stock" class="input-control" required min="0"
+                                placeholder="50">
                         </div>
                     </div>
 
@@ -1177,15 +1239,18 @@
                     <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label">Kích thước (size)</label>
-                            <input type="text" id="prod-form-size" class="input-control" placeholder="30cm, 1m2...">
+                            <input type="text" id="prod-form-size" class="input-control"
+                                placeholder="30cm, 1m2...">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Màu sắc (color)</label>
-                            <input type="text" id="prod-form-color" class="input-control" placeholder="Nâu, Hồng pastel...">
+                            <input type="text" id="prod-form-color" class="input-control"
+                                placeholder="Nâu, Hồng pastel...">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Chất liệu (material)</label>
-                            <input type="text" id="prod-form-material" class="input-control" placeholder="Bông PP 3D, Vải nhung...">
+                            <input type="text" id="prod-form-material" class="input-control"
+                                placeholder="Bông PP 3D, Vải nhung...">
                         </div>
                     </div>
 
@@ -1201,7 +1266,8 @@
                     <!-- Row 5: Description -->
                     <div class="form-group">
                         <label class="form-label">Mô tả sản phẩm</label>
-                        <textarea id="prod-form-desc" class="input-control" rows="3" placeholder="Mô tả chi tiết về sản phẩm gấu bông..."></textarea>
+                        <textarea id="prod-form-desc" class="input-control" rows="3"
+                            placeholder="Mô tả chi tiết về sản phẩm gấu bông..."></textarea>
                     </div>
 
                     <!-- Row 6: Image Gallery Manager -->
@@ -1209,15 +1275,17 @@
                         <label class="form-label">Quản lý Ảnh sản phẩm (Gallery)</label>
                         <div class="gallery-section">
                             <div class="gallery-input-row">
-                                <input type="text" id="gallery-input-url" class="input-control" placeholder="Nhập đường dẫn URL ảnh (VD: https://placehold.co/600x600...)">
+                                <input type="text" id="gallery-input-url" class="input-control"
+                                    placeholder="Nhập đường dẫn URL ảnh (VD: https://placehold.co/600x600...)">
                                 <button type="button" class="btn btn-honey" onclick="addImageToGallery()">
                                     <i class="fa-solid fa-plus"></i> Thêm Ảnh
                                 </button>
                             </div>
                             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-                                * Mẹo: Click "Đặt làm đại diện" để chọn ảnh chính cho sản phẩm. Có thể sắp xếp thứ tự hiển thị.
+                                * Mẹo: Click "Đặt làm đại diện" để chọn ảnh chính cho sản phẩm. Có thể sắp xếp thứ tự
+                                hiển thị.
                             </div>
-                            
+
                             <!-- Gallery items grid -->
                             <div class="gallery-grid" id="gallery-preview-grid">
                                 <!-- Dynamically filled -->
@@ -1253,17 +1321,21 @@
 
                     <div class="form-group">
                         <label class="form-label">Tên danh mục <span class="req">*</span></label>
-                        <input type="text" id="cat-form-name" class="input-control" required placeholder="Ví dụ: Gấu Bông Khổng Lồ">
+                        <input type="text" id="cat-form-name" class="input-control" required
+                            placeholder="Ví dụ: Gấu Bông Khổng Lồ">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Mô tả danh mục</label>
-                        <textarea id="cat-form-desc" class="input-control" rows="3" placeholder="Mô tả tóm tắt về loại danh mục này..."></textarea>
+                        <textarea id="cat-form-desc" class="input-control" rows="3"
+                            placeholder="Mô tả tóm tắt về loại danh mục này..."></textarea>
                     </div>
 
                     <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 1rem;">
-                        <input type="checkbox" id="cat-form-active" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
-                        <label for="cat-form-active" style="font-size: 14px; font-weight: 600; cursor: pointer;">Kích hoạt danh mục này</label>
+                        <input type="checkbox" id="cat-form-active" checked
+                            style="width: 18px; height: 18px; accent-color: var(--primary);">
+                        <label for="cat-form-active" style="font-size: 14px; font-weight: 600; cursor: pointer;">Kích
+                            hoạt danh mục này</label>
                     </div>
 
                     <div class="modal-footer">
@@ -1340,7 +1412,7 @@
                 if (prodData.success) {
                     const products = prodData.data.data || [];
                     document.getElementById('stat-total-products').innerText = prodData.data.total || products.length;
-                    
+
                     const activeCount = products.filter(p => p.status === 'ACTIVE').length;
                     document.getElementById('stat-active-products').innerText = activeCount;
 
@@ -1372,14 +1444,17 @@
                 }
             } catch (err) {
                 console.error("Lỗi tải danh mục:", err);
-                Toast.fire({ icon: 'error', title: 'Không thể tải danh mục sản phẩm' });
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Không thể tải danh mục sản phẩm'
+                });
             }
         }
 
         function renderCategoryDropdowns() {
             const filterDropdown = document.getElementById('prod-filter-category');
             const formDropdown = document.getElementById('prod-form-category');
-            
+
             const currentFilterVal = filterDropdown.value;
             const currentFormVal = formDropdown.value;
 
@@ -1402,7 +1477,10 @@
             const track = document.getElementById('category-grid-container');
             if (!track) return;
             const scrollAmount = 270; // card width (250px) + gap (20px)
-            track.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+            track.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
         }
 
         function renderCategoryViews() {
@@ -1411,7 +1489,8 @@
             const tbody = document.getElementById('categories-table-body');
 
             if (categoriesList.length === 0) {
-                grid.innerHTML = '<div class="empty-state" style="padding: 1.5rem; width: 100%;"><i class="fa-solid fa-folder-open"></i><p>Chưa có danh mục nào.</p></div>';
+                grid.innerHTML =
+                    '<div class="empty-state" style="padding: 1.5rem; width: 100%;"><i class="fa-solid fa-folder-open"></i><p>Chưa có danh mục nào.</p></div>';
                 tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Chưa có danh mục nào.</td></tr>';
                 return;
             }
@@ -1510,7 +1589,10 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    Toast.fire({ icon: 'success', title: data.message || 'Lưu danh mục thành công!' });
+                    Toast.fire({
+                        icon: 'success',
+                        title: data.message || 'Lưu danh mục thành công!'
+                    });
                     closeCategoryModal();
                     loadCategories();
                     loadStats();
@@ -1524,7 +1606,10 @@
                 }
             } catch (err) {
                 console.error("Lỗi lưu category:", err);
-                Toast.fire({ icon: 'error', title: 'Lỗi máy chủ kết nối' });
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Lỗi máy chủ kết nối'
+                });
             }
         }
 
@@ -1554,19 +1639,32 @@
                 try {
                     const res = await fetch(`/api/admin/categories/${id}`, {
                         method: 'DELETE',
-                        headers: { 'Accept': 'application/json' }
+                        headers: {
+                            'Accept': 'application/json'
+                        }
                     });
                     const data = await res.json();
 
                     if (res.ok && data.success) {
-                        Toast.fire({ icon: 'success', title: data.message || 'Xóa danh mục thành công!' });
+                        Toast.fire({
+                            icon: 'success',
+                            title: data.message || 'Xóa danh mục thành công!'
+                        });
                         loadCategories();
                         loadStats();
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message, confirmButtonColor: '#5D4037' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: data.message,
+                            confirmButtonColor: '#5D4037'
+                        });
                     }
                 } catch (err) {
-                    Toast.fire({ icon: 'error', title: 'Lỗi kết nối khi xóa' });
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Lỗi kết nối khi xóa'
+                    });
                 }
             }
         }
@@ -1600,10 +1698,22 @@
 
             let sortBy = 'created_at';
             let sortDir = 'desc';
-            if (sortVal === 'price_asc') { sortBy = 'price'; sortDir = 'asc'; }
-            if (sortVal === 'price_desc') { sortBy = 'price'; sortDir = 'desc'; }
-            if (sortVal === 'stock_quantity_asc') { sortBy = 'stock_quantity'; sortDir = 'asc'; }
-            if (sortVal === 'sold_count_desc') { sortBy = 'sold_count'; sortDir = 'desc'; }
+            if (sortVal === 'price_asc') {
+                sortBy = 'price';
+                sortDir = 'asc';
+            }
+            if (sortVal === 'price_desc') {
+                sortBy = 'price';
+                sortDir = 'desc';
+            }
+            if (sortVal === 'stock_quantity_asc') {
+                sortBy = 'stock_quantity';
+                sortDir = 'asc';
+            }
+            if (sortVal === 'sold_count_desc') {
+                sortBy = 'sold_count';
+                sortDir = 'desc';
+            }
 
             const queryParams = new URLSearchParams({
                 page: page,
@@ -1625,7 +1735,10 @@
                 }
             } catch (err) {
                 console.error("Lỗi tải sản phẩm:", err);
-                Toast.fire({ icon: 'error', title: 'Không thể tải danh sách sản phẩm' });
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Không thể tải danh sách sản phẩm'
+                });
             }
         }
 
@@ -1649,16 +1762,22 @@
 
             tbody.innerHTML = products.map(p => {
                 // Find primary image or first image
-                const primaryImg = (p.images && p.images.find(img => img.is_primary)) || (p.images && p.images[0]) || { image_url: 'https://placehold.co/100x100?text=No+Image' };
-                
+                const primaryImg = (p.images && p.images.find(img => img.is_primary)) || (p.images && p.images[
+                    0]) || {
+                        image_url: 'https://placehold.co/100x100?text=No+Image'
+                    };
+
                 // Stock Badge
                 let stockBadge = '';
                 if (p.stock_quantity === 0) {
-                    stockBadge = `<span class="badge badge-stock-out"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</span>`;
+                    stockBadge =
+                        `<span class="badge badge-stock-out"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</span>`;
                 } else if (p.stock_quantity <= 5) {
-                    stockBadge = `<span class="badge badge-stock-low"><i class="fa-solid fa-triangle-exclamation"></i> Còn ${p.stock_quantity}</span>`;
+                    stockBadge =
+                        `<span class="badge badge-stock-low"><i class="fa-solid fa-triangle-exclamation"></i> Còn ${p.stock_quantity}</span>`;
                 } else {
-                    stockBadge = `<span class="badge badge-stock-normal"><i class="fa-solid fa-check"></i> ${p.stock_quantity}</span>`;
+                    stockBadge =
+                        `<span class="badge badge-stock-normal"><i class="fa-solid fa-check"></i> ${p.stock_quantity}</span>`;
                 }
 
                 // Price display
@@ -1714,7 +1833,7 @@
             }).join('');
 
             // Pagination info & controls
-            document.getElementById('products-pagination-info').innerText = 
+            document.getElementById('products-pagination-info').innerText =
                 `Hiển thị trang ${paginator.current_page} / ${paginator.last_page} (Tổng ${paginator.total} sản phẩm)`;
 
             renderPaginationControls(paginator);
@@ -1725,19 +1844,23 @@
             let html = '';
 
             // Prev Button
-            html += `<button class="page-btn" ${paginator.current_page === 1 ? 'disabled' : ''} onclick="loadProducts(${paginator.current_page - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+            html +=
+                `<button class="page-btn" ${paginator.current_page === 1 ? 'disabled' : ''} onclick="loadProducts(${paginator.current_page - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
 
             // Page numbers
             for (let i = 1; i <= paginator.last_page; i++) {
-                if (i === 1 || i === paginator.last_page || (i >= paginator.current_page - 1 && i <= paginator.current_page + 1)) {
-                    html += `<button class="page-btn ${i === paginator.current_page ? 'active' : ''}" onclick="loadProducts(${i})">${i}</button>`;
+                if (i === 1 || i === paginator.last_page || (i >= paginator.current_page - 1 && i <= paginator
+                        .current_page + 1)) {
+                    html +=
+                        `<button class="page-btn ${i === paginator.current_page ? 'active' : ''}" onclick="loadProducts(${i})">${i}</button>`;
                 } else if (i === paginator.current_page - 2 || i === paginator.current_page + 2) {
                     html += `<span style="padding: 0 4px; color: var(--text-light);">...</span>`;
                 }
             }
 
             // Next Button
-            html += `<button class="page-btn" ${paginator.current_page === paginator.last_page ? 'disabled' : ''} onclick="loadProducts(${paginator.current_page + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+            html +=
+                `<button class="page-btn" ${paginator.current_page === paginator.last_page ? 'disabled' : ''} onclick="loadProducts(${paginator.current_page + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
 
             container.innerHTML = html;
         }
@@ -1760,13 +1883,11 @@
             document.getElementById('prod-form-desc').value = '';
 
             // Reset Gallery with sample placeholder
-            productGallery = [
-                {
-                    image_url: 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=Gau+Bong+Mat+Ngot',
-                    is_primary: true,
-                    sort_order: 0
-                }
-            ];
+            productGallery = [{
+                image_url: 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=Gau+Bong+Mat+Ngot',
+                is_primary: true,
+                sort_order: 0
+            }];
             renderGalleryGrid();
 
             document.getElementById('modal-product').classList.add('open');
@@ -1782,7 +1903,10 @@
                 const data = await res.json();
 
                 if (!data.success || !data.data) {
-                    Toast.fire({ icon: 'error', title: 'Không tìm thấy thông tin sản phẩm' });
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Không tìm thấy thông tin sản phẩm'
+                    });
                     return;
                 }
 
@@ -1811,7 +1935,10 @@
                 document.getElementById('modal-product').classList.add('open');
             } catch (err) {
                 console.error("Lỗi lấy chi tiết sản phẩm:", err);
-                Toast.fire({ icon: 'error', title: 'Lỗi tải chi tiết sản phẩm' });
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Lỗi tải chi tiết sản phẩm'
+                });
             }
         }
 
@@ -1819,7 +1946,10 @@
             const input = document.getElementById('gallery-input-url');
             const url = input.value.trim();
             if (!url) {
-                Toast.fire({ icon: 'warning', title: 'Vui lòng nhập đường dẫn URL ảnh' });
+                Toast.fire({
+                    icon: 'warning',
+                    title: 'Vui lòng nhập đường dẫn URL ảnh'
+                });
                 return;
             }
 
@@ -1837,7 +1967,8 @@
         function renderGalleryGrid() {
             const grid = document.getElementById('gallery-preview-grid');
             if (productGallery.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-light); font-size: 13px; padding: 10px;">Chưa có ảnh nào trong bộ sưu tập.</div>';
+                grid.innerHTML =
+                    '<div style="grid-column: 1/-1; text-align: center; color: var(--text-light); font-size: 13px; padding: 10px;">Chưa có ảnh nào trong bộ sưu tập.</div>';
                 return;
             }
 
@@ -1947,7 +2078,10 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    Toast.fire({ icon: 'success', title: data.message || 'Lưu sản phẩm thành công!' });
+                    Toast.fire({
+                        icon: 'success',
+                        title: data.message || 'Lưu sản phẩm thành công!'
+                    });
                     closeProductModal();
                     loadProducts();
                     loadStats();
@@ -1965,7 +2099,10 @@
                 }
             } catch (err) {
                 console.error("Lỗi lưu sản phẩm:", err);
-                Toast.fire({ icon: 'error', title: 'Lỗi kết nối máy chủ' });
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Lỗi kết nối máy chủ'
+                });
             }
         }
 
@@ -1985,22 +2122,36 @@
                 try {
                     const res = await fetch(`/api/admin/products/${id}`, {
                         method: 'DELETE',
-                        headers: { 'Accept': 'application/json' }
+                        headers: {
+                            'Accept': 'application/json'
+                        }
                     });
                     const data = await res.json();
 
                     if (res.ok && data.success) {
-                        Toast.fire({ icon: 'success', title: data.message || 'Cập nhật trạng thái thành công!' });
+                        Toast.fire({
+                            icon: 'success',
+                            title: data.message || 'Cập nhật trạng thái thành công!'
+                        });
                         loadProducts();
                         loadStats();
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message, confirmButtonColor: '#5D4037' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: data.message,
+                            confirmButtonColor: '#5D4037'
+                        });
                     }
                 } catch (err) {
-                    Toast.fire({ icon: 'error', title: 'Lỗi máy chủ khi cập nhật' });
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Lỗi máy chủ khi cập nhật'
+                    });
                 }
             }
         }
     </script>
 </body>
+
 </html>

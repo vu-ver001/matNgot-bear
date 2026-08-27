@@ -58,7 +58,6 @@
             </a>
 
             <div class="sidebar-section-label">Bán Hàng & Tài Chính</div>
-            <!-- Các mục của bạn nhóm -->
             <a href="{{ route('admin.vouchers.index') }}" class="sidebar-link {{ request()->routeIs('admin.vouchers*') || ($currentPage ?? '') === 'vouchers' ? 'active' : '' }}" data-title="Quản lý Voucher">
                 <i class="fa-solid fa-ticket"></i>
                 <span class="sidebar-link-text">Quản lý Voucher</span>

@@ -20,15 +20,18 @@ class VoucherController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Voucher::query()->with(['categories', 'products']);
+        $isTrashed = $request->input('status') === 'TRASHED';
+        $query = $isTrashed 
+            ? Voucher::onlyTrashed()->with(['categories', 'products']) 
+            : Voucher::query()->with(['categories', 'products']);
 
         // Search by voucher code
         if ($request->filled('search')) {
             $query->where('code', 'like', '%' . trim($request->input('search')) . '%');
         }
 
-        // Filter by real status
-        if ($request->filled('status')) {
+        // Filter by real status (if not in trash view)
+        if (!$isTrashed && $request->filled('status')) {
             $status = $request->input('status');
             $now = Carbon::now();
             if ($status === 'RUNNING') {
@@ -76,13 +79,14 @@ class VoucherController extends Controller
                 ->orWhereColumn('used_count', '>=', 'usage_limit')
                 ->count(),
             'inactive' => Voucher::where('status', 'INACTIVE')->count(),
+            'trashed' => Voucher::onlyTrashed()->count(),
             'order_vouchers' => Voucher::where('voucher_type', 'ORDER')->count(),
             'shipping_vouchers' => Voucher::where('voucher_type', 'SHIPPING')->count(),
         ];
 
         $vouchers = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
-        return view('admin.vouchers.index', compact('vouchers', 'stats'));
+        return view('admin.vouchers.index', compact('vouchers', 'stats', 'isTrashed'));
     }
 
     /**
@@ -288,14 +292,42 @@ class VoucherController extends Controller
     }
 
     /**
-     * Remove the specified voucher from storage.
+     * Remove the specified voucher from storage (Soft Delete).
      */
     public function destroy(Voucher $voucher): RedirectResponse
     {
         $code = $voucher->code;
         $voucher->delete();
 
-        return redirect()->route('admin.vouchers.index')->with('success', "Đã xóa voucher [{$code}] thành công!");
+        return redirect()->route('admin.vouchers.index')->with('success', "Đã chuyển voucher [{$code}] vào thùng rác thành công!");
+    }
+
+    /**
+     * Restore the specified soft-deleted voucher.
+     */
+    public function restore(int $id): RedirectResponse
+    {
+        $voucher = Voucher::onlyTrashed()->findOrFail($id);
+        $code = $voucher->code;
+        $voucher->restore();
+
+        return back()->with('success', "Đã khôi phục voucher [{$code}] thành công!");
+    }
+
+    /**
+     * Permanently remove the specified voucher from storage.
+     */
+    public function forceDelete(int $id): RedirectResponse
+    {
+        $voucher = Voucher::onlyTrashed()->findOrFail($id);
+        $code = $voucher->code;
+
+        // Detach pivot relations
+        $voucher->categories()->detach();
+        $voucher->products()->detach();
+        $voucher->forceDelete();
+
+        return back()->with('success', "Đã xóa vĩnh viễn voucher [{$code}] khỏi hệ thống!");
     }
 }
 

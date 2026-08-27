@@ -1,5 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import 'flatpickr/dist/flatpickr.min.css';
+@import './admin/vouchers/index.css';
+@import './admin/vouchers/create.css';
 
 @tailwind base;
 @tailwind components;
@@ -33,6 +35,7 @@
 
     body {
         font-weight: 400;
+        letter-spacing: -0.01em;
         line-height: 1.5;
         background-color: var(--cream-bg);
         color: var(--text-body);
@@ -53,7 +56,8 @@
 
     /* Tiêu đề đậm và sắc nét */
     h1, h2, h3, h4, h5, h6 {
-        font-weight: 600;
+        font-weight: 700;
+        letter-spacing: -0.02em;
         color: var(--text-title);
     }
 
@@ -68,6 +72,40 @@
         -moz-appearance: textfield !important;
         appearance: textfield !important;
     }
+}
+
+/* ==========================================================================
+   SweetAlert2 Toast Theme - Mật Ngọt Bear (Bo góc mềm mại, viền thanh lịch)
+   ========================================================================== */
+
+.swal2-popup.swal2-toast {
+    border-radius: 1.25rem !important; /* Bo cong mềm mại 20px */
+    border: 2px solid #EBDDCD !important;
+    background: #FAF6F0 !important;
+    box-shadow: 0 12px 28px -4px rgba(92, 50, 25, 0.12), 0 6px 12px -4px rgba(92, 50, 25, 0.08) !important;
+    padding: 0.85rem 1.25rem !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
+}
+
+.swal2-popup.swal2-toast .swal2-title {
+    color: #2E190E !important;
+    font-weight: 700 !important;
+    font-size: 0.925rem !important;
+    line-height: 1.4 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon {
+    margin: 0 0.65rem 0 0 !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    border-width: 2px !important;
+}
+
+.swal2-popup.swal2-toast .swal2-timer-progress-bar {
+    background: linear-gradient(90deg, #E09028, #F4B860) !important;
+    height: 3.5px !important;
+    border-radius: 0 0 1.25rem 1.25rem !important;
 }
 
 /* ==========================================================================
