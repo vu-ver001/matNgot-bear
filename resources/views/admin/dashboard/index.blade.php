@@ -7,6 +7,16 @@
             <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-6">
                 <p class="text-sm text-[#64748B]">Tổng doanh thu</p>
                 <p class="mt-2 text-2xl font-bold text-amber-600">{{ number_format($totalRevenue, 0, ',', '.') }} đ</p>
+                @php
+                    $monthChange = $previousMonthRevenue > 0
+                        ? round(($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue * 100, 1)
+                        : ($currentMonthRevenue > 0 ? 100.0 : null);
+                @endphp
+                @if ($monthChange !== null)
+                    <p class="mt-1 text-xs font-medium text-green-600">
+                        {{ $monthChange >= 0 ? '+' : '' }}{{ number_format($monthChange, 1) }}% so với tháng trước
+                    </p>
+                @endif
             </div>
             <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-6">
                 <p class="text-sm text-[#64748B]">Sản phẩm</p>
@@ -58,6 +68,7 @@
                                 'y' => round(200 - ($item->total / $maxRevenue) * 176, 1),
                                 'total' => (float) $item->total,
                                 'month' => $item->month,
+                                'year' => $item->year,
                             ];
                         });
                         $linePoints = $points->map(fn ($p) => "{$p->x},{$p->y}")->implode(' ');
@@ -66,7 +77,7 @@
                     @if (! $hasData)
                         <p class="text-sm text-[#64748B]">Chưa có dữ liệu doanh thu.</p>
                     @else
-                        <div class="relative">
+                        <div class="relative" x-data="{ hp: null }">
                             <div class="relative h-56">
                                 <svg class="absolute inset-0 w-full h-full" viewBox="0 0 600 220" preserveAspectRatio="none">
                                     @foreach ([200, 156, 112, 68, 24] as $gridY)
@@ -79,9 +90,11 @@
                                     @foreach ($points as $point)
                                         @if ($point->total > 0)
                                             <circle cx="{{ $point->x }}" cy="{{ $point->y }}" r="4.5"
-                                                    fill="#ffffff" stroke="#F59E0B" stroke-width="2.5">
-                                                <title>{{ number_format($point->total, 0, ',', '.') }} đ</title>
-                                            </circle>
+                                                    fill="#ffffff" stroke="#F59E0B" stroke-width="2.5" />
+                                            <circle cx="{{ $point->x }}" cy="{{ $point->y }}" r="14"
+                                                    fill="transparent" stroke="transparent" class="cursor-pointer"
+                                                    @mouseenter="hp = { m: {{ $point->month }}, y: {{ $point->year }}, t: {{ $point->total }}, px: {{ ($point->x / 600) * 100 }}, py: {{ ($point->y / 220) * 100 }} }"
+                                                    @mouseleave="hp = null" />
                                         @endif
                                     @endforeach
                                 </svg>
@@ -93,6 +106,21 @@
                                         </span>
                                     @endif
                                 @endforeach
+                                <div x-show="hp" x-cloak
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-150"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute z-10 pointer-events-none"
+                                     :style="`left:${hp?.px}%;top:${hp?.py}%;transform:translate(-50%,-130%)`">
+                                    <div class="bg-[#FFFBFB] border border-[#EBDDCD] rounded-xl shadow-[0_8px_24px_rgba(139,90,43,0.15)] backdrop-blur-sm px-3 py-2 text-center whitespace-nowrap">
+                                        <p class="text-[11px] font-medium text-[#8E8076]">Tháng <span x-text="hp?.m"></span>/<span x-text="hp?.y"></span></p>
+                                        <p class="text-sm font-extrabold text-[#B45309]"><span x-text="hp?.t ? new Intl.NumberFormat('vi-VN').format(hp.t)+' đ' : '0 đ'"></span></p>
+                                    </div>
+                                    <svg class="mx-auto -mt-1" width="12" height="6" viewBox="0 0 12 6"><polygon points="0,0 12,0 6,6" fill="#FFFBFB" stroke="#EBDDCD" stroke-width="1" stroke-linejoin="round"/></svg>
+                                </div>
                             </div>
                             <div class="relative h-5 mt-1">
                                 @foreach ($points as $point)
@@ -132,7 +160,7 @@
                                         <tr>
                                             <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">#</th>
                                             <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Sản phẩm</th>
-                                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Đã bán</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider whitespace-nowrap">Đã bán</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">

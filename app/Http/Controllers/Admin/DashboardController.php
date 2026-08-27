@@ -17,6 +17,16 @@ class DashboardController extends Controller
             ->where('payment_status', 'PAID')
             ->sum('total_amount');
 
+        $currentMonthRevenue = Order::where('order_status', 'COMPLETED')
+            ->where('payment_status', 'PAID')
+            ->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+            ->sum('total_amount');
+
+        $previousMonthRevenue = Order::where('order_status', 'COMPLETED')
+            ->where('payment_status', 'PAID')
+            ->whereBetween('created_at', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()])
+            ->sum('total_amount');
+
         $totalOrders = Order::count();
         $pendingOrders = Order::where('order_status', 'PENDING')->count();
         $completedOrders = Order::where('order_status', 'COMPLETED')->count();
@@ -64,6 +74,8 @@ class DashboardController extends Controller
 
         return view('admin.dashboard.index', compact(
             'totalRevenue',
+            'currentMonthRevenue',
+            'previousMonthRevenue',
             'totalOrders',
             'pendingOrders',
             'completedOrders',
