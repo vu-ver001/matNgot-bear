@@ -42,11 +42,22 @@
     --sidebar-collapsed-width: 72px;
 }
 
-* {
+*, ::before, ::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+body, button, input, select, textarea {
     font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+}
+
+.fa, .fas, .far, .fal, .fab, .fa-solid, .fa-regular, .fa-brands, i[class*="fa-"], [class^="fa-"], [class*=" fa-"] {
+    font-family: "Font Awesome 6 Free" !important;
+    font-style: normal;
+}
+.fa-brands, i.fa-brands, [class*="fa-brands"] {
+    font-family: "Font Awesome 6 Brands" !important;
 }
 
 body {
@@ -75,8 +86,49 @@ body {
     box-shadow: 4px 0 24px rgba(78, 52, 46, 0.12);
 }
 
+/* Khi Sidebar Thu Gọn (Mini Sidebar) */
+html.staff-sidebar-collapsed .staff-sidebar,
 .staff-sidebar.collapsed {
     width: var(--sidebar-collapsed-width);
+}
+
+html.staff-sidebar-collapsed .staff-main,
+.staff-main.expanded {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+html.staff-sidebar-collapsed .sidebar-brand-text,
+html.staff-sidebar-collapsed .sidebar-section-label,
+html.staff-sidebar-collapsed .sidebar-link-text,
+html.staff-sidebar-collapsed .sidebar-user-info,
+html.staff-sidebar-collapsed .sidebar-logout-btn span,
+.staff-sidebar.collapsed .sidebar-brand-text,
+.staff-sidebar.collapsed .sidebar-section-label,
+.staff-sidebar.collapsed .sidebar-link-text,
+.staff-sidebar.collapsed .sidebar-user-info,
+.staff-sidebar.collapsed .sidebar-logout-btn span {
+    opacity: 0;
+    display: none;
+}
+
+html.staff-sidebar-collapsed .sidebar-link:hover::after,
+.staff-sidebar.collapsed .sidebar-link:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 10px;
+    background: #4E342E;
+    color: #FFFFFF;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    z-index: 999;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    pointer-events: none;
 }
 
 .sidebar-brand {

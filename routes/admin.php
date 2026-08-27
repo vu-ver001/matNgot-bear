@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
@@ -52,14 +53,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('vouchers', VoucherController::class)->except(['show']);
 
     // 7. PHẦN CỦA KHÁNH VÂN: Quản lý Sản phẩm (Trang riêng)
-    Route::get('/products', function () {
-        return view('admin.products.index', ['currentPage' => 'products']);
-    })->name('products.index');
+    Route::resource('products', ProductController::class);
 
     // 8. PHẦN CỦA KHÁNH VÂN: Quản lý Danh mục (Trang riêng)
     Route::get('/categories', function () {
         return view('admin.categories.index', ['currentPage' => 'categories']);
     })->name('categories.index');
+
 
     // 9. Placeholder / Hỗ trợ
     Route::get('/payments', fn() => view('admin.placeholder', ['currentPage' => 'payments']))->name('payments.index');
