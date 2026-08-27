@@ -112,8 +112,10 @@
                                 </div>
                             </div>
                             <button type="button" @click="copyText('{{ $amount }}', 'Số tiền')" 
-                                    class="px-3 py-1.5 rounded-xl bg-white border border-[#EBDDCD] text-xs font-bold text-[#5C3219] hover:bg-[#FAF6EE] transition shadow-xs flex items-center gap-1.5">
-                                <i class="fa-regular fa-copy"></i>
+                                    class="px-3 py-1.5 rounded-xl bg-white border border-[#EBDDCD] text-xs font-bold text-[#5C3219] hover:bg-[#FAF6EE] transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5 text-[#5C3219]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
                                 <span>Sao chép</span>
                             </button>
                         </div>
@@ -127,8 +129,10 @@
                                 <div class="flex items-center gap-2">
                                     <span class="font-mono font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">{{ $transferContent }}</span>
                                     <button type="button" @click="copyText('{{ $transferContent }}', 'Mã đơn hàng')" 
-                                            class="text-[#E08A1E] hover:text-[#5C3219] text-xs font-bold transition p-1" title="Sao chép mã">
-                                        <i class="fa-regular fa-copy"></i>
+                                            class="text-[#E08A1E] hover:text-[#5C3219] text-xs font-bold transition p-1 cursor-pointer" title="Sao chép mã">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -137,16 +141,18 @@
                                 {{-- MoMo Specific details --}}
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
                                     <span class="text-[#786B61] font-medium">Hình thức:</span>
-                                    <span class="font-bold text-[#A50064] flex items-center gap-1">
-                                        <i class="fa-solid fa-wallet"></i> Ví điện tử MoMo
+                                    <span class="font-bold text-[#A50064] flex items-center gap-1.5">
+                                        <span>👛</span> Ví điện tử MoMo
                                     </span>
                                 </div>
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
                                     <span class="text-[#786B61] font-medium">Số điện thoại MoMo:</span>
                                     <div class="flex items-center gap-2">
-                                        <span class="font-bold text-[#2C1408]">{{ $paymentConfig['momo_phone'] }}</span>
-                                        <button type="button" @click="copyText('{{ $paymentConfig['momo_phone'] }}', 'SĐT MoMo')" class="text-[#E08A1E] hover:text-[#5C3219] text-xs font-bold transition p-1">
-                                            <i class="fa-regular fa-copy"></i>
+                                        <span class="font-mono font-bold text-lg text-[#2C1408]">{{ $paymentConfig['momo_phone'] }}</span>
+                                        <button type="button" @click="copyText('{{ $paymentConfig['momo_phone'] }}', 'Số điện thoại')" class="text-[#E08A1E] hover:text-[#5C3219] text-xs font-bold transition p-1 cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
                                         </button>
                                     </div>
                                 </div>
@@ -157,16 +163,15 @@
                                 <div class="pt-1">
                                     <a href="https://nhantien.momo.vn/{{ $paymentConfig['momo_phone'] }}" target="_blank"
                                        class="w-full bg-gradient-to-r from-[#A50064] to-[#C2185B] hover:from-[#880052] hover:to-[#AD1457] text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-sm">
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                        <span>Bấm để mở App MoMo chuyển tiền</span>
+                                        <span>📱 Bấm để mở App MoMo chuyển tiền</span>
                                     </a>
                                 </div>
                             @elseif($order->payment_method === 'CARD')
                                 {{-- VNPAY Specific details --}}
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
                                     <span class="text-[#786B61] font-medium">Cổng thanh toán:</span>
-                                    <span class="font-bold text-[#005BAA] flex items-center gap-1">
-                                        <i class="fa-solid fa-shield-halved"></i> Cổng VNPAY Gateway Quốc Gia
+                                    <span class="font-bold text-[#005BAA] flex items-center gap-1.5">
+                                        <span>🛡️</span> Cổng VNPAY Gateway Quốc Gia
                                     </span>
                                 </div>
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
@@ -184,10 +189,7 @@
                                 <div class="pt-2">
                                     <a href="{{ route('customer.payment.vnpay.redirect', $order->id) }}"
                                        class="w-full bg-gradient-to-r from-[#005BAA] to-[#0088CC] hover:from-[#004B8C] hover:to-[#0077B3] text-white font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md shadow-[#005BAA]/25 tracking-wide">
-                                        <i class="fa-brands fa-cc-visa text-base"></i>
-                                        <i class="fa-brands fa-cc-mastercard text-base"></i>
-                                        <span>CHUYỂN ĐẾN CỔNG VNPAY (THẺ VISA / ATM)</span>
-                                        <i class="fa-solid fa-arrow-right"></i>
+                                        <span>💳 CHUYỂN ĐẾN CỔNG VNPAY (THẺ VISA / ATM) ➔</span>
                                     </a>
                                 </div>
                             @else
@@ -200,8 +202,10 @@
                                     <span class="text-[#786B61] font-medium">Số tài khoản:</span>
                                     <div class="flex items-center gap-2">
                                         <span class="font-mono font-bold text-lg text-[#2C1408]">{{ $paymentConfig['account_number'] }}</span>
-                                        <button type="button" @click="copyText('{{ $paymentConfig['account_number'] }}', 'Số tài khoản')" class="text-[#E08A1E] hover:text-[#5C3219] text-xs font-bold transition p-1">
-                                            <i class="fa-regular fa-copy"></i>
+                                        <button type="button" @click="copyText('{{ $paymentConfig['account_number'] }}', 'Số tài khoản')" class="text-[#E08A1E] hover:text-[#5C3219] text-xs font-bold transition p-1 cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
                                         </button>
                                     </div>
                                 </div>
@@ -216,8 +220,10 @@
                         <form action="{{ route('customer.payment.confirm', $order->id) }}" method="POST" class="pt-2">
                             @csrf
                             <button type="submit" 
-                                    class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center text-base tracking-wide uppercase flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-check-circle text-lg"></i>
+                                    class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center text-base tracking-wide uppercase flex items-center justify-center gap-2 cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                                 <span>TÔI ĐÃ HOÀN TẤT CHUYỂN TIỀN</span>
                             </button>
                         </form>

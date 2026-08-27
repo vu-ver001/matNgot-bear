@@ -90,16 +90,21 @@ header.site-header {
     top: 0;
     z-index: 200;
     box-shadow: 0 4px 20px rgba(62, 39, 35, 0.04);
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
 }
 
 .header-main-row {
+    width: 100% !important;
     max-width: 1400px;
     margin: 0 auto;
     padding: 0.85rem 1.5rem;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
-    gap: 2rem;
+    gap: 1.5rem;
+    box-sizing: border-box;
 }
 
 /* Brand Logo */

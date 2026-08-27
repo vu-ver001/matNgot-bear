@@ -266,8 +266,10 @@
         @yield('content')
     </main>
 
-    <!-- Component Footer -->
-    @include('partials.footer')
+    <!-- Component Footer (Hidden on Checkout, Cart, Payment, and Orders) -->
+    @if (!request()->routeIs('customer.cart*') && !request()->routeIs('customer.checkout*') && !request()->routeIs('customer.payment.*') && !request()->routeIs('customer.orders.*') && !isset($hideFooter))
+        @include('partials.footer')
+    @endif
 
     <!-- Global Scripts -->
     <script>
