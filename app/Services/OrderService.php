@@ -41,7 +41,7 @@ class OrderService
                 $product->decrement('stock_quantity', $cartItem->quantity);
             }
 
-            $shippingFee = 30000;
+            $shippingFee = isset($data['shipping_fee']) ? (float) $data['shipping_fee'] : 30000;
             $discountAmount = 0;
             $shippingDiscountAmount = 0;
 
