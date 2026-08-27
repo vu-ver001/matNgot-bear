@@ -5,123 +5,325 @@ namespace Database\Seeders;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
 {
+    use WithoutModelEvents;
+
+    /**
+     * Tạo sản phẩm mẫu gấu bông thực tế, ảnh đẹp sang trọng cho 5 danh mục.
+     */
     public function run(): void
     {
+        $catClassic = Category::where('name', 'TEDDY CLASSIC')->first()->id;
+        $catButter  = Category::where('name', 'BUTTER BEAR')->first()->id;
+        $catMrBean  = Category::where('name', 'TEDDY MR. BEAN')->first()->id;
+        $catCouple  = Category::where('name', 'TEDDY COUPLE')->first()->id;
+        $catPillow  = Category::where('name', 'GỐI BÔNG TEDDY')->first()->id;
+
         $products = [
+            // TEDDY CLASSIC (4 sản phẩm)
             [
-                'category' => 'Gấu bông',
-                'name' => 'Gấu Teddy Mật Ong 45cm',
-                'description' => 'Gấu Teddy màu nâu mật ong, lông ngắn mềm và dễ vệ sinh.',
-                'price' => 349000,
-                'sale_price' => 299000,
-                'size' => '45cm',
-                'color' => 'Nâu mật ong',
-                'material' => 'Lông nhung, bông PP',
+                'category_id'    => $catClassic,
+                'name'           => 'Gấu Bông Teddy Socola 1m7 - 2m',
+                'description'    => 'Gấu bông Teddy Socola khổng lồ 1m7 - 2m là món quà sinh nhật bất ngờ nhất. Lông xoắn 3D cao cấp mềm mại, nhồi bông PP tinh khiết đàn hồi cực tốt, thân hình to bự ôm trọn người.',
+                'price'          => 1250000,
+                'sale_price'     => 980000,
+                'size'           => '1m8',
+                'color'          => 'Nâu Socola',
+                'material'       => '100% Bông PP 3D xoắn, vải nhung tuyết mịn',
                 'stock_quantity' => 25,
-                'status' => Product::STATUS_ACTIVE,
-                'sold_count' => 128,
-                'images' => ['/images/auth/bear-hero.png'],
+                'status'         => 'ACTIVE',
+                'sold_count'     => 340,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                ],
             ],
             [
-                'category' => 'Gấu bông',
-                'name' => 'Gấu Dâu Hồng 60cm',
-                'description' => 'Gấu bông hồng pastel ôm trái dâu, phù hợp làm quà tặng.',
-                'price' => 429000,
-                'sale_price' => null,
-                'size' => '60cm',
-                'color' => 'Hồng pastel',
-                'material' => 'Lông mịn, bông PP',
-                'stock_quantity' => 0,
-                'status' => Product::STATUS_ACTIVE,
-                'sold_count' => 86,
-                'images' => ['/images/auth/auth-panel-background.png'],
-            ],
-            [
-                'category' => 'Gấu bông',
-                'name' => 'Gấu Nâu Cổ Điển 80cm',
-                'description' => 'Mẫu gấu nâu dáng ngồi cổ điển với chiếc nơ caro.',
-                'price' => 659000,
-                'sale_price' => 599000,
-                'size' => '80cm',
-                'color' => 'Nâu cacao',
-                'material' => 'Lông nhung cao cấp, bông PP',
-                'stock_quantity' => 12,
-                'status' => Product::STATUS_ACTIVE,
-                'sold_count' => 54,
-                'images' => ['/images/auth/bear-hero.png'],
-            ],
-            [
-                'category' => 'Thú bông',
-                'name' => 'Thỏ Bông Kem 40cm',
-                'description' => 'Thỏ bông tai dài màu kem, nhẹ và êm ái.',
-                'price' => 249000,
-                'sale_price' => null,
-                'size' => '40cm',
-                'color' => 'Kem',
-                'material' => 'Lông mịn, bông PP',
-                'stock_quantity' => 31,
-                'status' => Product::STATUS_ACTIVE,
-                'sold_count' => 73,
-                'images' => ['/images/auth/auth-panel-background.png'],
-            ],
-            [
-                'category' => 'Thú bông',
-                'name' => 'Capybara Đội Quýt 35cm',
-                'description' => 'Capybara dáng nằm với chiếc mũ quả quýt có thể tháo rời.',
-                'price' => 279000,
-                'sale_price' => 259000,
-                'size' => '35cm',
-                'color' => 'Nâu sáng',
-                'material' => 'Lông co giãn, bông PP',
+                'category_id'    => $catClassic,
+                'name'           => 'Gấu Bông Teddy Logo Baby 1m7 - 2m',
+                'description'    => 'Mẫu gấu Teddy màu vàng kem bơ áo len kẻ sọc Logo Baby dáng ngồi siêu cưng. Kích thước to bằng người thật, chất lông xù mềm mại không rụng lông, an toàn cho trẻ nhỏ.',
+                'price'          => 1150000,
+                'sale_price'     => 890000,
+                'size'           => '1m7',
+                'color'          => 'Vàng Kem',
+                'material'       => 'Bông gòn bi tinh khiết, áo len dệt kim',
                 'stock_quantity' => 18,
-                'status' => Product::STATUS_ACTIVE,
-                'sold_count' => 101,
-                'images' => ['/images/auth/bear-hero.png'],
+                'status'         => 'ACTIVE',
+                'sold_count'     => 215,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                ],
             ],
             [
-                'category' => 'Bộ sưu tập giới hạn',
-                'name' => 'Gấu Noel Phiên Bản Giới Hạn',
-                'description' => 'Gấu bông mặc trang phục Noel thuộc bộ sưu tập mùa lễ hội.',
-                'price' => 399000,
-                'sale_price' => null,
-                'size' => '50cm',
-                'color' => 'Đỏ - trắng',
-                'material' => 'Lông nhung, bông PP',
-                'stock_quantity' => 5,
-                'status' => Product::STATUS_INACTIVE,
-                'sold_count' => 42,
-                'images' => [],
+                'category_id'    => $catClassic,
+                'name'           => 'Gấu Bông Teddy Boy Đeo Nơ Cổ Điển',
+                'description'    => 'Chú gấu Teddy Boy màu nâu quế thanh lịch với nơ caro to bản sang trọng. Lớp lông xoắn hoa hồng mềm mướt tay, thích hợp làm quà tỏ tình hoặc trang trí sofa phòng khách.',
+                'price'          => 650000,
+                'sale_price'     => 499000,
+                'size'           => '1m2',
+                'color'          => 'Nâu Quế',
+                'material'       => 'Bông PP cao cấp, nơ ruy băng lụa',
+                'stock_quantity' => 30,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 189,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catClassic,
+                'name'           => 'Gấu Bông Teddy Áo Len Gấu 1m6 Hồng Pastel',
+                'description'    => 'Em gấu Teddy hồng phấn ngọt ngào diện áo len thêu hình gấu cưng. Màu sắc pastel nhẹ nhàng đốn tim mọi cô nàng, ôm ngủ cực êm ái và ấm áp.',
+                'price'          => 950000,
+                'sale_price'     => 760000,
+                'size'           => '1m6',
+                'color'          => 'Hồng Pastel',
+                'material'       => 'Vải lông nhung tuyết, áo len dệt sợi tự nhiên',
+                'stock_quantity' => 15,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 410,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+
+            // BUTTER BEAR (3 sản phẩm)
+            [
+                'category_id'    => $catButter,
+                'name'           => 'Gấu Bơ Butter Bear Má Hồng Đội Mũ Bơ 45cm',
+                'description'    => 'Siêu phẩm Butter Bear đang làm mưa làm gió khắp châu Á! Biểu cảm má hồng cute phô mai que, đội chiếc mũ trái bơ ngộ nghĩnh, chất lông mịn như nhung.',
+                'price'          => 350000,
+                'sale_price'     => 279000,
+                'size'           => '45cm',
+                'color'          => 'Vàng Bơ',
+                'material'       => 'Bông gòn 3D cao cấp, vải mịn không xơ',
+                'stock_quantity' => 45,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 580,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catButter,
+                'name'           => 'Butter Bear Váy Hồng Bồng Bềnh 60cm',
+                'description'    => 'Bé gấu Butter Bear công chúa diện chiếc váy hồng xòe điệu đà, tai thêu nơ hoa xinh xắn. Là món quà tặng bé gái hoặc người yêu cực kỳ đáng yêu.',
+                'price'          => 480000,
+                'sale_price'     => 389000,
+                'size'           => '60cm',
+                'color'          => 'Vàng Bơ & Hồng',
+                'material'       => 'Bông PP đàn hồi 4 chiều, vải voan lụa cao cấp',
+                'stock_quantity' => 28,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 310,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catButter,
+                'name'           => 'Gấu Butter Bear Cầm Bánh Mì Nướng 35cm',
+                'description'    => 'Em gấu bơ ôm lát bánh mì nướng giòn rụm với nụ cười ngọt ngào. Kích thước 35cm nhỏ gọn mang theo đi du lịch hoặc để bàn làm việc giảm stress.',
+                'price'          => 280000,
+                'sale_price'     => 219000,
+                'size'           => '35cm',
+                'color'          => 'Vàng Kem',
+                'material'       => '100% Bông sạch kháng khuẩn',
+                'stock_quantity' => 60,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 450,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+
+            // TEDDY MR. BEAN (3 sản phẩm)
+            [
+                'category_id'    => $catMrBean,
+                'name'           => 'Gấu Bông Mr. Bean Cổ Điển Mắt Cúc 40cm',
+                'description'    => 'Chú gấu bông người bạn thân nhất của Mr. Bean! Thiết kế chuẩn phim với mắt cúc áo thủ công, thân hình thon dài độc đáo và vải len đan mộc mạc hoài niệm.',
+                'price'          => 290000,
+                'sale_price'     => 229000,
+                'size'           => '40cm',
+                'color'          => 'Nâu Đất',
+                'material'       => 'Vải len dệt sợi thô phong cách Vintage',
+                'stock_quantity' => 38,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 290,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catMrBean,
+                'name'           => 'Gấu Bông Mr. Bean Phiên Bản To 80cm',
+                'description'    => 'Phiên bản Mr. Bean nhồi bông size lớn 80cm ôm siêu đã. Chất len dệt mềm không xù lông, món quà sưu tầm vô giá cho các fan trung thành của series phim hài Mr. Bean.',
+                'price'          => 550000,
+                'sale_price'     => 449000,
+                'size'           => '80cm',
+                'color'          => 'Nâu Đất',
+                'material'       => 'Bông PP 3 chiều, vải len cao cấp',
+                'stock_quantity' => 20,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 145,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catMrBean,
+                'name'           => 'Combo Gấu Mr. Bean Mini 25cm + Hộp Quà Vintage',
+                'description'    => 'Set quà tặng gấu Mr. Bean mini 25cm kèm hộp giấy kraft thắt nơ sang trọng và thiệp viết tay vintage. Phù hợp làm quà tặng bạn thân, đồng nghiệp.',
+                'price'          => 220000,
+                'sale_price'     => 179000,
+                'size'           => '25cm',
+                'color'          => 'Nâu Đất',
+                'material'       => 'Vải len mộc cao cấp, hộp quà carton cao cấp',
+                'stock_quantity' => 50,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 320,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+
+            // TEDDY COUPLE (3 sản phẩm)
+            [
+                'category_id'    => $catCouple,
+                'name'           => 'Cặp Gấu Bông Teddy Cô Dâu Chú Rể 50cm',
+                'description'    => 'Cặp đôi gấu bông cưới lộng lẫy: chú rể mặc vest thắt nơ bảnh bao, cô dâu diện váy cưới voan đính hoa lấp lánh. Món quà cưới, quà kỷ niệm ngày yêu đầy ý nghĩa.',
+                'price'          => 780000,
+                'sale_price'     => 620000,
+                'size'           => '50cm',
+                'color'          => 'Trắng & Đen',
+                'material'       => 'Bông PP cao cấp, vải voan & satin cưới',
+                'stock_quantity' => 16,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 230,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catCouple,
+                'name'           => 'Cặp Gấu Teddy Áo Đôi Trái Tim Tình Yêu 60cm',
+                'description'    => 'Hai chú gấu Teddy nâu sữa diện áo đôi dệt hình trái tim Love. Thiết kế ấm áp lãng mạn, gửi gắm thông điệp tình yêu bền chặt gắn kết.',
+                'price'          => 690000,
+                'sale_price'     => 550000,
+                'size'           => '60cm',
+                'color'          => 'Nâu & Kem',
+                'material'       => 'Lông xoắn mềm mịn, áo len thêu trái tim',
+                'stock_quantity' => 22,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 195,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catCouple,
+                'name'           => 'Set Gấu Bông Couple Ôm Bó Hoa Kỷ Niệm 40cm',
+                'description'    => 'Cặp gấu bông ôm bó hoa hồng vĩnh cửu kèm hộp mica trong suốt sang chảnh. Sản phẩm bán chạy số 1 mỗi dịp Valentine và Quốc tế Phụ nữ 8/3.',
+                'price'          => 520000,
+                'sale_price'     => 419000,
+                'size'           => '40cm',
+                'color'          => 'Hồng & Trắng',
+                'material'       => 'Bông xoắn 3D tinh khiết, hoa sáp thơm',
+                'stock_quantity' => 35,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 480,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+
+            // GỐI BÔNG TEDDY (3 sản phẩm)
+            [
+                'category_id'    => $catPillow,
+                'name'           => 'Gối Ôm Dài Gấu Teddy Cao Cấp 1m2 - 1m5',
+                'description'    => 'Gối ôm hình gấu Teddy dáng dài êm ái, ruột nhồi 100% bông bi thái trắng tinh không xẹp lún. Giúp bạn ngủ ngon, nâng đỡ cột sống cổ và eo cực tốt.',
+                'price'          => 450000,
+                'sale_price'     => 359000,
+                'size'           => '1m2',
+                'color'          => 'Nâu Nhạt',
+                'material'       => 'Vỏ nhung spandex co giãn 4 chiều, ruột bông gòn bi',
+                'stock_quantity' => 40,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 520,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catPillow,
+                'name'           => 'Gối Tựa Lưng Văn Phòng Hình Mặt Gấu Teddy 40cm',
+                'description'    => 'Gối tựa lưng êm ái chống mỏi cột sống khi ngồi làm việc lâu. Thiết kế mặt gấu cười híp mắt dễ thương, có quai cài cố định vào ghế văn phòng.',
+                'price'          => 220000,
+                'sale_price'     => 169000,
+                'size'           => '40cm',
+                'color'          => 'Vàng Kem',
+                'material'       => 'Bông PP cao cấp, vải nỉ nhung thoáng khí',
+                'stock_quantity' => 55,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 390,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                ],
+            ],
+            [
+                'category_id'    => $catPillow,
+                'name'           => 'Gối Mền Gấu Bông 2 Trong 1 Đa Năng Kèm Chăn',
+                'description'    => 'Bộ gối mền du lịch 3 trong 1: vừa làm gấu bông ôm, vừa làm gối tựa, mở khóa sau lưng có ngay chăn tuyết nhung ấm áp 1m1 x 1m6. Cực tiện lợi cho dân văn phòng và đi xe ô tô.',
+                'price'          => 360000,
+                'sale_price'     => 289000,
+                'size'           => 'Gối 40cm + Chăn 1m6',
+                'color'          => 'Nâu Socola',
+                'material'       => 'Chăn nỉ tuyết siêu mềm, gối bông PP êm ái',
+                'stock_quantity' => 30,
+                'status'         => 'ACTIVE',
+                'sold_count'     => 610,
+                'images'         => [
+                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                ],
             ],
         ];
 
-        foreach ($products as $productData) {
-            $category = Category::query()
-                ->where('name', $productData['category'])
-                ->firstOrFail();
-            $images = $productData['images'];
+        // Xóa sản phẩm cũ và tạo mới
+        ProductImage::query()->delete();
+        Product::query()->delete();
 
-            unset($productData['category'], $productData['images']);
+        foreach ($products as $pData) {
+            $images = $pData['images'] ?? [];
+            unset($pData['images']);
 
-            $product = Product::query()->updateOrCreate(
-                ['name' => $productData['name']],
-                ['category_id' => $category->id, ...$productData],
-            );
+            $product = Product::create($pData);
 
-            foreach ($images as $sortOrder => $imageUrl) {
-                ProductImage::query()->updateOrCreate(
-                    [
-                        'product_id' => $product->id,
-                        'sort_order' => $sortOrder,
-                    ],
-                    [
-                        'image_url' => $imageUrl,
-                        'is_primary' => $sortOrder === 0,
-                    ],
-                );
+            foreach ($images as $index => $imgUrl) {
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'image_url'  => $imgUrl,
+                    'is_primary' => ($index === 0),
+                    'sort_order' => $index,
+                ]);
             }
         }
     }

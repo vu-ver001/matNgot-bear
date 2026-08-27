@@ -20,6 +20,8 @@ return new class extends Migration
             $table->enum('role', ['CUSTOMER', 'STAFF', 'ADMIN'])->default('CUSTOMER');
             $table->enum('status', ['ACTIVE', 'BLOCKED'])->default('ACTIVE');
             $table->string('address', 255)->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->rememberToken();
             $table->timestamps();
         });
 

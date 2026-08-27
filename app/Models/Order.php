@@ -17,8 +17,10 @@ class Order extends Model
         'recipient_address',
         'note',
         'voucher_id',
+        'shipping_voucher_id',
         'subtotal',
         'discount_amount',
+        'shipping_discount_amount',
         'shipping_fee',
         'total_amount',
         'order_status',
@@ -35,6 +37,7 @@ class Order extends Model
     protected $casts = [
         'subtotal' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'shipping_discount_amount' => 'decimal:2',
         'shipping_fee' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'stock_restored' => 'boolean',
@@ -50,7 +53,12 @@ class Order extends Model
 
     public function voucher(): BelongsTo
     {
-        return $this->belongsTo(Voucher::class);
+        return $this->belongsTo(Voucher::class, 'voucher_id')->withTrashed();
+    }
+
+    public function shippingVoucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class, 'shipping_voucher_id')->withTrashed();
     }
 
     public function cancelledByUser(): BelongsTo

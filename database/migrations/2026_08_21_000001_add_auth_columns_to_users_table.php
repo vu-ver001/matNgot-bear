@@ -9,8 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('email_verified_at')->nullable()->after('email');
-            $table->rememberToken()->after('password');
+            if (! Schema::hasColumn('users', 'email_verified_at')) {
+                $table->timestamp('email_verified_at')->nullable()->after('email');
+            }
+            if (! Schema::hasColumn('users', 'remember_token')) {
+                $table->rememberToken()->after('password');
+            }
         });
     }
 

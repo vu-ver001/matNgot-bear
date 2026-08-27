@@ -25,15 +25,36 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'full_name' => fake()->firstName().' '.fake()->lastName(),
+            'full_name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'phone' => null,
+            'phone' => fake()->numerify('09########'),
             'password' => static::$password ??= Hash::make('password'),
             'role' => User::ROLE_CUSTOMER,
             'status' => User::STATUS_ACTIVE,
+            'address' => fake()->address(),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * Create an admin user.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'ADMIN',
+        ]);
+    }
+
+    /**
+     * Indicate that the model's role should be staff.
+     */
+    public function staff(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'STAFF',
+        ]);
     }
 
     /**
