@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-customer-account-layout title="Đơn hàng của tôi" :flush="true">
     <div class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             @if (session('success'))
@@ -90,4 +90,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-customer-account-layout>

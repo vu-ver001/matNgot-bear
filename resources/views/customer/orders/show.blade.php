@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-customer-account-layout title="Chi tiết đơn hàng" :flush="true">
     <div class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="mb-6 flex items-center justify-between">
@@ -226,4 +226,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-customer-account-layout>
