@@ -58,17 +58,19 @@
             style="--profile-hero-image: url('{{ asset('images/profile/profile-banner-table.png') }}')"
         >
             <div class="profile-hero-avatar">
-                <img
-                    @class(['hidden' => ! $user->avatar_url])
-                    @if ($user->avatar_url) src="{{ $user->avatar_url }}" @endif
-                    alt="Ảnh đại diện của {{ $user->full_name }}"
-                    data-profile-avatar-preview
-                >
-                <span
-                    @class(['profile-avatar-fallback', 'hidden' => $user->avatar_url])
-                    data-profile-avatar-fallback
-                    aria-hidden="true"
-                >{{ $initial }}</span>
+                <div class="profile-avatar-clip">
+                    <img
+                        @class(['hidden' => ! $user->avatar_url])
+                        @if ($user->avatar_url) src="{{ $user->avatar_url }}" @endif
+                        alt="Ảnh đại diện của {{ $user->full_name }}"
+                        data-profile-avatar-preview
+                    >
+                    <span
+                        @class(['profile-avatar-fallback', 'hidden' => $user->avatar_url])
+                        data-profile-avatar-fallback
+                        aria-hidden="true"
+                    >{{ $initial }}</span>
+                </div>
 
                 <label
                     for="avatar"
@@ -117,6 +119,42 @@
             </div>
 
         </section>
+
+        <div
+            class="profile-avatar-editor"
+            data-profile-avatar-editor
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-avatar-editor-title"
+            hidden
+        >
+            <div class="profile-avatar-editor-backdrop" data-profile-avatar-editor-cancel></div>
+            <div class="profile-avatar-editor-panel">
+                <header>
+                    <div>
+                        <h2 id="profile-avatar-editor-title">Căn chỉnh ảnh đại diện</h2>
+                        <p>Kéo ảnh để chọn phần bạn muốn hiển thị trong khung tròn.</p>
+                    </div>
+                    <button type="button" data-profile-avatar-editor-cancel aria-label="Đóng">×</button>
+                </header>
+
+                <div class="profile-avatar-editor-frame" data-profile-avatar-editor-frame>
+                    <img
+                        alt="Ảnh đang căn chỉnh"
+                        data-profile-avatar-editor-image
+                        draggable="false"
+                        tabindex="0"
+                    >
+                </div>
+
+                <p class="profile-avatar-editor-help">Bạn cũng có thể dùng các phím mũi tên để chỉnh vị trí.</p>
+
+                <div class="profile-avatar-editor-actions">
+                    <button type="button" class="profile-avatar-editor-cancel" data-profile-avatar-editor-cancel>Hủy</button>
+                    <button type="button" class="profile-avatar-editor-apply" data-profile-avatar-editor-apply>Dùng ảnh này</button>
+                </div>
+            </div>
+        </div>
 
         <div class="profile-card-grid">
             <section class="profile-card" aria-labelledby="personal-information-title">
