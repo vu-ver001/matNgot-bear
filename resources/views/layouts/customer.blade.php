@@ -292,29 +292,20 @@
             });
         });
 
-<<<<<<< HEAD
-        // Cart & Wishlist state
-        let cartItemsCount = parseInt(localStorage.getItem('mn_cart_count') || '0');
-=======
         // Cart & Wishlist state (distinct item count)
         let cartItemsCount = {{ (int) ($realCartCount ?? 0) }};
         let wishlistCount = parseInt(localStorage.getItem('mn_wishlist_count') || '0');
->>>>>>> f12e814d1d386a89c48d970cc87df82e53dbb6fd
         updateCartBadge();
         updateWishlistBadge();
 
         function updateCartBadge() {
             const badge = document.getElementById('cart-count');
-<<<<<<< HEAD
-            if (badge) badge.innerText = cartItemsCount;
-=======
             if (badge) {
                 badge.innerText = cartItemsCount;
                 badge.style.display = cartItemsCount > 0 ? 'flex' : 'flex';
             }
             const wBadge = document.getElementById('wishlist-count');
             if (wBadge) wBadge.innerText = wishlistCount;
->>>>>>> f12e814d1d386a89c48d970cc87df82e53dbb6fd
         }
 
         function fetchCartCount() {
@@ -467,7 +458,6 @@
             });
         }
 
-<<<<<<< HEAD
         function toggleWishlist(product, e) {
             if (e) {
                 e.preventDefault();
@@ -514,7 +504,7 @@
                 }
             }
         }
-=======
+
         // Global Auth Modal Helper
         window.isCustomerAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
 
@@ -617,8 +607,7 @@
             </div>
         </div>
     </div>
->>>>>>> f12e814d1d386a89c48d970cc87df82e53dbb6fd
-    </script>
+
     @yield('scripts')
 </body>
 </html>
