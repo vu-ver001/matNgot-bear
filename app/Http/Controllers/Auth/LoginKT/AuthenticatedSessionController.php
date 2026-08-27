@@ -27,6 +27,7 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $request->user()->recordLogin();
         $request->session()->regenerate();
 
         return redirect()->intended(route(RoleRedirect::routeName($request->user()), absolute: false));

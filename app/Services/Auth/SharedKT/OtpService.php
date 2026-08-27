@@ -24,6 +24,7 @@ class OtpService
         string $email,
         int $expiresInSeconds,
         Closure $sendCode,
+        array $additionalAttributes = [],
     ): void {
         if (config('mail.default') === 'log') {
             throw ValidationException::withMessages([
@@ -33,7 +34,7 @@ class OtpService
 
         $code = $this->generateCode();
 
-        DB::transaction(function () use ($modelClass, $email, $expiresInSeconds, $sendCode, $code): void {
+        DB::transaction(function () use ($modelClass, $email, $expiresInSeconds, $sendCode, $code, $additionalAttributes): void {
             $otpRecord = $modelClass::query()
                 ->where('email', $email)
                 ->lockForUpdate()
@@ -47,13 +48,13 @@ class OtpService
 
             $modelClass::query()->updateOrCreate(
                 ['email' => $email],
-                [
+                array_merge($additionalAttributes, [
                     'code_hash' => Hash::make($code),
                     'expires_at' => now()->addSeconds($expiresInSeconds),
                     'verified_at' => null,
                     'last_sent_at' => now(),
                     'attempts' => 0,
-                ],
+                ]),
             );
 
             $sendCode($code);

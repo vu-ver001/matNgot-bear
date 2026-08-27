@@ -15,6 +15,12 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if (Auth::user()->role === \App\Models\User::ROLE_CUSTOMER)
+                        <x-nav-link :href="route('customer.wishlist.index')" :active="request()->routeIs('customer.wishlist.*')">
+                            {{ __('Yêu thích') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -70,6 +76,12 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if (Auth::user()->role === \App\Models\User::ROLE_CUSTOMER)
+                <x-responsive-nav-link :href="route('customer.wishlist.index')" :active="request()->routeIs('customer.wishlist.*')">
+                    {{ __('Yêu thích') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

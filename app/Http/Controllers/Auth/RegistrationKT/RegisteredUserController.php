@@ -70,6 +70,7 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
+        $user->recordLogin();
         Auth::login($user);
 
         $request->session()->regenerate();

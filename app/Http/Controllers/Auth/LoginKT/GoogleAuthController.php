@@ -101,6 +101,7 @@ class GoogleAuthController extends Controller
             return $this->loginError('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ hỗ trợ.');
         }
 
+        $user->recordLogin();
         Auth::login($user);
         $request->session()->regenerate();
 

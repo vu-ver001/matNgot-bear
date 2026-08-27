@@ -30,6 +30,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
+        $this->assertNotNull($user->fresh()->last_login_at);
         $response->assertRedirect(route('customer.dashboard', absolute: false));
     }
 
