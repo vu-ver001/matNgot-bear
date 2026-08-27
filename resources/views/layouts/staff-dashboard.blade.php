@@ -12,6 +12,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Script áp dụng trạng thái Mini Sidebar ngay lập tức trước khi render HTML để triệt tiêu độ khựng -->
+    <script>
+        (function() {
+            if (localStorage.getItem('mn_staff_sidebar_collapsed') === '1') {
+                document.documentElement.classList.add('staff-sidebar-collapsed');
+            }
+        })();
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/staff-layout.css') }}">
     @yield('styles')
@@ -21,7 +30,7 @@
     <!-- ====== STAFF SIDEBAR (NÂU PASTEL & TỰ ĐỘNG ĐÓNG MỞ) ====== -->
     <aside class="staff-sidebar" id="staffSidebar">
         <div class="sidebar-brand">
-            <div class="sidebar-brand-icon" onclick="toggleStaffSidebar()" title="Đóng / Mở Menu"><i class="fa-solid fa-headset"></i></div>
+            <div class="sidebar-brand-icon" onclick="toggleStaffSidebar()" title="Đóng / Mở Menu"><i class="fa-solid fa-paw"></i></div>
             <div class="sidebar-brand-text">
                 <span class="sidebar-brand-name">Mật Ngọt Bear</span>
                 <span class="sidebar-brand-sub">Khu Vực Xử Lý Staff</span>
@@ -31,26 +40,26 @@
         <nav class="sidebar-nav">
             <div class="sidebar-section-label">Vận Hành & Đơn Hàng</div>
             <!-- Các mục của bạn nhóm (Trang trống chờ code) -->
-            <a href="{{ route('staff.dashboard') }}" class="sidebar-link {{ request()->routeIs('staff.dashboard*') || ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard vận hành" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.dashboard') }}" class="sidebar-link {{ request()->routeIs('staff.dashboard*') || ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard vận hành">
                 <i class="fa-solid fa-chart-line"></i>
                 <span class="sidebar-link-text">Dashboard vận hành</span>
             </a>
-            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ request()->routeIs('staff.orders*') || ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý đơn hàng" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ request()->routeIs('staff.orders*') || ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý đơn hàng">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="sidebar-link-text">Quản lý đơn hàng</span>
             </a>
-            <a href="{{ route('staff.order-status.index') }}" class="sidebar-link {{ request()->routeIs('staff.order-status*') || ($currentPage ?? '') === 'order-status' ? 'active' : '' }}" data-title="Xử lý trạng thái đơn" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.order-status.index') }}" class="sidebar-link {{ request()->routeIs('staff.order-status*') || ($currentPage ?? '') === 'order-status' ? 'active' : '' }}" data-title="Xử lý trạng thái đơn">
                 <i class="fa-solid fa-truck-ramp-box"></i>
                 <span class="sidebar-link-text">Xử lý trạng thái đơn</span>
             </a>
 
             <div class="sidebar-section-label">Thanh Toán & Hỗ Trợ</div>
             <!-- Các mục của bạn nhóm (Trang trống chờ code) -->
-            <a href="{{ route('staff.payments.index') }}" class="sidebar-link {{ request()->routeIs('staff.payments*') || ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Xử lý thanh toán" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.payments.index') }}" class="sidebar-link {{ request()->routeIs('staff.payments*') || ($currentPage ?? '') === 'payments' ? 'active' : '' }}" data-title="Xử lý thanh toán">
                 <i class="fa-solid fa-receipt"></i>
                 <span class="sidebar-link-text">Xử lý thanh toán</span>
             </a>
-            <a href="{{ route('staff.support.index') }}" class="sidebar-link {{ request()->routeIs('staff.support*') || ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ khách hàng" onclick="handleStaffSidebarItemClick(event, this)">
+            <a href="{{ route('staff.support.index') }}" class="sidebar-link {{ request()->routeIs('staff.support*') || ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ khách hàng">
                 <i class="fa-solid fa-comments"></i>
                 <span class="sidebar-link-text">Hỗ trợ khách hàng</span>
             </a>
@@ -75,10 +84,29 @@
         </div>
     </aside>
 
+    <!-- Script khôi phục trạng thái thu/mở tức thì không giật layout -->
+    <script>
+        (function() {
+            if (localStorage.getItem('mn_staff_sidebar_collapsed') === '1') {
+                document.getElementById('staffSidebar')?.classList.add('collapsed');
+            }
+        })();
+    </script>
+
     <!-- ====== MAIN CONTENT ====== -->
     <div class="staff-main" id="staffMain">
+        <script>
+            (function() {
+                if (localStorage.getItem('mn_staff_sidebar_collapsed') === '1') {
+                    document.getElementById('staffMain')?.classList.add('expanded');
+                }
+            })();
+        </script>
         <div class="staff-topbar">
             <div class="topbar-left">
+                <button type="button" class="topbar-btn" onclick="toggleStaffSidebar()" title="Đóng / Mở Menu" style="cursor: pointer; border: 1px solid var(--border-dark);">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
                 <div class="topbar-title">@yield('page-title', 'Xử Lý Nghiệp Vụ Nhân Viên')</div>
             </div>
             <div class="topbar-actions">
@@ -93,11 +121,12 @@
         </div>
     </div>
 
-    <!-- Script Tự Động Đóng / Mở Menu & Thu Gọn cho Staff -->
+    <!-- Script Điều Khiển Đóng / Mở Menu theo Chân Gấu cho Staff -->
     <script>
         function toggleStaffSidebar() {
-            const sidebar = document.getElementById('staffSidebar');
-            if (sidebar.classList.contains('collapsed')) {
+            const isCollapsed = document.documentElement.classList.contains('staff-sidebar-collapsed') ||
+                                document.getElementById('staffSidebar')?.classList.contains('collapsed');
+            if (isCollapsed) {
                 expandStaffSidebar();
             } else {
                 collapseStaffSidebar();
@@ -107,39 +136,20 @@
         function expandStaffSidebar() {
             const sidebar = document.getElementById('staffSidebar');
             const main = document.getElementById('staffMain');
-            sidebar.classList.remove('collapsed');
-            main.classList.remove('expanded');
+            document.documentElement.classList.remove('staff-sidebar-collapsed');
+            sidebar?.classList.remove('collapsed');
+            main?.classList.remove('expanded');
             localStorage.setItem('mn_staff_sidebar_collapsed', '0');
         }
 
         function collapseStaffSidebar() {
             const sidebar = document.getElementById('staffSidebar');
             const main = document.getElementById('staffMain');
-            sidebar.classList.add('collapsed');
-            main.classList.add('expanded');
+            document.documentElement.classList.add('staff-sidebar-collapsed');
+            sidebar?.classList.add('collapsed');
+            main?.classList.add('expanded');
             localStorage.setItem('mn_staff_sidebar_collapsed', '1');
         }
-
-        function handleStaffSidebarItemClick(e, elem) {
-            const sidebar = document.getElementById('staffSidebar');
-            const isCollapsed = sidebar.classList.contains('collapsed');
-
-            if (isCollapsed) {
-                e.preventDefault();
-                expandStaffSidebar();
-            } else {
-                localStorage.setItem('mn_staff_sidebar_collapsed', '1');
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedState = localStorage.getItem('mn_staff_sidebar_collapsed');
-            if (savedState === '1') {
-                collapseStaffSidebar();
-            } else {
-                expandStaffSidebar();
-            }
-        });
     </script>
 </body>
 </html>

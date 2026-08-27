@@ -9,7 +9,7 @@
 @section('content')
 
 @php
-    $hasSale = !empty($product->sale_price) && $product->sale_price < $product->price;
+    $hasSale = $product->is_on_sale;
     $discountPct = $hasSale ? round((($product->price - $product->sale_price) / $product->price) * 100) : 0;
     $primaryImg = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
     $primaryUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/800x800/f5e6ca/7c4a2d?text=' . urlencode($product->name);
@@ -55,26 +55,41 @@
 
         <!-- Right Column: Info & Action -->
         <div class="detail-info-col">
-            <!-- Category Badge -->
-            <a href="{{ route('products.index', ['category_id' => $product->category_id]) }}" class="detail-cat-badge">
-                <i class="fa-solid fa-paw" style="color: var(--honey-dark);"></i> {{ $product->category->name ?? 'Gấu Bông' }}
-            </a>
+            <!-- Category Badge & Wishlist Heart (Góc trên cùng bên phải) -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+                <a href="{{ route('products.index', ['category_id' => $product->category_id]) }}" class="detail-cat-badge" style="margin-bottom: 0;">
+                    <i class="fa-solid fa-paw" style="color: var(--honey-dark);"></i> {{ $product->category->name ?? 'Gấu Bông' }}
+                </a>
+                <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $product->price }}, sale_price: {{ $product->sale_price ?? 'null' }}, image_url: '{{ $primaryUrl }}' }, event)" title="Lưu vào yêu thích" style="position: static; width: 44px; height: 44px; font-size: 18px; box-shadow: 0 4px 14px rgba(78, 52, 46, 0.1);">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+            </div>
 
             <!-- Title -->
             <h1 class="detail-product-title">{{ $product->name }}</h1>
 
+            @php
+                $avgRating = $product->reviews_count > 0 ? round($product->avg_rating, 1) : 5.0;
+                $fullStars = floor($avgRating);
+                $hasHalf = ($avgRating - $fullStars) >= 0.5;
+            @endphp
+
             <!-- Rating & Sold -->
             <div class="detail-rating-row">
-                <div class="stars-group">
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <strong style="color: var(--text-main); margin-left: 4px;">5.0</strong>
-                </div>
+                <a href="#reviews-section" class="stars-group" style="text-decoration: none;" title="Xem các đánh giá">
+                    @for($i = 1; $i <= 5; $i++)
+                        @if($i <= $fullStars)
+                            <i class="fa-solid fa-star"></i>
+                        @elseif($i == $fullStars + 1 && $hasHalf)
+                            <i class="fa-solid fa-star-half-stroke"></i>
+                        @else
+                            <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
+                        @endif
+                    @endfor
+                    <strong style="color: var(--text-main); margin-left: 4px;">{{ number_format($avgRating, 1) }}</strong>
+                </a>
                 <span>&bull;</span>
-                <span>{{ $product->reviews_count ?? 0 }} đánh giá</span>
+                <a href="#reviews-section" style="color: var(--text-muted); font-weight: 700; text-decoration: underline;" title="Xem chi tiết đánh giá">{{ $product->reviews_count ?? 0 }} đánh giá</a>
                 <span>&bull;</span>
                 <span><i class="fa-solid fa-fire" style="color: #FF5722;"></i> Đã bán {{ $product->sold_count ?? 0 }} em gấu</span>
             </div>
@@ -182,6 +197,124 @@
         </div>
     </div>
 
+    <!-- Customer Reviews Section (Đánh Giá Sản Phẩm Từ Khách Hàng) -->
+    <div class="detail-tabs-section" id="reviews-section" style="margin-top: 2rem;">
+        <div class="detail-tab-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-star-half-stroke" style="color: var(--honey-dark);"></i>
+                <span>Đánh Giá Sản Phẩm ({{ $product->reviews_count ?? 0 }})</span>
+            </div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
+                <i class="fa-solid fa-shield-check" style="color: var(--success);"></i> 100% Đánh giá từ khách mua hàng thực tế
+            </div>
+        </div>
+
+        <div class="detail-desc-content" style="padding-top: 1rem;">
+            <!-- Rating Overview Card -->
+            <div class="review-overview-card">
+                <!-- Left: Big Score -->
+                <div class="review-score-box">
+                    <div class="review-big-score">{{ number_format($avgRating, 1) }}</div>
+                    <div class="review-stars-large">
+                        @for($i = 1; $i <= 5; $i++)
+                            @if($i <= $fullStars)
+                                <i class="fa-solid fa-star"></i>
+                            @elseif($i == $fullStars + 1 && $hasHalf)
+                                <i class="fa-solid fa-star-half-stroke"></i>
+                            @else
+                                <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
+                            @endif
+                        @endfor
+                    </div>
+                    <div class="review-total-text">{{ $product->reviews_count }} lượt đánh giá</div>
+                </div>
+
+                <!-- Center: Progress Bars Breakdown -->
+                <div class="review-bars-breakdown">
+                    @for($star = 5; $star >= 1; $star--)
+                        @php
+                            $starCount = $ratingCounts[$star] ?? 0;
+                            $starPct = $product->reviews_count > 0 ? round(($starCount / $product->reviews_count) * 100) : ($star === 5 ? 100 : 0);
+                        @endphp
+                        <div class="review-bar-row">
+                            <span class="bar-label">{{ $star }} <i class="fa-solid fa-star" style="color: var(--honey); font-size: 11px;"></i></span>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="width: {{ $starPct }}%;"></div>
+                            </div>
+                            <span class="bar-count">{{ $starCount }}</span>
+                        </div>
+                    @endfor
+                </div>
+
+                <!-- Right: Star Filter Buttons -->
+                <div class="review-filter-chips">
+                    <button type="button" class="star-filter-chip active" onclick="filterReviews('all', this)">
+                        Tất Cả ({{ $product->reviews_count }})
+                    </button>
+                    @for($star = 5; $star >= 1; $star--)
+                        <button type="button" class="star-filter-chip" onclick="filterReviews({{ $star }}, this)">
+                            {{ $star }} Sao ({{ $ratingCounts[$star] ?? 0 }})
+                        </button>
+                    @endfor
+                </div>
+            </div>
+
+            <!-- Review Items List -->
+            <div class="review-items-list" id="reviewItemsList">
+                @forelse($product->reviews as $review)
+                    <div class="review-item-card" data-rating="{{ $review->rating }}">
+                        <div class="review-item-header">
+                            <div class="review-author-info">
+                                <div class="review-avatar">
+                                    {{ mb_substr($review->user->full_name ?? 'K', 0, 1) }}
+                                </div>
+                                <div>
+                                    <div class="review-author-name">
+                                        {{ $review->user->full_name ?? 'Khách hàng thân thiết' }}
+                                        <span class="badge-verified-buyer">
+                                            <i class="fa-solid fa-circle-check"></i> Đã mua hàng
+                                        </span>
+                                    </div>
+                                    <div class="review-meta-line">
+                                        <div class="review-item-stars">
+                                            @for($s = 1; $s <= 5; $s++)
+                                                @if($s <= $review->rating)
+                                                    <i class="fa-solid fa-star"></i>
+                                                @else
+                                                    <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
+                                                @endif
+                                            @endfor
+                                        </div>
+                                        <span class="review-date">&bull; {{ $review->created_at ? $review->created_at->format('d/m/Y H:i') : 'Vừa xong' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="review-item-comment">
+                            {{ $review->comment }}
+                        </div>
+
+                        <div class="review-item-footer">
+                            <div class="review-variant-tag">
+                                <i class="fa-solid fa-paw" style="color: var(--honey);"></i> Phân loại: {{ $product->size ?? 'Size tiêu chuẩn' }} - {{ $product->color ?? 'Màu tự nhiên' }}
+                            </div>
+                            <button type="button" class="btn-helpful-like" onclick="this.classList.toggle('liked'); const countSpan = this.querySelector('span'); if(countSpan) { let n = parseInt(countSpan.innerText) || 0; countSpan.innerText = this.classList.contains('liked') ? n + 1 : Math.max(0, n - 1); }">
+                                <i class="fa-regular fa-thumbs-up"></i> Hữu ích (<span>0</span>)
+                            </button>
+                        </div>
+                    </div>
+                @empty
+                    <div class="review-empty-state">
+                        <div class="review-empty-icon"><i class="fa-solid fa-comment-dots"></i></div>
+                        <h4>Chưa có đánh giá nào cho sản phẩm này</h4>
+                        <p>Hãy là người đầu tiên sở hữu chú gấu bông này và để lại nhận xét đáng yêu bạn nhé!</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
     <!-- Related Products -->
     @if(isset($relatedProducts) && $relatedProducts->count() > 0)
         <div style="margin-top: 3rem;">
@@ -201,6 +334,9 @@
                             @if($relSale)
                                 <span class="card-badge-sale">Sale</span>
                             @endif
+                            <button type="button" class="btn-wishlist-card" data-product-id="{{ $rel->id }}" onclick="toggleWishlist({ id: {{ $rel->id }}, name: '{{ addslashes($rel->name) }}', price: {{ $rel->price }}, sale_price: {{ $rel->sale_price ?? 'null' }}, image_url: '{{ $relImgUrl }}' }, event)" title="Lưu vào yêu thích">
+                                <i class="fa-regular fa-heart"></i>
+                            </button>
                             <a href="{{ route('products.show', $rel->id) }}">
                                 <img src="{{ $relImgUrl }}" alt="{{ $rel->name }}" class="product-card-img" onerror="this.src='https://placehold.co/600x600/f5e6ca/7c4a2d?text=Gau+Bong'">
                             </a>
@@ -272,6 +408,21 @@
     function handleBuyNow() {
         const qty = parseInt(document.getElementById('detail-quantity').value) || 1;
         addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, 'checkout');
+    }
+
+    function filterReviews(star, btn) {
+        document.querySelectorAll('.star-filter-chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+
+        const cards = document.querySelectorAll('.review-item-card');
+        cards.forEach(card => {
+            const cardRating = card.getAttribute('data-rating');
+            if (star === 'all' || cardRating == star) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
     }
 </script>
 @endsection

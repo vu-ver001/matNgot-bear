@@ -41,9 +41,14 @@
             </div>
         </a>
 
-        <!-- Wishlist (Yêu thích - Chờ đường dẫn của bạn nhóm) -->
-        <a href="#" class="utility-icon-btn" title="Danh sách yêu thích">
-            <i class="fa-regular fa-heart" style="font-size: 16px; color: #E57373;"></i>
+        <!-- Wishlist (Yêu thích) -->
+        @auth
+            <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+        @endauth
+        @guest
+            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+        @endguest
+            <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
             <span class="badge-count" id="wishlist-count">0</span>
         </a>
 
@@ -53,15 +58,29 @@
             <span class="badge-count" id="cart-count">{{ (int) ($realCartCount ?? 0) }}</span>
         </a>
 
-        <!-- My Orders (Đơn của tôi - Chờ đường dẫn của bạn nhóm) -->
-        <a href="#" class="utility-icon-btn" title="Đơn hàng của tôi">
-            <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
-        </a>
+        <!-- My Orders (Đơn hàng của tôi cạnh giỏ hàng) -->
+        @auth
+            <a href="{{ route('customer.orders.index') }}" class="utility-icon-btn" title="Đơn hàng của tôi">
+                <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
+                @php
+                    $pendingOrderCount = \App\Models\Order::where('customer_id', auth()->id())
+                        ->whereNotIn('order_status', ['CANCELLED', 'DELIVERED', 'COMPLETED'])
+                        ->count();
+                @endphp
+                @if($pendingOrderCount > 0)
+                    <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ $pendingOrderCount }}</span>
+                @endif
+            </a>
+        @else
+            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" title="Đơn hàng của tôi (Đăng nhập để xem)">
+                <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
+            </a>
+        @endauth
 
-        <!-- Nút Đăng nhập / Đăng xuất & Tài khoản (Chờ đường dẫn của bạn nhóm) -->
+        <!-- Nút Đăng nhập / Đăng xuất & Tài khoản -->
         <div style="position: relative;">
             @guest
-                <a href="/login" class="btn-auth-pill" title="Đăng nhập">
+                <a href="{{ route('login') }}" class="btn-auth-pill" title="Đăng nhập">
                     <i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP
                 </a>
             @endguest
@@ -80,11 +99,12 @@
                                 <div style="font-size: 10.5px; color: var(--text-light);">Quản trị viên</div>
                             </div>
                         </div>
-                        <a href="#" class="dropdown-item">
-                            <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
-                        </a>
                         <a href="{{ route('admin.dashboard') }}" class="dropdown-item">
-                            <span><i class="fa-solid fa-gauge-high" style="color: #8D6E63; margin-right: 6px;"></i> Quản Lý</span>
+                            <span><i class="fa-solid fa-gauge-high" style="color: #8D6E63; margin-right: 6px;"></i> Quản Lý Admin</span>
+                            <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
+                        </a>
+                        <a href="{{ route('admin.orders.index') }}" class="dropdown-item">
+                            <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 6px;"></i> Quản Lý Đơn Hàng</span>
                             <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
                         </a>
                         <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
@@ -108,11 +128,12 @@
                                 <div style="font-size: 10.5px; color: var(--text-light);">Nhân viên</div>
                             </div>
                         </div>
-                        <a href="#" class="dropdown-item">
-                            <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
-                        </a>
                         <a href="{{ route('staff.dashboard') }}" class="dropdown-item">
-                            <span><i class="fa-solid fa-boxes-packing" style="color: #8D6E63; margin-right: 6px;"></i> Xử Lý</span>
+                            <span><i class="fa-solid fa-boxes-packing" style="color: #8D6E63; margin-right: 6px;"></i> Bảng Xử Lý</span>
+                            <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
+                        </a>
+                        <a href="{{ route('staff.orders.index') }}" class="dropdown-item">
+                            <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 6px;"></i> Đơn Hàng</span>
                             <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
                         </a>
                         <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
@@ -136,11 +157,8 @@
                                 <div style="font-size: 10.5px; color: var(--text-light);">Khách hàng thân thiết</div>
                             </div>
                         </div>
-                        <a href="#" class="dropdown-item">
-                            <span><i class="fa-solid fa-user-pen" style="color: #8D6E63; margin-right: 6px;"></i> Hồ Sơ Cá Nhân</span>
-                        </a>
-                        <a href="#" class="dropdown-item">
-                            <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 6px;"></i> Đơn Hàng Của Tôi</span>
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item">
+                            <span><i class="fa-solid fa-user-gear" style="color: #8D6E63; margin-right: 6px;"></i> Tài Khoản Của Tôi</span>
                         </a>
                         <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">
                             <form method="POST" action="{{ route('logout') }}">

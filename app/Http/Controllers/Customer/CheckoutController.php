@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Voucher;
@@ -327,10 +328,28 @@ class CheckoutController extends Controller
                     ->with('info', 'Đơn hàng ' . $order->order_code . ' đã tạo! Vui lòng hoàn tất thanh toán.');
             }
 
-            return redirect()->route('customer.orders.show', $order->id)
+            return redirect()->route('customer.checkout.success', $order->id)
                 ->with('success', 'Đặt hàng thành công! Mã đơn hàng của bạn là: ' . $order->order_code);
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Lỗi đặt hàng: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Display order success / thank you page with clear navigation back to home, cart, and orders.
+     */
+    public function success(Order $order): View|\Illuminate\Http\RedirectResponse
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        if ($order->customer_id !== auth()->id() && auth()->user()->role !== 'ADMIN' && auth()->user()->role !== 'STAFF') {
+            abort(403, 'Bạn không có quyền xem đơn hàng này.');
+        }
+
+        $order->load(['details.product.images', 'details.product.category', 'voucher', 'shippingVoucher', 'payments']);
+
+        return view('customer.checkout.success', compact('order'));
     }
 }

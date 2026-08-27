@@ -37,12 +37,14 @@ class ProductPublicController extends Controller
             $query->where('category_id', $request->input('category_id'));
         }
 
-        // 3. Lọc theo khoảng giá bán thực tế COALESCE(sale_price, price)
+        // 3. Lọc theo khoảng giá bán thực tế (có tính thời hạn khuyến mãi)
+        $effectivePriceSql = 'CASE WHEN sale_price IS NOT NULL AND (sale_start_at IS NULL OR sale_start_at <= NOW()) AND (sale_end_at IS NULL OR sale_end_at >= NOW()) THEN sale_price ELSE price END';
+
         if ($request->filled('min_price')) {
-            $query->whereRaw('COALESCE(sale_price, price) >= ?', [(float) $request->input('min_price')]);
+            $query->whereRaw("({$effectivePriceSql}) >= ?", [(float) $request->input('min_price')]);
         }
         if ($request->filled('max_price')) {
-            $query->whereRaw('COALESCE(sale_price, price) <= ?', [(float) $request->input('max_price')]);
+            $query->whereRaw("({$effectivePriceSql}) <= ?", [(float) $request->input('max_price')]);
         }
 
         // 4. Lọc theo kích thước (size)
@@ -68,11 +70,12 @@ class ProductPublicController extends Controller
         // 8. Sắp xếp (Sort)
         $sort = $request->input('sort', 'latest');
         match ($sort) {
-            'price_asc'   => $query->orderByRaw('COALESCE(sale_price, price) ASC'),
-            'price_desc'  => $query->orderByRaw('COALESCE(sale_price, price) DESC'),
+            'price_asc'   => $query->orderByRaw("({$effectivePriceSql}) ASC"),
+            'price_desc'  => $query->orderByRaw("({$effectivePriceSql}) DESC"),
             'best_seller' => $query->orderByDesc('sold_count'),
             default       => $query->orderByDesc('created_at'),
         };
+
 
         // Phân trang (mặc định 12 sản phẩm/trang)
         $perPage = (int) $request->input('per_page', 12);
