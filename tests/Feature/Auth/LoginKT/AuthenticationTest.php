@@ -31,7 +31,35 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $this->assertNotNull($user->fresh()->last_login_at);
-        $response->assertRedirect(route('customer.dashboard', absolute: false));
+        $response->assertRedirect(route('home', absolute: false));
+    }
+
+    public function test_login_started_from_home_returns_to_home(): void
+    {
+        $user = User::factory()->create();
+
+        $this->get(route('login', ['redirect' => '/']))
+            ->assertOk();
+
+        $this->post(route('login'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertRedirect(route('home'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_login_does_not_accept_an_external_redirect(): void
+    {
+        $user = User::factory()->create();
+
+        $this->get(route('login', ['redirect' => '//example.com']))
+            ->assertOk();
+
+        $this->post(route('login'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertRedirect(route('home', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
@@ -82,7 +110,7 @@ class AuthenticationTest extends TestCase
     public function test_active_users_are_redirected_by_role(): void
     {
         $roles = [
-            User::ROLE_CUSTOMER => 'customer.dashboard',
+            User::ROLE_CUSTOMER => 'home',
             User::ROLE_STAFF => 'staff.dashboard',
             User::ROLE_ADMIN => 'admin.dashboard',
         ];

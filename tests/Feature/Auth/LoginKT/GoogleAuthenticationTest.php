@@ -37,7 +37,7 @@ class GoogleAuthenticationTest extends TestCase
 
         $response = $this->get(route('auth.google.callback'));
 
-        $response->assertRedirect(route('customer.dashboard', absolute: false));
+        $response->assertRedirect(route('home', absolute: false));
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
             'full_name' => 'Gấu Mật Ngọt',

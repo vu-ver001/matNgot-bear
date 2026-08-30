@@ -80,7 +80,11 @@
         <!-- Nút Đăng nhập / Đăng xuất & Tài khoản -->
         <div style="position: relative;">
             @guest
-                <a href="{{ route('login') }}" class="btn-auth-pill" title="Đăng nhập">
+                <a
+                    href="{{ route('login', ['redirect' => route('home', absolute: false)]) }}"
+                    class="btn-auth-pill"
+                    title="Đăng nhập"
+                >
                     <i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP
                 </a>
             @endguest
