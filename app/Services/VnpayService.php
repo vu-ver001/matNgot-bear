@@ -52,8 +52,10 @@ class VnpayService
     /**
      * Build VNPAY Gateway URL for Card / ATM / Visa / QR redirection.
      */
-    public function createPaymentUrl(Order $order, string $returnUrl, string $ipAddress = '127.0.0.1'): string
+    public function createPaymentUrl(Order $order, ?string $returnUrl = null, string $ipAddress = '127.0.0.1'): string
     {
+        $returnUrl = $returnUrl ?? config('services.vnpay.return_url', route('payment.vnpay.return'));
+
         $vnp_Params = [
             "vnp_Version" => "2.1.0",
             "vnp_TmnCode" => $this->tmnCode,
@@ -94,6 +96,14 @@ class VnpayService
     }
 
     /**
+     * Alias for createPaymentUrl
+     */
+    public function createPayment(Order $order, ?string $returnUrl = null, string $ipAddress = '127.0.0.1'): string
+    {
+        return $this->createPaymentUrl($order, $returnUrl, $ipAddress);
+    }
+
+    /**
      * Verify VNPAY return response signature.
      */
     public function verifyResponse(array $inputData): bool
@@ -116,6 +126,22 @@ class VnpayService
         $secureHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
         return hash_equals($secureHash, $vnp_SecureHash);
+    }
+
+    /**
+     * Alias for verifyResponse on Return
+     */
+    public function verifyReturn(array $inputData): bool
+    {
+        return $this->verifyResponse($inputData);
+    }
+
+    /**
+     * Alias for verifyResponse on IPN
+     */
+    public function verifyIpn(array $inputData): bool
+    {
+        return $this->verifyResponse($inputData);
     }
 
     /**

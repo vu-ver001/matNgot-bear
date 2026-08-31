@@ -13,7 +13,7 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    @if (auth()->user()->role === 'ADMIN')
+                    @if (Auth::user()->role === 'ADMIN')
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
@@ -32,16 +32,16 @@
                         <x-nav-link :href="route('admin.reports.revenue')" :active="request()->routeIs('admin.reports.*')">
                             {{ __('Báo cáo') }}
                         </x-nav-link>
-                    @elseif (auth()->user()->role === 'STAFF')
+                    @elseif (Auth::user()->role === 'STAFF')
                         <x-nav-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
                         <x-nav-link :href="route('staff.orders.index')" :active="request()->routeIs('staff.orders.*')">
-                            {{ __('Đơn hàng') }}
+                            {{ __('Quản lý Đơn hàng') }}
                         </x-nav-link>
-                    @else
+                    @elseif (Auth::user()->role === 'CUSTOMER')
                         <x-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.*')">
-                            {{ __('Đơn hàng của tôi') }}
+                            <span>Đơn hàng của tôi</span>
                         </x-nav-link>
                     @endif
                 </div>
@@ -96,7 +96,7 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1 bg-white/95">
-            @if (auth()->user()->role === 'ADMIN')
+            @if (Auth::user()->role === 'ADMIN')
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
@@ -112,16 +112,19 @@
                 <x-responsive-nav-link :href="route('admin.reports.revenue')" :active="request()->routeIs('admin.reports.*')">
                     {{ __('Báo cáo') }}
                 </x-responsive-nav-link>
-            @elseif (auth()->user()->role === 'STAFF')
+            @elseif (Auth::user()->role === 'STAFF')
                 <x-responsive-nav-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('staff.orders.index')" :active="request()->routeIs('staff.orders.*')">
-                    {{ __('Đơn hàng') }}
+                    {{ __('Quản lý Đơn hàng') }}
                 </x-responsive-nav-link>
-            @else
+            @elseif (Auth::user()->role === 'CUSTOMER')
+                <x-responsive-nav-link :href="route('home')">
+                    <span>🏠 Trang chủ</span>
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.*')">
-                    {{ __('Đơn hàng của tôi') }}
+                    <span>📋 Đơn hàng của tôi</span>
                 </x-responsive-nav-link>
             @endif
 

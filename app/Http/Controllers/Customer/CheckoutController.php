@@ -33,6 +33,11 @@ class CheckoutController extends Controller
             return redirect()->route('login')->with('info', 'Vui lòng đăng nhập hoặc đăng ký tài khoản để tiến hành thanh toán đơn hàng.');
         }
 
+        if (auth()->user()->role !== 'CUSTOMER') {
+            $roleLabel = auth()->user()->role === 'ADMIN' ? 'Quản trị viên (Admin)' : 'Nhân viên (Staff)';
+            return redirect()->route('home')->with('error', "Tài khoản {$roleLabel} không thể thực hiện đặt hàng. Vui lòng chuyển sang tài khoản Khách hàng để mua sắm.");
+        }
+
         $userId = auth()->id();
         $user = auth()->user();
 
@@ -92,14 +97,29 @@ class CheckoutController extends Controller
         if (!empty($savedRecipientAddress)) {
             $parts = array_map('trim', explode(',', $savedRecipientAddress));
             if (count($parts) >= 3) {
-                // e.g. "Số 41A Phú Diễn, Phường Cầu Giấy, Hà Nội"
+                // e.g. "388 Xã Đàn, Phường Văn Miếu - Quốc Tử Giám, Hà Nội"
                 $savedProvince = end($parts);
                 $savedWard = $parts[count($parts) - 2];
                 $savedStreet = implode(', ', array_slice($parts, 0, count($parts) - 2));
             } elseif (count($parts) === 2) {
-                // e.g. "Số 41A Phú Diễn, Hà Nội"
+                // e.g. "388 Xã Đàn, Hà Nội"
                 $savedProvince = end($parts);
                 $savedStreet = $parts[0];
+            }
+
+            // Normalise ward string if it contains extra notes (e.g. "Phường Văn Miếu – Quốc Tử Giám" -> "Phường Văn Miếu")
+            if (str_contains($savedWard, '–') || str_contains($savedWard, '-')) {
+                $subWards = preg_split('/[–\-]/u', $savedWard);
+                if (!empty($subWards[0])) {
+                    $savedWard = trim($subWards[0]);
+                }
+            }
+
+            // If ward wasn't explicitly isolated, try regex search in full address
+            if (empty($savedWard) || (!str_starts_with($savedWard, 'Phường') && !str_starts_with($savedWard, 'Xã'))) {
+                if (preg_match('/(Phường\s+[^\,\-]+|Xã\s+[^\,\-]+|Thị trấn\s+[^\,\-]+)/iu', $savedRecipientAddress, $m)) {
+                    $savedWard = trim($m[1]);
+                }
             }
         }
 
@@ -109,7 +129,7 @@ class CheckoutController extends Controller
             'recipient_email' => $savedRecipientEmail,
             'province' => $savedProvince,
             'ward' => $savedWard,
-            'street' => $savedStreet,
+            'street' => $savedStreet ?: $savedRecipientAddress,
             'full_address' => $savedRecipientAddress,
         ];
 
@@ -322,8 +342,13 @@ class CheckoutController extends Controller
                 return redirect()->route('customer.payment.vnpay.redirect', $order->id);
             }
 
-            // If MoMo or Bank Transfer, redirect to interactive payment gateway page
-            if (in_array($rawMethod, ['MOMO', 'BANK_TRANSFER', 'E_WALLET'])) {
+            // If MoMo, redirect directly to official MoMo Gateway
+            if ($rawMethod === 'MOMO') {
+                return redirect()->route('customer.payment.momo.redirect', $order->id);
+            }
+
+            // If Bank Transfer, redirect to interactive payment gateway page
+            if (in_array($rawMethod, ['BANK_TRANSFER', 'E_WALLET'])) {
                 return redirect()->route('customer.payment.qr', $order->id)
                     ->with('info', 'Đơn hàng ' . $order->order_code . ' đã tạo! Vui lòng hoàn tất thanh toán.');
             }

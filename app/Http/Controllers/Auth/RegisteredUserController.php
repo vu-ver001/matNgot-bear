@@ -50,6 +50,18 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        // Merge guest session cart into user database cart
+        if (session()->has('guest_cart')) {
+            $guestCart = session()->pull('guest_cart', []);
+            foreach ($guestCart as $productId => $qty) {
+                \App\Models\CartItem::create([
+                    'user_id' => $user->id,
+                    'product_id' => (int) $productId,
+                    'quantity' => (int) $qty,
+                ]);
+            }
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 }
