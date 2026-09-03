@@ -49,8 +49,8 @@ return [
     ],
 
     'vnpay' => [
-        'tmn_code' => env('VNPAY_TMN_CODE', 'CGXZLS0Z'),
-        'hash_secret' => env('VNPAY_HASH_SECRET', 'RAIOGPH2TUW0GAF9D0QI016IKMWHDYEZ'),
+        'tmn_code' => env('VNPAY_TMN_CODE', 'DKEKANL1'),
+        'hash_secret' => env('VNPAY_HASH_SECRET', 'ODQMSSMZLVNQZMMITMJHFEUUQZWQYYEW'),
         'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
         'merchant_name' => env('VNPAY_MERCHANT_NAME', 'MẬT NGỌT BEAR'),
         'return_url' => env('VNPAY_RETURN_URL'),

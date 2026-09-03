@@ -87,7 +87,7 @@ class CheckoutController extends Controller
         $savedRecipientName = $latestOrder->recipient_name ?? $user->full_name ?? '';
         $savedRecipientPhone = $latestOrder->recipient_phone ?? $user->phone ?? '';
         $savedRecipientEmail = $latestOrder->recipient_email ?? $user->email ?? '';
-        $savedRecipientAddress = $latestOrder->recipient_address ?? $user->address ?? '';
+        $savedRecipientAddress = $this->cleanAddress($latestOrder->recipient_address ?? $user->address ?? '');
 
         // Intelligently parse province, ward, and street from saved address
         $savedProvince = 'Hà Nội';
@@ -97,17 +97,17 @@ class CheckoutController extends Controller
         if (!empty($savedRecipientAddress)) {
             $parts = array_map('trim', explode(',', $savedRecipientAddress));
             if (count($parts) >= 3) {
-                // e.g. "388 Xã Đàn, Phường Văn Miếu - Quốc Tử Giám, Hà Nội"
+                // e.g. "Thôn Đại Đồng, Xã Thiên Lộc, Hà Nội"
                 $savedProvince = end($parts);
                 $savedWard = $parts[count($parts) - 2];
                 $savedStreet = implode(', ', array_slice($parts, 0, count($parts) - 2));
             } elseif (count($parts) === 2) {
-                // e.g. "388 Xã Đàn, Hà Nội"
+                // e.g. "Thôn Đại Đồng, Hà Nội"
                 $savedProvince = end($parts);
                 $savedStreet = $parts[0];
             }
 
-            // Normalise ward string if it contains extra notes (e.g. "Phường Văn Miếu – Quốc Tử Giám" -> "Phường Văn Miếu")
+            // Normalise ward string if it contains extra notes
             if (str_contains($savedWard, '–') || str_contains($savedWard, '-')) {
                 $subWards = preg_split('/[–\-]/u', $savedWard);
                 if (!empty($subWards[0])) {
@@ -115,12 +115,14 @@ class CheckoutController extends Controller
                 }
             }
 
-            // If ward wasn't explicitly isolated, try regex search in full address
-            if (empty($savedWard) || (!str_starts_with($savedWard, 'Phường') && !str_starts_with($savedWard, 'Xã'))) {
-                if (preg_match('/(Phường\s+[^\,\-]+|Xã\s+[^\,\-]+|Thị trấn\s+[^\,\-]+)/iu', $savedRecipientAddress, $m)) {
-                    $savedWard = trim($m[1]);
-                }
+            // Clean street address so it only keeps house/street/village, not duplicated ward/province
+            if (!empty($savedWard)) {
+                $savedStreet = preg_replace('/,?\s*' . preg_quote($savedWard, '/') . '/iu', '', $savedStreet);
             }
+            if (!empty($savedProvince)) {
+                $savedStreet = preg_replace('/,?\s*' . preg_quote($savedProvince, '/') . '/iu', '', $savedStreet);
+            }
+            $savedStreet = trim($savedStreet ?? '', ', ');
         }
 
         $savedProfile = [
@@ -306,8 +308,11 @@ class CheckoutController extends Controller
         };
 
         try {
+            $cleanedAddress = $this->cleanAddress($validated['recipient_address']);
+
             $data = array_merge($validated, [
                 'customer_id' => $userId,
+                'recipient_address' => $cleanedAddress,
                 'payment_method' => $dbPaymentMethod,
             ]);
 
@@ -319,7 +324,7 @@ class CheckoutController extends Controller
                 $currentUser->update([
                     'full_name' => $validated['recipient_name'] ?: $currentUser->full_name,
                     'phone' => $validated['recipient_phone'] ?: $currentUser->phone,
-                    'address' => $validated['recipient_address'] ?: $currentUser->address,
+                    'address' => $cleanedAddress ?: $currentUser->address,
                 ]);
             }
 
@@ -376,5 +381,34 @@ class CheckoutController extends Controller
         $order->load(['details.product.images', 'details.product.category', 'voucher', 'shippingVoucher', 'payments']);
 
         return view('customer.checkout.success', compact('order'));
+    }
+
+    /**
+     * Clean and remove duplicated segments (e.g. repeated Ward, Province) from address.
+     */
+    public function cleanAddress(?string $address): string
+    {
+        if (empty($address)) {
+            return '';
+        }
+
+        $parts = array_filter(array_map('trim', explode(',', $address)));
+        $unique = [];
+
+        foreach ($parts as $part) {
+            $norm = mb_strtolower(preg_replace('/\s+/', ' ', $part));
+            $exists = false;
+            foreach ($unique as $u) {
+                if (mb_strtolower(preg_replace('/\s+/', ' ', $u)) === $norm) {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (!$exists) {
+                $unique[] = $part;
+            }
+        }
+
+        return implode(', ', $unique);
     }
 }

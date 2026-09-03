@@ -1,11 +1,20 @@
 <x-app-layout>
     <div class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="mb-6 flex items-center justify-between">
-                <h2 class="font-bold text-2xl text-[#2B1810] tracking-tight">Chi tiết đơn hàng <span class="text-[#E08A1E] font-mono">{{ $order->order_code }}</span></h2>
-                <a href="{{ route('customer.orders.index') }}" class="text-sm font-semibold text-[#8C4A19] hover:text-[#5C3219] flex items-center gap-1">
-                    <span>← Quay lại danh sách</span>
-                </a>
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-bold text-2xl text-[#2B1810] tracking-tight">Chi tiết đơn hàng <span class="text-[#E08A1E] font-mono">{{ $order->order_code }}</span></h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('customer.orders.invoice', $order) }}" target="_blank"
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-amber-50 text-[#8C4A19] font-bold text-xs sm:text-sm rounded-xl border border-amber-300 shadow-xs transition transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-file-invoice text-sm text-[#E08A1E]"></i>
+                        <span>Xem hóa đơn điện tử</span>
+                    </a>
+                    <a href="{{ route('customer.orders.index') }}" class="text-sm font-semibold text-[#8C4A19] hover:text-[#5C3219] flex items-center gap-1">
+                        <span>← Quay lại danh sách</span>
+                    </a>
+                </div>
             </div>
             @if (session('success'))
                 <div class="mb-4 bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-xl">
@@ -26,34 +35,34 @@
             @endphp
 
             @if($canPayOnline)
-                <div class="mb-6 bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 border-2 border-amber-400 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm"
+                <div class="mb-5 bg-gradient-to-r from-amber-500/10 via-amber-500/15 to-amber-500/10 border border-amber-300 rounded-2xl p-3.5 sm:px-5 sm:py-3.5 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 shadow-xs"
                      x-data="{ showChangeModal: false }">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 shadow-md shadow-amber-500/30">
+                    <div class="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
                             💳
                         </div>
                         <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="text-base font-extrabold text-[#2B1810]">Đơn hàng này chưa hoàn tất thanh toán</h4>
-                                <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h4 class="text-sm sm:text-base font-bold text-[#2B1810]">Đơn hàng này chưa hoàn tất thanh toán</h4>
+                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold whitespace-nowrap">
                                     @if($order->payment_method === 'CARD') VNPAY @elseif($order->payment_method === 'E_WALLET') Ví MoMo @else VietQR @endif
                                 </span>
                             </div>
-                            <p class="text-xs sm:text-sm text-[#7D6B5D] mt-0.5">Số tiền cần thanh toán: <strong class="text-amber-700 font-bold text-base">{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>. Vui lòng thanh toán hoặc đổi phương thức phù hợp!</p>
+                            <p class="text-xs text-[#7D6B5D] mt-0.5">Số tiền cần thanh toán: <strong class="text-amber-700 font-bold text-sm">{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>. Vui lòng thanh toán hoặc đổi phương thức phù hợp!</p>
                         </div>
                     </div>
                     
-                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
+                    <div class="flex items-center gap-2.5 w-full md:w-auto shrink-0 justify-end">
                         <a href="{{ $order->payment_method === 'CARD' ? route('customer.payment.vnpay.redirect', $order) : ($order->payment_method === 'E_WALLET' ? route('customer.payment.momo.redirect', $order) : route('customer.payment.qr', $order)) }}" 
-                           class="flex-1 sm:flex-initial px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center uppercase tracking-wide flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-credit-card"></i>
-                            <span>THANH TOÁN NGAY</span>
+                           class="flex-1 md:flex-initial whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/25 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center uppercase tracking-wide flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-credit-card text-xs"></i>
+                            <span class="whitespace-nowrap">THANH TOÁN NGAY</span>
                         </a>
 
                         <button type="button" @click="showChangeModal = true"
-                                class="flex-1 sm:flex-initial px-4 py-2.5 bg-white hover:bg-amber-50 text-[#5C3219] font-bold text-xs sm:text-sm rounded-xl border border-amber-300 shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                class="flex-1 md:flex-initial whitespace-nowrap px-3.5 py-2 sm:px-4 sm:py-2.5 bg-white hover:bg-amber-50 text-[#5C3219] font-bold text-xs sm:text-sm rounded-xl border border-amber-300 shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-arrow-right-arrow-left text-xs"></i>
-                            <span>Đổi hình thức</span>
+                            <span class="whitespace-nowrap">Đổi hình thức</span>
                         </button>
                     </div>
 
@@ -170,9 +179,18 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
+                    <div class="bg-white rounded-2xl border border-amber-100 shadow-sm" x-data="{ showEditAddressModal: false }">
                         <div class="p-6">
-                            <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Thông tin nhận hàng</h3>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-[#1E293B]">Thông tin nhận hàng</h3>
+                                @if($order->order_status === 'PENDING')
+                                    <button type="button" @click="showEditAddressModal = true"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <span>Đổi địa chỉ</span>
+                                    </button>
+                                @endif
+                            </div>
                             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <dt class="text-[#64748B]">Người nhận</dt>
@@ -194,6 +212,73 @@
                                 @endif
                             </dl>
                         </div>
+
+                        {{-- Modal đổi địa chỉ nhận hàng --}}
+                        @if($order->order_status === 'PENDING')
+                        <div x-show="showEditAddressModal" 
+                             x-cloak 
+                             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs text-left"
+                             @click.self="showEditAddressModal = false"
+                             @keydown.escape.window="showEditAddressModal = false">
+                            <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-amber-200 space-y-4"
+                                 @click.stop>
+                                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                                    <div>
+                                        <h3 class="font-black text-lg text-[#2C1408] flex items-center gap-2">
+                                            <span class="text-xl">📍</span> Thay đổi địa chỉ nhận hàng
+                                        </h3>
+                                        <p class="text-xs text-[#786B61] mt-0.5">Đơn hàng #{{ $order->order_code }} (Đang chờ nhân viên xác nhận)</p>
+                                    </div>
+                                    <button type="button" @click="showEditAddressModal = false" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition">
+                                        <i class="fa-solid fa-xmark text-base"></i>
+                                    </button>
+                                </div>
+
+                                <form action="{{ route('customer.orders.update_shipping_address', $order->id) }}" method="POST" class="space-y-4">
+                                    @csrf
+                                    @method('PATCH')
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-[#4A3B32] mb-1">Tên người nhận <span class="text-rose-500">*</span></label>
+                                        <input type="text" name="recipient_name" value="{{ old('recipient_name', $order->recipient_name) }}" required
+                                               class="w-full px-4 py-2.5 rounded-xl border border-amber-200 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-[#4A3B32] mb-1">Số điện thoại liên hệ <span class="text-rose-500">*</span></label>
+                                        <input type="tel" name="recipient_phone" value="{{ old('recipient_phone', $order->recipient_phone) }}" required
+                                               class="w-full px-4 py-2.5 rounded-xl border border-amber-200 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-[#4A3B32] mb-1">Địa chỉ giao hàng chi tiết <span class="text-rose-500">*</span></label>
+                                        <textarea name="recipient_address" rows="3" required
+                                                  placeholder="Số nhà, tên đường, thôn xóm, phường/xã, quận/huyện, tỉnh/thành..."
+                                                  class="w-full px-4 py-2.5 rounded-xl border border-amber-200 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">{{ old('recipient_address', $order->recipient_address) }}</textarea>
+                                        <p class="text-[11px] text-[#8C4A19] mt-1">💡 Hệ thống sẽ tự động làm sạch và định dạng địa chỉ chuẩn đẹp.</p>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-[#4A3B32] mb-1">Ghi chú cho shipper (Tùy chọn)</label>
+                                        <input type="text" name="note" value="{{ old('note', $order->note) }}"
+                                               placeholder="VD: Gọi trước khi giao, giao giờ hành chính..."
+                                               class="w-full px-4 py-2.5 rounded-xl border border-amber-200 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                    </div>
+
+                                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                                        <button type="button" @click="showEditAddressModal = false"
+                                                class="px-4 py-2.5 rounded-xl text-xs font-bold text-[#64748B] hover:bg-gray-100 transition cursor-pointer">
+                                            Hủy bỏ
+                                        </button>
+                                        <button type="submit"
+                                                class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#E08A1E] to-[#8C4A19] hover:from-[#C77815] hover:to-[#733C14] shadow-md shadow-[#E08A1E]/30 transition cursor-pointer">
+                                            Lưu thay đổi địa chỉ
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        @endif
                     </div>
 
                     <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">

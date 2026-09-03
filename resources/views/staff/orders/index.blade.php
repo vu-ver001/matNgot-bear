@@ -67,22 +67,22 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Khách hàng</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">SĐT</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Tổng tiền</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Trạng thái</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Thanh toán</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Ngày đặt</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Thao tác</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider whitespace-nowrap min-w-[140px]">Trạng thái</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider whitespace-nowrap min-w-[150px]">Thanh toán</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider whitespace-nowrap">Ngày đặt</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider whitespace-nowrap">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($orders as $order)
                             <tr>
-                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B]">{{ $order->order_code }}</td>
-                                <td class="px-4 py-4 text-sm text-[#64748B]">{{ $order->customer?->full_name ?? '—' }}</td>
-                                <td class="px-4 py-4 text-sm text-[#64748B]">{{ $order->recipient_phone }}</td>
-                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right">{{ number_format($order->total_amount, 0, ',', '.') }} đ</td>
-                                <td class="px-4 py-4"><x-order-status-badge :status="$order->order_status" /></td>
-                                <td class="px-4 py-4"><x-payment-status-badge :status="$order->payment_status" /></td>
-                                <td class="px-4 py-4 text-sm text-[#64748B]">{{ $order->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B] whitespace-nowrap">{{ $order->order_code }}</td>
+                                <td class="px-4 py-4 text-sm text-[#64748B] whitespace-nowrap">{{ $order->customer?->full_name ?? '—' }}</td>
+                                <td class="px-4 py-4 text-sm text-[#64748B] whitespace-nowrap">{{ $order->recipient_phone }}</td>
+                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right whitespace-nowrap">{{ number_format($order->total_amount, 0, ',', '.') }} đ</td>
+                                <td class="px-4 py-4 whitespace-nowrap"><x-order-status-badge :status="$order->order_status" /></td>
+                                <td class="px-4 py-4 whitespace-nowrap"><x-payment-status-badge :status="$order->payment_status" /></td>
+                                <td class="px-4 py-4 text-sm text-[#64748B] whitespace-nowrap">{{ $order->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="px-4 py-4 text-right">
                                     <a href="{{ route('staff.orders.show', $order) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-[#8B5A2B] bg-amber-100 rounded-full hover:bg-amber-200">Xử lý</a>
                                 </td>

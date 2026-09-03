@@ -43,26 +43,26 @@
                                     <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Ngày đặt</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Sản phẩm</th>
                                     <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Tổng tiền</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Trạng thái</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Thanh toán</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider whitespace-nowrap min-w-[140px]">Trạng thái</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-[#8B5A2B] uppercase tracking-wider whitespace-nowrap min-w-[150px]">Thanh toán</th>
                                     <th class="px-4 py-3 text-right text-xs font-medium text-[#8B5A2B] uppercase tracking-wider">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse ($orders as $order)
                                     <tr>
-                                        <td class="px-4 py-4 text-sm font-medium text-[#1E293B]">{{ $order->order_code }}</td>
-                                        <td class="px-4 py-4 text-sm text-[#64748B]">{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                                        <td class="px-4 py-4 text-sm text-[#64748B]">
+                                        <td class="px-4 py-4 text-sm font-medium text-[#1E293B] whitespace-nowrap">{{ $order->order_code }}</td>
+                                        <td class="px-4 py-4 text-sm text-[#64748B] whitespace-nowrap">{{ $order->created_at->format('d/m/Y H:i') }}</td>
+                                        <td class="px-4 py-4 text-sm text-[#64748B] whitespace-nowrap">
                                             {{ $order->details->count() }} sản phẩm
                                         </td>
-                                        <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right">
+                                        <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right whitespace-nowrap">
                                             {{ number_format($order->total_amount, 0, ',', '.') }} đ
                                         </td>
-                                        <td class="px-4 py-4">
+                                        <td class="px-4 py-4 whitespace-nowrap">
                                             <x-order-status-badge :status="$order->order_status" />
                                         </td>
-                                        <td class="px-4 py-4">
+                                        <td class="px-4 py-4 whitespace-nowrap">
                                             <x-payment-status-badge :status="$order->payment_status" />
                                         </td>
                                         <td class="px-4 py-4 text-right space-x-1.5 whitespace-nowrap" x-data="{ openChangePayment: false }">
@@ -182,6 +182,13 @@
                                                     </button>
                                                 </form>
                                             @endif
+
+                                            <a href="{{ route('customer.orders.invoice', $order) }}" target="_blank"
+                                               class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#8B5A2B] bg-white border border-amber-200 rounded-full hover:bg-amber-50 transition"
+                                               title="Xem hóa đơn điện tử">
+                                                <i class="fa-solid fa-file-invoice text-amber-600"></i>
+                                                <span class="hidden sm:inline">Hóa đơn</span>
+                                            </a>
 
                                             <a href="{{ route('customer.orders.show', $order) }}"
                                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-[#8B5A2B] bg-amber-100 rounded-full hover:bg-amber-200">

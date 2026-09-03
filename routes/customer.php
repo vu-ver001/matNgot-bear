@@ -38,6 +38,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
         // 4. Orders
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+        Route::patch('/orders/{order}/shipping-address', [OrderController::class, 'updateShippingAddress'])->name('orders.update_shipping_address');
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
     });

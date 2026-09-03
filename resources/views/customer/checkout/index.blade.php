@@ -1939,11 +1939,29 @@
                 },
 
                 get fullAddress() {
-                    const parts = [];
-                    if (this.streetAddress) parts.push(this.streetAddress.trim());
-                    if (this.selectedWard) parts.push(this.selectedWard);
-                    if (this.selectedProvince) parts.push(this.selectedProvince);
-                    return parts.join(', ');
+                    const rawParts = [];
+                    if (this.streetAddress) {
+                        rawParts.push(...this.streetAddress.split(','));
+                    }
+                    if (this.selectedWard) {
+                        rawParts.push(...this.selectedWard.split(','));
+                    }
+                    if (this.selectedProvince) {
+                        rawParts.push(...this.selectedProvince.split(','));
+                    }
+
+                    const unique = [];
+                    rawParts.forEach(p => {
+                        const trimmed = p.trim();
+                        if (!trimmed) return;
+                        const norm = trimmed.toLowerCase().replace(/\s+/g, ' ');
+                        const exists = unique.some(u => u.toLowerCase().replace(/\s+/g, ' ') === norm);
+                        if (!exists) {
+                            unique.push(trimmed);
+                        }
+                    });
+
+                    return unique.join(', ');
                 },
 
                 transferCode: 'MNB-' + Math.floor(100000 + Math.random() * 900000),

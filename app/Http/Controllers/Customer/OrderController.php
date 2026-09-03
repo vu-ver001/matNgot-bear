@@ -45,6 +45,57 @@ class OrderController extends Controller
         return view('customer.orders.show', compact('order'));
     }
 
+    /**
+     * View and print customer e-invoice.
+     */
+    public function invoice(Order $order)
+    {
+        if ($order->customer_id !== auth()->id() && !in_array(auth()->user()->role, ['ADMIN', 'STAFF'])) {
+            abort(403);
+        }
+
+        $order->load(['details.product.images', 'payments', 'voucher', 'customer']);
+
+        return view('customer.orders.invoice', compact('order'));
+    }
+
+    /**
+     * Update recipient shipping address before staff confirmation (while order is PENDING).
+     */
+    public function updateShippingAddress(Request $request, Order $order)
+    {
+        if ($order->customer_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($order->order_status !== 'PENDING') {
+            return back()->with('error', 'Đơn hàng đã được nhân viên tiếp nhận xử lý, không thể thay đổi địa chỉ nhận hàng.');
+        }
+
+        $validated = $request->validate([
+            'recipient_name' => 'required|string|max:100',
+            'recipient_phone' => 'required|string|max:20',
+            'recipient_address' => 'required|string|max:500',
+            'note' => 'nullable|string|max:500',
+        ], [
+            'recipient_name.required' => 'Vui lòng nhập tên người nhận.',
+            'recipient_phone.required' => 'Vui lòng nhập số điện thoại.',
+            'recipient_address.required' => 'Vui lòng nhập địa chỉ giao hàng.',
+        ]);
+
+        $checkoutController = app(\App\Http\Controllers\Customer\CheckoutController::class);
+        $cleanAddress = $checkoutController->cleanAddress($validated['recipient_address']);
+
+        $order->update([
+            'recipient_name' => $validated['recipient_name'],
+            'recipient_phone' => $validated['recipient_phone'],
+            'recipient_address' => $cleanAddress,
+            'note' => $validated['note'] ?? $order->note,
+        ]);
+
+        return back()->with('success', 'Đã cập nhật thông tin địa chỉ nhận hàng thành công!');
+    }
+
     public function cancel(Request $request, Order $order)
     {
         if ($order->customer_id !== auth()->id()) {
