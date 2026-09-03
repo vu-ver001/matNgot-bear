@@ -931,70 +931,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                {{-- Bank Transfer Info Box (Matches Screenshot & with VietQR) --}}
-                                <div x-show="paymentMethod === 'BANK_TRANSFER'" x-transition.origin.top.duration.250ms
-                                     class="mt-4 p-5 sm:p-6 bg-white border-2 border-[#EADBCC] rounded-2xl shadow-xs" style="display: none;">
-                                    
-                                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                        {{-- Transfer Details List --}}
-                                        <div class="flex-1 w-full">
-                                            <h3 class="text-xs sm:text-sm font-black text-[#2B1810] uppercase tracking-wider mb-4 flex items-center justify-between">
-                                                <span>THÔNG TIN CHUYỂN KHOẢN</span>
-                                                <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                    Tự động xác nhận
-                                                </span>
-                                            </h3>
-
-                                            <div class="space-y-3.5 text-xs sm:text-sm">
-                                                <div class="flex justify-between items-center py-1.5 border-b border-[#F7EFE6]">
-                                                    <span class="text-[#7D6B5D] font-medium">Ngân hàng</span>
-                                                    <span class="font-extrabold text-[#2B1810]">MB Bank (Ngân hàng Quân Đội)</span>
-                                                </div>
-
-                                                <div class="flex justify-between items-center py-1.5 border-b border-[#F7EFE6]">
-                                                    <span class="text-[#7D6B5D] font-medium">Số tài khoản</span>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="font-extrabold text-[#2B1810] tracking-wider text-sm sm:text-base">0377466205</span>
-                                                        <button type="button" @click="copyText('0377466205', 'Đã sao chép số tài khoản!')" 
-                                                                class="text-[#D68729] hover:text-[#8A4819] text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#FFF6EA] hover:bg-[#FFE8CC] transition cursor-pointer border border-[#FAD9B5]">
-                                                            Sao chép
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <div class="flex justify-between items-center py-1.5 border-b border-[#F7EFE6]">
-                                                    <span class="text-[#7D6B5D] font-medium">Chủ tài khoản</span>
-                                                    <span class="font-extrabold text-[#2B1810]">NGUYỄN NGỌC ANH</span>
-                                                </div>
-
-                                                <div class="flex justify-between items-center py-1.5">
-                                                    <span class="text-[#7D6B5D] font-medium">Nội dung CK</span>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="font-extrabold text-[#D68729] tracking-wider text-sm sm:text-base" x-text="transferCode">MNB-322696</span>
-                                                        <button type="button" @click="copyText(transferCode, 'Đã sao chép nội dung chuyển khoản!')" 
-                                                                class="text-[#D68729] hover:text-[#8A4819] text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#FFF6EA] hover:bg-[#FFE8CC] transition cursor-pointer border border-[#FAD9B5]">
-                                                            Sao chép
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- VietQR Image --}}
-                                        <div class="w-full md:w-auto flex flex-col items-center justify-center p-3 bg-[#FAF5ED] border border-[#EADBCC] rounded-2xl shrink-0">
-                                            <div class="relative w-36 h-36 bg-white p-1.5 rounded-xl shadow-xs border border-[#EADBCC] flex items-center justify-center">
-                                                <img :src="vietQrUrl" alt="VietQR Thanh Toán" class="w-full h-full object-contain"
-                                                     onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MNB-TRANSFER'">
-                                            </div>
-                                            <div class="mt-2 text-center">
-                                                <p class="text-[11.5px] font-bold text-[#2B1810]">Quét mã VietQR</p>
-                                                <p class="text-[10px] text-[#7D6B5D]">Mở app ngân hàng quét mã</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -1457,14 +1393,16 @@
                     {
                         name: 'Hà Nội',
                         wards: [
+                            'Phường Văn Miếu', 'Phường Quốc Tử Giám', 'Phường Nam Đồng', 'Phường Phương Mai', 'Phường Kim Liên',
+                            'Phường Khâm Thiên', 'Phường Trung Tự', 'Phường Phương Liệt', 'Phường Thịnh Quang', 'Phường Trung Liệt',
+                            'Phường Ô Chợ Dừa', 'Phường Hàng Bột', 'Phường Cát Linh', 'Phường Thổ Quan', 'Phường Văn Chương',
                             'Phường Phú Diễn', 'Phường Phúc Diễn', 'Phường Cầu Giấy', 'Phường Dịch Vọng', 'Phường Dịch Vọng Hậu',
                             'Phường Nghĩa Đô', 'Phường Nghĩa Tân', 'Phường Yên Hòa', 'Phường Trung Hòa', 'Phường Cống Vị',
                             'Phường Điện Biên', 'Phường Đội Cấn', 'Phường Kim Mã', 'Phường Liễu Giai', 'Phường Ngọc Hà',
                             'Phường Thành Công', 'Phường Giảng Võ', 'Phường Quán Thánh', 'Phường Trúc Bạch', 'Phường Hàng Bạc',
                             'Phường Hàng Gai', 'Phường Tràng Tiền', 'Phường Cửa Đông', 'Phường Cửa Nam', 'Phường Hàng Bông',
                             'Phường Hàng Đào', 'Phường Bách Khoa', 'Phường Minh Khai', 'Phường Trương Định', 'Phường Đồng Tâm',
-                            'Phường Vĩnh Tuy', 'Phường Bạch Mai', 'Phường Cát Linh', 'Phường Hàng Bột', 'Phường Láng Hạ',
-                            'Phường Láng Thượng', 'Phường Ô Chợ Dừa', 'Phường Kim Liên', 'Phường Khâm Thiên', 'Phường Hạ Đình',
+                            'Phường Vĩnh Tuy', 'Phường Bạch Mai', 'Phường Láng Hạ', 'Phường Láng Thượng', 'Phường Hạ Đình',
                             'Phường Khương Mai', 'Phường Khương Đình', 'Phường Thanh Xuân Bắc', 'Phường Thanh Xuân Trung',
                             'Phường Thanh Xuân Nam', 'Phường Mỹ Đình 1', 'Phường Mỹ Đình 2', 'Phường Mễ Trì', 'Phường Phú Đô',
                             'Phường Trung Văn', 'Phường Tây Mỗ', 'Phường Đại Mỗ', 'Phường Cổ Nhuế 1', 'Phường Cổ Nhuế 2',
@@ -1776,11 +1714,42 @@
                         this.suggestedChips = [...new Set([...this.suggestedChips, ...dbCodes])].slice(0, 4);
                     }
 
-                    if (config.userAddress) {
-                        this.streetAddress = config.userAddress;
+                    const initialProvince = config.savedProfile?.province || 'Hà Nội';
+                    const initialWard = config.savedProfile?.ward || '';
+                    const initialStreet = config.savedProfile?.street || config.userAddress || '';
+
+                    this.selectedProvince = initialProvince;
+                    this.streetAddress = initialStreet;
+
+                    const prov = this.provinces.find(p => p.name === initialProvince || this.normalizeStr(p.name).includes(this.normalizeStr(initialProvince)));
+                    if (prov) {
+                        this.availableWards = prov.wards || [];
+                        this.availableWardDetails = prov.wardDetails || [];
                     }
 
-                    this.selectProvinceName('Hà Nội');
+                    // Preserve remembered / saved ward accurately
+                    if (initialWard) {
+                        // Find matching ward in available wards or use direct
+                        const matchedW = this.availableWards.find(w => 
+                            this.normalizeStr(w) === this.normalizeStr(initialWard) || 
+                            this.normalizeStr(w).includes(this.normalizeStr(initialWard.replace('Phường ', '').replace('Xã ', ''))) ||
+                            this.normalizeStr(initialWard).includes(this.normalizeStr(w.replace('Phường ', '').replace('Xã ', '')))
+                        );
+                        this.selectedWard = matchedW || initialWard;
+                    } else if (this.streetAddress) {
+                        // Check if any available ward is mentioned in street address (e.g. Văn Miếu, Xã Đàn)
+                        const matchedW = this.availableWards.find(w => {
+                            const core = w.replace('Phường ', '').replace('Xã ', '').trim();
+                            return core.length > 2 && this.normalizeStr(this.streetAddress).includes(this.normalizeStr(core));
+                        });
+                        if (matchedW) {
+                            this.selectedWard = matchedW;
+                        } else {
+                            this.selectedWard = this.availableWards[0] || '';
+                        }
+                    } else {
+                        this.selectedWard = this.availableWards[0] || '';
+                    }
 
                     // If initial shipping is provided, apply initial values
                     if (config.initialShipping && config.initialShipping.options) {
@@ -1814,6 +1783,16 @@
                                 if (cur) {
                                     this.availableWards = cur.wards || [];
                                     this.availableWardDetails = cur.wardDetails || [];
+                                    // If current selectedWard is set, ensure it keeps matching
+                                    if (this.selectedWard) {
+                                        const matchInNew = this.availableWards.find(w => 
+                                            this.normalizeStr(w) === this.normalizeStr(this.selectedWard) ||
+                                            this.normalizeStr(w).includes(this.normalizeStr(this.selectedWard.replace('Phường ', '').replace('Xã ', '')))
+                                        );
+                                        if (matchInNew) {
+                                            this.selectedWard = matchInNew;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1893,11 +1872,13 @@
 
                 selectProvinceName(name) {
                     this.selectedProvince = name;
-                    const prov = this.provinces.find(p => p.name === name);
+                    const prov = this.provinces.find(p => p.name === name || this.normalizeStr(p.name).includes(this.normalizeStr(name)));
                     if (prov) {
                         this.availableWards = prov.wards || [];
                         this.availableWardDetails = prov.wardDetails || [];
-                        this.selectedWard = this.availableWards[0] || '';
+                        if (!this.availableWards.includes(this.selectedWard)) {
+                            this.selectedWard = this.availableWards[0] || '';
+                        }
                     } else {
                         this.availableWards = [];
                         this.availableWardDetails = [];
@@ -1958,11 +1939,29 @@
                 },
 
                 get fullAddress() {
-                    const parts = [];
-                    if (this.streetAddress) parts.push(this.streetAddress.trim());
-                    if (this.selectedWard) parts.push(this.selectedWard);
-                    if (this.selectedProvince) parts.push(this.selectedProvince);
-                    return parts.join(', ');
+                    const rawParts = [];
+                    if (this.streetAddress) {
+                        rawParts.push(...this.streetAddress.split(','));
+                    }
+                    if (this.selectedWard) {
+                        rawParts.push(...this.selectedWard.split(','));
+                    }
+                    if (this.selectedProvince) {
+                        rawParts.push(...this.selectedProvince.split(','));
+                    }
+
+                    const unique = [];
+                    rawParts.forEach(p => {
+                        const trimmed = p.trim();
+                        if (!trimmed) return;
+                        const norm = trimmed.toLowerCase().replace(/\s+/g, ' ');
+                        const exists = unique.some(u => u.toLowerCase().replace(/\s+/g, ' ') === norm);
+                        if (!exists) {
+                            unique.push(trimmed);
+                        }
+                    });
+
+                    return unique.join(', ');
                 },
 
                 transferCode: 'MNB-' + Math.floor(100000 + Math.random() * 900000),

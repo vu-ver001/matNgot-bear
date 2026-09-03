@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -12,8 +13,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dateTime('sale_start_at')->nullable()->after('sale_price');
-            $table->dateTime('sale_end_at')->nullable()->after('sale_start_at');
+            if (!Schema::hasColumn('products', 'sale_start_at')) {
+                $table->dateTime('sale_start_at')->nullable()->after('sale_price');
+            }
+            if (!Schema::hasColumn('products', 'sale_end_at')) {
+                $table->dateTime('sale_end_at')->nullable()->after('sale_start_at');
+            }
         });
     }
 

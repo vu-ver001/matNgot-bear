@@ -17,6 +17,9 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Vite Scripts & Tailwind CSS -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <!-- Customer Layout CSS (Tách riêng bởi Khánh Vân) -->
     <link rel="stylesheet" href="{{ asset('css/customer-layout.css') }}">
     @yield('styles')
@@ -301,11 +304,14 @@
         function updateCartBadge() {
             const badge = document.getElementById('cart-count');
             if (badge) {
-                badge.innerText = cartItemsCount;
-                badge.style.display = cartItemsCount > 0 ? 'flex' : 'flex';
+                badge.innerText = cartItemsCount > 99 ? '99+' : cartItemsCount;
+                badge.style.display = cartItemsCount > 0 ? 'flex' : 'none';
             }
             const wBadge = document.getElementById('wishlist-count');
-            if (wBadge) wBadge.innerText = wishlistCount;
+            if (wBadge) {
+                wBadge.innerText = wishlistCount > 99 ? '99+' : wishlistCount;
+                wBadge.style.display = wishlistCount > 0 ? 'flex' : 'none';
+            }
         }
 
         function fetchCartCount() {
@@ -320,11 +326,38 @@
                 .catch(() => {});
         }
 
-        // Auto sync when page gains focus or is restored from bfcache
-        window.addEventListener('focus', fetchCartCount);
-        window.addEventListener('pageshow', fetchCartCount);
+        window.userRole = "{{ auth()->check() ? auth()->user()->role : 'GUEST' }}";
+        window.isCustomerAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
 
         function addToCart(productId, productName = 'Gấu bông', qty = 1, redirectMode = false) {
+            // 1. Chưa đăng nhập: Bật Popup Đăng nhập
+            if (!window.isCustomerAuthenticated) {
+                if (redirectMode === 'checkout' || redirectMode === true) {
+                    const targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id=" + productId + "&quantity=" + qty;
+                    openAuthModal(targetCheckoutUrl, 'Đăng nhập để Mua ngay', 'Vui lòng đăng nhập hoặc đăng ký tài khoản Mật Ngọt Bear để tiến hành thanh toán đơn hàng ngay bạn nhé!');
+                } else {
+                    openAuthModal(window.location.href, 'Đăng nhập để Thêm vào giỏ', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng và tích lũy ưu đãi!');
+                }
+                return false;
+            }
+
+            // 2. Tài khoản Nhân viên (STAFF) hoặc Quản trị viên (ADMIN): Không được mua hàng
+            if (window.userRole === 'STAFF' || window.userRole === 'ADMIN') {
+                const roleName = window.userRole === 'ADMIN' ? 'Quản Trị Viên (Admin)' : 'Nhân Viên (Staff)';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Không khả dụng cho ' + roleName,
+                        html: `Tài khoản <strong>${roleName}</strong> chỉ dùng để quản lý hệ thống, không có chức năng thêm vào giỏ hàng hay đặt hàng.<br><br>Vui lòng chuyển sang tài khoản <strong>Khách hàng</strong> để trải nghiệm mua sắm!`,
+                        confirmButtonColor: '#E08A1E',
+                        confirmButtonText: 'Đã hiểu'
+                    });
+                } else {
+                    alert(`Tài khoản ${roleName} không có chức năng thêm sản phẩm vào giỏ hàng hay đặt hàng.`);
+                }
+                return false;
+            }
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             return fetch('{{ route('customer.cart.store') }}', {
@@ -339,7 +372,13 @@
                         quantity: qty
                     })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (response.status === 401) {
+                        openAuthModal(window.location.href, 'Đăng nhập để Thêm vào giỏ');
+                        throw new Error('Unauthenticated');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         if (data.cart_count !== undefined) {
@@ -369,11 +408,6 @@
                                 ? "{{ route('customer.checkout.index') }}?selected_items[]=" + cartItemId
                                 : "{{ route('customer.checkout.index') }}?product_id=" + productId + "&quantity=" + qty;
 
-                            if (!window.isCustomerAuthenticated) {
-                                openAuthModal(targetCheckoutUrl);
-                                return true;
-                            }
-
                             window.location.href = targetCheckoutUrl;
                         } else if (redirectMode === 'cart') {
                             window.location.href = "{{ route('customer.cart') }}";
@@ -393,16 +427,22 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error adding to cart:', error);
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'Có lỗi xảy ra khi thêm vào giỏ hàng!'
-                    });
+                    if (error.message !== 'Unauthenticated') {
+                        console.error('Error adding to cart:', error);
+                        Toast.fire({
+                            icon: 'error',
+                            title: 'Có lỗi xảy ra khi thêm vào giỏ hàng!'
+                        });
+                    }
                     return false;
                 });
         }
 
         function showToastCart() {
+            if (!window.isCustomerAuthenticated) {
+                openAuthModal("{{ route('customer.cart') }}", 'Đăng nhập xem Giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để xem và quản lý giỏ hàng của bạn!');
+                return;
+            }
             if (cartItemsCount === 0) {
                 Swal.fire({
                     icon: 'info',
@@ -427,96 +467,107 @@
             }
         }
 
-        function saveWishlist(items) {
-            localStorage.setItem('mn_wishlist_items', JSON.stringify(items));
-            localStorage.setItem('mn_wishlist_count', items.length);
+        function saveWishlist(list) {
+            localStorage.setItem('mn_wishlist_items', JSON.stringify(list));
+            wishlistCount = list.length;
+            localStorage.setItem('mn_wishlist_count', wishlistCount);
             updateWishlistBadge();
         }
 
-        function updateWishlistBadge() {
-            const items = getWishlist();
-            const wBadge = document.getElementById('wishlist-count');
-            if (wBadge) wBadge.innerText = items.length;
-
-            // Sync all heart buttons on page
-            document.querySelectorAll('.btn-wishlist-card, .btn-wishlist-detail').forEach(btn => {
-                const pId = parseInt(btn.getAttribute('data-product-id'));
-                const isFav = items.some(item => item.id === pId);
-                if (isFav) {
-                    btn.classList.add('active');
-                    const icon = btn.querySelector('i');
-                    if (icon) {
-                        icon.className = 'fa-solid fa-heart';
-                    }
-                } else {
-                    btn.classList.remove('active');
-                    const icon = btn.querySelector('i');
-                    if (icon) {
-                        icon.className = 'fa-regular fa-heart';
-                    }
-                }
-            });
+        function isInWishlist(productId) {
+            const list = getWishlist();
+            return list.some(item => item.id == productId);
         }
 
-        function toggleWishlist(product, e) {
+        function toggleWishlist(productId, productName = 'Gấu bông', price = '', image = '', e = null) {
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
 
-            let items = getWishlist();
-            const index = items.findIndex(item => item.id === product.id);
+            let list = getWishlist();
+            const index = list.findIndex(item => item.id == productId);
 
             if (index > -1) {
-                // Remove from wishlist
-                items.splice(index, 1);
-                saveWishlist(items);
-                showWishlistHeaderToast(`Đã xóa "${product.name}" khỏi danh sách yêu thích`, false);
-            } else {
-                // Add to wishlist
-                items.push({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    sale_price: product.sale_price || null,
-                    image_url: product.image_url,
-                    url: `/products/${product.id}`
+                list.splice(index, 1);
+                saveWishlist(list);
+                updateHeartIcons(productId, false);
+                Toast.fire({
+                    icon: 'info',
+                    title: `Đã bỏ "${productName}" khỏi danh sách yêu thích`
                 });
-                saveWishlist(items);
-                showWishlistHeaderToast(`Đã thêm "${product.name}" vào danh sách yêu thích! ❤️`, true);
+            } else {
+                list.push({
+                    id: productId,
+                    name: productName,
+                    price: price,
+                    image: image
+                });
+                saveWishlist(list);
+                updateHeartIcons(productId, true);
+                Toast.fire({
+                    icon: 'success',
+                    title: `Đã lưu "${productName}" vào yêu thích! ❤️`
+                });
             }
         }
 
-        function showWishlistHeaderToast(message, isSuccess = true) {
-            // 1. SweetAlert2 Toast at top-end
-            Toast.fire({
-                icon: isSuccess ? 'success' : 'info',
-                title: message
-            });
-
-            // 2. Animate Wishlist icon in header
-            const headerBtn = document.getElementById('wishlist-header-btn');
-            if (headerBtn) {
-                const headerIcon = headerBtn.querySelector('i');
-                if (headerIcon) {
-                    headerIcon.classList.add('heart-pulse-anim');
-                    setTimeout(() => headerIcon.classList.remove('heart-pulse-anim'), 700);
+        function updateHeartIcons(productId, isFav) {
+            document.querySelectorAll(`[data-wishlist-btn="${productId}"]`).forEach(btn => {
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    if (isFav) {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid');
+                        btn.style.color = '#E08A1E';
+                    } else {
+                        icon.classList.remove('fa-solid');
+                        icon.classList.add('fa-regular');
+                        btn.style.color = '';
+                    }
                 }
-            }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const list = getWishlist();
+            list.forEach(item => {
+                updateHeartIcons(item.id, true);
+            });
+        });
+
+        function updateWishlistBadge() {
+            const items = getWishlist();
+            const wBadge = document.getElementById('wishlist-count');
+            if (wBadge) wBadge.innerText = items.length;
         }
 
         // Global Auth Modal Helper
         window.isCustomerAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
 
-        function openAuthModal(targetUrl = null) {
+        function openAuthModal(targetUrl = null, customTitle = null, customDesc = null) {
             const modal = document.getElementById('mn-auth-modal');
             if (!modal) return;
             
             const loginBtn = document.getElementById('mn-auth-login-btn');
             const registerBtn = document.getElementById('mn-auth-register-btn');
+            const titleEl = document.getElementById('mn-auth-modal-title');
+            const descEl = document.getElementById('mn-auth-modal-desc');
             const baseLogin = "{{ route('login') }}";
             const baseRegister = "{{ route('register') }}";
             
+            if (customTitle && titleEl) {
+                titleEl.innerText = customTitle;
+            } else if (titleEl) {
+                titleEl.innerText = 'Đăng nhập tài khoản';
+            }
+
+            if (customDesc && descEl) {
+                descEl.innerText = customDesc;
+            } else if (descEl) {
+                descEl.innerHTML = 'Đăng nhập hoặc tạo tài khoản <strong class="text-[#2B1810]">Mật Ngọt Bear</strong> để thêm vào giỏ hàng, mua hàng và tích lũy ưu đãi!';
+            }
+
             if (targetUrl) {
                 loginBtn.href = `${baseLogin}?redirect=${encodeURIComponent(targetUrl)}`;
                 registerBtn.href = `${baseRegister}?redirect=${encodeURIComponent(targetUrl)}`;
@@ -564,11 +615,11 @@
                 🧸
             </div>
 
-            <h3 class="text-xl sm:text-2xl font-black text-[#2B1810] mb-2 tracking-tight">
-                Đăng nhập để thanh toán
+            <h3 id="mn-auth-modal-title" class="text-xl sm:text-2xl font-black text-[#2B1810] mb-2 tracking-tight">
+                Đăng nhập tài khoản
             </h3>
-            <p class="text-xs sm:text-sm text-[#7D6B5D] leading-relaxed mb-5 font-medium">
-                Đăng nhập hoặc tạo tài khoản <strong class="text-[#2B1810]">Mật Ngọt Bear</strong> để tiếp tục đặt hàng, nhận voucher ưu đãi và tích lũy điểm thưởng!
+            <p id="mn-auth-modal-desc" class="text-xs sm:text-sm text-[#7D6B5D] leading-relaxed mb-5 font-medium">
+                Đăng nhập hoặc tạo tài khoản <strong class="text-[#2B1810]">Mật Ngọt Bear</strong> để thêm vào giỏ hàng, mua hàng và tích lũy ưu đãi!
             </p>
 
             {{-- Value Props Checklist --}}
