@@ -15,8 +15,14 @@ class AuthenticatedSessionController extends Controller
     /**
      * Hiển thị trang đăng nhập.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        $redirectPath = $this->safeRedirectPath($request->query('redirect'));
+
+        if ($redirectPath !== null) {
+            $request->session()->put('url.intended', url($redirectPath));
+        }
+
         return view('auth.loginKT.index');
     }
 
@@ -45,5 +51,19 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Chỉ cho phép quay lại đường dẫn bên trong website hiện tại.
+     */
+    private function safeRedirectPath(mixed $redirect): ?string
+    {
+        if (! is_string($redirect)
+            || ! str_starts_with($redirect, '/')
+            || str_starts_with($redirect, '//')) {
+            return null;
+        }
+
+        return $redirect;
     }
 }
