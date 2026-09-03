@@ -176,5 +176,6 @@
             localStorage.setItem('mn_admin_sidebar_collapsed', '1');
         }
     </script>
+    @yield('scripts')
 </body>
 </html>
