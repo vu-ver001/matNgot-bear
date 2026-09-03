@@ -316,8 +316,9 @@ const setupPasswordResetFlow = () => {
 
     const stepNames = ['email', 'otp', 'password'];
     const steps = [...form.querySelectorAll('[data-password-reset-step]')];
-    const progressItems = [...document.querySelectorAll('[data-password-reset-progress-item]')];
-    const emailInput = form.querySelector('#reset_email');
+    const flowContainer = form.closest('[data-password-reset-container]') ?? document;
+    const progressItems = [...flowContainer.querySelectorAll('[data-password-reset-progress-item]')];
+    const emailInput = form.querySelector('[data-password-reset-email-input]');
     const emailMessage = form.querySelector('[data-password-reset-email-message]');
     const otpInputs = [...form.querySelectorAll('[data-password-reset-otp-input]')];
     const otpMessage = form.querySelector('[data-password-reset-otp-message]');
@@ -474,7 +475,7 @@ const setupPasswordResetFlow = () => {
         if (stepName === 'otp') {
             otpInputs[0]?.focus();
         } else if (stepName === 'password') {
-            form.querySelector('#password')?.focus();
+            form.querySelector('[data-password-reset-new-password]')?.focus();
         } else {
             emailInput?.focus();
         }

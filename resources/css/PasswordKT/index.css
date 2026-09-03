@@ -1,0 +1,819 @@
+.password-page {
+    width: 100%;
+    color: #4c2a1b;
+    font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+}
+
+.password-page.uses-default-layout {
+    padding: 30px 24px;
+}
+
+/* ==========================================
+   1. HERO BANNER
+   ========================================== */
+.password-banner {
+    position: relative;
+    width: 100%;
+    height: clamp(160px, 12.5vw, 175px);
+    overflow: hidden;
+    border: 1px solid #edd9c8;
+    border-radius: 18px;
+    background-color: #f7e4ce;
+    background-image: var(--password-banner-image);
+    background-position: center 81%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    box-shadow: 0 8px 24px rgba(88, 49, 27, 0.06);
+}
+
+.password-banner-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    color: #5c2d19;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(60, 30, 15, 0.12);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.password-banner-badge-icon {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    color: #934c26;
+}
+
+.password-banner-badge-icon .password-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* ==========================================
+   2. PAGE HEADING
+   ========================================== */
+.password-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 30px 4px 26px;
+}
+
+.password-heading-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: 10px;
+    color: #743b20;
+    background: linear-gradient(135deg, #fde8dc 0%, #fae1d1 100%);
+    box-shadow: 0 2px 8px rgba(116, 59, 32, 0.06);
+}
+
+.password-heading-icon .password-icon {
+    width: 19px;
+    height: 19px;
+}
+
+.password-heading-copy h1 {
+    color: #3d1e13;
+    font-size: clamp(18px, 1.8vw, 22px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.password-heading-copy p {
+    margin-top: 2px;
+    color: #857165;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+/* ==========================================
+   3. GRID & CARDS
+   ========================================== */
+.password-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(310px, 0.95fr);
+    align-items: stretch;
+    gap: 22px;
+}
+
+.password-card {
+    border: 1px solid #ecded3;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(88, 49, 27, 0.05);
+}
+
+.password-form-card {
+    padding: clamp(20px, 2.2vw, 30px);
+}
+
+.password-security-card {
+    display: flex;
+    flex-direction: column;
+    padding: clamp(20px, 2.2vw, 30px);
+}
+
+/* ==========================================
+   4. FORM CARD CONTENT
+   ========================================== */
+.password-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f2e9e1;
+}
+
+.password-form-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #482618;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.password-form-badge .password-icon {
+    width: 18px;
+    height: 18px;
+    color: #8c4724;
+}
+
+.password-required-note {
+    color: #9c887f;
+    font-size: 12px;
+}
+
+.password-star {
+    color: #d1493b;
+    font-weight: 700;
+}
+
+.password-form {
+    display: grid;
+    gap: 18px;
+}
+
+.password-field-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.password-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #4e2d1f;
+    font-size: 13.5px;
+    font-weight: 650;
+}
+
+.password-field-header label {
+    margin-bottom: 0;
+}
+
+.password-forgot-inline {
+    padding: 0;
+    border: 0;
+    color: #944e29;
+    background: transparent;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 150ms ease, text-decoration 150ms ease;
+}
+
+.password-forgot-inline:hover {
+    color: #5e2814;
+    text-decoration: underline;
+}
+
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    border: 1.5px solid #e7d8cc;
+    border-radius: 12px;
+    background: #fdfcfb;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.password-input-wrap:hover {
+    border-color: #d7c1b1;
+}
+
+.password-input-wrap:focus-within {
+    border-color: #944e29;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(148, 78, 41, 0.12);
+}
+
+.password-input-wrap.has-error {
+    border-color: #db4d3f;
+    box-shadow: 0 0 0 4px rgba(219, 77, 63, 0.1);
+}
+
+.password-input-wrap > .password-icon {
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+    margin-left: 15px;
+    color: #9e897e;
+    transition: color 160ms ease;
+}
+
+.password-input-wrap:focus-within > .password-icon {
+    color: #944e29;
+}
+
+.password-input-wrap input {
+    width: 100%;
+    min-width: 0;
+    height: 46px;
+    padding: 0 50px 0 12px;
+    border: 0;
+    outline: 0;
+    color: #3b1d12;
+    background: transparent;
+    font-size: 14.5px;
+    box-shadow: none;
+}
+
+.password-input-wrap input:focus {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+    --tw-ring-shadow: 0 0 #0000;
+}
+
+.password-input-wrap input::placeholder {
+    color: #aea099;
+}
+
+.password-visibility {
+    position: absolute;
+    right: 7px;
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 9px;
+    color: #917d74;
+    transition: color 140ms ease, background 140ms ease;
+}
+
+.password-visibility:hover {
+    color: #5c2d19;
+    background: #fbf1e8;
+}
+
+.password-visibility .auth-icon {
+    width: 19px;
+    height: 19px;
+}
+
+.password-field-error {
+    margin-top: 6px;
+    color: #c94134;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+/* ==========================================
+   5. PASSWORD STRENGTH METER
+   ========================================== */
+.password-strength {
+    margin-top: 10px;
+}
+
+.password-strength-copy {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: #8f7c72;
+    font-size: 11.5px;
+}
+
+.password-strength-copy strong {
+    color: #7b665b;
+    font-weight: 700;
+}
+
+.password-strength-bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.password-strength-bar span {
+    height: 5px;
+    border-radius: 999px;
+    background: #ebe0d6;
+    transition: background 180ms ease;
+}
+
+.password-strength[data-level='weak'] .password-strength-bar span:nth-child(-n + 1) {
+    background: #e25444;
+}
+
+.password-strength[data-level='medium'] .password-strength-bar span:nth-child(-n + 2) {
+    background: #e6852e;
+}
+
+.password-strength[data-level='good'] .password-strength-bar span:nth-child(-n + 3) {
+    background: #d49826;
+}
+
+.password-strength[data-level='strong'] .password-strength-bar span {
+    background: #2ea65a;
+}
+
+.password-strength[data-level='weak'] .password-strength-copy strong {
+    color: #cf4738;
+}
+
+.password-strength[data-level='medium'] .password-strength-copy strong {
+    color: #c76f1c;
+}
+
+.password-strength[data-level='good'] .password-strength-copy strong {
+    color: #b57e1b;
+}
+
+.password-strength[data-level='strong'] .password-strength-copy strong {
+    color: #278c4c;
+}
+
+/* ==========================================
+   6. SUBMIT BUTTON
+   ========================================== */
+.password-submit {
+    display: inline-flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 4px;
+    border: 0;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, #6c3720 0%, #542714 100%);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 22px rgba(84, 39, 20, 0.22);
+    cursor: pointer;
+    transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+
+.password-submit:hover {
+    background: linear-gradient(135deg, #5c2c18 0%, #441d0c 100%);
+    box-shadow: 0 10px 26px rgba(84, 39, 20, 0.3);
+    transform: translateY(-1px);
+}
+
+.password-submit:active {
+    transform: translateY(0);
+}
+
+.password-submit:disabled {
+    cursor: wait;
+    opacity: 0.75;
+    transform: none;
+}
+
+.password-submit .password-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* ==========================================
+   7. SECURITY CARD (RIGHT COLUMN)
+   ========================================== */
+.password-card-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.password-card-heading > .password-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border-radius: 11px;
+    color: #743b20;
+    background: #fde8dc;
+    padding: 8px;
+}
+
+.password-card-heading h2 {
+    color: #3b1d12;
+    font-size: 16.5px;
+    font-weight: 750;
+    line-height: 1.3;
+}
+
+.password-card-heading p {
+    margin-top: 2px;
+    color: #8c776c;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.password-security-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid #fae4d2;
+    border-radius: 12px;
+    color: #78533e;
+    background: #fff8f1;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.password-security-message .password-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    margin-top: 1px;
+    color: #a45326;
+}
+
+.password-requirements-box {
+    margin: 18px 0 16px;
+    padding: 14px 16px;
+    border: 1px solid #eee1d5;
+    border-radius: 14px;
+    background: #fbf6f2;
+}
+
+.password-requirements-caption {
+    display: block;
+    margin-bottom: 11px;
+    color: #5c3523;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.password-requirements {
+    display: grid;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.password-requirements li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #7d6b61;
+    font-size: 12.5px;
+    line-height: 1.45;
+    transition: color 160ms ease;
+}
+
+.password-requirements li > span {
+    display: grid;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    place-items: center;
+    border-radius: 50%;
+    color: #9f8c81;
+    background: #e9ded4;
+    transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.password-requirements li > span .password-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.password-requirements li.is-met {
+    color: #276939;
+    font-weight: 600;
+}
+
+.password-requirements li.is-met > span {
+    color: #fff;
+    background: #2ea65a;
+    box-shadow: 0 2px 6px rgba(46, 166, 90, 0.28);
+}
+
+.password-security-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid #f0e3d7;
+}
+
+.password-security-note > .password-icon {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    padding: 6px;
+    border-radius: 9px;
+    color: #793d22;
+    background: #f9eade;
+}
+
+.password-security-note strong {
+    display: block;
+    color: #4c291b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.password-security-note p {
+    margin-top: 3px;
+    color: #8c796e;
+    font-size: 11.5px;
+    line-height: 1.5;
+}
+
+/* ==========================================
+   8. RESET MODAL & TOAST
+   ========================================== */
+.password-reset-modal {
+    position: fixed;
+    z-index: 100;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.password-reset-modal[hidden] {
+    display: none;
+}
+
+.password-reset-backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(47, 27, 18, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.password-reset-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 590px);
+    max-height: min(88vh, 760px);
+    overflow-y: auto;
+    border: 1px solid #ead5c2;
+    border-radius: 22px;
+    background: #fffdfb;
+    box-shadow: 0 28px 80px rgba(48, 25, 15, 0.24);
+}
+
+.password-reset-header {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 22px;
+    border-bottom: 1px solid #eee0d5;
+    background: rgba(255, 253, 251, 0.97);
+}
+
+.password-reset-header > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.password-reset-header-icon {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    place-items: center;
+    border-radius: 12px;
+    color: #743b20;
+    background: #fde8dc;
+}
+
+.password-reset-header-icon .password-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.password-reset-header h2 {
+    color: #402116;
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.password-reset-header p {
+    margin-top: 2px;
+    color: #907d73;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.password-reset-close {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border: 0;
+    border-radius: 10px;
+    color: #745345;
+    background: transparent;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 140ms ease;
+}
+
+.password-reset-close:hover {
+    background: #f5e9df;
+}
+
+.password-reset-content {
+    padding: 22px;
+}
+
+.password-reset-dialog .register-progress {
+    margin-bottom: 20px;
+}
+
+.password-reset-dialog .register-step {
+    gap: 14px;
+}
+
+.password-reset-dialog .auth-input-wrap,
+.password-reset-dialog .auth-submit {
+    min-height: 52px;
+}
+
+.password-reset-dialog .register-otp input {
+    height: 54px;
+}
+
+.password-toast {
+    position: fixed;
+    z-index: 110;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    width: min(360px, calc(100vw - 32px));
+    align-items: center;
+    gap: 10px;
+    padding: 13px 14px;
+    border: 1px solid #b8dfb7;
+    border-radius: 13px;
+    color: #326b36;
+    background: #f3fbf2;
+    box-shadow: 0 14px 38px rgba(53, 91, 53, 0.15);
+}
+
+.password-toast > span {
+    display: grid;
+    width: 25px;
+    height: 25px;
+    flex: 0 0 25px;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: #5b9c5c;
+    font-weight: 700;
+}
+
+.password-toast p {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.password-toast button {
+    padding: 2px 5px;
+    border: 0;
+    color: #5d785f;
+    background: transparent;
+    font-size: 21px;
+    cursor: pointer;
+}
+
+body.has-password-modal {
+    overflow: hidden;
+}
+
+/* ==========================================
+   9. RESPONSIVE BREAKPOINTS
+   ========================================== */
+@media (max-width: 980px) {
+    .password-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .password-security-note {
+        margin-top: 14px;
+    }
+}
+
+@media (max-width: 640px) {
+    .password-page.uses-default-layout {
+        padding: 20px 14px;
+    }
+
+    .password-banner {
+        height: 135px;
+        border-radius: 16px;
+        background-position: 85% 82%;
+    }
+
+    .password-banner-badge {
+        bottom: 12px;
+        left: 12px;
+        padding: 5px 12px;
+        font-size: 11px;
+    }
+
+    .password-heading {
+        gap: 10px;
+        margin: 22px 2px 18px;
+    }
+
+    .password-heading-icon {
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+        border-radius: 8px;
+    }
+
+    .password-heading-icon .password-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .password-heading-copy h1 {
+        font-size: 17px;
+    }
+
+    .password-heading-copy p {
+        font-size: 12px;
+    }
+
+    .password-reset-modal {
+        align-items: end;
+        padding: 10px;
+    }
+
+    .password-reset-dialog {
+        width: 100%;
+        max-height: 92vh;
+        border-radius: 20px;
+    }
+
+    .password-reset-header,
+    .password-reset-content {
+        padding: 16px;
+    }
+
+    .password-reset-header p {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .password-input-wrap,
+    .password-submit,
+    .password-requirements li,
+    .password-requirements li > span {
+        transition: none;
+    }
+}

@@ -5,7 +5,7 @@
 .wishlist-hero {
     position: relative;
     display: flex;
-    min-height: 150px;
+    min-height: 170px;
     align-items: center;
     justify-content: space-between;
     gap: 36px;
@@ -13,7 +13,7 @@
     border: 1px solid #ead9c9;
     border-radius: 18px;
     background: var(--wishlist-hero-image) center 90% / cover no-repeat;
-    padding: 24px 32px;
+    padding: 28px 32px;
 }
 
 .wishlist-hero-copy {
