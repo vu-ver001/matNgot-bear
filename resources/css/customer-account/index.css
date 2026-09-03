@@ -22,7 +22,12 @@
     grid-template-columns: 280px minmax(0, 1fr);
     width: 100%;
     min-height: 100vh;
-    background: #fffaf5;
+    background-color: #fffaf5;
+    background-image: url('/images/auth/auth-panel-background.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center top;
     color: var(--account-text);
     font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
     transition: grid-template-columns 180ms ease;

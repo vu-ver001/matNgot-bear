@@ -39,18 +39,9 @@
 
         <nav class="sidebar-nav">
             <div class="sidebar-section-label">Vận Hành & Đơn Hàng</div>
-            <!-- Các mục của bạn nhóm (Trang trống chờ code) -->
-            <a href="{{ route('staff.dashboard') }}" class="sidebar-link {{ request()->routeIs('staff.dashboard*') || ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard vận hành">
-                <i class="fa-solid fa-chart-line"></i>
-                <span class="sidebar-link-text">Dashboard vận hành</span>
-            </a>
-            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ request()->routeIs('staff.orders*') || ($currentPage ?? '') === 'orders' ? 'active' : '' }}" data-title="Quản lý đơn hàng">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span class="sidebar-link-text">Quản lý đơn hàng</span>
-            </a>
-            <a href="{{ route('staff.order-status.index') }}" class="sidebar-link {{ request()->routeIs('staff.order-status*') || ($currentPage ?? '') === 'order-status' ? 'active' : '' }}" data-title="Xử lý trạng thái đơn">
-                <i class="fa-solid fa-truck-ramp-box"></i>
-                <span class="sidebar-link-text">Xử lý trạng thái đơn</span>
+            <a href="{{ route('staff.orders.index') }}" class="sidebar-link {{ request()->routeIs('staff.orders*') || request()->routeIs('staff.order-status*') || in_array($currentPage ?? '', ['orders', 'order-status']) ? 'active' : '' }}" data-title="Xử lý đơn hàng">
+                <i class="fa-solid fa-boxes-packing"></i>
+                <span class="sidebar-link-text">Xử lý đơn hàng</span>
             </a>
 
             <div class="sidebar-section-label">Thanh Toán & Hỗ Trợ</div>

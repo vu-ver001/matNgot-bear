@@ -11,13 +11,18 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
-    public function getAdminDashboardData(): array
+    public function getAdminDashboardData(?int $month = null, ?int $year = null): array
     {
+        $selectedYear = $year ?: Carbon::now()->year;
+        $selectedMonth = $month ?: Carbon::now()->month;
+
         return [
-            'kpi' => $this->getAdminKpi(),
-            'monthlyRevenue' => $this->getMonthlyRevenue(),
+            'kpi' => $this->getAdminKpi($selectedMonth, $selectedYear),
+            'monthlyRevenue' => $this->getMonthlyRevenue($selectedYear),
             'topProducts' => $this->getTopProducts(),
             'recentOrders' => $this->getRecentOrders(),
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
         ];
     }
 
@@ -29,7 +34,7 @@ class DashboardService
         ];
     }
 
-    private function getAdminKpi(): array
+    private function getAdminKpi(int $selectedMonth, int $selectedYear): array
     {
         $completedPaid = fn ($query) => $query
             ->where('order_status', 'COMPLETED')
@@ -37,18 +42,39 @@ class DashboardService
 
         $totalRevenue = (clone $completedPaid(Order::query()))->sum('total_amount');
 
+        $targetDate = Carbon::createFromDate($selectedYear, $selectedMonth, 1);
+        $monthStart = $targetDate->copy()->startOfMonth();
+        $monthEnd = $targetDate->copy()->endOfMonth();
+
         $currentMonthRevenue = (clone $completedPaid(Order::query()))
-            ->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
             ->sum('total_amount');
 
+        $prevTargetDate = $targetDate->copy()->subMonth();
+        $prevMonthStart = $prevTargetDate->copy()->startOfMonth();
+        $prevMonthEnd = $prevTargetDate->copy()->endOfMonth();
+
         $previousMonthRevenue = (clone $completedPaid(Order::query()))
-            ->whereBetween('created_at', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()])
+            ->whereBetween('created_at', [$prevMonthStart, $prevMonthEnd])
             ->sum('total_amount');
+
+        $monthChange = null;
+        if ($previousMonthRevenue > 0) {
+            $monthChange = round(($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue * 100, 1);
+        } elseif ($currentMonthRevenue > 0) {
+            $monthChange = 100.0;
+        } elseif ($currentMonthRevenue == 0 && $previousMonthRevenue == 0) {
+            $monthChange = 0.0;
+        }
 
         return [
             'totalRevenue' => $totalRevenue,
             'currentMonthRevenue' => $currentMonthRevenue,
             'previousMonthRevenue' => $previousMonthRevenue,
+            'monthChange' => $monthChange,
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
+            'isCurrentMonth' => ($selectedMonth === Carbon::now()->month && $selectedYear === Carbon::now()->year),
             'totalOrders' => Order::count(),
             'pendingOrders' => Order::where('order_status', 'PENDING')->count(),
             'completedOrders' => Order::where('order_status', 'COMPLETED')->count(),
@@ -77,31 +103,27 @@ class DashboardService
         return compact('pendingOrders', 'processingOrders', 'shippingOrders', 'completedToday', 'revenueToday');
     }
 
-    private function getMonthlyRevenue(): Collection
+    private function getMonthlyRevenue(int $year): Collection
     {
-        $start = Carbon::now()->startOfMonth()->subMonths(11);
-
         $monthlyRows = Order::where('order_status', 'COMPLETED')
             ->where('payment_status', 'PAID')
-            ->where('created_at', '>=', $start)
+            ->whereYear('created_at', $year)
             ->selectRaw(DB::getDriverName() === 'sqlite'
-                ? "CAST(strftime('%m', created_at) AS INTEGER) as month, CAST(strftime('%Y', created_at) AS INTEGER) as year, SUM(total_amount) as total"
-                : 'MONTH(created_at) as month, YEAR(created_at) as year, SUM(total_amount) as total')
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
+                ? "CAST(strftime('%m', created_at) AS INTEGER) as month, SUM(total_amount) as total, COUNT(*) as order_count"
+                : 'MONTH(created_at) as month, SUM(total_amount) as total, COUNT(*) as order_count')
+            ->groupBy('month')
             ->get()
-            ->keyBy(fn ($row) => $row->year.'-'.$row->month);
+            ->keyBy('month');
 
-        return collect(range(0, 11))
-            ->map(function (int $i) use ($start, $monthlyRows) {
-                $month = $start->copy()->addMonths($i);
-                $row = $monthlyRows->get($month->format('Y-n'));
+        return collect(range(1, 12))
+            ->map(function (int $m) use ($year, $monthlyRows) {
+                $row = $monthlyRows->get($m);
 
                 return (object) [
-                    'year' => $month->year,
-                    'month' => $month->month,
+                    'year' => $year,
+                    'month' => $m,
                     'total' => (float) ($row->total ?? 0),
+                    'order_count' => (int) ($row->order_count ?? 0),
                 ];
             });
     }
