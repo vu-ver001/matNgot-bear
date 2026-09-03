@@ -6,7 +6,7 @@
         [
             'label' => 'Mua sắm',
             'items' => [
-                ['label' => 'Đơn hàng của tôi', 'route' => null, 'active' => [], 'icon' => 'package'],
+                ['label' => 'Đơn hàng của tôi', 'route' => 'customer.orders.index', 'active' => ['customer.orders.*'], 'icon' => 'package'],
                 ['label' => 'Danh sách yêu thích', 'route' => 'customer.wishlist.index', 'active' => ['customer.wishlist.*'], 'icon' => 'heart'],
                 ['label' => 'Đánh giá của tôi', 'route' => null, 'active' => [], 'icon' => 'star'],
             ],
