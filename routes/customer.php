@@ -36,7 +36,14 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('/payment/confirm/{order}', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
         Route::post('/payment/retry/{order}', [PaymentController::class, 'retryPayment'])->name('payment.retry');
 
-        // 4. Orders
+        // 4. Wishlist (Kim Tuyến)
+        Route::prefix('wishlist')->name('wishlist.')->middleware(['role:CUSTOMER'])->group(function () {
+            Route::get('/', [WishlistController::class, 'index'])->name('index');
+            Route::delete('/', [WishlistController::class, 'clear'])->name('clear');
+            Route::delete('/{product}', [WishlistController::class, 'destroy'])->name('destroy');
+        });
+
+        // 5. Orders
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
