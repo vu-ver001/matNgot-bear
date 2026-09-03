@@ -36,10 +36,46 @@
     <body class="font-sans antialiased">
         <div
             class="customer-account-app"
-            x-data="{ sidebarOpen: false, sidebarCollapsed: false, accountMenuOpen: false }"
+            x-data="{
+                sidebarOpen: false,
+                sidebarCollapsed: false,
+                accountMenuOpen: false,
+
+                init() {
+                    try {
+                        this.sidebarCollapsed = localStorage.getItem('customer-account-sidebar-collapsed') === '1';
+                    } catch (error) {
+                        this.sidebarCollapsed = false;
+                    }
+                },
+
+                setSidebarCollapsed(collapsed) {
+                    this.sidebarCollapsed = collapsed;
+
+                    try {
+                        localStorage.setItem('customer-account-sidebar-collapsed', collapsed ? '1' : '0');
+                    } catch (error) {
+                        // Menu vẫn hoạt động nếu trình duyệt không cho phép lưu trạng thái.
+                    }
+                },
+
+                toggleSidebar() {
+                    this.setSidebarCollapsed(! this.sidebarCollapsed);
+                },
+            }"
             :class="{ 'is-sidebar-collapsed': sidebarCollapsed }"
             @keydown.escape.window="sidebarOpen = false; accountMenuOpen = false"
         >
+            <script>
+                try {
+                    if (localStorage.getItem('customer-account-sidebar-collapsed') === '1') {
+                        document.currentScript.parentElement.classList.add('is-sidebar-collapsed');
+                    }
+                } catch (error) {
+                    // Giữ giao diện mặc định nếu trình duyệt không cho phép đọc trạng thái.
+                }
+            </script>
+
             <aside
                 id="customer-account-sidebar"
                 class="customer-account-sidebar"
@@ -57,7 +93,7 @@
                         type="button"
                         class="customer-account-collapse-button"
                         :class="{ 'is-collapsed': sidebarCollapsed }"
-                        @click="window.innerWidth < 1024 ? sidebarOpen = false : sidebarCollapsed = ! sidebarCollapsed"
+                        @click="window.innerWidth < 1024 ? sidebarOpen = false : toggleSidebar()"
                         aria-label="Thu gọn hoặc mở rộng menu tài khoản"
                     >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -99,7 +135,7 @@
                     <button
                         type="button"
                         class="customer-account-user"
-                        @click="sidebarCollapsed ? (sidebarCollapsed = false, accountMenuOpen = true) : accountMenuOpen = ! accountMenuOpen"
+                        @click="sidebarCollapsed ? (setSidebarCollapsed(false), accountMenuOpen = true) : accountMenuOpen = ! accountMenuOpen"
                         :aria-expanded="accountMenuOpen.toString()"
                         aria-controls="customer-account-user-menu"
                     >

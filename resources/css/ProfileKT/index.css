@@ -168,15 +168,26 @@
     box-shadow: 0 0 0 2px #f0d7c5, 0 10px 25px rgba(105, 55, 30, 0.12);
 }
 
-.profile-hero-avatar > img,
+.profile-avatar-clip {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    overflow: hidden;
+    place-items: center;
+    border-radius: 50%;
+}
+
+.profile-avatar-clip > img,
 .profile-avatar-fallback {
     width: 100%;
     height: 100%;
     border-radius: 50%;
 }
 
-.profile-hero-avatar > img {
+.profile-avatar-clip > img {
+    display: block;
     object-fit: cover;
+    object-position: center;
 }
 
 .profile-avatar-fallback {
@@ -203,6 +214,155 @@
     box-shadow: 0 5px 14px rgba(76, 42, 27, 0.11);
     cursor: pointer;
     transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.profile-avatar-editor {
+    position: fixed;
+    z-index: 90;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+body.profile-avatar-editor-open {
+    overflow: hidden;
+}
+
+.profile-avatar-editor[hidden] {
+    display: none;
+}
+
+.profile-avatar-editor-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(48, 27, 19, 0.58);
+    backdrop-filter: blur(3px);
+}
+
+.profile-avatar-editor-panel {
+    position: relative;
+    z-index: 1;
+    width: min(440px, 100%);
+    border: 1px solid #ead7c8;
+    border-radius: 20px;
+    background: #fffdfb;
+    padding: 22px;
+    box-shadow: 0 24px 70px rgba(53, 28, 17, 0.28);
+}
+
+.profile-avatar-editor-panel > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+.profile-avatar-editor-panel h2 {
+    margin: 0;
+    color: #432318;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.profile-avatar-editor-panel header p,
+.profile-avatar-editor-help {
+    margin: 5px 0 0;
+    color: #806e64;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.profile-avatar-editor-panel header > button {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: #f7ece3;
+    color: #6b3514;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.profile-avatar-editor-frame {
+    position: relative;
+    width: min(300px, 76vw);
+    margin: 0 auto;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border: 5px solid white;
+    border-radius: 50%;
+    background: #f1dfd0;
+    box-shadow: 0 0 0 2px #e5c8b2, 0 12px 30px rgba(83, 43, 24, 0.16);
+    touch-action: none;
+    user-select: none;
+}
+
+.profile-avatar-editor-frame::after {
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: inherit;
+    content: '';
+    pointer-events: none;
+}
+
+.profile-avatar-editor-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 50%;
+    cursor: grab;
+}
+
+.profile-avatar-editor-frame img:active {
+    cursor: grabbing;
+}
+
+.profile-avatar-editor-frame img:focus-visible {
+    outline: 3px solid #d98b2b;
+    outline-offset: -6px;
+}
+
+.profile-avatar-editor-help {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.profile-avatar-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    margin-top: 18px;
+}
+
+.profile-avatar-editor-actions button {
+    min-height: 40px;
+    border-radius: 9px;
+    padding: 9px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.profile-avatar-editor-cancel {
+    border: 1px solid #dfc7b5;
+    background: white;
+    color: #684331;
+}
+
+.profile-avatar-editor-apply {
+    border: 1px solid #6b3514;
+    background: #6b3514;
+    color: white;
+}
+
+.profile-avatar-editor-apply:hover {
+    background: #432318;
 }
 
 .profile-camera-button:hover {
@@ -591,6 +751,16 @@
 @media (max-width: 767px) {
     .profile-page.uses-default-layout {
         padding: 20px 12px;
+    }
+
+    .profile-avatar-editor {
+        align-items: end;
+        padding: 10px;
+    }
+
+    .profile-avatar-editor-panel {
+        border-radius: 18px;
+        padding: 18px;
     }
 
     .profile-card {
