@@ -8,6 +8,10 @@ import { voucherForm } from './admin/vouchers/create.js';
 import { vouchersList } from './admin/vouchers/index.js';
 import { cartComponent } from './customer/cart.js';
 
+import './auth/index.js';
+import './ProfileKT/index.js';
+import './wishlistKT/index.js';
+
 flatpickr.localize(Vietnamese);
 
 window.Alpine = Alpine;

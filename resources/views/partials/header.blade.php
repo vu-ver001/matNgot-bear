@@ -41,8 +41,13 @@
             </div>
         </a>
 
-        <!-- Wishlist (Yêu thích - Chờ bạn nhóm gắn link trang riêng) -->
-        <a href="#" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+        <!-- Wishlist (Yêu thích) -->
+        @auth
+            <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+        @endauth
+        @guest
+            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+        @endguest
             <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
             <span class="badge-count" id="wishlist-count">0</span>
         </a>
@@ -75,7 +80,11 @@
         <!-- Nút Đăng nhập / Đăng xuất & Tài khoản -->
         <div style="position: relative;">
             @guest
-                <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="btn-auth-pill" title="Đăng nhập">
+                <a
+                    href="{{ route('login', ['redirect' => route('home', absolute: false)]) }}"
+                    class="btn-auth-pill"
+                    title="Đăng nhập"
+                >
                     <i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP
                 </a>
             @endguest
@@ -152,7 +161,7 @@
                                 <div style="font-size: 10.5px; color: var(--text-light);">Khách hàng thân thiết</div>
                             </div>
                         </div>
-                        <a href="#" class="dropdown-item">
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item">
                             <span><i class="fa-solid fa-user-gear" style="color: #8D6E63; margin-right: 6px;"></i> Tài Khoản Của Tôi</span>
                         </a>
                         <div style="border-top: 1px solid var(--border-light); margin-top: 4px; padding-top: 4px;">

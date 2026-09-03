@@ -11,6 +11,10 @@ class Product extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_ACTIVE = 'ACTIVE';
+
+    public const STATUS_INACTIVE = 'INACTIVE';
+
     protected $fillable = [
         'category_id',
         'name',

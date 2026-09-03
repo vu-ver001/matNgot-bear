@@ -43,6 +43,9 @@
                         <x-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.*')">
                             <span>Đơn hàng của tôi</span>
                         </x-nav-link>
+                        <x-nav-link :href="route('customer.wishlist.index')" :active="request()->routeIs('customer.wishlist.*')">
+                            {{ __('Yêu thích') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -125,6 +128,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('customer.orders.index')" :active="request()->routeIs('customer.orders.*')">
                     <span>📋 Đơn hàng của tôi</span>
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('customer.wishlist.index')" :active="request()->routeIs('customer.wishlist.*')">
+                    {{ __('Yêu thích') }}
                 </x-responsive-nav-link>
             @endif
 

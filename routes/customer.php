@@ -4,6 +4,7 @@ use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\PaymentController;
+use App\Http\Controllers\Customer\WishlistKT\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('customer')->name('customer.')->group(function () {
@@ -68,3 +69,8 @@ Route::get('/payment/result/{order}', [PaymentController::class, 'paymentResult'
 Route::post('/api/payment/webhook', [PaymentController::class, 'handleWebhook'])->name('payment.webhook');
 Route::post('/webhook/payment', [PaymentController::class, 'handleWebhook']);
 Route::post('/webhook/sepay', [PaymentController::class, 'handleWebhook']);
+// Shortcut alias routes tiện lợi ngoài root
+Route::get('/wishlist', fn() => redirect()->route('customer.wishlist.index'));
+Route::get('/cart', fn() => redirect()->route('customer.cart'));
+Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
+Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));
