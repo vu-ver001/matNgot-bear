@@ -138,22 +138,31 @@
                 <!-- Quantity Selector -->
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 13px; font-weight: 700; color: var(--text-muted);">Số lượng:</span>
-                    <div class="qty-selector">
-                        <button type="button" class="qty-btn" onclick="changeQuantity(-1)">-</button>
-                        <input type="number" id="detail-quantity" class="qty-input" value="1" min="1" max="{{ $product->stock_quantity }}" readonly>
-                        <button type="button" class="qty-btn" onclick="changeQuantity(1)">+</button>
+                    <div class="qty-selector {{ $product->stock_quantity <= 0 ? 'opacity-50 pointer-events-none' : '' }}">
+                        <button type="button" class="qty-btn" onclick="changeQuantity(-1)" {{ $product->stock_quantity <= 0 ? 'disabled' : '' }}>-</button>
+                        <input type="number" id="detail-quantity" class="qty-input" value="{{ $product->stock_quantity > 0 ? 1 : 0 }}" min="{{ $product->stock_quantity > 0 ? 1 : 0 }}" max="{{ $product->stock_quantity }}" readonly>
+                        <button type="button" class="qty-btn" onclick="changeQuantity(1)" {{ $product->stock_quantity <= 0 ? 'disabled' : '' }}>+</button>
                     </div>
                 </div>
             </div>
 
             <!-- Actions Buttons -->
             <div class="action-buttons-group">
-                <button type="button" class="btn-add-cart-main" onclick="handleAddToCart()" {{ $product->stock_quantity <= 0 ? 'disabled' : '' }}>
-                    <i class="fa-solid fa-bag-shopping"></i> Thêm Vào Giỏ
-                </button>
-                <button type="button" class="btn-buy-now" onclick="handleBuyNow()" {{ $product->stock_quantity <= 0 ? 'disabled' : '' }}>
-                    <i class="fa-solid fa-bolt"></i> Mua Ngay
-                </button>
+                @if($product->stock_quantity > 0)
+                    <button type="button" class="btn-add-cart-main" onclick="handleAddToCart()">
+                        <i class="fa-solid fa-bag-shopping"></i> Thêm Vào Giỏ
+                    </button>
+                    <button type="button" class="btn-buy-now" onclick="handleBuyNow()">
+                        <i class="fa-solid fa-bolt"></i> Mua Ngay
+                    </button>
+                @else
+                    <button type="button" class="btn-add-cart-main opacity-60 cursor-not-allowed" style="background: #786B61;" onclick="handleAddToCart()">
+                        <i class="fa-solid fa-circle-xmark"></i> Tạm Hết Hàng
+                    </button>
+                    <button type="button" class="btn-buy-now opacity-60 cursor-not-allowed" style="background: #A8988A;" onclick="handleBuyNow()">
+                        <i class="fa-solid fa-ban"></i> Hết Hàng
+                    </button>
+                @endif
             </div>
 
             <!-- Store Guarantee -->
@@ -401,11 +410,37 @@
     }
 
     function handleAddToCart() {
+        if (!window.isCustomerAuthenticated) {
+            openAuthModal(window.location.href, 'Đăng nhập để Thêm vào giỏ', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng và tích lũy ưu đãi!');
+            return;
+        }
+        if (maxStock <= 0) {
+            if (typeof Toast !== 'undefined') {
+                Toast.fire({ icon: 'warning', title: 'Sản phẩm hiện đang tạm hết hàng.' });
+            } else {
+                alert('Sản phẩm hiện đang tạm hết hàng.');
+            }
+            return;
+        }
         const qty = parseInt(document.getElementById('detail-quantity').value) || 1;
         addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty);
     }
 
     function handleBuyNow() {
+        if (!window.isCustomerAuthenticated) {
+            const qty = parseInt(document.getElementById('detail-quantity')?.value) || 1;
+            const targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id={{ $product->id }}&quantity=" + qty;
+            openAuthModal(targetCheckoutUrl, 'Đăng nhập để Mua ngay', 'Vui lòng đăng nhập hoặc đăng ký tài khoản Mật Ngọt Bear để tiến hành mua hàng ngay bạn nhé!');
+            return;
+        }
+        if (maxStock <= 0) {
+            if (typeof Toast !== 'undefined') {
+                Toast.fire({ icon: 'warning', title: 'Sản phẩm hiện đang tạm hết hàng.' });
+            } else {
+                alert('Sản phẩm hiện đang tạm hết hàng.');
+            }
+            return;
+        }
         const qty = parseInt(document.getElementById('detail-quantity').value) || 1;
         addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, 'checkout');
     }
