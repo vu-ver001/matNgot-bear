@@ -289,7 +289,7 @@
         `;
 
         const selectedCat = document.querySelector('input[name="cat_filter"]:checked');
-        const categoryId = selectedCat ? selectedCat.value : '{{ request("category_id") }}';
+        const categoryId = selectedCat ? selectedCat.value : '';
         const minPrice = document.getElementById('filter-min-price').value;
         const maxPrice = document.getElementById('filter-max-price').value;
         const inStock = document.getElementById('filter-in-stock').checked;

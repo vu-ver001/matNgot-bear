@@ -376,12 +376,13 @@ nav.nav-bar {
     padding: 0 1.5rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
 }
 
 .nav-menu {
     display: flex;
     align-items: center;
+    justify-content: center;
     list-style: none;
     gap: 2px;
 }
