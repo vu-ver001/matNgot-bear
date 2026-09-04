@@ -38,8 +38,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 340,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_socola_giant.jpg',
+                    '/images/products/teddy_reference_main.png',
                 ],
             ],
             [
@@ -55,8 +55,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 215,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_logo_baby.jpg',
+                    '/images/products/teddy_boy_classic.jpg',
                 ],
             ],
             [
@@ -72,8 +72,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 189,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_boy_classic.jpg',
+                    '/images/products/teddy_reference_main.png',
                 ],
             ],
             [
@@ -89,8 +89,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 410,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_pink_pastel.jpg',
+                    '/images/products/teddy_logo_baby.jpg',
                 ],
             ],
 
@@ -108,8 +108,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 580,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/butter_bear_hat.jpg',
+                    '/images/products/butter_bear_dress.jpg',
                 ],
             ],
             [
@@ -125,8 +125,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 310,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/butter_bear_dress.jpg',
+                    '/images/products/butter_bear_toast.jpg',
                 ],
             ],
             [
@@ -142,8 +142,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 450,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/butter_bear_toast.jpg',
+                    '/images/products/butter_bear_hat.jpg',
                 ],
             ],
 
@@ -161,8 +161,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 290,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/mr_bean_vintage.jpg',
+                    '/images/products/mr_bean_giant.jpg',
                 ],
             ],
             [
@@ -178,8 +178,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 145,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/mr_bean_giant.jpg',
+                    '/images/products/mr_bean_vintage.jpg',
                 ],
             ],
             [
@@ -195,8 +195,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 320,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/mr_bean_giftbox.jpg',
+                    '/images/products/mr_bean_vintage.jpg',
                 ],
             ],
 
@@ -214,8 +214,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 230,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_couple_wedding.jpg',
+                    '/images/products/teddy_couple_heart.jpg',
                 ],
             ],
             [
@@ -231,8 +231,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 195,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_couple_heart.jpg',
+                    '/images/products/teddy_couple_flower.jpg',
                 ],
             ],
             [
@@ -248,8 +248,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 480,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_couple_flower.jpg',
+                    '/images/products/teddy_couple_heart.jpg',
                 ],
             ],
 
@@ -267,8 +267,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 520,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_long_pillow.jpg',
+                    '/images/products/teddy_reference_main.png',
                 ],
             ],
             [
@@ -284,8 +284,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 390,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_reference_main.png',
+                    '/images/products/teddy_logo_baby.jpg',
                 ],
             ],
             [
@@ -301,8 +301,8 @@ class ProductSeeder extends Seeder
                 'status'         => 'ACTIVE',
                 'sold_count'     => 610,
                 'images'         => [
-                    'https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&auto=format&fit=crop&q=80',
+                    '/images/products/teddy_socola_giant.jpg',
+                    '/images/products/teddy_long_pillow.jpg',
                 ],
             ],
         ];
