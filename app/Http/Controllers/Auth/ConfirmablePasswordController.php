@@ -12,7 +12,7 @@ use Illuminate\View\View;
 class ConfirmablePasswordController extends Controller
 {
     /**
-     * Show the confirm password view.
+     * Hiển thị trang xác nhận lại mật khẩu.
      */
     public function show(): View
     {
@@ -20,7 +20,7 @@ class ConfirmablePasswordController extends Controller
     }
 
     /**
-     * Confirm the user's password.
+     * Kiểm tra mật khẩu hiện tại của người dùng.
      */
     public function store(Request $request): RedirectResponse
     {

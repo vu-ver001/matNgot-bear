@@ -23,10 +23,14 @@ class CartController extends Controller
     /**
      * Display customer cart.
      */
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): View|JsonResponse|RedirectResponse
     {
-        $userId = $this->getUserId();
+        if (auth()->check() && auth()->user()->role !== 'CUSTOMER') {
+            $roleLabel = auth()->user()->role === 'ADMIN' ? 'Quản trị viên (Admin)' : 'Nhân viên (Staff)';
+            return redirect()->route('home')->with('error', "Tài khoản {$roleLabel} không sử dụng giỏ hàng để mua sắm. Vui lòng chuyển sang tài khoản Khách hàng.");
+        }
 
+        $userId = auth()->id();
         $cartItems = CartItem::where('user_id', $userId)
             ->with(['product' => function ($query) {
                 $query->with(['category', 'images' => function ($q) {
@@ -48,10 +52,34 @@ class CartController extends Controller
     }
 
     /**
-     * Add product to cart.
+     * Add product to cart (Requires Authenticated Customer).
      */
     public function store(Request $request): RedirectResponse|JsonResponse
     {
+        if (!auth()->check()) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'require_login' => true,
+                    'message' => 'Vui lòng đăng nhập tài khoản để thêm sản phẩm vào giỏ hàng.',
+                ], 401);
+            }
+            return redirect()->route('login')->with('info', 'Vui lòng đăng nhập tài khoản để thêm sản phẩm vào giỏ hàng.');
+        }
+
+        if (auth()->user()->role !== 'CUSTOMER') {
+            $roleLabel = auth()->user()->role === 'ADMIN' ? 'Quản trị viên (Admin)' : 'Nhân viên (Staff)';
+            $msg = "Tài khoản {$roleLabel} không có chức năng thêm vào giỏ hàng hay mua sản phẩm. Vui lòng sử dụng tài khoản Khách hàng để mua sắm.";
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'is_staff' => true,
+                    'message' => $msg,
+                ], 403);
+            }
+            return back()->with('error', $msg);
+        }
+
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
@@ -66,8 +94,14 @@ class CartController extends Controller
             return back()->with('error', 'Sản phẩm hiện đang ngưng kinh doanh.');
         }
 
-        $userId = $this->getUserId();
+        if ($product->stock_quantity <= 0) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Sản phẩm này hiện đang tạm hết hàng!'], 400);
+            }
+            return back()->with('error', 'Sản phẩm này hiện đang tạm hết hàng!');
+        }
 
+        $userId = auth()->id();
         $existingItem = CartItem::where('user_id', $userId)
             ->where('product_id', $product->id)
             ->first();
@@ -94,7 +128,6 @@ class CartController extends Controller
         );
 
         $cartItem->touch();
-
         $cartCount = CartItem::where('user_id', $userId)->count();
 
         if ($request->wantsJson()) {
@@ -114,8 +147,8 @@ class CartController extends Controller
      */
     public function update(Request $request, CartItem $cartItem): RedirectResponse|JsonResponse
     {
-        $userId = $this->getUserId();
-        if ($cartItem->user_id !== $userId && auth()->check()) {
+        $userId = auth()->id();
+        if ($cartItem->user_id !== $userId) {
             abort(403);
         }
 
@@ -124,7 +157,6 @@ class CartController extends Controller
         ]);
 
         $product = $cartItem->product;
-
         if ($validated['quantity'] > $product->stock_quantity) {
             $msg = "Số lượng tồn kho tối đa là {$product->stock_quantity}.";
             if ($request->wantsJson()) {
@@ -134,14 +166,13 @@ class CartController extends Controller
         }
 
         $cartItem->update(['quantity' => $validated['quantity']]);
-
         $effectivePrice = $product->sale_price ?? $product->price;
         $lineTotal = $effectivePrice * $cartItem->quantity;
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'quantity' => $cartItem->quantity,
+                'quantity' => $validated['quantity'],
                 'lineTotal' => $lineTotal,
                 'lineTotalFormatted' => number_format($lineTotal, 0, ',', '.') . 'đ',
             ]);
@@ -155,8 +186,8 @@ class CartController extends Controller
      */
     public function destroy(Request $request, CartItem $cartItem): RedirectResponse|JsonResponse
     {
-        $userId = $this->getUserId();
-        if ($cartItem->user_id !== $userId && auth()->check()) {
+        $userId = auth()->id();
+        if ($cartItem->user_id !== $userId) {
             abort(403);
         }
 
@@ -179,7 +210,7 @@ class CartController extends Controller
      */
     public function clear(Request $request): RedirectResponse|JsonResponse
     {
-        $userId = $this->getUserId();
+        $userId = auth()->id();
         CartItem::where('user_id', $userId)->delete();
 
         if ($request->wantsJson()) {
@@ -198,8 +229,8 @@ class CartController extends Controller
      */
     public function count(Request $request): JsonResponse
     {
-        $userId = $this->getUserId();
-        $cartCount = CartItem::where('user_id', $userId)->count();
+        $userId = auth()->id();
+        $cartCount = $userId ? CartItem::where('user_id', $userId)->count() : 0;
 
         return response()->json([
             'success' => true,
@@ -215,7 +246,7 @@ class CartController extends Controller
         $validated = $request->validate([
             'cart_item_id' => 'nullable|integer',
             'product_name' => 'nullable|string',
-            'action' => 'nullable|string', // 'uncheck_single' or 'uncheck_all'
+            'action' => 'nullable|string',
             'remaining_count' => 'nullable|integer',
         ]);
 
@@ -238,4 +269,3 @@ class CartController extends Controller
         ]);
     }
 }
-

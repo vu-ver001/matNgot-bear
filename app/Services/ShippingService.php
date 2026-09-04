@@ -261,9 +261,9 @@ class ShippingService
     }
 
     /**
-     * Estimate Distance (km) using local database of 63 provinces and districts
+     * Estimate Distance (km) using local database of 63 provinces and landmarks from warehouse (41A Phú Diễn, Bắc Từ Liêm, Hà Nội).
      */
-    protected function estimateDistance(?string $province, ?string $district = '', ?string $ward = ''): float
+    protected function estimateDistance(?string $province, ?string $district = '', ?string $ward = '', ?string $street = ''): float
     {
         if (empty($province)) return 10.0;
 
@@ -273,76 +273,130 @@ class ShippingService
         if (str_contains($cleanProv, 'ha noi')) {
             // Distance from warehouse at Số 41A Phú Diễn, Bắc Từ Liêm, Hà Nội:
             
-            // 1. Siêu gần (Phú Diễn, Phúc Diễn, Cầu Diễn, Kiều Mai, ga Phú Diễn): 0.5 - 2.0 km
-            if (str_contains($combined, 'phu dien') || str_contains($combined, 'phuc dien') || str_contains($combined, 'cau dien') || str_contains($combined, 'kieu mai') || str_contains($combined, 'duc dien')) {
-                return 1.5;
+            // 1. Siêu gần (Phú Diễn, Phúc Diễn, Cầu Diễn, Văn Trì, Kiều Mai, Đức Diễn, Đình Quán, Nguyên Xá, Văn Tiến Dũng, Hoàng Công Chất): 0.5 - 2.0 km
+            if (str_contains($combined, 'van tri') || str_contains($combined, 'phu dien') || str_contains($combined, 'phuc dien') || 
+                str_contains($combined, 'cau dien') || str_contains($combined, 'kieu mai') || str_contains($combined, 'duc dien') || 
+                str_contains($combined, 'dinh quan') || str_contains($combined, 'nguyen xa') || str_contains($combined, 'van tien dung') || 
+                str_contains($combined, 'hoang cong chat') || str_contains($combined, 'phan ba vanh') || str_contains($combined, 'trai ga') || 
+                str_contains($combined, 'k3') || str_contains($combined, 'tai nguyen') || str_contains($combined, 'ga phu dien')) {
+                return 1.6;
             }
 
-            // 2. Khu vực Cầu Giấy / Mai Dịch / ĐH Sư Phạm / ĐH Quốc Gia / ĐH Thương Mại: 2.5 - 3.5 km
-            if (str_contains($combined, 'su pham') || str_contains($combined, 'thuong mai') || str_contains($combined, 'quoc gia') || str_contains($combined, 'ngoai ngu') || str_contains($combined, 'bao chi') || str_contains($combined, 'mai dich') || str_contains($combined, 'ho tung mau') || str_contains($combined, 'xuan thuy') || str_contains($combined, 'cau giay') || str_contains($combined, 'tran thai tong') || str_contains($combined, 'duy tan') || str_contains($combined, 'ton that thuyet') || str_contains($combined, 'dich vong') || str_contains($combined, 'pham van dong')) {
+            // 2. Rất gần (Tây Tựu, Nhổn, ĐH Công Nghiệp, Xuân Phương, Phương Canh, Minh Khai Bắc Từ Liêm, Thụy Phương, Liên Mạc, Thượng Cát): 2.2 - 3.2 km
+            if (str_contains($combined, 'tay tuu') || str_contains($combined, 'nhon') || str_contains($combined, 'cong nghiep') || 
+                str_contains($combined, 'xuan phuong') || str_contains($combined, 'phuong canh') || str_contains($combined, 'hoe thi') || 
+                str_contains($combined, 'tu hoang') || str_contains($combined, 'do nha') || str_contains($combined, 'thuy phuong') || 
+                str_contains($combined, 'lien mac') || str_contains($combined, 'thuong cat')) {
+                return 2.8;
+            }
+
+            // 3. Khu vực lân cận (Cổ Nhuế 1, Cổ Nhuế 2, Mai Dịch, Hồ Tùng Mậu, Lê Đức Thọ, Phạm Văn Đồng, Trần Vỹ, ĐH Mỏ, HV Tài Chính, HV Cảnh Sát): 3.0 - 3.8 km
+            if (str_contains($combined, 'co nhue') || str_contains($combined, 'mai dich') || str_contains($combined, 'ho tung mau') || 
+                str_contains($combined, 'le duc tho') || str_contains($combined, 'pham van dong') || str_contains($combined, 'tran vy') || 
+                str_contains($combined, 'nguyen co thach') || str_contains($combined, 'canh sat') || str_contains($combined, 'mo dia chat') || 
+                str_contains($combined, 'tai chinh') || str_contains($combined, 'dong ngac')) {
                 return 3.2;
             }
 
-            // 3. Cổ Nhuế, Xuân Đỉnh, Đông Ngạc, Nghĩa Đô, Nghĩa Tân: 3.5 - 4.5 km
-            if (str_contains($combined, 'co nhue') || str_contains($combined, 'xuan dinh') || str_contains($combined, 'dong ngac') || str_contains($combined, 'nghia do') || str_contains($combined, 'nghia tan') || str_contains($combined, 'hoang quoc viet') || str_contains($combined, 'vo chi cong')) {
-                return 4.0;
+            // 4. Khu vực Cầu Giấy / ĐH Sư Phạm / ĐH Quốc Gia / ĐH Thương Mại / Dịch Vọng / Nghĩa Tân: 3.5 - 4.5 km
+            if (str_contains($combined, 'su pham') || str_contains($combined, 'thuong mai') || str_contains($combined, 'quoc gia') || 
+                str_contains($combined, 'ngoai ngu') || str_contains($combined, 'bao chi') || str_contains($combined, 'xuan thuy') || 
+                str_contains($combined, 'cau giay') || str_contains($combined, 'tran thai tong') || str_contains($combined, 'duy tan') || 
+                str_contains($combined, 'ton that thuyet') || str_contains($combined, 'dich vong') || str_contains($combined, 'nghia do') || 
+                str_contains($combined, 'nghia tan') || str_contains($combined, 'hoang quoc viet') || str_contains($combined, 'yen hoa') || 
+                str_contains($combined, 'trung hoa')) {
+                return 3.8;
             }
 
-            // 4. Mỹ Đình, Mễ Trì, Nam Từ Liêm, Sân vận động Mỹ Đình, Keangnam: 4.0 - 5.5 km
-            if (str_contains($combined, 'my dinh') || str_contains($combined, 'me tri') || str_contains($combined, 'nam tu liem') || str_contains($combined, 'le duc tho') || str_contains($combined, 'pham hung') || str_contains($combined, 'keangnam') || str_contains($combined, 'phu do') || str_contains($combined, 'trung van') || str_contains($combined, 'tay mo') || str_contains($combined, 'dai mo')) {
+            // 5. Mỹ Đình, Mễ Trì, Sân vận động Mỹ Đình, Keangnam, Phú Đô, Tây Mỗ, Đại Mỗ, Smart City: 4.2 - 5.5 km
+            if (str_contains($combined, 'my dinh') || str_contains($combined, 'me tri') || str_contains($combined, 'nam tu liem') || 
+                str_contains($combined, 'pham hung') || str_contains($combined, 'keangnam') || str_contains($combined, 'phu do') || 
+                str_contains($combined, 'trung van') || str_contains($combined, 'tay mo') || str_contains($combined, 'dai mo') || 
+                str_contains($combined, 'smart city') || str_contains($combined, 'xuan dinh') || str_contains($combined, 'vo chi cong') || 
+                str_contains($combined, 'ngoai giao doan') || str_contains($combined, 'starlake')) {
                 return 4.8;
             }
 
-            // 5. Ba Đình, Giảng Võ, Liễu Giai, Kim Mã, Đội Cấn, Ngọc Hà: 6.0 - 7.5 km
-            if (str_contains($combined, 'ba dinh') || str_contains($combined, 'giang vo') || str_contains($combined, 'lieu giai') || str_contains($combined, 'kim ma') || str_contains($combined, 'doi can') || str_contains($combined, 'ngoc ha') || str_contains($combined, 'thanh cong') || str_contains($combined, 'hoang hoa tham')) {
+            // 6. Ba Đình, Giảng Võ, Liễu Giai, Kim Mã, Đội Cấn, Ngọc Hà, Quán Thánh: 6.5 km
+            if (str_contains($combined, 'ba dinh') || str_contains($combined, 'giang vo') || str_contains($combined, 'lieu giai') || 
+                str_contains($combined, 'kim ma') || str_contains($combined, 'doi can') || str_contains($combined, 'ngoc ha') || 
+                str_contains($combined, 'thanh cong') || str_contains($combined, 'hoang hoa tham') || str_contains($combined, 'quan thanh') || 
+                str_contains($combined, 'truc bach') || str_contains($combined, 'dien bien')) {
                 return 6.5;
             }
 
-            // 6. Đống Đa, Láng Hạ, Chùa Bộc, Thái Hà, Ô Chợ Dừa, Cát Linh, Xã Đàn: 6.8 - 8.0 km
-            if (str_contains($combined, 'dong da') || str_contains($combined, 'lang ha') || str_contains($combined, 'chua boc') || str_contains($combined, 'thai ha') || str_contains($combined, 'o cho dua') || str_contains($combined, 'cat linh') || str_contains($combined, 'xa dan') || str_contains($combined, 'ton duc thang') || str_contains($combined, 'kim lien')) {
+            // 7. Đống Đa gần, Láng Hạ, Chùa Bộc, Thái Hà, Láng Thượng, Huỳnh Thúc Kháng: 7.2 km
+            if (str_contains($combined, 'lang ha') || str_contains($combined, 'chua boc') || str_contains($combined, 'thai ha') || 
+                str_contains($combined, 'lang thuong') || str_contains($combined, 'huynh thuc khang') || str_contains($combined, 'thai thinh')) {
                 return 7.2;
             }
 
-            // 7. Tây Hồ, Thụy Khuê, Quảng An, Nhật Tân, Xuân La: 7.0 - 8.5 km
-            if (str_contains($combined, 'tay ho') || str_contains($combined, 'thuy khue') || str_contains($combined, 'quang an') || str_contains($combined, 'nhat tan') || str_contains($combined, 'xuan la') || str_contains($combined, 'lac long quan')) {
-                return 7.5;
-            }
-
-            // 8. Thanh Xuân, Hà Đông, Mộ Lao, Văn Quán: 7.5 - 9.5 km
-            if (str_contains($combined, 'thanh xuan') || str_contains($combined, 'nguyen trai') || str_contains($combined, 'khuong dinh') || str_contains($combined, 'ha dong') || str_contains($combined, 'mo lao') || str_contains($combined, 'van quan') || str_contains($combined, 'le van luong') || str_contains($combined, 'to huu')) {
+            // 8. Xã Đàn, Văn Miếu, Quốc Tử Giám, Ô Chợ Dừa, Khâm Thiên, Tôn Đức Thắng, Cát Linh, Nam Đồng, Trung Phụng, Thổ Quan: 8.2 km (Google Maps)
+            if (str_contains($combined, 'xa dan') || str_contains($combined, 'van mieu') || str_contains($combined, 'quoc tu giam') || 
+                str_contains($combined, 'o cho dua') || str_contains($combined, 'kham thien') || str_contains($combined, 'ton duc thang') || 
+                str_contains($combined, 'cat linh') || str_contains($combined, 'nam dong') || str_contains($combined, 'trung phung') || 
+                str_contains($combined, 'tho quan') || str_contains($combined, 'hang bot') || str_contains($combined, 'kim lien') || 
+                str_contains($combined, 'de la thanh') || str_contains($combined, 'nguyen luong bang') || str_contains($combined, 'dong da')) {
                 return 8.2;
             }
 
-            // 9. Hoàn Kiếm, Cửa Nam, Phố Cổ, Tràng Tiền, Hàng Bạc, Hàng Bài: 9.0 - 10.5 km
-            if (str_contains($combined, 'hoan kiem') || str_contains($combined, 'cua nam') || str_contains($combined, 'trang tien') || str_contains($combined, 'hang bac') || str_contains($combined, 'pho co') || str_contains($combined, 'hang bai') || str_contains($combined, 'dinh tien hoang')) {
+            // 9. Tây Hồ, Thụy Khuê, Quảng An, Nhật Tân, Xuân La, Lạc Long Quân: 7.5 km
+            if (str_contains($combined, 'tay ho') || str_contains($combined, 'thuy khue') || str_contains($combined, 'quang an') || 
+                str_contains($combined, 'nhat tan') || str_contains($combined, 'xuan la') || str_contains($combined, 'lac long quan') || 
+                str_contains($combined, 'buoi')) {
+                return 7.5;
+            }
+
+            // 10. Thanh Xuân, Hà Đông, Mộ Lao, Văn Quán, Vạn Phúc, Tố Hữu: 8.2 - 9.0 km
+            if (str_contains($combined, 'thanh xuan') || str_contains($combined, 'nguyen trai') || str_contains($combined, 'khuong dinh') || 
+                str_contains($combined, 'ha dong') || str_contains($combined, 'mo lao') || str_contains($combined, 'van quan') || 
+                str_contains($combined, 'le van luong') || str_contains($combined, 'to huu') || str_contains($combined, 'van phuc') || 
+                str_contains($combined, 'ha cau') || str_contains($combined, 'la khe') || str_contains($combined, 'kien hung') || 
+                str_contains($combined, 'an khanh') || str_contains($combined, 'bao son')) {
+                return 8.2;
+            }
+
+            // 10. Hoàn Kiếm, Cửa Nam, Phố Cổ, Tràng Tiền, Hàng Bạc, Hàng Bài: 9.0 - 10.5 km
+            if (str_contains($combined, 'hoan kiem') || str_contains($combined, 'cua nam') || str_contains($combined, 'trang tien') || 
+                str_contains($combined, 'hang bac') || str_contains($combined, 'pho co') || str_contains($combined, 'hang bai') || 
+                str_contains($combined, 'dinh tien hoang') || str_contains($combined, 'hang gai') || str_contains($combined, 'hang dao') || 
+                str_contains($combined, 'hang bong')) {
                 return 9.8;
             }
 
-            // 10. Hai Bà Trưng, Bách Khoa, Bạch Mai, Minh Khai, Times City: 10.0 - 12.0 km
-            if (str_contains($combined, 'hai ba trung') || str_contains($combined, 'bach khoa') || str_contains($combined, 'bach mai') || str_contains($combined, 'minh khai') || str_contains($combined, 'times city') || str_contains($combined, 'vinh tuy')) {
+            // 11. Hai Bà Trưng, Bách Khoa, Bạch Mai, Minh Khai Hai Bà Trưng, Times City: 10.0 - 12.0 km
+            if (str_contains($combined, 'hai ba trung') || str_contains($combined, 'bach khoa') || str_contains($combined, 'bach mai') || 
+                str_contains($combined, 'times city') || str_contains($combined, 'vinh tuy') || str_contains($combined, 'truong dinh') || 
+                str_contains($combined, 'dong tam')) {
                 return 10.8;
             }
 
-            // 11. Hoàng Mai, Linh Đàm, Định Công, Đại Kim, Hoàng Liệt: 11.0 - 13.5 km
-            if (str_contains($combined, 'hoang mai') || str_contains($combined, 'linh dam') || str_contains($combined, 'dinh cong') || str_contains($combined, 'dai kim') || str_contains($combined, 'hoang liet') || str_contains($combined, 'giai phong')) {
+            // 12. Hoàng Mai, Linh Đàm, Định Công, Đại Kim, Hoàng Liệt: 11.0 - 13.5 km
+            if (str_contains($combined, 'hoang mai') || str_contains($combined, 'linh dam') || str_contains($combined, 'dinh cong') || 
+                str_contains($combined, 'dai kim') || str_contains($combined, 'hoang liet') || str_contains($combined, 'giai phong') || 
+                str_contains($combined, 'tan mai') || str_contains($combined, 'thinh liet') || str_contains($combined, 'yen so')) {
                 return 12.0;
             }
 
-            // 12. Long Biên, Gia Thụy, Bồ Đề, Ngọc Lâm, Aeon Mall: 13.0 - 16.0 km
-            if (str_contains($combined, 'long bien') || str_contains($combined, 'gia thuy') || str_contains($combined, 'bo de') || str_contains($combined, 'ngoc lam') || str_contains($combined, 'aeon')) {
+            // 13. Long Biên, Gia Lâm, Bồ Đề, Ngọc Lâm, Aeon Mall: 13.0 - 17.0 km
+            if (str_contains($combined, 'long bien') || str_contains($combined, 'gia lam') || str_contains($combined, 'gia thuy') || 
+                str_contains($combined, 'bo de') || str_contains($combined, 'ngoc lam') || str_contains($combined, 'aeon') || 
+                str_contains($combined, 'sai dong') || str_contains($combined, 'thach ban') || str_contains($combined, 'ocean park')) {
                 return 14.5;
             }
 
-            // 13. Ngoại thành gần (Hoài Đức, Đan Phượng, Thiên Lộc, Đông Anh): 12.0 - 20.0 km
-            if (str_contains($combined, 'hoai duc') || str_contains($combined, 'dan phuong') || str_contains($combined, 'thien loc') || str_contains($combined, 'dong anh') || str_contains($combined, 'me linh') || str_contains($combined, 'tien phong')) {
-                return 16.5;
+            // 14. Ngoại thành gần (Hoài Đức, Đan Phượng, Thiên Lộc, Đông Anh): 10.0 - 18.0 km
+            if (str_contains($combined, 'hoai duc') || str_contains($combined, 'dan phuong') || str_contains($combined, 'thien loc') || 
+                str_contains($combined, 'dong anh') || str_contains($combined, 'me linh') || str_contains($combined, 'tien phong') || 
+                str_contains($combined, 'soc son') || str_contains($combined, 'co loa') || str_contains($combined, 'kim chung')) {
+                return 15.0;
             }
 
-            // 14. Inner Hanoi default
+            // 15. Inner Hanoi fallback default
             if ($this->isHanoiInnerCity($province, $district, $ward)) {
-                return 6.5;
+                return 5.5;
             }
-            return 28.0;
+            return 25.0;
         }
 
         foreach ($this->provinceDistances as $name => $info) {
@@ -370,12 +424,16 @@ class ShippingService
 
     protected function estimateDurationText(float $distanceKm): string
     {
-        if ($distanceKm <= 4) {
-            $mins = max(7, (int) round($distanceKm * 2.5));
-            return "{$mins} phút";
-        } elseif ($distanceKm <= 15) {
-            $mins = max(15, (int) round($distanceKm * 2.2));
-            return "{$mins} phút";
+        if ($distanceKm <= 2.0) {
+            return '5 phút';
+        } elseif ($distanceKm <= 3.5) {
+            return '8 phút';
+        } elseif ($distanceKm <= 5.0) {
+            return '12 phút';
+        } elseif ($distanceKm <= 8.0) {
+            return '18 phút';
+        } elseif ($distanceKm <= 15.0) {
+            return (int) round($distanceKm * 2.2) . ' phút';
         } elseif ($distanceKm <= 150) {
             $hours = max(1, round($distanceKm / 45, 1));
             return "{$hours} giờ";

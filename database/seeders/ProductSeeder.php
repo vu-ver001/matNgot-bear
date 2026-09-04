@@ -24,9 +24,7 @@ class ProductSeeder extends Seeder
         $catPillow  = Category::where('name', 'GỐI BÔNG TEDDY')->first()->id;
 
         $products = [
-            // ==========================================
-            // 1. TEDDY CLASSIC (4 sản phẩm)
-            // ==========================================
+            // TEDDY CLASSIC (4 sản phẩm)
             [
                 'category_id'    => $catClassic,
                 'name'           => 'Gấu Bông Teddy Socola 1m7 - 2m',
@@ -96,9 +94,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
 
-            // ==========================================
-            // 2. BUTTER BEAR (3 sản phẩm)
-            // ==========================================
+            // BUTTER BEAR (3 sản phẩm)
             [
                 'category_id'    => $catButter,
                 'name'           => 'Gấu Bơ Butter Bear Má Hồng Đội Mũ Bơ 45cm',
@@ -151,9 +147,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
 
-            // ==========================================
-            // 3. TEDDY MR. BEAN (3 sản phẩm)
-            // ==========================================
+            // TEDDY MR. BEAN (3 sản phẩm)
             [
                 'category_id'    => $catMrBean,
                 'name'           => 'Gấu Bông Mr. Bean Cổ Điển Mắt Cúc 40cm',
@@ -206,9 +200,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
 
-            // ==========================================
-            // 4. TEDDY COUPLE (3 sản phẩm)
-            // ==========================================
+            // TEDDY COUPLE (3 sản phẩm)
             [
                 'category_id'    => $catCouple,
                 'name'           => 'Cặp Gấu Bông Teddy Cô Dâu Chú Rể 50cm',
@@ -261,9 +253,7 @@ class ProductSeeder extends Seeder
                 ],
             ],
 
-            // ==========================================
-            // 5. GỐI BÔNG TEDDY (3 sản phẩm)
-            // ==========================================
+            // GỐI BÔNG TEDDY (3 sản phẩm)
             [
                 'category_id'    => $catPillow,
                 'name'           => 'Gối Ôm Dài Gấu Teddy Cao Cấp 1m2 - 1m5',

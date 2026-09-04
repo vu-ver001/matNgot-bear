@@ -395,9 +395,14 @@
                                 </div>
                                 <div class="product-card-footer">
                                     <span><i class="fa-solid fa-ruler" style="color: var(--text-light);"></i> ${p.size || 'Size chuẩn'}</span>
-                                    <button type="button" class="btn-add-cart-quick" onclick="addToCart(${p.id}, '${nameEscaped}')" title="Thêm vào giỏ hàng">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
+                                    ${(p.stock_quantity > 0)
+                                        ? `<button type="button" class="btn-add-cart-quick" onclick="addToCart(${p.id}, '${nameEscaped}')" title="Thêm vào giỏ hàng">
+                                            <i class="fa-solid fa-plus"></i>
+                                           </button>`
+                                        : `<button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để Thêm vào giỏ'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
+                                            <i class="fa-solid fa-ban"></i>
+                                           </button>`
+                                    }
                                 </div>
                             </div>
                         </div>

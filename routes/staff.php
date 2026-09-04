@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Route;
 | Anh Vũ: Dashboard vận hành, Đơn hàng, Thanh toán.
 */
 
-Route::prefix('staff')->name('staff.')->group(function () {
+Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->group(function () {
 
-    // Trang chủ Staff (mặc định vào Dashboard vận hành)
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    // Trang chủ Staff (mặc định vào Quản lý đơn hàng)
+    Route::get('/', fn() => redirect()->route('staff.orders.index'))->name('dashboard');
 
     // Quản lý đơn hàng
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

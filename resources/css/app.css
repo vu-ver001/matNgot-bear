@@ -2,6 +2,10 @@
 @import 'flatpickr/dist/flatpickr.min.css';
 @import './admin/vouchers/index.css';
 @import './admin/vouchers/create.css';
+@import './auth/index.css';
+@import './customer-account/index.css';
+@import './ProfileKT/index.css';
+@import './wishlistKT/index.css';
 
 @tailwind base;
 @tailwind components;
@@ -29,39 +33,7 @@
 }
 
 @layer base {
-    html, body, button, input, select, textarea {
-        font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-
-    body {
-        font-weight: 400;
-        letter-spacing: -0.01em;
-        line-height: 1.5;
-        background-color: var(--cream-bg);
-        color: var(--text-body);
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* Đảm bảo Font Awesome icons luôn hiển thị đúng 100% */
-    .fa, .fas, .far, .fal, .fab, .fa-solid, .fa-regular, .fa-brands, .fa-light, .fa-duotone,
-    i[class*="fa-"], span[class*="fa-"], [class^="fa-"], [class*=" fa-"] {
-        font-family: "Font Awesome 6 Free" !important;
-        font-style: normal;
-    }
-
-    .fa-brands, i.fa-brands, [class*="fa-brands"] {
-        font-family: "Font Awesome 6 Brands" !important;
-    }
-
-    /* Tiêu đề đậm và sắc nét */
-    h1, h2, h3, h4, h5, h6 {
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: var(--text-title);
-    }
-
-    /* Ẩn hoàn toàn mũi tên tăng giảm số (spinner arrows) trên tất cả input number */
+    /* Ẩn mũi tên tăng giảm số trên input number */
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button {
         -webkit-appearance: none !important;

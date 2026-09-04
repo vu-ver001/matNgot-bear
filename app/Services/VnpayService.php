@@ -14,8 +14,8 @@ class VnpayService
     public function __construct()
     {
         // Standard VNPAY Sandbox test credentials for development/testing
-        $this->tmnCode = config('services.vnpay.tmn_code', env('VNPAY_TMN_CODE', 'CGXZLS0Z'));
-        $this->hashSecret = config('services.vnpay.hash_secret', env('VNPAY_HASH_SECRET', 'RAIOGPH2TUW0GAF9D0QI016IKMWHDYEZ'));
+        $this->tmnCode = config('services.vnpay.tmn_code', env('VNPAY_TMN_CODE', 'DKEKANL1'));
+        $this->hashSecret = config('services.vnpay.hash_secret', env('VNPAY_HASH_SECRET', 'ODQMSSMZLVNQZMMITMJHFEUUQZWQYYEW'));
         $this->vnpUrl = config('services.vnpay.url', env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'));
         $this->merchantName = config('services.vnpay.merchant_name', env('VNPAY_MERCHANT_NAME', 'MẬT NGỌT BEAR'));
     }
@@ -52,21 +52,27 @@ class VnpayService
     /**
      * Build VNPAY Gateway URL for Card / ATM / Visa / QR redirection.
      */
-    public function createPaymentUrl(Order $order, string $returnUrl, string $ipAddress = '127.0.0.1'): string
+    public function createPaymentUrl(Order $order, ?string $returnUrl = null, string $ipAddress = '127.0.0.1'): string
     {
+        $returnUrl = $returnUrl ?? config('services.vnpay.return_url', route('payment.vnpay.return'));
+        $createDate = date('YmdHis');
+        $expireDate = date('YmdHis', strtotime('+15 minutes', strtotime($createDate)));
+        $cleanOrderInfo = "Thanh toan don hang " . preg_replace('/[^A-Za-z0-9]/', '', $order->order_code);
+
         $vnp_Params = [
             "vnp_Version" => "2.1.0",
             "vnp_TmnCode" => $this->tmnCode,
             "vnp_Amount" => (int) $order->total_amount * 100,
             "vnp_Command" => "pay",
-            "vnp_CreateDate" => date('YmdHis'),
+            "vnp_CreateDate" => $createDate,
             "vnp_CurrCode" => "VND",
             "vnp_IpAddr" => $ipAddress,
             "vnp_Locale" => "vn",
-            "vnp_OrderInfo" => "Thanh toan don hang {$order->order_code} tai Mat Ngot Bear",
+            "vnp_OrderInfo" => $cleanOrderInfo,
             "vnp_OrderType" => "other",
             "vnp_ReturnUrl" => $returnUrl,
             "vnp_TxnRef" => $order->order_code,
+            "vnp_ExpireDate" => $expireDate,
         ];
 
         ksort($vnp_Params);
@@ -94,6 +100,14 @@ class VnpayService
     }
 
     /**
+     * Alias for createPaymentUrl
+     */
+    public function createPayment(Order $order, ?string $returnUrl = null, string $ipAddress = '127.0.0.1'): string
+    {
+        return $this->createPaymentUrl($order, $returnUrl, $ipAddress);
+    }
+
+    /**
      * Verify VNPAY return response signature.
      */
     public function verifyResponse(array $inputData): bool
@@ -116,6 +130,22 @@ class VnpayService
         $secureHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
         return hash_equals($secureHash, $vnp_SecureHash);
+    }
+
+    /**
+     * Alias for verifyResponse on Return
+     */
+    public function verifyReturn(array $inputData): bool
+    {
+        return $this->verifyResponse($inputData);
+    }
+
+    /**
+     * Alias for verifyResponse on IPN
+     */
+    public function verifyIpn(array $inputData): bool
+    {
+        return $this->verifyResponse($inputData);
     }
 
     /**

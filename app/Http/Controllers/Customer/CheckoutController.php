@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Voucher;
@@ -30,6 +31,11 @@ class CheckoutController extends Controller
         if (!auth()->check()) {
             session()->put('url.intended', $request->fullUrl());
             return redirect()->route('login')->with('info', 'Vui lòng đăng nhập hoặc đăng ký tài khoản để tiến hành thanh toán đơn hàng.');
+        }
+
+        if (auth()->user()->role !== 'CUSTOMER') {
+            $roleLabel = auth()->user()->role === 'ADMIN' ? 'Quản trị viên (Admin)' : 'Nhân viên (Staff)';
+            return redirect()->route('home')->with('error', "Tài khoản {$roleLabel} không thể thực hiện đặt hàng. Vui lòng chuyển sang tài khoản Khách hàng để mua sắm.");
         }
 
         $userId = auth()->id();
@@ -81,7 +87,7 @@ class CheckoutController extends Controller
         $savedRecipientName = $latestOrder->recipient_name ?? $user->full_name ?? '';
         $savedRecipientPhone = $latestOrder->recipient_phone ?? $user->phone ?? '';
         $savedRecipientEmail = $latestOrder->recipient_email ?? $user->email ?? '';
-        $savedRecipientAddress = $latestOrder->recipient_address ?? $user->address ?? '';
+        $savedRecipientAddress = $this->cleanAddress($latestOrder->recipient_address ?? $user->address ?? '');
 
         // Intelligently parse province, ward, and street from saved address
         $savedProvince = 'Hà Nội';
@@ -91,15 +97,32 @@ class CheckoutController extends Controller
         if (!empty($savedRecipientAddress)) {
             $parts = array_map('trim', explode(',', $savedRecipientAddress));
             if (count($parts) >= 3) {
-                // e.g. "Số 41A Phú Diễn, Phường Cầu Giấy, Hà Nội"
+                // e.g. "Thôn Đại Đồng, Xã Thiên Lộc, Hà Nội"
                 $savedProvince = end($parts);
                 $savedWard = $parts[count($parts) - 2];
                 $savedStreet = implode(', ', array_slice($parts, 0, count($parts) - 2));
             } elseif (count($parts) === 2) {
-                // e.g. "Số 41A Phú Diễn, Hà Nội"
+                // e.g. "Thôn Đại Đồng, Hà Nội"
                 $savedProvince = end($parts);
                 $savedStreet = $parts[0];
             }
+
+            // Normalise ward string if it contains extra notes
+            if (str_contains($savedWard, '–') || str_contains($savedWard, '-')) {
+                $subWards = preg_split('/[–\-]/u', $savedWard);
+                if (!empty($subWards[0])) {
+                    $savedWard = trim($subWards[0]);
+                }
+            }
+
+            // Clean street address so it only keeps house/street/village, not duplicated ward/province
+            if (!empty($savedWard)) {
+                $savedStreet = preg_replace('/,?\s*' . preg_quote($savedWard, '/') . '/iu', '', $savedStreet);
+            }
+            if (!empty($savedProvince)) {
+                $savedStreet = preg_replace('/,?\s*' . preg_quote($savedProvince, '/') . '/iu', '', $savedStreet);
+            }
+            $savedStreet = trim($savedStreet ?? '', ', ');
         }
 
         $savedProfile = [
@@ -108,7 +131,7 @@ class CheckoutController extends Controller
             'recipient_email' => $savedRecipientEmail,
             'province' => $savedProvince,
             'ward' => $savedWard,
-            'street' => $savedStreet,
+            'street' => $savedStreet ?: $savedRecipientAddress,
             'full_address' => $savedRecipientAddress,
         ];
 
@@ -285,8 +308,11 @@ class CheckoutController extends Controller
         };
 
         try {
+            $cleanedAddress = $this->cleanAddress($validated['recipient_address']);
+
             $data = array_merge($validated, [
                 'customer_id' => $userId,
+                'recipient_address' => $cleanedAddress,
                 'payment_method' => $dbPaymentMethod,
             ]);
 
@@ -298,7 +324,7 @@ class CheckoutController extends Controller
                 $currentUser->update([
                     'full_name' => $validated['recipient_name'] ?: $currentUser->full_name,
                     'phone' => $validated['recipient_phone'] ?: $currentUser->phone,
-                    'address' => $validated['recipient_address'] ?: $currentUser->address,
+                    'address' => $cleanedAddress ?: $currentUser->address,
                 ]);
             }
 
@@ -321,16 +347,68 @@ class CheckoutController extends Controller
                 return redirect()->route('customer.payment.vnpay.redirect', $order->id);
             }
 
-            // If MoMo or Bank Transfer, redirect to interactive payment gateway page
-            if (in_array($rawMethod, ['MOMO', 'BANK_TRANSFER', 'E_WALLET'])) {
+            // If MoMo, redirect directly to official MoMo Gateway
+            if ($rawMethod === 'MOMO') {
+                return redirect()->route('customer.payment.momo.redirect', $order->id);
+            }
+
+            // If Bank Transfer, redirect to interactive payment gateway page
+            if (in_array($rawMethod, ['BANK_TRANSFER', 'E_WALLET'])) {
                 return redirect()->route('customer.payment.qr', $order->id)
                     ->with('info', 'Đơn hàng ' . $order->order_code . ' đã tạo! Vui lòng hoàn tất thanh toán.');
             }
 
-            return redirect()->route('customer.orders.show', $order->id)
+            return redirect()->route('customer.checkout.success', $order->id)
                 ->with('success', 'Đặt hàng thành công! Mã đơn hàng của bạn là: ' . $order->order_code);
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Lỗi đặt hàng: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Display order success / thank you page with clear navigation back to home, cart, and orders.
+     */
+    public function success(Order $order): View|\Illuminate\Http\RedirectResponse
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        if ($order->customer_id !== auth()->id() && auth()->user()->role !== 'ADMIN' && auth()->user()->role !== 'STAFF') {
+            abort(403, 'Bạn không có quyền xem đơn hàng này.');
+        }
+
+        $order->load(['details.product.images', 'details.product.category', 'voucher', 'shippingVoucher', 'payments']);
+
+        return view('customer.checkout.success', compact('order'));
+    }
+
+    /**
+     * Clean and remove duplicated segments (e.g. repeated Ward, Province) from address.
+     */
+    public function cleanAddress(?string $address): string
+    {
+        if (empty($address)) {
+            return '';
+        }
+
+        $parts = array_filter(array_map('trim', explode(',', $address)));
+        $unique = [];
+
+        foreach ($parts as $part) {
+            $norm = mb_strtolower(preg_replace('/\s+/', ' ', $part));
+            $exists = false;
+            foreach ($unique as $u) {
+                if (mb_strtolower(preg_replace('/\s+/', ' ', $u)) === $norm) {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (!$exists) {
+                $unique[] = $part;
+            }
+        }
+
+        return implode(', ', $unique);
     }
 }

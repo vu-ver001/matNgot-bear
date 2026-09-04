@@ -3,77 +3,27 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\Product;
-use App\Models\User;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use App\Services\DashboardService;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request, DashboardService $dashboard)
     {
-        $totalRevenue = Order::where('order_status', 'COMPLETED')
-            ->where('payment_status', 'PAID')
-            ->sum('total_amount');
+        $month = $request->filled('month') ? (int) $request->input('month') : null;
+        $year = $request->filled('year') ? (int) $request->input('year') : null;
 
-        $totalOrders = Order::count();
-        $pendingOrders = Order::where('order_status', 'PENDING')->count();
-        $completedOrders = Order::where('order_status', 'COMPLETED')->count();
-        $cancelledOrders = Order::where('order_status', 'CANCELLED')->count();
+        $data = $dashboard->getAdminDashboardData($month, $year);
 
-        $totalCustomers = User::where('role', 'CUSTOMER')->count();
-        $totalStaff = User::where('role', 'STAFF')->count();
-        $totalProducts = Product::count();
-
-        $recentOrders = Order::with('customer')
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        $start = Carbon::now()->startOfMonth()->subMonths(11);
-
-        $monthlyRows = Order::where('order_status', 'COMPLETED')
-            ->where('payment_status', 'PAID')
-            ->where('created_at', '>=', $start)
-            ->selectRaw(DB::getDriverName() === 'sqlite'
-                ? "CAST(strftime('%m', created_at) AS INTEGER) as month, CAST(strftime('%Y', created_at) AS INTEGER) as year, SUM(total_amount) as total"
-                : 'MONTH(created_at) as month, YEAR(created_at) as year, SUM(total_amount) as total')
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get()
-            ->keyBy(fn ($row) => $row->year.'-'.$row->month);
-
-        $monthlyRevenue = collect(range(0, 11))
-            ->map(function (int $i) use ($start, $monthlyRows) {
-                $month = $start->copy()->addMonths($i);
-                $row = $monthlyRows->get($month->format('Y-n'));
-
-                return (object) [
-                    'year' => $month->year,
-                    'month' => $month->month,
-                    'total' => (float) ($row->total ?? 0),
-                ];
-            });
-
-        $topProducts = Product::where('status', 'ACTIVE')
-            ->orderByDesc('sold_count')
-            ->limit(10)
-            ->get();
-
-        return view('admin.dashboard.index', compact(
-            'totalRevenue',
-            'totalOrders',
-            'pendingOrders',
-            'completedOrders',
-            'cancelledOrders',
-            'totalCustomers',
-            'totalStaff',
-            'totalProducts',
-            'recentOrders',
-            'monthlyRevenue',
-            'topProducts',
+        return view('admin.dashboard.index', array_merge(
+            $data['kpi'],
+            [
+                'monthlyRevenue' => $data['monthlyRevenue'],
+                'topProducts' => $data['topProducts'],
+                'recentOrders' => $data['recentOrders'],
+                'selectedMonth' => $data['selectedMonth'],
+                'selectedYear' => $data['selectedYear'],
+            ]
         ));
     }
 }

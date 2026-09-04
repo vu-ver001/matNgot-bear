@@ -1,0 +1,474 @@
+/* Shared staff-style cards, filters and tables used by both order pages. */
+.customer-account-page.orders-page { background: transparent; }
+.order-actions-menu {
+    position: fixed;
+    z-index: 60;
+    width: 224px;
+    max-width: calc(100vw - 16px);
+    padding: 6px;
+    border: 1px solid #EADFCF;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(109, 76, 65, 0.18);
+    text-align: left;
+}
+.order-actions-menu a, .order-actions-menu button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    color: #5D4037;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: left;
+    white-space: normal;
+}
+.order-actions-menu a:hover, .order-actions-menu button:hover,
+.order-actions-menu a:focus-visible, .order-actions-menu button:focus-visible {
+    background: #F8F4EE;
+    outline: 2px solid #EADFCF;
+}
+.orders-ui {
+    --bg-page: #FDFBF7;
+    --bg-card: #FFFFFF;
+    --bg-surface: #F8F4EE;
+    --bg-cream: #F5EFEB;
+
+    --pastel-brown-main: #8D6E63;
+    --pastel-brown-dark: #5D4037;
+    --pastel-brown-deep: #4E342E;
+    --pastel-brown-light: #EFEBE9;
+    --pastel-brown-surface: #FAF6F0;
+
+    --honey: #E59819;
+    --honey-light: #FFF8E7;
+    --honey-dark: #B87309;
+    --honey-gold: #F6D89B;
+
+    --text-main: #4E342E;
+    --text-muted: #795548;
+    --text-light: #9E8076;
+
+    --border: #EADFCF;
+    --border-light: #F2EAE0;
+    --danger: #C62828;
+
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+
+    --shadow-subtle: 0 4px 16px rgba(109, 76, 65, 0.05);
+    --shadow-card: 0 10px 30px rgba(109, 76, 65, 0.08);
+    --shadow-hover: 0 16px 40px rgba(109, 76, 65, 0.14);
+
+    --sidebar-width: 270px;
+    --sidebar-collapsed-width: 72px;
+    font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+    color: var(--text-main);
+    min-width: 0;
+}
+.orders-ui :is(button, input, select, textarea) { font-family: inherit; }
+.orders-ui .panel-card.mb-0 { margin-bottom: 0; }
+@media (max-width: 480px) {
+    .orders-ui .panel-card { padding: 1rem; }
+    .orders-ui .stats-grid { grid-template-columns: minmax(0, 1fr); }
+    .orders-ui .search-box { min-width: 0; flex-basis: 100%; }
+}
+/* 2. Stat Cards Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-subtle);
+    transition: all 0.25s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+    border-color: #D7CCC8;
+}
+
+.stat-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.stat-subtext {
+    margin-top: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-left: 12px;
+}
+
+.stat-icon.brown  { background: #EFEBE9; color: #5D4037; }
+.stat-icon.honey  { background: var(--honey-light); color: var(--honey-dark); }
+.stat-icon.amber  { background: #FEF3C7; color: #D97706; }
+.stat-icon.green  { background: #E8F5E9; color: #2E7D32; }
+.stat-icon.red    { background: #FFEBEE; color: #C62828; }
+.stat-icon.blue   { background: #E3F2FD; color: #1565C0; }
+.stat-icon.cyan   { background: #E0F7FA; color: #00838F; }
+.stat-icon.purple { background: #F3E5F5; color: #6A1B9A; }
+
+/* 3. Panel Cards */
+.panel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem 1.75rem;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 1.5rem;
+}
+
+.panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.panel-title {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 17.5px;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.panel-title i {
+    color: var(--pastel-brown-main);
+    font-size: 18px;
+}
+
+.panel-subtitle {
+    font-size: 12.5px;
+    color: var(--text-light);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 4. Toolbar & Filters */
+.toolbar-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 13.5px;
+    pointer-events: none;
+}
+
+.input-control, .select-control {
+    width: 100%;
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 9px 14px;
+    font-size: 13px;
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.search-box .input-control {
+    padding-left: 36px;
+}
+
+.input-control:focus, .select-control:focus {
+    border-color: var(--pastel-brown-main);
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(141, 110, 99, 0.12);
+}
+
+/* 5. Navigation Pills (Filter Tabs) */
+.nav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1.25rem;
+}
+
+.nav-pill {
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border);
+    background: var(--bg-page);
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-pill:hover {
+    background: var(--pastel-brown-light);
+    color: var(--pastel-brown-dark);
+    border-color: #D7CCC8;
+}
+
+.nav-pill.active {
+    background: linear-gradient(135deg, #8D6E63 0%, #5D4037 100%);
+    color: #FFFFFF;
+    border-color: #5D4037;
+    box-shadow: 0 2px 8px rgba(93, 64, 55, 0.25);
+}
+
+.nav-pill-count {
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    background: rgba(255, 255, 255, 0.25);
+    color: inherit;
+}
+
+.nav-pill:not(.active) .nav-pill-count {
+    background: var(--pastel-brown-light);
+    color: var(--pastel-brown-dark);
+}
+
+/* 6. Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8D6E63 0%, #5D4037 100%);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(109, 76, 65, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(109, 76, 65, 0.3);
+    background: linear-gradient(135deg, #795548 0%, #4E342E 100%);
+    color: #FFFFFF;
+}
+
+.btn-honey {
+    background: linear-gradient(135deg, #F6D89B 0%, #E59819 100%);
+    color: #4E342E;
+    box-shadow: 0 4px 12px rgba(229, 152, 25, 0.25);
+}
+
+.btn-honey:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(229, 152, 25, 0.35);
+    color: #4E342E;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.btn-outline:hover {
+    background: var(--bg-surface);
+    border-color: #D7CCC8;
+    color: var(--text-main);
+}
+
+.btn-success {
+    background: #2E7D32;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+}
+
+.btn-success:hover {
+    background: #1B5E20;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #C62828;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
+}
+
+.btn-danger:hover {
+    background: #B71C1C;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+}
+
+.btn-icon {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-icon:hover {
+    background: var(--bg-card);
+    border-color: #D7CCC8;
+    transform: scale(1.05);
+}
+
+.btn-icon.view:hover {
+    background: var(--honey-light);
+    border-color: var(--honey);
+    color: var(--honey-dark);
+}
+
+.btn-icon.edit:hover {
+    background: #E3F2FD;
+    border-color: #90CAF9;
+    color: #1565C0;
+}
+
+.btn-icon.delete:hover {
+    background: #FFEBEE;
+    border-color: #EF9A9A;
+    color: var(--danger);
+}
+
+/* 7. Data Tables */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+}
+
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+}
+
+table.data-table th {
+    background: #FAF6F0;
+    color: var(--pastel-brown-dark);
+    font-weight: 700;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+}
+
+table.data-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+table.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+table.data-table tbody tr:hover {
+    background: #FAF6F0;
+}

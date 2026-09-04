@@ -16,32 +16,53 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropUnique(['email']);
-            $table->index('email');
-            $table->softDeletes();
-        });
+        if (!Schema::hasColumn('users', 'deleted_at')) {
+            Schema::table('users', function (Blueprint $table) {
+                try {
+                    $table->dropUnique(['email']);
+                } catch (\Throwable $e) {}
+                try {
+                    $table->index('email');
+                } catch (\Throwable $e) {}
+                $table->softDeletes();
+            });
+        }
 
-        Schema::table('categories', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        if (!Schema::hasColumn('categories', 'deleted_at')) {
+            Schema::table('categories', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
 
-        Schema::table('products', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        if (!Schema::hasColumn('products', 'deleted_at')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
 
-        Schema::table('vouchers', function (Blueprint $table) {
-            $table->dropUnique(['code']);
-            $table->index('code');
-            $table->softDeletes();
-        });
+        if (!Schema::hasColumn('vouchers', 'deleted_at')) {
+            Schema::table('vouchers', function (Blueprint $table) {
+                try {
+                    $table->dropUnique(['code']);
+                } catch (\Throwable $e) {}
+                try {
+                    $table->index('code');
+                } catch (\Throwable $e) {}
+                $table->softDeletes();
+            });
+        }
 
-        Schema::table('reviews', function (Blueprint $table) {
-            // Index thường thay thế cho unique bị xóa, giữ index cho FK user_id
-            $table->index(['user_id', 'product_id']);
-            $table->dropUnique(['user_id', 'product_id']);
-            $table->softDeletes();
-        });
+        if (!Schema::hasColumn('reviews', 'deleted_at')) {
+            Schema::table('reviews', function (Blueprint $table) {
+                try {
+                    $table->index(['user_id', 'product_id']);
+                } catch (\Throwable $e) {}
+                try {
+                    $table->dropUnique(['user_id', 'product_id']);
+                } catch (\Throwable $e) {}
+                $table->softDeletes();
+            });
+        }
     }
 
     public function down(): void

@@ -4,34 +4,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private readonly UserService $userService,
+    ) {}
+
     public function index(Request $request)
     {
-        $query = User::query();
+        $users = $this->userService->list($request->only('role', 'status', 'search'));
 
-        if ($request->filled('role')) {
-            $query->where('role', $request->role);
-        }
+        $stats = [
+            'total' => User::count(),
+            'customer' => User::where('role', 'CUSTOMER')->count(),
+            'staff' => User::where('role', 'STAFF')->count(),
+            'admin' => User::where('role', 'ADMIN')->count(),
+        ];
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
-            });
-        }
-
-        $users = $query->latest()->paginate(15);
-
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', compact('users', 'stats'));
     }
 
     public function store(Request $request)
@@ -45,7 +38,7 @@ class UserController extends Controller
             'role' => 'required|in:CUSTOMER,STAFF',
         ]);
 
-        User::create($validated);
+        $this->userService->create($validated);
 
         return redirect()->route('admin.users.index')->with('success', 'Tạo người dùng thành công.');
     }
@@ -61,58 +54,26 @@ class UserController extends Controller
             'role' => 'required|in:CUSTOMER,STAFF,ADMIN',
         ]);
 
-        if ($user->id === auth()->id()) {
-            $validated['role'] = $user->role;
-        }
-
-        $data = [
-            'full_name' => $validated['full_name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'address' => $validated['address'] ?? null,
-            'role' => $validated['role'],
-        ];
-
-        if (! empty($validated['password'])) {
-            $data['password'] = $validated['password'];
-        }
-
-        $user->update($data);
+        $this->userService->update($user, $validated);
 
         return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công.');
     }
 
     public function destroy(User $user)
     {
-        if ($user->id === auth()->id()) {
-            return redirect()->route('admin.users.index')->with('error', 'Không thể xóa tài khoản đang đăng nhập.');
-        }
+        $error = $this->userService->delete($user);
 
-        if ($user->role === 'ADMIN') {
-            return redirect()->route('admin.users.index')->with('error', 'Không thể xóa tài khoản quản trị viên.');
-        }
-
-        if ($user->orders()->exists()) {
-            return redirect()->route('admin.users.index')->with('error', 'Không thể xóa người dùng đã có đơn hàng.');
-        }
-
-        $user->delete();
-
-        return redirect()->route('admin.users.index')->with('success', 'Xóa người dùng thành công.');
+        return $error ?? redirect()->route('admin.users.index')->with('success', 'Xóa người dùng thành công.');
     }
 
     public function updateStatus(Request $request, User $user)
     {
-        if ($user->id === auth()->id()) {
-            return redirect()->back()->with('error', 'Không thể khóa/mở khóa tài khoản đang đăng nhập.');
-        }
-
         $validated = $request->validate([
             'status' => 'required|in:ACTIVE,BLOCKED',
         ]);
 
-        $user->update(['status' => $validated['status']]);
+        $error = $this->userService->toggleStatus($user);
 
-        return redirect()->back()->with('success', 'Cập nhật trạng thái người dùng thành công.');
+        return $error ?? redirect()->back()->with('success', 'Cập nhật trạng thái người dùng thành công.');
     }
 }

@@ -1,0 +1,274 @@
+/* ==========================================================================
+   MẬT NGỌT BEAR - PAYMENT RESULT STYLESHEET (ĐỘC LẬP)
+   ========================================================================== */
+
+.payment-result-container {
+    min-height: 75vh;
+    padding: 32px 16px;
+    background-color: #FAF6EE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.payment-result-card {
+    max-width: 960px;
+    width: 100%;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px -15px rgba(44, 20, 8, 0.1);
+    border: 1px solid #EBDDCD;
+    overflow: hidden;
+}
+
+/* --- Status Banners --- */
+.status-banner-paid {
+    background: linear-gradient(135deg, #1C462C 0%, #059669 50%, #047857 100%);
+    padding: 36px 24px;
+    text-align: center;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-banner-pending {
+    background: linear-gradient(135deg, #7C4A03 0%, #D97706 50%, #B45309 100%);
+    padding: 36px 24px;
+    text-align: center;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-banner-failed {
+    background: linear-gradient(135deg, #681818 0%, #DC2626 50%, #B91C1C 100%);
+    padding: 36px 24px;
+    text-align: center;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-icon-circle {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.status-title {
+    font-size: 26px;
+    font-weight: 900;
+    color: #ffffff !important;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.status-subtitle {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9) !important;
+    max-width: 580px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.order-code-badge {
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    padding: 8px 18px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 13px;
+}
+
+.order-code-text {
+    font-family: monospace;
+    font-weight: 800;
+    font-size: 16px;
+    color: #F6D89B;
+    letter-spacing: 0.5px;
+}
+
+.btn-copy-code {
+    background: rgba(255, 255, 255, 0.25);
+    border: none;
+    color: #ffffff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-copy-code:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* --- Product Thumbnail & Cards --- */
+.product-thumb-img {
+    width: 64px !important;
+    height: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid #EBDDCD;
+    background: #ffffff;
+}
+
+.info-card {
+    background: #FAF6EE;
+    border: 1px solid #EBDDCD;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.info-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #EBDDCD;
+    margin-bottom: 14px;
+}
+
+.info-card-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #5C3219;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- Action Buttons --- */
+.btn-primary-action {
+    background: linear-gradient(135deg, #5C3219 0%, #7E4A28 100%);
+    color: #ffffff !important;
+    font-weight: 800;
+    padding: 14px 20px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(92, 50, 25, 0.25);
+    transition: all 0.2s ease;
+    border: none;
+    width: 100%;
+}
+
+.btn-primary-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(92, 50, 25, 0.35);
+    background: linear-gradient(135deg, #432310 0%, #5C3219 100%);
+}
+
+.btn-secondary-action {
+    background: #ffffff;
+    color: #5C3219 !important;
+    font-weight: 700;
+    padding: 12px 18px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    border: 1px solid #EBDDCD;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-secondary-action:hover {
+    background: #FAF6EE;
+}
+
+/* --- Status Pills --- */
+.status-pill-paid {
+    background: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #6EE7B7;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-pill-pending {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FCD34D;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-pill-failed {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FCA5A5;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-pill-confirmed {
+    background: #DBEAFE;
+    color: #1E40AF;
+    border: 1px solid #93C5FD;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-pill-shipping {
+    background: #E0E7FF;
+    color: #3730A3;
+    border: 1px solid #C7D2FE;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
