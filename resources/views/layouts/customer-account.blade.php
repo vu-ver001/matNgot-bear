@@ -32,6 +32,10 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=montserrat:400,500,600,700&display=swap" rel="stylesheet">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @if (request()->routeIs('customer.orders.*'))
+            <link rel="stylesheet" href="{{ asset('css/order-components.css') }}">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        @endif
     </head>
     <body class="font-sans antialiased">
         <div
@@ -223,7 +227,7 @@
                     @include('customer.partials.account-icon', ['name' => 'menu'])
                 </button>
 
-                <main @class(['customer-account-page', 'is-flush-page' => $flush])>
+                <main @class(['customer-account-page', 'is-flush-page' => $flush, 'orders-page' => request()->routeIs('customer.orders.*')])>
                     <div @class(['customer-account-content', 'is-flush' => $flush])>
                         {{ $slot }}
                     </div>

@@ -23,15 +23,35 @@ class OrderController extends Controller
             return redirect()->route('admin.orders.index');
         }
 
-        $query = Order::where('customer_id', auth()->id())->with(['latestPayment', 'details']);
+        $query = Order::where('customer_id', auth()->id());
+
+        $counts = (clone $query)->selectRaw('order_status, COUNT(*) as aggregate')
+            ->groupBy('order_status')->pluck('aggregate', 'order_status');
+        $stats = ['total' => $counts->sum()];
+        foreach ($counts as $status => $count) {
+            $stats[strtolower($status)] = $count;
+        }
 
         if ($request->filled('order_status')) {
             $query->where('order_status', $request->order_status);
         }
 
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_code', 'like', "%{$search}%")
+                    ->orWhere('recipient_name', 'like', "%{$search}%")
+                    ->orWhere('recipient_phone', 'like', "%{$search}%");
+            });
+        }
+
         $orders = $query->latest()->paginate(10);
 
-        return view('customer.orders.index', compact('orders'));
+        return view('customer.orders.index', compact('orders', 'stats'));
     }
 
     public function show(Order $order)
