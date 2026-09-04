@@ -1,5 +1,44 @@
 /* Shared staff-style cards, filters and tables used by both order pages. */
 .customer-account-page.orders-page { background: transparent; }
+.order-payments { container-type: inline-size; }
+.order-payments-table { table-layout: fixed; }
+table.order-payments-table th, table.order-payments-table td {
+    padding: 12px 10px;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+.order-payments-table th:nth-child(1) { width: 30%; }
+.order-payments-table th:nth-child(2) { width: 20%; }
+.order-payments-table th:nth-child(3) { width: 28%; }
+.order-payments-table th:nth-child(4) { width: 22%; }
+@container (max-width: 560px) {
+    .order-payments-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    .order-payments-table, .order-payments-table tbody { display: block; }
+    .order-payments-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+    }
+    .order-payments-table tr:last-child { border-bottom: 0; }
+    table.order-payments-table td { display: block; border: 0; }
+    .order-payments-table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .order-payments-table td[colspan] { grid-column: 1 / -1; }
+    .order-payments-table td[colspan]::before { display: none; }
+}
 .order-actions-menu {
     position: fixed;
     z-index: 60;
