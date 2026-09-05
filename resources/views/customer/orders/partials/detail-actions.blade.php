@@ -87,16 +87,20 @@
             <button type="button"
                     class="btn-review-order w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#E08A1E] to-[#8C4A19] hover:from-[#C77815] hover:to-[#733C14] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-amber-600/25 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer shrink-0"
                     data-order-id="{{ $order->id }}"
+                    data-open-order-review-modal
                     data-product-id="{{ $firstDetail->product_id }}"
                     data-product-name="{{ $firstDetail->product_name }}">
                 <i class="fa-solid fa-star text-amber-200"></i>
                 <span>Viết đánh giá</span>
             </button>
         @else
-            <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-300 shrink-0">
+            <button type="button"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-300 transition cursor-pointer shrink-0"
+                    data-open-order-review-modal
+                    data-order-id="{{ $order->id }}">
                 <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                <span>Bạn đã đánh giá đơn hàng này</span>
-            </span>
+                <span>Xem lại đánh giá</span>
+            </button>
         @endif
     </div>
 @endif

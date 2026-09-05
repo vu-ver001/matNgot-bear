@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
+use App\Http\Controllers\PasswordKT\PasswordController;
 use App\Http\Controllers\ProfileKT\ProfileController;
 use App\Http\Controllers\ProfileKT\ProfileEmailController;
 use App\Support\RoleRedirect;
@@ -91,6 +92,9 @@ Route::get('/switch-role/{role}', function (string $role) {
 })->name('switch-role');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/account/password', [PasswordController::class, 'edit'])->name('account.password.edit');
+    Route::put('/account/password', [PasswordController::class, 'update'])->name('account.password.update');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/email/code', [ProfileEmailController::class, 'sendCode'])->name('profile.email.code');
