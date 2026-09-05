@@ -246,25 +246,28 @@
                     Đơn hàng đã kết thúc ở trạng thái <strong>{{ $order->order_status }}</strong>, không thể cập nhật thêm.
                 </div>
             @else
-                <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" x-data="{ status: '{{ $order->order_status }}' }">
+                <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" x-data="{ status: '' }">
                     @csrf
                     @method('PATCH')
                     <div>
                         <label class="block text-xs font-bold text-[#795548] uppercase mb-1.5">Chuyển sang trạng thái:</label>
-                        <select name="order_status" x-model="status" class="select-control">
+                        <select name="order_status" x-model="status" class="select-control" required>
+                            <option value="" disabled>Chọn trạng thái mới</option>
                             @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Chờ giao hàng', 'COMPLETED' => 'Đã giao thành công', 'RETURNED' => 'Trả hàng / Hoàn tiền', 'CANCELLED' => 'Hủy đơn hàng'] as $value => $label)
-                                <option value="{{ $value }}" @selected($order->order_status === $value)>{{ $label }}</option>
+                                @if (in_array($value, $order->allowedNextStatuses(), true))
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endif
                             @endforeach
                         </select>
                     </div>
 
                     <div x-show="status === 'CANCELLED'" x-cloak class="mt-3">
                         <label class="block text-xs font-bold text-rose-700 uppercase mb-1.5">Lý do hủy đơn <span class="text-rose-600">*</span></label>
-                        <textarea name="cancel_reason" rows="3" placeholder="Nhập lý do hủy đơn chi tiết..."
+                        <textarea name="cancel_reason" rows="3" maxlength="255" :required="status === 'CANCELLED'" :disabled="status !== 'CANCELLED'" placeholder="Nhập lý do hủy đơn chi tiết..."
                                   class="input-control"></textarea>
                     </div>
 
-                    <button type="submit" class="mt-4 w-full btn btn-primary">
+                    <button type="submit" :disabled="!status" class="mt-4 w-full btn btn-primary">
                         <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
                     </button>
                 </form>

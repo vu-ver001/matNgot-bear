@@ -15,7 +15,7 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $query = Order::with(['customer', 'latestPayment']);
+        $query = Order::with(['customer', 'latestPayment', 'details.product.images']);
 
         if ($request->filled('order_status')) {
             $query->where('order_status', $request->order_status);
@@ -34,11 +34,16 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->latest()->paginate(15);
+        $perPage = in_array((int) $request->input('per_page'), [15, 30, 50, 100], true)
+            ? (int) $request->input('per_page')
+            : 15;
+
+        $orders = $query->latest()->paginate($perPage);
 
         $stats = [
             'total' => Order::count(),
             'pending' => Order::where('order_status', 'PENDING')->count(),
+            'confirmed' => Order::where('order_status', 'CONFIRMED')->count(),
             'preparing' => Order::where('order_status', 'PREPARING')->count(),
             'shipping' => Order::where('order_status', 'SHIPPING')->count(),
             'completed' => Order::where('order_status', 'COMPLETED')->count(),
@@ -47,6 +52,47 @@ class OrderController extends Controller
         ];
 
         return view('admin.orders.index', compact('orders', 'stats'));
+    }
+
+    public function bulkUpdateStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'order_ids' => 'required|array|min:1',
+            'order_ids.*' => 'required|integer|exists:orders,id',
+            'target_status' => 'nullable|in:SHIPPING',
+        ]);
+
+        $targetStatus = $validated['target_status'] ?? 'SHIPPING';
+        $changedBy = auth()->id();
+
+        try {
+            $result = $this->orderService->bulkUpdateStatus(
+                $validated['order_ids'],
+                $targetStatus,
+                $changedBy,
+                'Cập nhật trạng thái hàng loạt bởi ' . (auth()->user()->full_name ?? auth()->user()->name ?? 'Admin')
+            );
+
+            $statusLabels = [
+                'SHIPPING' => 'Đang giao hàng',
+                'CONFIRMED' => 'Đã xác nhận',
+                'PREPARING' => 'Chờ lấy hàng',
+                'COMPLETED' => 'Đã giao thành công',
+            ];
+            $label = $statusLabels[$targetStatus] ?? $targetStatus;
+
+            if ($result['updated'] > 0) {
+                $msg = "Đã chuyển {$result['updated']} đơn hàng sang trạng thái '{$label}' thành công.";
+                if ($result['skipped'] > 0) {
+                    $msg .= " (Bỏ qua {$result['skipped']} đơn do trạng thái không phù hợp).";
+                }
+                return redirect()->back()->with('success', $msg);
+            }
+
+            return redirect()->back()->with('error', "Không có đơn hàng nào hợp lệ để chuyển sang trạng thái '{$label}'.");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Lỗi khi thao tác hàng loạt: ' . $e->getMessage());
+        }
     }
 
     public function show(Order $order)

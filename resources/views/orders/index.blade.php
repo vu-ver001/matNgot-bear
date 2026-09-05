@@ -1,5 +1,12 @@
 {{-- Shared staff-style order list. Both roles provide scoped $orders and $stats. --}}
-<div class="orders-ui">
+<link rel="stylesheet" href="{{ asset('css/order-components.css') }}">
+
+@php
+    $bulkShippingOrderIds = $orders
+        ->filter(fn ($order) => $order->canTransitionTo('SHIPPING'))
+        ->pluck('id')->values()->all();
+@endphp
+<div class="orders-ui" x-data="bulkOrderManager({{ json_encode($bulkShippingOrderIds) }})">
 @include('orders.partials.alerts')
 @include('orders.partials.stats')
 
@@ -41,67 +48,31 @@
 
     @include('orders.partials.filters')
 
-    <!-- Orders Data Table -->
-    <div class="table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Mã Đơn</th>
-                    <th>{{ $isStaff ? 'Khách hàng' : 'Người nhận' }}</th>
-                    <th>Số Điện Thoại</th>
-                    <th class="text-right">Tổng Tiền</th>
-                    <th>Trạng Thái Đơn</th>
-                    <th>Thanh Toán</th>
-                    <th>Ngày Đặt</th>
-                    <th class="text-right">Thao Tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($orders as $order)
-                    <tr>
-                        <td>
-                            <a href="{{ route($routePrefix.'.show', $order) }}" class="font-bold text-[#4E342E] hover:text-[#B87309] hover:underline">
-                                {{ $order->order_code }}
-                            </a>
-                        </td>
-                        <td>
-                            <div class="font-bold text-[#4E342E]">{{ $isStaff ? ($order->customer?->full_name ?? $order->recipient_name) : $order->recipient_name }}</div>
-                            @if ($isStaff && $order->customer)
-                                <div class="text-[11px] text-[#8E8076]"><i class="fa-regular fa-user text-[10px]"></i> Thành viên</div>
-                            @elseif ($isStaff)
-                                <div class="text-[11px] text-[#8E8076]">Khách vãng lai</div>
-                            @endif
-                        </td>
-                        <td class="text-[#795548] font-medium">{{ $order->recipient_phone }}</td>
-                        <td class="text-right font-extrabold text-amber-700">
-                            {{ number_format($order->total_amount, 0, ',', '.') }} đ
-                        </td>
-                        <td><x-order-status-badge :status="$order->order_status" /></td>
-                        <td><x-payment-status-badge :status="$order->payment_status" /></td>
-                        <td class="text-xs text-[#795548]">{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="text-right whitespace-nowrap">
-                            @include('orders.partials.row-actions')
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="p-10 text-center text-[#8E8076]">
-                            <i class="fa-solid fa-box-open text-3xl text-amber-300 mb-2 block"></i>
-                            Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+    <!-- Bulk Operations Toolbar -->
+    @include('orders.partials.bulk-toolbar', ['routePrefix' => $routePrefix])
+
+    <!-- Orders Cards List -->
+    <div class="orders-cards-container space-y-4">
+        @forelse ($orders as $order)
+            @include('orders.partials.staff-order-card', [
+                'order' => $order,
+                'routePrefix' => $routePrefix,
+                'isStaff' => $isStaff
+            ])
+        @empty
+            <div class="p-10 text-center text-[#8E8076] bg-white rounded-2xl border border-amber-200/60">
+                <i class="fa-solid fa-box-open text-3xl text-amber-300 mb-2 block"></i>
+                Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.
+            </div>
+        @endforelse
     </div>
 
     <!-- Pagination -->
     @if ($orders->hasPages())
-        <div class="mt-4">
+        <div class="mt-6">
             {{ $orders->withQueryString()->links() }}
         </div>
     @endif
 </div>
-
 
 </div>

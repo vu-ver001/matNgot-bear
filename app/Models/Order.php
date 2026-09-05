@@ -9,6 +9,57 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
+    public const STATUS_TRANSITIONS = [
+        'PENDING' => ['CONFIRMED', 'CANCELLED'],
+        'CONFIRMED' => ['PREPARING', 'CANCELLED'],
+        'PREPARING' => ['SHIPPING', 'CANCELLED'],
+        'SHIPPING' => ['COMPLETED', 'CANCELLED'],
+        'COMPLETED' => ['RETURNED'],
+        'RETURNED' => [],
+        'CANCELLED' => [],
+    ];
+
+    public function allowedNextStatuses(): array
+    {
+        return array_values(array_filter(
+            self::STATUS_TRANSITIONS[$this->order_status] ?? [],
+            fn (string $status) => $this->meetsTransitionRequirements($status)
+        ));
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, $this->allowedNextStatuses(), true);
+    }
+
+    /**
+     * A reorder is meaningful only after the original order has reached a
+     * terminal state. This prevents a customer from duplicating an order that
+     * is still being processed or shipped.
+     */
+    public function canBeReordered(): bool
+    {
+        return in_array($this->order_status, ['COMPLETED', 'CANCELLED', 'RETURNED'], true);
+    }
+
+    /**
+     * Online payment is available only while a prepaid order is still being
+     * processed. COD orders are settled when delivery is confirmed.
+     */
+    public function canPayOnline(): bool
+    {
+        return in_array($this->payment_method, ['BANK_TRANSFER', 'E_WALLET', 'CARD'], true)
+            && in_array($this->payment_status, ['UNPAID', 'FAILED'], true)
+            && in_array($this->order_status, ['PENDING', 'CONFIRMED', 'PREPARING'], true);
+    }
+
+    private function meetsTransitionRequirements(string $status): bool
+    {
+        return $status !== 'SHIPPING'
+            || $this->payment_method === 'COD'
+            || $this->payment_status === 'PAID';
+    }
+
     protected $fillable = [
         'order_code',
         'customer_id',

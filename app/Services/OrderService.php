@@ -124,47 +124,23 @@ class OrderService
     public function cancelOrder(Order $order, ?int $cancelledBy = null, ?string $reason = null): Order
     {
         return DB::transaction(function () use ($order, $cancelledBy, $reason) {
-            if (! in_array($order->order_status, ['PENDING', 'CONFIRMED'])) {
-                throw new \Exception('Không thể hủy đơn hàng ở trạng thái hiện tại.');
+            $lockedOrder = Order::lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->order_status !== 'PENDING') {
+                throw new \Exception('Bạn chỉ có thể hủy đơn hàng đang chờ xác nhận.');
             }
 
-            if (blank($reason)) {
-                throw new \Exception('Lý do hủy đơn là bắt buộc.');
-            }
-
-            $oldStatus = $order->order_status;
-
-            $order->update([
-                'order_status' => 'CANCELLED',
-                'cancel_reason' => $reason,
-                'cancelled_by' => $cancelledBy,
-                'cancelled_at' => now(),
-            ]);
-
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'from_status' => $oldStatus,
-                'to_status' => 'CANCELLED',
-                'changed_by' => $cancelledBy,
-                'note' => $reason,
-                'changed_at' => now(),
-            ]);
-
-            if (! $order->stock_restored) {
-                $this->restoreStock($order);
-                $order->update(['stock_restored' => true]);
-            }
-
-            return $order->fresh();
+            return $this->updateStatus($lockedOrder, 'CANCELLED', $cancelledBy, $reason);
         });
     }
 
     public function updateStatus(Order $order, string $newStatus, ?int $changedBy = null, ?string $note = null): Order
     {
         return DB::transaction(function () use ($order, $newStatus, $changedBy, $note) {
+            $order->setRawAttributes(Order::lockForUpdate()->findOrFail($order->id)->getAttributes(), true);
+            $order->unsetRelations();
             $oldStatus = $order->order_status;
 
-            $this->assertValidTransition($oldStatus, $newStatus, $note);
+            $this->assertValidTransition($order, $newStatus, $note);
 
             $updateData = ['order_status' => $newStatus];
 
@@ -191,6 +167,10 @@ class OrderService
             }
 
             $order->update($updateData);
+
+            if ($newStatus === 'COMPLETED') {
+                $this->confirmCodPayment($order, $changedBy);
+            }
 
             OrderStatusHistory::create([
                 'order_id' => $order->id,
@@ -223,17 +203,44 @@ class OrderService
         }
     }
 
-    private function assertValidTransition(string $oldStatus, string $newStatus, ?string $note = null): void
+    /**
+     * Cập nhật trạng thái hàng loạt (Giao hàng loạt / Xác nhận hàng loạt).
+     *
+     * @param array<int> $orderIds
+     * @param string $targetStatus
+     * @param int|null $changedBy
+     * @param string|null $note
+     * @return array{updated: int, skipped: int, target_status: string}
+     */
+    public function bulkUpdateStatus(array $orderIds, string $targetStatus = 'SHIPPING', ?int $changedBy = null, ?string $note = null): array
     {
-        $allowedTransitions = [
-            'PENDING' => ['CONFIRMED', 'CANCELLED'],
-            'CONFIRMED' => ['PREPARING', 'CANCELLED'],
-            'PREPARING' => ['SHIPPING', 'CANCELLED'],
-            'SHIPPING' => ['COMPLETED', 'CANCELLED'],
-            'COMPLETED' => ['RETURNED'],
-            'RETURNED' => [],
-            'CANCELLED' => [],
-        ];
+        return DB::transaction(function () use ($orderIds, $targetStatus, $changedBy, $note) {
+            $orders = Order::whereIn('id', $orderIds)->orderBy('id')->lockForUpdate()->get();
+            $updated = 0;
+            $skipped = 0;
+
+            foreach ($orders as $order) {
+                if (! in_array($targetStatus, $order->allowedNextStatuses(), true)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $this->updateStatus($order, $targetStatus, $changedBy, $note);
+                $updated++;
+            }
+
+            return [
+                'updated' => $updated,
+                'skipped' => $skipped,
+                'target_status' => $targetStatus,
+            ];
+        });
+    }
+
+    private function assertValidTransition(Order $order, string $newStatus, ?string $note = null): void
+    {
+        $allowedTransitions = Order::STATUS_TRANSITIONS;
+        $oldStatus = $order->order_status;
 
         if ($oldStatus === $newStatus) {
             throw new \Exception('Đơn hàng đã ở trạng thái này rồi.');
@@ -245,6 +252,10 @@ class OrderService
 
         if (! in_array($newStatus, $allowedTransitions[$oldStatus])) {
             throw new \Exception("Không thể chuyển đơn hàng từ '{$oldStatus}' sang '{$newStatus}'.");
+        }
+
+        if (! $order->canTransitionTo($newStatus)) {
+            throw new \Exception('Đơn thanh toán trước phải được xác nhận đã thanh toán trước khi giao hàng.');
         }
 
         if ($newStatus === 'CANCELLED' && blank($note)) {
@@ -262,6 +273,25 @@ class OrderService
             'transaction_ref' => $data['transaction_ref'] ?? null,
             'gateway_response' => $data['gateway_response'] ?? null,
         ]);
+    }
+
+    private function confirmCodPayment(Order $order, ?int $confirmedBy): void
+    {
+        if ($order->payment_method !== 'COD') {
+            return;
+        }
+
+        $payment = $order->payments()->where('method', 'COD')->where('status', 'PENDING')->latest('id')->first();
+
+        if (! $payment && ! $order->payments()->where('method', 'COD')->where('status', 'PAID')->exists()) {
+            $payment = $this->createPayment($order, ['method' => 'COD']);
+        }
+
+        if ($payment) {
+            $this->confirmPayment($payment, $confirmedBy);
+        } elseif ($order->payment_status !== 'PAID') {
+            $order->update(['payment_status' => 'PAID']);
+        }
     }
 
     public function confirmPayment(Payment $payment, ?int $confirmedBy = null): Payment

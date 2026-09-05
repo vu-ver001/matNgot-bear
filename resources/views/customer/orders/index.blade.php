@@ -53,7 +53,7 @@
                         @forelse ($orders as $order)
                             @php
                                 $card = $order->toCustomerCardData();
-                                $hasUnpaidOnline = !in_array($order->payment_status, ['PAID']) && $order->order_status !== 'CANCELLED';
+                                $hasUnpaidOnline = $order->canPayOnline();
                                 $productCount = count($card['products']);
                             @endphp
 

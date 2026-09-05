@@ -172,7 +172,7 @@
                     </div>
                 </div>
 
-                @if(! $isStaff && $order->payment_status === 'UNPAID' && $order->order_status !== 'CANCELLED')
+                @if(! $isStaff && $order->canPayOnline())
                     <div class="mt-4 pt-4 border-t border-amber-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                         <span class="text-xs text-amber-800 font-semibold flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
