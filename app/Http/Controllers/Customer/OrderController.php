@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 
@@ -45,11 +47,33 @@ class OrderController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('order_code', 'like', "%{$search}%")
                     ->orWhere('recipient_name', 'like', "%{$search}%")
-                    ->orWhere('recipient_phone', 'like', "%{$search}%");
+                    ->orWhere('recipient_phone', 'like', "%{$search}%")
+                    ->orWhereHas('details', function ($dq) use ($search) {
+                        $dq->where('product_name', 'like', "%{$search}%");
+                    });
             });
         }
 
-        $orders = $query->latest()->paginate(10);
+        $orders = $query->with([
+            'details.product.images',
+            'voucher',
+            'shippingVoucher',
+            'reviews',
+            'payments',
+        ])->latest()->paginate(10);
+
+        if ($request->wantsJson() || $request->query('format') === 'json') {
+            return response()->json([
+                'success' => true,
+                'data' => $orders->getCollection()->map(fn ($order) => $order->toCustomerCardData()),
+                'pagination' => [
+                    'current_page' => $orders->currentPage(),
+                    'per_page' => $orders->perPage(),
+                    'total' => $orders->total(),
+                    'last_page' => $orders->lastPage(),
+                ],
+            ]);
+        }
 
         return view('customer.orders.index', compact('orders', 'stats'));
     }
@@ -197,5 +221,39 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Customer reorders products from a previous order into their cart.
+     */
+    public function reorder(Order $order)
+    {
+        if ($order->customer_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $order->loadMissing('details.product');
+        $addedCount = 0;
+
+        foreach ($order->details as $detail) {
+            $product = $detail->product;
+            if ($product && $product->status === Product::STATUS_ACTIVE && $product->stock_quantity > 0) {
+                $cartItem = CartItem::firstOrNew([
+                    'user_id' => auth()->id(),
+                    'product_id' => $product->id,
+                ]);
+
+                $newQty = ($cartItem->exists ? $cartItem->quantity : 0) + $detail->quantity;
+                $cartItem->quantity = min($newQty, $product->stock_quantity);
+                $cartItem->save();
+                $addedCount++;
+            }
+        }
+
+        if ($addedCount > 0) {
+            return redirect()->route('customer.cart')->with('success', "Đã thêm các sản phẩm từ đơn hàng #{$order->order_code} vào giỏ hàng của bạn!");
+        }
+
+        return back()->with('error', 'Rất tiếc, các sản phẩm trong đơn hàng này hiện đã hết hàng hoặc không còn kinh doanh.');
     }
 }
