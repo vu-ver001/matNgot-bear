@@ -20,8 +20,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Support\Facades\View::composer('*', function ($view) {
-            $userId = auth()->id() ?? \App\Models\User::where('role', 'CUSTOMER')->first()?->id ?? 1;
-            $realCartCount = \App\Models\CartItem::where('user_id', $userId)->count();
+            if (auth()->check()) {
+                $realCartCount = \App\Models\CartItem::where('user_id', auth()->id())->count();
+            } else {
+                $realCartCount = count(session()->get('guest_cart', []));
+            }
             $view->with('realCartCount', $realCartCount);
         });
     }

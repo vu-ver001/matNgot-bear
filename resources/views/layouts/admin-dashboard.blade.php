@@ -28,14 +28,23 @@
 </head>
 <body>
 
-    <!-- ====== SIDEBAR (NÂU PASTEL & TỰ ĐỘNG ĐÓNG MỞ) ====== -->
+    @php
+        $adminUser = auth()->user();
+        $adminInitial = mb_strtoupper(mb_substr($adminUser->full_name ?? $adminUser->name ?? 'A', 0, 1, 'UTF-8'));
+        $adminName = $adminUser->full_name ?? $adminUser->name ?? 'Quản Trị Viên';
+        $adminEmail = $adminUser->email ?? 'admin@matngotbear.com';
+    @endphp
+
+    <!-- ====== SIDEBAR (GIAO DIỆN PASTEL THEO ẢNH 1 & ẢNH 2) ====== -->
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="sidebar-brand">
-            <div class="sidebar-brand-icon" onclick="toggleSidebar()" title="Đóng / Mở Menu"><i class="fa-solid fa-paw"></i></div>
-            <div class="sidebar-brand-text">
-                <span class="sidebar-brand-name">Mật Ngọt Bear</span>
-                <span class="sidebar-brand-sub">Bảng Quản Trị Admin</span>
+            <div class="sidebar-brand-content">
+                <a href="{{ route('home') }}" class="sidebar-brand-name" title="Về trang chủ Mật Ngọt Bear">Mật Ngọt Bear</a>
+                <span class="sidebar-brand-sub">KHU VỰC QUẢN LÝ</span>
             </div>
+            <button type="button" class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Thu gọn menu" id="sidebarCollapseBtn">
+                <i class="fa-solid fa-chevron-left" id="sidebarToggleIcon"></i>
+            </button>
         </div>
 
         <nav class="sidebar-nav">
@@ -43,10 +52,10 @@
             <!-- Mục của bạn nhóm (Dashboard & Thống kê) -->
             <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard*') || ($currentPage ?? '') === 'dashboard' ? 'active' : '' }}" data-title="Dashboard & Thống kê">
                 <i class="fa-solid fa-chart-pie"></i>
-                <span class="sidebar-link-text">Dashboard & Thống kê</span>
+                <span class="sidebar-link-text">Dashboard &amp; Thống kê</span>
             </a>
 
-            <div class="sidebar-section-label">Sản Phẩm & Danh Mục</div>
+            <div class="sidebar-section-label">Sản Phẩm &amp; Danh Mục</div>
             <!-- Phần của Khánh Vân -->
             <a href="{{ route('admin.products.index') }}" class="sidebar-link {{ request()->routeIs('admin.products*') || ($currentPage ?? '') === 'products' ? 'active' : '' }}" data-title="Quản lý Sản phẩm">
                 <i class="fa-solid fa-box-open"></i>
@@ -57,7 +66,7 @@
                 <span class="sidebar-link-text">Quản lý Danh mục</span>
             </a>
 
-            <div class="sidebar-section-label">Bán Hàng & Tài Chính</div>
+            <div class="sidebar-section-label">Bán Hàng &amp; Tài Chính</div>
             <a href="{{ route('admin.vouchers.index') }}" class="sidebar-link {{ request()->routeIs('admin.vouchers*') || ($currentPage ?? '') === 'vouchers' ? 'active' : '' }}" data-title="Quản lý Voucher">
                 <i class="fa-solid fa-ticket"></i>
                 <span class="sidebar-link-text">Quản lý Voucher</span>
@@ -78,7 +87,7 @@
                 <span class="sidebar-link-text">Quản lý Người Dùng</span>
             </a>
 
-            <div class="sidebar-section-label">Hỗ Trợ & Báo Cáo</div>
+            <div class="sidebar-section-label">Hỗ Trợ &amp; Báo Cáo</div>
             <!-- Các mục của bạn nhóm -->
             <a href="{{ route('admin.reviews.index') }}" class="sidebar-link {{ request()->routeIs('admin.reviews*') || ($currentPage ?? '') === 'reviews' ? 'active' : '' }}" data-title="Quản lý Review">
                 <i class="fa-solid fa-star-half-stroke"></i>
@@ -90,22 +99,55 @@
             </a>
         </nav>
 
-        <!-- Sidebar Footer -->
-        <div class="sidebar-footer">
-            <div class="sidebar-footer-user">
-                <div class="sidebar-avatar"><i class="fa-solid fa-user-shield"></i></div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name">{{ auth()->user()->full_name ?? 'Admin' }}</div>
-                    <div class="sidebar-user-role">Quản trị viên</div>
+        <!-- Sidebar Footer & Popup Người Dùng (Theo chuẩn Ảnh 1 & 2) -->
+        <div class="sidebar-footer-wrap">
+            <!-- Popup Card (Ảnh 2) -->
+            <div class="sidebar-user-popup" id="sidebarUserPopup">
+                <div class="user-popup-header">
+                    <div class="user-popup-avatar">
+                        {{ $adminInitial }}
+                    </div>
+                    <div class="user-popup-info">
+                        <div class="user-popup-name">{{ $adminName }}</div>
+                        <div class="user-popup-email" title="{{ $adminEmail }}">{{ $adminEmail }}</div>
+                    </div>
+                </div>
+
+                <div class="user-popup-divider"></div>
+
+                <div class="user-popup-menu">
+                    <a href="{{ route('profile.edit') }}" class="user-popup-item active">
+                        <i class="fa-regular fa-user"></i>
+                        <span>Hồ sơ</span>
+                    </a>
+                    <div class="user-popup-item disabled">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Đổi mật khẩu</span>
+                        <span class="badge-not-connected">Chưa kết nối</span>
+                    </div>
+                </div>
+
+                <div class="user-popup-divider"></div>
+
+                <form method="POST" action="{{ route('logout') }}" class="user-popup-logout-form">
+                    @csrf
+                    <button type="submit" class="user-popup-item logout-btn">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Trigger bar (Ảnh 1) -->
+            <div class="sidebar-user-trigger" onclick="toggleUserPopup(event)" id="sidebarUserTrigger" title="Tài khoản cá nhân">
+                <div class="sidebar-user-avatar">
+                    {{ $adminInitial }}
+                </div>
+                <div class="sidebar-user-details">
+                    <div class="sidebar-user-name">{{ $adminName }}</div>
+                    <div class="sidebar-user-email" title="{{ $adminEmail }}">{{ $adminEmail }}</div>
                 </div>
             </div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="sidebar-logout-btn" title="Đăng Xuất">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    <span>Đăng Xuất</span>
-                </button>
-            </form>
         </div>
     </aside>
 
@@ -127,27 +169,30 @@
                 }
             })();
         </script>
-        <div class="admin-topbar">
-            <div class="topbar-left">
-                <button type="button" class="topbar-btn" onclick="toggleSidebar()" title="Đóng / Mở Menu" style="cursor: pointer; border: 1px solid var(--border-dark);">
-                    <i class="fa-solid fa-bars-staggered"></i>
-                </button>
-                <div class="topbar-title">@yield('page-title', 'Bảng Điều Khiển Quản Trị')</div>
-            </div>
-            <div class="topbar-actions">
-                <a href="{{ route('home') }}" class="topbar-btn topbar-btn-home">
-                    <i class="fa-solid fa-store"></i> Về Cửa Hàng
-                </a>
-            </div>
-        </div>
-
         <div class="admin-content">
             @yield('content')
         </div>
     </div>
 
-    <!-- Script Điều Khiển Đóng / Mở Menu theo Chân Gấu -->
+    <!-- Script Điều Khiển Đóng / Mở Menu & Popup Card Người Dùng -->
     <script>
+        function toggleUserPopup(e) {
+            if (e) e.stopPropagation();
+            const popup = document.getElementById('sidebarUserPopup');
+            popup?.classList.toggle('show');
+        }
+
+        // Đóng popup khi click ra ngoài
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('sidebarUserPopup');
+            const trigger = document.getElementById('sidebarUserTrigger');
+            if (popup && popup.classList.contains('show')) {
+                if (!popup.contains(e.target) && !trigger?.contains(e.target)) {
+                    popup.classList.remove('show');
+                }
+            }
+        });
+
         function toggleSidebar() {
             const isCollapsed = document.documentElement.classList.contains('admin-sidebar-collapsed') ||
                                 document.getElementById('adminSidebar')?.classList.contains('collapsed');
@@ -158,12 +203,20 @@
             }
         }
 
+        function updateCollapseIcon(collapsed) {
+            const icon = document.getElementById('sidebarToggleIcon');
+            if (icon) {
+                icon.className = collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
+            }
+        }
+
         function expandSidebar() {
             const sidebar = document.getElementById('adminSidebar');
             const main = document.getElementById('adminMain');
             document.documentElement.classList.remove('admin-sidebar-collapsed');
             sidebar?.classList.remove('collapsed');
             main?.classList.remove('expanded');
+            updateCollapseIcon(false);
             localStorage.setItem('mn_admin_sidebar_collapsed', '0');
         }
 
@@ -173,8 +226,16 @@
             document.documentElement.classList.add('admin-sidebar-collapsed');
             sidebar?.classList.add('collapsed');
             main?.classList.add('expanded');
+            updateCollapseIcon(true);
             localStorage.setItem('mn_admin_sidebar_collapsed', '1');
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('mn_admin_sidebar_collapsed') === '1') {
+                updateCollapseIcon(true);
+            }
+        });
     </script>
+    @yield('scripts')
 </body>
 </html>

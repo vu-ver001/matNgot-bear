@@ -17,7 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
         $middleware->validateCsrfTokens(except: [
+            'cart/log-uncheck',
             'customer/cart/log-uncheck',
+            'api/payment/*',
+            'webhook/*',
+            'payment/*',
+            'payment/vnpay/*',
+            'payment/momo/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

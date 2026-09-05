@@ -40,28 +40,33 @@ class MomoService
 
     /**
      * Generate standard MoMo QR Code URL.
-     * Uses MoMo official universal link format (https://nhantien.momo.vn/{phone})
-     * to avoid the deprecated P2P string error ("Ví chưa xác thực").
+     * Generates a clean MoMo P2P QR payload without third-party bank / VietQR watermarks.
      */
     public function generateQrUrl(Order $order): string
     {
-        $momoLink = "https://nhantien.momo.vn/{$this->phone}";
-        return "https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=" . urlencode($momoLink);
+        $amount = (int) $order->total_amount;
+        $orderCode = $order->order_code;
+        $momoPayload = "2|99|{$this->phone}|||0|0|{$amount}|{$orderCode}|transfer_myqr";
+
+        return "https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=8&data=" . urlencode($momoPayload);
     }
 
     /**
-     * Get direct MoMo app deep link
+     * Get direct MoMo app deep link or web link
      */
     public function getMomoDeepLink(Order $order): string
     {
-        return "https://nhantien.momo.vn/{$this->phone}";
+        return "momo://";
     }
 
     /**
      * Create MoMo Gateway Online Payment Request (AIO / ATM / QR).
      */
-    public function createGatewayPayment(Order $order, string $returnUrl, string $notifyUrl): array
+    public function createGatewayPayment(Order $order, ?string $returnUrl = null, ?string $notifyUrl = null): array
     {
+        $returnUrl = $returnUrl ?? config('services.momo.redirect_url', route('payment.momo.return'));
+        $notifyUrl = $notifyUrl ?? config('services.momo.ipn_url', route('payment.momo.ipn'));
+
         if (empty($this->accessKey) || empty($this->secretKey)) {
             return [
                 'success' => false,
@@ -73,7 +78,7 @@ class MomoService
 
         $requestId = $this->partnerCode . '_' . time() . '_' . uniqid();
         $orderId = $order->order_code . '_' . time();
-        $orderInfo = "Thanh toán đơn hàng {$order->order_code} tại Mật Ngọt Bear";
+        $orderInfo = "Thanh toan don hang {$order->order_code} tai Mat Ngot Bear";
         $amount = (string) (int) $order->total_amount;
         $extraData = base64_encode(json_encode(['order_id' => $order->id]));
         $requestType = "captureWallet";
@@ -109,7 +114,7 @@ class MomoService
         ];
 
         try {
-            $response = Http::post($this->endpoint, $data);
+            $response = Http::timeout(10)->post($this->endpoint, $data);
             $json = $response->json();
 
             if (isset($json['resultCode']) && $json['resultCode'] == 0) {
@@ -121,10 +126,11 @@ class MomoService
                 ];
             }
 
-            Log::warning('MoMo Gateway Error:', $json ?? []);
+            Log::warning('MoMo Gateway Response:', $json ?? []);
             return [
                 'success' => false,
                 'message' => $json['message'] ?? 'Lỗi khởi tạo giao dịch MoMo',
+                'payUrl' => null,
                 'qrUrl' => $this->generateQrUrl($order)
             ];
         } catch (\Throwable $e) {
@@ -132,9 +138,18 @@ class MomoService
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
+                'payUrl' => null,
                 'qrUrl' => $this->generateQrUrl($order)
             ];
         }
+    }
+
+    /**
+     * Alias for createGatewayPayment
+     */
+    public function createPayment(Order $order, ?string $returnUrl = null, ?string $ipnUrl = null): array
+    {
+        return $this->createGatewayPayment($order, $returnUrl, $ipnUrl);
     }
 
     /**
@@ -162,6 +177,36 @@ class MomoService
 
         $computedSignature = hash_hmac("sha256", $rawHash, $this->secretKey);
 
-        return hash_equals($computedSignature, $data['signature']);
+        return hash_equals($computedSignature, (string)$data['signature']);
+    }
+
+    /**
+     * Verify MoMo Return URL Signature
+     */
+    public function verifyReturnSignature(array $data): bool
+    {
+        return $this->verifyIpnSignature($data);
+    }
+
+    /**
+     * Safely extract order ID from extraData or orderId
+     */
+    public function extractOrderId(array $data): ?int
+    {
+        if (!empty($data['extraData'])) {
+            $decoded = json_decode(base64_decode($data['extraData']), true);
+            if (!empty($decoded['order_id'])) {
+                return (int) $decoded['order_id'];
+            }
+        }
+
+        if (!empty($data['orderId'])) {
+            $parts = explode('_', $data['orderId']);
+            $orderCode = $parts[0] ?? $data['orderId'];
+            $order = Order::where('order_code', $orderCode)->first();
+            return $order?->id;
+        }
+
+        return null;
     }
 }

@@ -73,6 +73,82 @@ class OrderManagementTest extends TestCase
         $this->get('/customer/orders/'.$order->id)->assertOk();
     }
 
+    public function test_shared_order_pages_keep_role_specific_actions(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $payment = $this->createPayment($order);
+        $order->update(['payment_method' => 'BANK_TRANSFER', 'payment_status' => 'UNPAID']);
+
+        $this->actingAs($this->staff);
+        $this->get(route('staff.orders.index'))
+            ->assertOk()
+            ->assertSee(route('staff.orders.show', $order), false)
+            ->assertSee($order->recipient_phone)
+            ->assertDontSee(route('customer.payment.retry', $order), false);
+        $this->get(route('staff.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Thông tin nhận hàng')
+            ->assertSee('Sản phẩm đã đặt')
+            ->assertSee(route('staff.orders.updateStatus', $order), false)
+            ->assertSee(route('staff.payments.updateStatus', $payment), false)
+            ->assertDontSee(route('customer.orders.update_shipping_address', $order), false)
+            ->assertDontSee(route('customer.orders.cancel', $order), false)
+            ->assertDontSee(route('customer.payment.retry', $order), false);
+
+        $this->actingAs($this->customer);
+        $this->get(route('customer.orders.index'))
+            ->assertOk()
+            ->assertSee(route('customer.orders.show', $order), false)
+            ->assertSee(route('customer.payment.retry', $order), false)
+            ->assertSee('name="search"', false);
+        $this->get(route('customer.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Thông tin nhận hàng')
+            ->assertSee('Sản phẩm đã đặt')
+            ->assertSee(route('customer.orders.update_shipping_address', $order), false)
+            ->assertSee(route('customer.orders.cancel', $order), false)
+            ->assertSee(route('customer.payment.retry', $order), false)
+            ->assertDontSee(route('staff.orders.updateStatus', $order), false)
+            ->assertDontSee(route('staff.payments.updateStatus', $payment), false);
+
+        $order->update(['order_status' => 'SHIPPING']);
+        $this->get(route('customer.orders.show', $order))
+            ->assertOk()
+            ->assertSee(route('customer.orders.complete', $order), false)
+            ->assertDontSee(route('customer.orders.update_shipping_address', $order), false);
+        $this->actingAs($this->staff)->get(route('staff.orders.show', $order))
+            ->assertOk()
+            ->assertDontSee(route('customer.orders.complete', $order), false);
+    }
+
+    public function test_shared_order_list_preserves_customer_scope_and_staff_filters(): void
+    {
+        $mine = $this->createOrder($this->customer);
+        $other = $this->createOrder(User::factory()->create(['role' => 'CUSTOMER']));
+        $other->update(['order_status' => 'CONFIRMED', 'payment_status' => 'PAID']);
+
+        $this->actingAs($this->customer)->get(route('customer.orders.index'))
+            ->assertOk()->assertSee($mine->order_code)->assertDontSee($other->order_code)
+            ->assertViewHas('stats', fn ($stats) => $stats['total'] === 1 && $stats['pending'] === 1);
+        $this->get(route('customer.orders.index', ['search' => $other->order_code]))
+            ->assertOk()->assertDontSee('href="'.route('customer.orders.show', $other).'"', false)
+            ->assertViewHas('orders', fn ($orders) => $orders->total() === 0);
+        $this->get(route('customer.orders.index', ['payment_status' => 'PAID']))
+            ->assertOk()->assertViewHas('orders', fn ($orders) => $orders->total() === 0);
+        $response = $this->actingAs($this->staff)->get(route('staff.orders.index', [
+            'search' => $other->order_code,
+            'payment_status' => 'PAID',
+            'order_status' => 'CONFIRMED',
+        ]))->assertOk()->assertSee($other->order_code)->assertDontSee($mine->order_code);
+        $response->assertSee(route('staff.orders.index', [
+            'search' => $other->order_code,
+            'payment_status' => 'PAID',
+            'order_status' => 'SHIPPING',
+        ]));
+        $this->get(route('staff.orders.index', ['search' => 'NO-MATCH']))
+            ->assertOk()->assertSee('Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.');
+    }
+
     public function test_staff_can_update_order_status_and_payment(): void
     {
         $order = $this->createOrder($this->customer);

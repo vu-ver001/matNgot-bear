@@ -41,24 +41,53 @@ Route::get('/dashboard', function (Request $request) {
 
 // Tiện ích chuyển nhanh vai trò (Admin / Staff / Khách hàng / Guest) để test giao diện
 Route::get('/switch-role/{role}', function (string $role) {
-    if ($role === 'guest') {
+    if (strtolower($role) === 'guest') {
         auth()->logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();
-        return back()->with('status', 'Đã chuyển sang trạng thái Khách vãng lai (Guest)!');
+        return redirect()->route('home')->with('status', 'Đã chuyển sang trạng thái Khách vãng lai (Guest)!');
     }
 
-    $email = match ($role) {
-        'admin'    => 'admin@matngotbear.com',
-        'staff'    => 'staff1@matngotbear.com',
-        'customer' => 'nguyenvana@example.com',
-        default    => 'nguyenvana@example.com',
+    $roleEnum = match (strtolower($role)) {
+        'admin'    => 'ADMIN',
+        'staff'    => 'STAFF',
+        'customer' => 'CUSTOMER',
+        default    => 'CUSTOMER',
     };
 
-    $user = \App\Models\User::where('email', $email)->first();
+    $user = \App\Models\User::where('role', $roleEnum)->first();
+    if (!$user) {
+        // Fallback: Tạo user demo nếu chưa có
+        $defaults = [
+            'ADMIN'    => ['email' => 'admin@matngotbear.com', 'name' => 'Quản Trị Viên (Admin)'],
+            'STAFF'    => ['email' => 'staff1@matngotbear.com', 'name' => 'Nhân Viên CSKH (Staff)'],
+            'CUSTOMER' => ['email' => 'customer@matngot.com', 'name' => 'Nguyễn Văn Khách'],
+        ];
+        $def = $defaults[$roleEnum] ?? $defaults['CUSTOMER'];
+        $user = \App\Models\User::firstOrCreate(
+            ['email' => $def['email']],
+            ['full_name' => $def['name'], 'role' => $roleEnum, 'password' => bcrypt('password')]
+        );
+    }
+
     if ($user) {
         auth()->login($user);
     }
+
+    if (session()->has('url.intended')) {
+        return redirect()->intended();
+    }
+
+    // Nếu đang ở trang login, chuyển hướng thẳng đến dashboard tương ứng
+    $previousUrl = url()->previous();
+    if (str_contains($previousUrl, '/login') || str_contains($previousUrl, '/register')) {
+        return match ($roleEnum) {
+            'ADMIN' => redirect()->route('admin.dashboard')->with('status', "Đã đăng nhập: {$user?->full_name} (Admin)"),
+            'STAFF' => redirect()->route('staff.dashboard')->with('status', "Đã đăng nhập: {$user?->full_name} (Staff)"),
+            default => redirect()->route('home')->with('status', "Đã đăng nhập: {$user?->full_name}"),
+        };
+    }
+
     return back()->with('status', "Đã chuyển sang tài khoản: {$user?->full_name} ({$user?->role})");
 })->name('switch-role');
 
