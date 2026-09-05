@@ -21,6 +21,40 @@
     </div>
 @endif
 
+@if ($selectedCustomer)
+    <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-user-tag text-blue-600"></i>
+                <span>
+                    Đang xem đơn hàng của
+                    <strong>{{ $selectedCustomer->full_name }}</strong>
+                </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 pl-6 text-xs">
+                <span class="rounded-full border border-blue-200 bg-white px-2.5 py-1 font-bold text-blue-800">
+                    {{ $stats['total'] ?? 0 }} đơn hàng
+                </span>
+                <span class="rounded-full border border-emerald-200 bg-white px-2.5 py-1 font-bold text-emerald-700">
+                    {{ $stats['completed'] ?? 0 }} đã hoàn thành
+                </span>
+                <span class="rounded-full border border-amber-200 bg-white px-2.5 py-1 font-bold text-amber-700">
+                    Tổng chi tiêu: {{ number_format((float) ($selectedCustomer->total_spent ?? 0), 0, ',', '.') }} đ
+                </span>
+            </div>
+        </div>
+        <a href="{{ route('admin.orders.index') }}"
+           class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 transition hover:bg-blue-100">
+            <i class="fa-solid fa-xmark"></i> Bỏ lọc khách hàng
+        </a>
+    </div>
+@elseif (request()->filled('customer_id'))
+    <div class="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <span>Không tìm thấy tài khoản khách hàng phù hợp.</span>
+        <a href="{{ route('admin.orders.index') }}" class="text-xs font-bold text-amber-800 hover:underline">Xem tất cả đơn</a>
+    </div>
+@endif
+
 <!-- 1. Stats Grid -->
 <div class="stats-grid">
     <div class="stat-card">

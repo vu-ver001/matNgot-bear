@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 
@@ -16,6 +17,30 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $query = Order::with(['customer', 'latestPayment', 'details.product.images']);
+
+        $selectedCustomer = null;
+        if ($request->filled('customer_id')) {
+            $selectedCustomer = User::where('role', User::ROLE_CUSTOMER)
+                ->withSum([
+                    'orders as total_spent' => fn ($orderQuery) => $orderQuery
+                        ->where('order_status', 'COMPLETED')
+                        ->where('payment_status', 'PAID'),
+                ], 'total_amount')
+                ->find($request->integer('customer_id'));
+
+            if ($selectedCustomer) {
+                $query->where('customer_id', $selectedCustomer->id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $statusCountsQuery = Order::query();
+        if ($selectedCustomer) {
+            $statusCountsQuery->where('customer_id', $selectedCustomer->id);
+        } elseif ($request->filled('customer_id')) {
+            $statusCountsQuery->whereRaw('1 = 0');
+        }
 
         if ($request->filled('order_status')) {
             $query->where('order_status', $request->order_status);
@@ -40,18 +65,16 @@ class OrderController extends Controller
 
         $orders = $query->latest()->paginate($perPage);
 
-        $stats = [
-            'total' => Order::count(),
-            'pending' => Order::where('order_status', 'PENDING')->count(),
-            'confirmed' => Order::where('order_status', 'CONFIRMED')->count(),
-            'preparing' => Order::where('order_status', 'PREPARING')->count(),
-            'shipping' => Order::where('order_status', 'SHIPPING')->count(),
-            'completed' => Order::where('order_status', 'COMPLETED')->count(),
-            'returned' => Order::where('order_status', 'RETURNED')->count(),
-            'cancelled' => Order::where('order_status', 'CANCELLED')->count(),
-        ];
+        $statusCounts = $statusCountsQuery
+            ->selectRaw('order_status, COUNT(*) as aggregate')
+            ->groupBy('order_status')
+            ->pluck('aggregate', 'order_status');
+        $stats = ['total' => $statusCounts->sum()];
+        foreach ($statusCounts as $status => $count) {
+            $stats[strtolower($status)] = $count;
+        }
 
-        return view('admin.orders.index', compact('orders', 'stats'));
+        return view('admin.orders.index', compact('orders', 'stats', 'selectedCustomer'));
     }
 
     public function bulkUpdateStatus(Request $request)

@@ -1,6 +1,17 @@
 <form method="GET" action="{{ route($routePrefix.'.index') }}" class="toolbar-grid orders-filter-bar flex flex-wrap items-center gap-3 mb-5">
+    @php
+        $resetParams = array_filter([
+            'order_status' => request('order_status'),
+            'customer_id' => request()->routeIs('admin.orders.*') ? request('customer_id') : null,
+        ], fn ($value) => $value !== null && $value !== '');
+    @endphp
+
     @if (request('order_status'))
         <input type="hidden" name="order_status" value="{{ request('order_status') }}">
+    @endif
+
+    @if (request()->routeIs('admin.orders.*') && request()->filled('customer_id'))
+        <input type="hidden" name="customer_id" value="{{ request('customer_id') }}">
     @endif
 
     <!-- 1. Search Box -->
@@ -45,7 +56,7 @@
             <span>Lọc</span>
         </button>
         @if (request()->hasAny(['search', 'payment_status', 'order_status', 'per_page']))
-            <a href="{{ route($routePrefix.'.index', request('order_status') ? ['order_status' => request('order_status')] : []) }}" 
+            <a href="{{ route($routePrefix.'.index', $resetParams) }}"
                class="btn btn-outline inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-stone-50 text-[#795548] border border-[#EADFCF] font-semibold rounded-xl text-xs sm:text-sm transition shadow-2xs" 
                title="Xóa bộ lọc và đặt lại">
                 <i class="fa-solid fa-rotate-left text-xs"></i>

@@ -10,7 +10,7 @@ class UserService
 {
     public function list(array $filters): LengthAwarePaginator
     {
-        $query = User::query();
+        $query = User::query()->withCount('orders');
 
         if (! empty($filters['role'])) {
             $query->where('role', $filters['role']);

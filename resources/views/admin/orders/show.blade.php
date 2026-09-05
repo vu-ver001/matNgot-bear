@@ -74,7 +74,7 @@
                     <dt class="text-xs font-bold text-[#8E8076] uppercase">Người nhận hàng</dt>
                     <dd class="font-extrabold text-[#4E342E] text-base mt-0.5">{{ $order->recipient_name }}</dd>
                     @if ($order->customer)
-                        <span class="text-[11px] text-[#8D6E63] font-medium"><i class="fa-solid fa-user-tag text-[10px]"></i> Tài khoản: {{ $order->customer->full_name }} ({{ $order->customer->email }})</span>
+                        <span class="text-[11px] text-[#8D6E63] font-medium"><i class="fa-solid fa-user-tag text-[10px]"></i> Tài khoản: {{ $order->customer->full_name }}</span>
                     @endif
                 </div>
                 <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">

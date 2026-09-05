@@ -115,6 +115,65 @@ class UserManagementTest extends TestCase
         $this->assertSoftDeleted('users', ['id' => $customer->id]);
     }
 
+    public function test_user_list_shows_order_totals_only_for_customers(): void
+    {
+        $customer = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+        $customerWithoutOrders = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF]);
+        $category = Category::create(['name' => 'Order count category', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Sản phẩm đếm đơn',
+            'price' => 100000,
+            'stock_quantity' => 10,
+            'status' => 'ACTIVE',
+        ]);
+
+        $completedOrder = app(OrderService::class)->createOrder([
+            'customer_id' => $customer->id,
+            'recipient_name' => $customer->full_name,
+            'recipient_phone' => '0980000000',
+            'recipient_address' => 'Hà Nội',
+            'payment_method' => 'COD',
+        ], [(object) ['product_id' => $product->id, 'quantity' => 1]]);
+        $completedOrder->update([
+            'order_status' => 'COMPLETED',
+            'payment_status' => 'PAID',
+        ]);
+
+        $cancelledOrder = app(OrderService::class)->createOrder([
+            'customer_id' => $customer->id,
+            'recipient_name' => $customer->full_name,
+            'recipient_phone' => '0980000000',
+            'recipient_address' => 'Hà Nội',
+            'payment_method' => 'COD',
+        ], [(object) ['product_id' => $product->id, 'quantity' => 1]]);
+        $cancelledOrder->update([
+            'order_status' => 'CANCELLED',
+            'payment_status' => 'PAID',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('2 đơn hàng')
+            ->assertSee('0 đơn hàng')
+            ->assertDontSee('đã hoàn thành')
+            ->assertDontSee('Tổng chi tiêu')
+            ->assertSee(route('admin.orders.index', ['customer_id' => $customer->id]), false)
+            ->assertDontSee(route('admin.orders.index', ['customer_id' => $staff->id]), false);
+
+        $response->assertViewHas('users', function ($users) use ($customer, $customerWithoutOrders, $staff) {
+            $listedCustomer = $users->firstWhere('id', $customer->id);
+            $listedCustomerWithoutOrders = $users->firstWhere('id', $customerWithoutOrders->id);
+            $listedStaff = $users->firstWhere('id', $staff->id);
+
+            return $listedCustomer?->orders_count === 2
+                && $listedCustomerWithoutOrders?->orders_count === 0
+                && $listedStaff?->orders_count === 0;
+        });
+    }
+
     public function test_cannot_delete_user_with_orders(): void
     {
         $customer = User::factory()->create(['role' => 'CUSTOMER']);

@@ -149,6 +149,83 @@ class OrderManagementTest extends TestCase
             ->assertOk()->assertSee('Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.');
     }
 
+    public function test_admin_can_filter_orders_by_customer_and_keep_the_filter(): void
+    {
+        $mine = $this->createOrder($this->customer);
+        $mine->update(['order_status' => 'COMPLETED', 'payment_status' => 'PAID']);
+        $expectedTotalSpent = (float) $mine->total_amount;
+
+        $otherCustomer = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+        $other = $this->createOrder($otherCustomer);
+        $other->update(['order_status' => 'COMPLETED', 'payment_status' => 'PAID']);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.orders.index', [
+            'customer_id' => $this->customer->id,
+            'order_status' => 'COMPLETED',
+            'payment_status' => 'PAID',
+        ]));
+
+        $response->assertOk()
+            ->assertSee($mine->order_code)
+            ->assertDontSee($other->order_code)
+            ->assertSee('Đang xem đơn hàng của')
+            ->assertSee($this->customer->full_name)
+            ->assertSee('Tổng chi tiêu: '.number_format($expectedTotalSpent, 0, ',', '.').' đ')
+            ->assertSee('name="customer_id" value="'.$this->customer->id.'"', false)
+            ->assertSee(route('admin.orders.index', [
+                'customer_id' => $this->customer->id,
+                'payment_status' => 'PAID',
+                'order_status' => 'SHIPPING',
+            ]))
+            ->assertSee(route('admin.orders.index', [
+                'order_status' => 'COMPLETED',
+                'customer_id' => $this->customer->id,
+            ]));
+
+        $response->assertViewHas('selectedCustomer', fn ($customer) => $customer?->is($this->customer)
+            && (float) $customer->total_spent === $expectedTotalSpent);
+        $response->assertViewHas('orders', fn ($orders) => $orders->total() === 1
+            && $orders->every(fn ($order) => $order->customer_id === $this->customer->id));
+        $response->assertViewHas('stats', fn ($stats) => $stats['total'] === 1
+            && $stats['completed'] === 1);
+    }
+
+    public function test_admin_customer_filter_rejects_non_customer_accounts(): void
+    {
+        $this->createOrder($this->customer);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.orders.index', [
+            'customer_id' => $this->staff->id,
+        ]));
+
+        $response->assertOk()
+            ->assertSee('Không tìm thấy tài khoản khách hàng phù hợp.')
+            ->assertViewHas('selectedCustomer', fn ($customer) => $customer === null)
+            ->assertViewHas('orders', fn ($orders) => $orders->total() === 0)
+            ->assertViewHas('stats', fn ($stats) => $stats['total'] === 0);
+    }
+
+    public function test_admin_order_pagination_keeps_customer_filter(): void
+    {
+        $this->product->update(['stock_quantity' => 100]);
+
+        for ($index = 0; $index < 16; $index++) {
+            $this->createOrder($this->customer);
+        }
+
+        $response = $this->actingAs($this->admin)->get(route('admin.orders.index', [
+            'customer_id' => $this->customer->id,
+            'per_page' => 15,
+        ]));
+
+        $response->assertOk()
+            ->assertSee(route('admin.orders.index', [
+                'customer_id' => $this->customer->id,
+                'per_page' => 15,
+                'page' => 2,
+            ]));
+    }
+
     public function test_staff_can_update_order_status_and_payment(): void
     {
         $order = $this->createOrder($this->customer);

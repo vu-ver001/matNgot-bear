@@ -46,7 +46,7 @@
                         <dt class="text-[#795548]">Người nhận</dt>
                         <dd class="font-medium text-[#4E342E]">{{ $order->recipient_name }}</dd>
                         @if ($isStaff && $order->customer)
-                            <dd class="text-xs text-[#795548] mt-1">Tài khoản: {{ $order->customer->full_name }} ({{ $order->customer->email }})</dd>
+                            <dd class="text-xs text-[#795548] mt-1">Tài khoản: {{ $order->customer->full_name }}</dd>
                         @endif
                     </div>
                     <div>
