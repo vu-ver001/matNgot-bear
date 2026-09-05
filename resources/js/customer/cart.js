@@ -196,6 +196,10 @@ export function cartComponent(initialItems = []) {
                     this.selectedItems = this.selectedItems.filter(id => id !== itemId);
                     this.saveSelection();
                     
+                    if (typeof updateCartBadge === 'function') {
+                        updateCartBadge(this.items.length);
+                    }
+                    
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'success',

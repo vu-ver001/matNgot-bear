@@ -53,29 +53,28 @@
         </a>
 
         <!-- Cart (Giỏ hàng) -->
-        <a href="{{ route('customer.cart') }}" class="utility-icon-btn" title="Giỏ hàng">
+        @auth
+            <a href="{{ route('customer.cart') }}" class="utility-icon-btn {{ request()->routeIs('customer.cart*') ? 'active' : '' }}" title="Giỏ hàng">
+        @endauth
+        @guest
+            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.cart') }}', 'Đăng nhập xem Giỏ hàng', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem giỏ hàng và thanh toán nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.cart')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.cart*') ? 'active' : '' }}" title="Giỏ hàng">
+        @endguest
             <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
             <span class="badge-count" id="cart-count">{{ (int) ($realCartCount ?? 0) > 99 ? '99+' : (int) ($realCartCount ?? 0) }}</span>
         </a>
 
-        <!-- My Orders (Đơn hàng của tôi cạnh giỏ hàng) -->
+        <!-- Vouchers (Kho voucher khuyến mãi) -->
         @auth
-            <a href="{{ route('customer.orders.index') }}" class="utility-icon-btn" title="Đơn hàng của tôi">
-                <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
-                @php
-                    $pendingOrderCount = \App\Models\Order::where('customer_id', auth()->id())
-                        ->whereNotIn('order_status', ['CANCELLED', 'DELIVERED', 'COMPLETED'])
-                        ->count();
-                @endphp
-                @if($pendingOrderCount > 0)
-                    <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ $pendingOrderCount }}</span>
-                @endif
-            </a>
-        @else
-            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" title="Đơn hàng của tôi (Đăng nhập để xem)">
-                <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
-            </a>
+            <a href="{{ route('customer.vouchers.index') }}" class="utility-icon-btn {{ request()->routeIs('customer.vouchers.*') ? 'active' : '' }}" title="Kho voucher & khuyến mãi">
         @endauth
+        @guest
+            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.vouchers.index') }}', 'Đăng nhập xem Kho Voucher', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem toàn bộ voucher và nhận ưu đãi nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.vouchers.index')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.vouchers.*') ? 'active' : '' }}" title="Kho voucher & khuyến mãi">
+        @endguest
+            <i class="fa-solid fa-ticket" style="font-size: 16px; color: #E08A1E;"></i>
+            @if(($availableVoucherCount ?? 0) > 0)
+                <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ (int) ($availableVoucherCount ?? 0) > 99 ? '99+' : (int) ($availableVoucherCount ?? 0) }}</span>
+            @endif
+        </a>
 
         <!-- Nút Đăng nhập / Đăng xuất & Tài khoản -->
         <div style="position: relative;">

@@ -312,16 +312,22 @@
                                     <dt class="text-[#64748B]">Tạm tính</dt>
                                     <dd class="font-medium text-[#1E293B]">{{ number_format($order->subtotal, 0, ',', '.') }} đ</dd>
                                 </div>
-                                @if ($order->discount_amount > 0)
-                                    <div class="flex justify-between">
-                                        <dt class="text-[#64748B]">Giảm giá {{ $order->voucher?->code ? "({$order->voucher->code})" : '' }}</dt>
-                                        <dd class="font-medium text-rose-600">-{{ number_format($order->discount_amount, 0, ',', '.') }} đ</dd>
-                                    </div>
-                                @endif
                                 <div class="flex justify-between">
                                     <dt class="text-[#64748B]">Phí vận chuyển</dt>
                                     <dd class="font-medium text-[#1E293B]">{{ number_format($order->shipping_fee, 0, ',', '.') }} đ</dd>
                                 </div>
+                                @if (($order->shipping_discount_amount ?? 0) > 0)
+                                    <div class="flex justify-between">
+                                        <dt class="text-[#64748B]">Giảm phí vận chuyển {{ $order->shippingVoucher?->code ? "({$order->shippingVoucher->code})" : '' }}</dt>
+                                        <dd class="font-medium text-teal-600">-{{ number_format($order->shipping_discount_amount, 0, ',', '.') }} đ</dd>
+                                    </div>
+                                @endif
+                                @if ($order->discount_amount > 0)
+                                    <div class="flex justify-between">
+                                        <dt class="text-[#64748B]">Giảm giá voucher {{ $order->voucher?->code ? "({$order->voucher->code})" : '' }}</dt>
+                                        <dd class="font-medium text-rose-600">-{{ number_format($order->discount_amount, 0, ',', '.') }} đ</dd>
+                                    </div>
+                                @endif
                                 <div class="flex justify-between text-base pt-2 border-t border-amber-100">
                                     <dt class="font-semibold text-[#1E293B]">Tổng cộng</dt>
                                     <dd class="font-bold text-amber-600">{{ number_format($order->total_amount, 0, ',', '.') }} đ</dd>

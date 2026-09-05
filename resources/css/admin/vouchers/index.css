@@ -4,7 +4,7 @@
 
 .voucher-stat-card {
     background-color: #FFFFFF;
-    border-radius: 1.25rem;
+    border-radius: 0.75rem;
     padding: 1.25rem 1.5rem;
     border: 1px solid #EBDDCD;
     box-shadow: 0 2px 8px rgba(92, 50, 25, 0.04);
@@ -22,7 +22,7 @@
 .voucher-stat-icon {
     width: 3.5rem;
     height: 3.5rem;
-    border-radius: 1.125rem;
+    border-radius: 0.625rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -43,7 +43,7 @@
 .voucher-filter-select {
     background-color: #FFFFFF;
     border: 1px solid #EBDDCD;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     padding: 0.65rem 1rem;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -62,7 +62,7 @@
     background-color: #5C3219;
     color: #FFFFFF;
     border: none;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     padding: 0.65rem 1.5rem;
     font-size: 0.8125rem;
     font-weight: 800;
@@ -82,7 +82,7 @@
 /* Modern Vouchers Table */
 .voucher-table-wrapper {
     background-color: #FFFFFF;
-    border-radius: 1.5rem;
+    border-radius: 0.875rem;
     border: 1px solid #F0E6D8;
     box-shadow: 0 2px 8px rgba(92, 50, 25, 0.04);
     overflow: hidden;
@@ -129,8 +129,8 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 800;
     font-size: 0.9375rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.375rem;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;

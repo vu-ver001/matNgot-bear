@@ -30,7 +30,9 @@
     })">
     <div class="min-h-screen bg-cream-bg flex flex-col">
         @auth
-            @include('layouts.navigation')
+            @if (!request()->routeIs('customer.checkout*') && !request()->routeIs('customer.cart*') && !request()->routeIs('customer.payment.*'))
+                @include('layouts.navigation')
+            @endif
         @endauth
 
         <!-- Page Heading -->

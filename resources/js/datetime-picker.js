@@ -5,6 +5,7 @@ export function cuteDateTimePicker(config) {
         dropUp: false,
         alignRight: false,
         minDateStr: config.minDate || null,
+        disablePast: config.disablePast !== false,
 
         // Selected date state
         selectedYear: null,
@@ -22,6 +23,27 @@ export function cuteDateTimePicker(config) {
             'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8',
             'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
         ],
+
+        get minTime() {
+            if (this.minDateStr) {
+                const parsed = new Date(typeof this.minDateStr === 'string' ? this.minDateStr.replace(/-/g, '/') : this.minDateStr);
+                if (!isNaN(parsed.getTime())) {
+                    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
+                }
+            }
+            if (this.disablePast) {
+                const now = new Date();
+                return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            }
+            return 0;
+        },
+
+        get isPrevMonthDisabled() {
+            if (!this.disablePast && !this.minDateStr) return false;
+            const minD = new Date(this.minTime);
+            return (this.viewYear < minD.getFullYear()) || 
+                   (this.viewYear === minD.getFullYear() && this.viewMonth <= minD.getMonth());
+        },
 
         init() {
             const now = new Date();
@@ -154,15 +176,20 @@ export function cuteDateTimePicker(config) {
             // Previous month days
             for (let i = startDay - 1; i >= 0; i--) {
                 const d = daysInPrevMonth - i;
+                const prevYear = month === 0 ? year - 1 : year;
+                const prevMonth = month === 0 ? 11 : month - 1;
+                const cellTime = new Date(prevYear, prevMonth, d).getTime();
+                const isPast = cellTime < this.minTime;
+
                 grid.push({
                     key: `prev-${d}`,
                     date: d,
-                    month: month - 1,
-                    year: month === 0 ? year - 1 : year,
+                    month: prevMonth,
+                    year: prevYear,
                     isOtherMonth: true,
                     isToday: false,
                     isSelected: false,
-                    clickable: true
+                    clickable: !isPast
                 });
             }
 
@@ -180,6 +207,9 @@ export function cuteDateTimePicker(config) {
                     year === this.selectedYear
                 );
 
+                const cellTime = new Date(year, month, d).getTime();
+                const isPast = cellTime < this.minTime;
+
                 grid.push({
                     key: `curr-${d}`,
                     date: d,
@@ -188,22 +218,27 @@ export function cuteDateTimePicker(config) {
                     isOtherMonth: false,
                     isToday: isToday,
                     isSelected: isSelected,
-                    clickable: true
+                    clickable: !isPast
                 });
             }
 
             // Next month days to fill 42 cells grid (6 weeks)
             const remaining = 42 - grid.length;
             for (let d = 1; d <= remaining; d++) {
+                const nextYear = month === 11 ? year + 1 : year;
+                const nextMonth = month === 11 ? 0 : month + 1;
+                const cellTime = new Date(nextYear, nextMonth, d).getTime();
+                const isPast = cellTime < this.minTime;
+
                 grid.push({
                     key: `next-${d}`,
                     date: d,
-                    month: month + 1,
-                    year: month === 11 ? year + 1 : year,
+                    month: nextMonth,
+                    year: nextYear,
                     isOtherMonth: true,
                     isToday: false,
                     isSelected: false,
-                    clickable: true
+                    clickable: !isPast
                 });
             }
 
@@ -211,6 +246,7 @@ export function cuteDateTimePicker(config) {
         },
 
         prevMonth() {
+            if (this.isPrevMonthDisabled) return;
             if (this.viewMonth === 0) {
                 this.viewMonth = 11;
                 this.viewYear--;
@@ -229,6 +265,9 @@ export function cuteDateTimePicker(config) {
         },
 
         selectDay(year, month, date) {
+            const cellTime = new Date(year, month, date).getTime();
+            if (cellTime < this.minTime) return;
+
             this.selectedYear = year;
             this.selectedMonth = month;
             this.selectedDate = date;

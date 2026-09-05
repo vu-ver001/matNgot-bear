@@ -1,4 +1,8 @@
-<x-app-layout>
+@extends('layouts.customer')
+
+@section('title', 'Thanh Toán Đơn Hàng - Mật Ngọt Bear')
+
+@section('content')
     <style>
         /* Exact color palette and typography matching the mockup */
         :root {
@@ -313,9 +317,22 @@
         }
 
         .shopee-voucher-card.disabled {
-            opacity: 0.65;
+            opacity: 0.7;
             background: #FAF8F5;
             border-color: #EADBCC;
+        }
+
+        .shopee-voucher-card.exhausted {
+            opacity: 0.55 !important;
+            background: #F8F8F8 !important;
+            border-color: #E5E7EB !important;
+            filter: grayscale(35%);
+            cursor: not-allowed;
+        }
+
+        .shopee-voucher-card.exhausted .voucher-stub-order,
+        .shopee-voucher-card.exhausted .voucher-stub-shipping {
+            background-color: #9CA3AF !important;
         }
 
         .voucher-stub-order {
@@ -522,6 +539,7 @@
                 <input type="hidden" name="recipient_address" :value="fullAddress">
                 <input type="hidden" name="province" :value="selectedProvince">
                 <input type="hidden" name="ward" :value="selectedWard">
+                <input type="hidden" name="address_detail" :value="streetAddress">
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                     
@@ -636,12 +654,12 @@
                                         <div x-show="open" x-transition.origin.top.duration.150ms 
                                              class="searchable-dropdown-panel" style="display: none;">
                                             <input type="text" x-ref="wardInput" x-model="search" 
-                                                   @keydown.enter.prevent="if(search.trim()) { selectedWard = search.trim(); open = false; search = ''; onAddressChange(); }"
+                                                   @keydown.enter.prevent="if(search.trim()) { selectWardName(search.trim()); open = false; search = ''; }"
                                                    placeholder="🔍 Tìm hoặc nhập phường / xã..." 
                                                    class="searchable-dropdown-input">
                                             <div class="searchable-dropdown-list">
                                                 <template x-for="w in filterWards(availableWards, search)" :key="w">
-                                                    <div @click="selectedWard = w; open = false; search = ''; onAddressChange()" 
+                                                    <div @click="selectWardName(w); open = false; search = ''" 
                                                          class="searchable-dropdown-item !items-start !flex-col !py-2"
                                                          :class="{ 'active': selectedWard === w }">
                                                         <div class="flex items-center justify-between w-full">
@@ -655,7 +673,7 @@
                                                 </template>
                                                 {{-- Quick Add/Select if typing a custom or new commune name --}}
                                                 <div x-show="search.trim() && !availableWards.includes(search.trim())" 
-                                                     @click="selectedWard = search.trim(); open = false; search = ''; onAddressChange()"
+                                                     @click="selectWardName(search.trim()); open = false; search = ''"
                                                      class="p-2.5 px-3.5 text-xs text-[#D68729] hover:bg-[#FFF9F2] cursor-pointer flex items-center gap-2 border-t border-[#F2DECA] font-medium transition-colors">
                                                     <span class="text-sm">➕</span>
                                                     <span>Sử dụng: "<strong x-text="search.trim()"></strong>"</span>
@@ -674,7 +692,8 @@
                                     <input type="text" 
                                            id="street-address-input"
                                            x-model="streetAddress" 
-                                           @input.debounce.500ms="onAddressChange()"
+                                           @input.debounce.400ms="onStreetAddressInput()"
+                                           @blur="cleanStreetAddress(); onAddressChange()"
                                            required
                                            placeholder="Số nhà, tên đường, khu phố..."
                                            class="mn-input">
@@ -1030,7 +1049,8 @@
                                                     <div class="shopee-voucher-card"
                                                          :class="{
                                                             'selected': selectedShippingVoucher && selectedShippingVoucher.id === v.id,
-                                                            'disabled': getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v)
+                                                            'disabled': getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v),
+                                                            'exhausted': getVoucherStatus(v).key === 'EXHAUSTED' || getVoucherStatus(v).key === 'EXHAUSTED_USER'
                                                          }">
                                                         {{-- Left Stub --}}
                                                         <div class="voucher-stub-shipping">
@@ -1046,25 +1066,41 @@
                                                         {{-- Right Info --}}
                                                         <div class="flex-1 p-2 sm:p-2.5 flex flex-col justify-between min-w-0">
                                                             <div class="flex items-start justify-between gap-1.5">
-                                                                <div>
+                                                                <div class="min-w-0 flex-1">
                                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                                         <span class="px-1.5 py-0.2 rounded bg-[#FFF0DC] text-[#D68729] font-extrabold text-[10px] tracking-wide border border-[#FAD9B5]"
                                                                               x-text="v.code"></span>
                                                                         <span class="font-bold text-[11.5px] text-[#2B1810]"
-                                                                              x-text="v.discount_type === 'PERCENTAGE' ? 'Giảm ' + parseFloat(v.discount_value) + '% phí ship' : 'Giảm ' + formatVND(v.discount_value)"></span>
+                                                                              x-text="v.discount_type === 'PERCENTAGE' ? 'Giảm ' + parseFloat(v.discount_value) + '% phí ship' + (v.max_discount_value && parseFloat(v.max_discount_value) > 0 ? ' (Tối đa ' + formatVND(v.max_discount_value) + ')' : '') : 'Giảm ' + formatVND(v.discount_value)"></span>
                                                                     </div>
                                                                     <div class="text-[10px] text-[#7D6B5D] mt-0.5">
                                                                         Đơn tối thiểu: <span class="font-semibold text-[#2B1810]" x-text="formatVND(v.min_order_value || 0)"></span>
+                                                                    </div>
+
+                                                                    {{-- Usage remaining badges --}}
+                                                                    <div class="flex items-center gap-1 mt-1 flex-wrap text-[9px]">
+                                                                        {{-- Global Shop remaining --}}
+                                                                        <span class="px-1.5 py-0.5 rounded font-medium transition"
+                                                                              :class="v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining <= 0) ? 'bg-rose-50 text-rose-600 font-bold border border-rose-200' : 'bg-[#F4E8D8]/60 text-[#7D6B5D]'"
+                                                                              x-text="v.global_limit > 0 ? (v.global_remaining > 0 ? ('Còn ' + v.global_remaining + '/' + v.global_limit + ' lượt') : 'Hết lượt toàn shop') : 'Lượt shop: Không giới hạn'">
+                                                                        </span>
+
+                                                                        {{-- Customer personal remaining --}}
+                                                                        <span class="px-1.5 py-0.5 rounded font-medium transition"
+                                                                              :class="v.is_user_exhausted || (v.user_remaining !== undefined && v.user_remaining <= 0) ? 'bg-rose-50 text-rose-600 font-bold border border-rose-200' : 'bg-[#FFF0DC] text-[#D68729] font-bold border border-[#FAD9B5]'"
+                                                                              x-text="(v.user_remaining !== undefined && v.user_remaining <= 0) ? ('Bạn đã dùng ' + v.user_used_count + '/' + (v.user_limit || 1) + ' lượt') : ('Lượt của bạn: còn ' + (v.user_remaining !== undefined ? v.user_remaining : (v.user_limit || 1)) + '/' + (v.user_limit || 1))">
+                                                                        </span>
                                                                     </div>
                                                                 </div>
 
                                                                 {{-- Action Button --}}
                                                                 <div class="shrink-0">
                                                                     <button type="button" @click="toggleShippingVoucher(v)"
-                                                                            class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition cursor-pointer"
+                                                                            :disabled="getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v)"
+                                                                            class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition"
                                                                             :class="selectedShippingVoucher && selectedShippingVoucher.id === v.id ? 
-                                                                                'bg-[#0D9488] text-white shadow-xs' : 
-                                                                                (getVoucherStatus(v).key === 'ACTIVE' && isEligible(v) ? 'bg-[#FFF0DC] text-[#D68729] hover:bg-[#0D9488] hover:text-white border border-[#FAD9B5]' : 'bg-[#F4F4F4] text-[#A0A0A0] cursor-not-allowed')">
+                                                                                'bg-[#0D9488] text-white shadow-xs cursor-pointer' : 
+                                                                                (getVoucherStatus(v).key === 'ACTIVE' && isEligible(v) ? 'bg-[#FFF0DC] text-[#D68729] hover:bg-[#0D9488] hover:text-white border border-[#FAD9B5] cursor-pointer' : 'bg-[#F4F4F4] text-[#A0A0A0] cursor-not-allowed')">
                                                                         <span x-text="selectedShippingVoucher && selectedShippingVoucher.id === v.id ? '✓ Đang dùng' : (getVoucherStatus(v).key === 'ACTIVE' ? (isEligible(v) ? 'Áp dụng' : 'Chưa đủ ĐK') : getVoucherStatus(v).btnText)"></span>
                                                                     </button>
                                                                 </div>
@@ -1123,7 +1159,8 @@
                                                     <div class="shopee-voucher-card"
                                                          :class="{
                                                             'selected': selectedOrderVoucher && selectedOrderVoucher.id === v.id,
-                                                            'disabled': getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v)
+                                                            'disabled': getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v),
+                                                            'exhausted': getVoucherStatus(v).key === 'EXHAUSTED' || getVoucherStatus(v).key === 'EXHAUSTED_USER'
                                                          }">
                                                         {{-- Left Stub --}}
                                                         <div class="voucher-stub-order">
@@ -1139,25 +1176,41 @@
                                                         {{-- Right Info --}}
                                                         <div class="flex-1 p-2 sm:p-2.5 flex flex-col justify-between min-w-0">
                                                             <div class="flex items-start justify-between gap-1.5">
-                                                                <div>
+                                                                <div class="min-w-0 flex-1">
                                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                                         <span class="px-1.5 py-0.2 rounded bg-[#FFF0DC] text-[#D68729] font-extrabold text-[10px] tracking-wide border border-[#FAD9B5]"
                                                                               x-text="v.code"></span>
                                                                         <span class="font-bold text-[11.5px] text-[#2B1810]"
-                                                                              x-text="v.discount_type === 'PERCENTAGE' ? 'Giảm ' + parseFloat(v.discount_value) + '%' : 'Giảm ' + formatVND(v.discount_value)"></span>
+                                                                              x-text="v.discount_type === 'PERCENTAGE' ? 'Giảm ' + parseFloat(v.discount_value) + '%' + (v.max_discount_value && parseFloat(v.max_discount_value) > 0 ? ' (Tối đa ' + formatVND(v.max_discount_value) + ')' : '') : 'Giảm ' + formatVND(v.discount_value)"></span>
                                                                     </div>
                                                                     <div class="text-[10px] text-[#7D6B5D] mt-0.5">
                                                                         Đơn tối thiểu: <span class="font-semibold text-[#2B1810]" x-text="formatVND(v.min_order_value || 0)"></span>
+                                                                    </div>
+
+                                                                    {{-- Usage remaining badges --}}
+                                                                    <div class="flex items-center gap-1 mt-1 flex-wrap text-[9px]">
+                                                                        {{-- Global Shop remaining --}}
+                                                                        <span class="px-1.5 py-0.5 rounded font-medium transition"
+                                                                              :class="v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining <= 0) ? 'bg-rose-50 text-rose-600 font-bold border border-rose-200' : 'bg-[#F4E8D8]/60 text-[#7D6B5D]'"
+                                                                              x-text="v.global_limit > 0 ? (v.global_remaining > 0 ? ('Còn ' + v.global_remaining + '/' + v.global_limit + ' lượt') : 'Hết lượt toàn shop') : 'Lượt shop: Không giới hạn'">
+                                                                        </span>
+
+                                                                        {{-- Customer personal remaining --}}
+                                                                        <span class="px-1.5 py-0.5 rounded font-medium transition"
+                                                                              :class="v.is_user_exhausted || (v.user_remaining !== undefined && v.user_remaining <= 0) ? 'bg-rose-50 text-rose-600 font-bold border border-rose-200' : 'bg-[#FFF0DC] text-[#D68729] font-bold border border-[#FAD9B5]'"
+                                                                              x-text="(v.user_remaining !== undefined && v.user_remaining <= 0) ? ('Bạn đã dùng ' + v.user_used_count + '/' + (v.user_limit || 1) + ' lượt') : ('Lượt của bạn: còn ' + (v.user_remaining !== undefined ? v.user_remaining : (v.user_limit || 1)) + '/' + (v.user_limit || 1))">
+                                                                        </span>
                                                                     </div>
                                                                 </div>
 
                                                                 {{-- Action Button --}}
                                                                 <div class="shrink-0">
                                                                     <button type="button" @click="toggleOrderVoucher(v)"
-                                                                            class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition cursor-pointer"
+                                                                            :disabled="getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v)"
+                                                                            class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition"
                                                                             :class="selectedOrderVoucher && selectedOrderVoucher.id === v.id ? 
-                                                                                'bg-[#D68729] text-white shadow-xs' : 
-                                                                                (getVoucherStatus(v).key === 'ACTIVE' && isEligible(v) ? 'bg-[#FFF0DC] text-[#D68729] hover:bg-[#D68729] hover:text-white border border-[#FAD9B5]' : 'bg-[#F4F4F4] text-[#A0A0A0] cursor-not-allowed')">
+                                                                                'bg-[#D68729] text-white shadow-xs cursor-pointer' : 
+                                                                                (getVoucherStatus(v).key === 'ACTIVE' && isEligible(v) ? 'bg-[#FFF0DC] text-[#D68729] hover:bg-[#D68729] hover:text-white border border-[#FAD9B5] cursor-pointer' : 'bg-[#F4F4F4] text-[#A0A0A0] cursor-not-allowed')">
                                                                         <span x-text="selectedOrderVoucher && selectedOrderVoucher.id === v.id ? '✓ Đang dùng' : (getVoucherStatus(v).key === 'ACTIVE' ? (isEligible(v) ? 'Áp dụng' : 'Chưa đủ ĐK') : getVoucherStatus(v).btnText)"></span>
                                                                     </button>
                                                                 </div>
@@ -1213,14 +1266,11 @@
                                         $specsText = !empty($specs) ? implode(' · ', $specs) : ($item->product->category->name ?? 'Gấu bông');
                                     @endphp
                                     <div class="flex items-center gap-3.5 pt-4 first:pt-0">
-                                        {{-- Image with orange quantity badge --}}
+                                        {{-- Image (clean without circular bubble) --}}
                                         <div class="mn-product-thumb">
                                             <img src="{{ $imageUrl }}" 
                                                  alt="{{ $item->product->name }}" 
                                                  onerror="this.src='https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=300&auto=format&fit=crop&q=80'">
-                                            <span class="mn-qty-badge">
-                                                {{ $item->quantity }}
-                                            </span>
                                         </div>
 
                                         {{-- Details --}}
@@ -1229,10 +1279,13 @@
                                             <p class="text-xs text-[#7D6B5D] mt-1">{{ $specsText }}</p>
                                         </div>
 
-                                        {{-- Price --}}
+                                        {{-- Price & Quantity --}}
                                         <div class="text-right shrink-0">
-                                            <span class="text-sm sm:text-base font-extrabold text-[#D68729]">
-                                                {{ number_format($lineTotal, 0, ',', '.') }}đ
+                                            <span class="text-sm sm:text-base font-extrabold text-[#D68729] block">
+                                                {{ number_format($unitPrice, 0, ',', '.') }}đ
+                                            </span>
+                                            <span class="text-xs font-bold text-[#7D6B5D] mt-0.5 block">
+                                                x{{ $item->quantity }}
                                             </span>
                                         </div>
                                     </div>
@@ -1247,29 +1300,35 @@
                             </h3>
 
                             <div class="space-y-3 text-xs sm:text-sm mt-3">
+                                {{-- 1. Tạm tính dạng x{qty} --}}
                                 <div class="flex justify-between items-center text-[#7D6B5D]">
-                                    <span>Tạm tính ({{ $cartItems->sum('quantity') }} sản phẩm)</span>
+                                    <span>Tạm tính (x{{ $cartItems->sum('quantity') }})</span>
                                     <span class="font-extrabold text-[#2B1810]" x-text="formatVND(subtotal)">{{ number_format($subtotal, 0, ',', '.') }}đ</span>
                                 </div>
 
+                                {{-- 2. Phí vận chuyển --}}
                                 <div class="flex justify-between items-start text-[#7D6B5D]">
                                     <div>
                                         <span>Phí vận chuyển</span>
                                         <span class="block text-[11px] text-[#7D6B5D] mt-0.5" x-text="selectedShippingTime">1 - 2 ngày</span>
                                     </div>
                                     <div class="text-right">
-                                        <template x-if="shippingDiscount > 0">
-                                            <div>
-                                                <span class="line-through text-gray-400 font-medium text-xs mr-1" x-text="formatVND(shippingFee)"></span>
-                                                <span class="font-extrabold text-teal-600" x-text="formatVND(Math.max(0, shippingFee - shippingDiscount))">0đ</span>
-                                            </div>
-                                        </template>
-                                        <template x-if="!shippingDiscount || shippingDiscount <= 0">
-                                            <span class="font-extrabold text-[#2B1810]" x-text="formatVND(shippingFee)">{{ number_format($shippingFee, 0, ',', '.') }}đ</span>
-                                        </template>
+                                        <span class="font-extrabold text-[#2B1810]" x-text="shippingFee > 0 ? formatVND(shippingFee) : '0đ'">{{ number_format($shippingFee, 0, ',', '.') }}đ</span>
                                     </div>
                                 </div>
 
+                                {{-- 3. - Phí vận chuyển (khi áp dụng voucher freeship) --}}
+                                <template x-if="shippingDiscount > 0">
+                                    <div class="flex justify-between items-center text-teal-600 font-bold">
+                                        <span class="flex items-center gap-1">
+                                            <span>🚚 Giảm phí vận chuyển</span>
+                                            <span class="text-[11px] font-normal opacity-85" x-text="selectedShippingVoucher ? '[' + selectedShippingVoucher.code + ']' : ''"></span>
+                                        </span>
+                                        <span x-text="'-' + formatVND(shippingDiscount)"></span>
+                                    </div>
+                                </template>
+
+                                {{-- 4. Giảm giá voucher đơn hàng --}}
                                 <template x-if="orderDiscount > 0">
                                     <div class="flex justify-between items-center text-emerald-600 font-bold">
                                         <span class="flex items-center gap-1">
@@ -1280,20 +1339,10 @@
                                     </div>
                                 </template>
 
-                                <template x-if="selectedShippingVoucher">
-                                    <div class="flex justify-between items-center text-teal-600 font-bold">
-                                        <span class="flex items-center gap-1">
-                                            <span>🚚 Giảm phí vận chuyển</span>
-                                            <span class="text-[11px] font-normal opacity-85" x-text="'[' + selectedShippingVoucher.code + ']'"></span>
-                                        </span>
-                                        <span x-text="shippingDiscount > 0 ? ('-' + formatVND(shippingDiscount)) : 'Miễn phí'"></span>
-                                    </div>
-                                </template>
-
                                 <div class="pt-4 border-t border-[#F4E8D8] flex justify-between items-baseline">
                                     <div>
                                         <span class="text-xs sm:text-sm font-extrabold text-[#2B1810] block">Tổng thanh toán</span>
-                                        <span class="text-[11px] text-[#7D6B5D] font-normal block mt-0.5">Đã bao gồm VAT (nếu có)</span>
+                                        {{-- <span class="text-[11px] text-[#7D6B5D] font-normal block mt-0.5">Đã bao gồm VAT (nếu có)</span> --}}
                                     </div>
                                     <span class="text-2xl sm:text-3xl font-extrabold text-[#D68729] tracking-tight" x-text="formatVND(finalTotal)">{{ number_format($subtotal + $shippingFee, 0, ',', '.') }}đ</span>
                                 </div>
@@ -1339,6 +1388,8 @@
             orderVouchers: @json($orderVouchers),
             shippingVouchers: @json($shippingVouchers),
             allVouchers: @json($allVouchers ?? $orderVouchers),
+            usedVoucherCodes: @json($usedVoucherCodes ?? []),
+            savedProfile: @json($savedProfile ?? null),
             userAddress: @json($user->address ?? ''),
             initialShipping: @json($initialShipping ?? null),
             googleMapsApiKey: @json($googleMapsApiKey ?? ''),
@@ -1393,6 +1444,9 @@
                     {
                         name: 'Hà Nội',
                         wards: [
+                            'Phường Ba Đình', 'Phường Đống Đa', 'Phường Hai Bà Trưng', 'Phường Hoàn Kiếm', 'Phường Hoàng Mai',
+                            'Phường Tây Hồ', 'Phường Cầu Giấy', 'Phường Thanh Xuân', 'Phường Nam Từ Liêm', 'Phường Bắc Từ Liêm',
+                            'Phường Hà Đông', 'Phường Long Biên',
                             'Phường Văn Miếu', 'Phường Quốc Tử Giám', 'Phường Nam Đồng', 'Phường Phương Mai', 'Phường Kim Liên',
                             'Phường Khâm Thiên', 'Phường Trung Tự', 'Phường Phương Liệt', 'Phường Thịnh Quang', 'Phường Trung Liệt',
                             'Phường Ô Chợ Dừa', 'Phường Hàng Bột', 'Phường Cát Linh', 'Phường Thổ Quan', 'Phường Văn Chương',
@@ -1731,16 +1785,20 @@
                     if (initialWard) {
                         // Find matching ward in available wards or use direct
                         const matchedW = this.availableWards.find(w => 
-                            this.normalizeStr(w) === this.normalizeStr(initialWard) || 
-                            this.normalizeStr(w).includes(this.normalizeStr(initialWard.replace('Phường ', '').replace('Xã ', ''))) ||
-                            this.normalizeStr(initialWard).includes(this.normalizeStr(w.replace('Phường ', '').replace('Xã ', '')))
+                            this.normalizeStr(w) === this.normalizeStr(initialWard)
+                        ) || this.availableWards.find(w => 
+                            this.normalizeStr(w).includes(this.normalizeStr(initialWard.replace(/^(Phường|Xã|Thị trấn)\s+/i, ''))) ||
+                            this.normalizeStr(initialWard).includes(this.normalizeStr(w.replace(/^(Phường|Xã|Thị trấn)\s+/i, '')))
                         );
                         this.selectedWard = matchedW || initialWard;
+                        if (!this.availableWards.includes(this.selectedWard)) {
+                            this.availableWards.unshift(this.selectedWard);
+                        }
                     } else if (this.streetAddress) {
-                        // Check if any available ward is mentioned in street address (e.g. Văn Miếu, Xã Đàn)
+                        // Check if any available ward is mentioned in street address (e.g. Ba Đình, Phú Diễn)
                         const matchedW = this.availableWards.find(w => {
-                            const core = w.replace('Phường ', '').replace('Xã ', '').trim();
-                            return core.length > 2 && this.normalizeStr(this.streetAddress).includes(this.normalizeStr(core));
+                            const core = w.replace(/^(Phường|Xã|Thị trấn)\s+/i, '').trim();
+                            return core.length >= 3 && this.normalizeStr(this.streetAddress).includes(this.normalizeStr(core));
                         });
                         if (matchedW) {
                             this.selectedWard = matchedW;
@@ -1750,6 +1808,9 @@
                     } else {
                         this.selectedWard = this.availableWards[0] || '';
                     }
+
+                    // Clean any duplicated ward/province names from streetAddress on load
+                    this.cleanStreetAddress();
 
                     // If initial shipping is provided, apply initial values
                     if (config.initialShipping && config.initialShipping.options) {
@@ -1786,13 +1847,17 @@
                                     // If current selectedWard is set, ensure it keeps matching
                                     if (this.selectedWard) {
                                         const matchInNew = this.availableWards.find(w => 
-                                            this.normalizeStr(w) === this.normalizeStr(this.selectedWard) ||
-                                            this.normalizeStr(w).includes(this.normalizeStr(this.selectedWard.replace('Phường ', '').replace('Xã ', '')))
+                                            this.normalizeStr(w) === this.normalizeStr(this.selectedWard)
+                                        ) || this.availableWards.find(w => 
+                                            this.normalizeStr(w).includes(this.normalizeStr(this.selectedWard.replace(/^(Phường|Xã|Thị trấn)\s+/i, '')))
                                         );
                                         if (matchInNew) {
                                             this.selectedWard = matchInNew;
+                                        } else {
+                                            this.availableWards.unshift(this.selectedWard);
                                         }
                                     }
+                                    this.cleanStreetAddress();
                                 }
                             }
                         }
@@ -1814,6 +1879,8 @@
                                     const place = autocomplete.getPlace();
                                     if (place && place.formatted_address) {
                                         this.streetAddress = place.formatted_address;
+                                        this.detectAndSyncAddress();
+                                        this.cleanStreetAddress();
                                         this.onAddressChange();
                                     }
                                 });
@@ -1870,6 +1937,95 @@
                     return '';
                 },
 
+                escapeRegExp(string) {
+                    if (!string) return '';
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                },
+
+                cleanStreetAddress() {
+                    if (!this.streetAddress) return;
+                    let s = this.streetAddress.trim();
+
+                    // Strip province if at the end of comma-separated parts
+                    if (this.selectedProvince) {
+                        const pNorm = this.normalizeStr(this.selectedProvince);
+                        let parts = s.split(',').map(p => p.trim());
+                        if (parts.length > 1 && this.normalizeStr(parts[parts.length - 1]).includes(pNorm)) {
+                            parts.pop();
+                            s = parts.join(', ');
+                        }
+                    }
+
+                    // Strip ward if at the end of comma-separated parts
+                    if (this.selectedWard) {
+                        const wCore = this.normalizeStr(this.selectedWard.replace(/^(Phường|Xã|Thị trấn)\s+/i, ''));
+                        let parts = s.split(',').map(p => p.trim());
+                        if (parts.length > 1 && this.normalizeStr(parts[parts.length - 1]).includes(wCore)) {
+                            parts.pop();
+                            s = parts.join(', ');
+                        }
+                    }
+
+                    // Strip trailing province name by regex
+                    if (this.selectedProvince) {
+                        const pEsc = this.escapeRegExp(this.selectedProvince);
+                        s = s.replace(new RegExp(',?\\s*' + pEsc + '$', 'i'), '');
+                    }
+
+                    // Strip trailing ward name by regex
+                    if (this.selectedWard) {
+                        const wEsc = this.escapeRegExp(this.selectedWard);
+                        s = s.replace(new RegExp(',?\\s*' + wEsc + '$', 'i'), '');
+                        const wCore = this.escapeRegExp(this.selectedWard.replace(/^(Phường|Xã|Thị trấn)\s+/i, '').trim());
+                        if (wCore.length >= 3) {
+                            s = s.replace(new RegExp(',?\\s*(Phường|Xã|Thị trấn)?\\s*' + wCore + '$', 'i'), '');
+                        }
+                    }
+
+                    this.streetAddress = s.replace(/^,\s*|,\s*$/g, '').trim();
+                },
+
+                onStreetAddressInput() {
+                    this.detectAndSyncAddress();
+                    this.onAddressChange();
+                },
+
+                detectAndSyncAddress() {
+                    if (!this.streetAddress) return;
+                    const text = this.normalizeStr(this.streetAddress);
+
+                    // 1. Detect if province is mentioned in text
+                    if (this.provinces && this.provinces.length > 0) {
+                        for (const p of this.provinces) {
+                            const pNorm = this.normalizeStr(p.name);
+                            if (pNorm.length >= 4 && text.includes(pNorm)) {
+                                if (this.selectedProvince !== p.name) {
+                                    this.selectedProvince = p.name;
+                                    const prov = this.provinces.find(pr => pr.name === p.name);
+                                    if (prov) {
+                                        this.availableWards = prov.wards || [];
+                                        this.availableWardDetails = prov.wardDetails || [];
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    // 2. Detect if ward from availableWards is mentioned in text
+                    if (this.availableWards && this.availableWards.length > 0) {
+                        const sortedWards = [...this.availableWards].sort((a, b) => b.length - a.length);
+                        for (const w of sortedWards) {
+                            const cleanW = w.replace(/^(Phường|Xã|Thị trấn)\s+/i, '').trim();
+                            const wNorm = this.normalizeStr(cleanW);
+                            if (wNorm.length >= 3 && text.includes(wNorm)) {
+                                this.selectedWard = w;
+                                break;
+                            }
+                        }
+                    }
+                },
+
                 selectProvinceName(name) {
                     this.selectedProvince = name;
                     const prov = this.provinces.find(p => p.name === name || this.normalizeStr(p.name).includes(this.normalizeStr(name)));
@@ -1884,6 +2040,13 @@
                         this.availableWardDetails = [];
                         this.selectedWard = '';
                     }
+                    this.cleanStreetAddress();
+                    this.onAddressChange();
+                },
+
+                selectWardName(name) {
+                    this.selectedWard = name;
+                    this.cleanStreetAddress();
                     this.onAddressChange();
                 },
 
@@ -2025,8 +2188,11 @@
                     if (v.end_date && new Date(v.end_date) < now) {
                         return { key: 'EXPIRED', label: '🔴 Đã hết hạn', badgeClass: 'bg-[#FDECEB] text-[#E04B4B] border-[#F8BDB8]', btnText: 'Hết hạn' };
                     }
-                    if (v.usage_limit && parseInt(v.used_count || 0) >= parseInt(v.usage_limit)) {
-                        return { key: 'EXPIRED', label: '🔴 Đã hết lượt', badgeClass: 'bg-[#FDECEB] text-[#E04B4B] border-[#F8BDB8]', btnText: 'Hết lượt' };
+                    if (v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining !== undefined && v.global_remaining <= 0) || (v.usage_limit && parseInt(v.used_count || 0) >= parseInt(v.usage_limit))) {
+                        return { key: 'EXHAUSTED', label: '🔴 Hết lượt toàn shop', badgeClass: 'bg-[#FDECEB] text-[#E04B4B] border-[#F8BDB8]', btnText: 'Hết lượt' };
+                    }
+                    if (v.is_user_exhausted || (v.user_remaining !== undefined && v.user_remaining <= 0)) {
+                        return { key: 'EXHAUSTED_USER', label: '🔴 Bạn đã hết lượt', badgeClass: 'bg-[#FFF1F0] text-[#E04B4B] border-[#FFA39E]', btnText: 'Hết lượt' };
                     }
                     if (v.start_date && new Date(v.start_date) > now) {
                         return { key: 'UPCOMING', label: '🟡 Sắp diễn ra', badgeClass: 'bg-[#FFF8E6] text-[#D4981E] border-[#FFE8A3]', btnText: 'Chưa mở' };
@@ -2049,7 +2215,7 @@
                         const aStatus = this.getVoucherStatus(a).key;
                         const bStatus = this.getVoucherStatus(b).key;
                         
-                        const statusWeight = { 'ACTIVE': 3, 'UPCOMING': 2, 'EXPIRED': 1 };
+                        const statusWeight = { 'ACTIVE': 3, 'UPCOMING': 2, 'EXHAUSTED_USER': 1, 'EXHAUSTED': 1, 'EXPIRED': 0 };
                         if ((statusWeight[aStatus] || 0) !== (statusWeight[bStatus] || 0)) {
                             return (statusWeight[bStatus] || 0) - (statusWeight[aStatus] || 0);
                         }
@@ -2069,7 +2235,7 @@
                         const aStatus = this.getVoucherStatus(a).key;
                         const bStatus = this.getVoucherStatus(b).key;
                         
-                        const statusWeight = { 'ACTIVE': 3, 'UPCOMING': 2, 'EXPIRED': 1 };
+                        const statusWeight = { 'ACTIVE': 3, 'UPCOMING': 2, 'EXHAUSTED_USER': 1, 'EXHAUSTED': 1, 'EXPIRED': 0 };
                         if ((statusWeight[aStatus] || 0) !== (statusWeight[bStatus] || 0)) {
                             return (statusWeight[bStatus] || 0) - (statusWeight[aStatus] || 0);
                         }
@@ -2086,8 +2252,18 @@
 
                 toggleOrderVoucher(v) {
                     const status = this.getVoucherStatus(v);
+                    if (status.key === 'EXHAUSTED') {
+                        this.voucherMessage = `Mã [${v.code}] đã hết lượt sử dụng trên toàn hệ thống.`;
+                        this.voucherSuccess = false;
+                        return;
+                    }
+                    if (status.key === 'EXHAUSTED_USER') {
+                        this.voucherMessage = `Bạn đã sử dụng hết lượt cho phép đối với mã [${v.code}].`;
+                        this.voucherSuccess = false;
+                        return;
+                    }
                     if (status.key === 'EXPIRED') {
-                        this.voucherMessage = `Mã [${v.code}] đã hết hạn hoặc hết lượt sử dụng.`;
+                        this.voucherMessage = `Mã [${v.code}] đã hết hạn hoặc tạm ngưng.`;
                         this.voucherSuccess = false;
                         return;
                     }
@@ -2115,8 +2291,18 @@
 
                 toggleShippingVoucher(v) {
                     const status = this.getVoucherStatus(v);
+                    if (status.key === 'EXHAUSTED') {
+                        this.voucherMessage = `Mã freeship [${v.code}] đã hết lượt sử dụng trên toàn hệ thống.`;
+                        this.voucherSuccess = false;
+                        return;
+                    }
+                    if (status.key === 'EXHAUSTED_USER') {
+                        this.voucherMessage = `Bạn đã sử dụng hết lượt cho phép đối với mã freeship [${v.code}].`;
+                        this.voucherSuccess = false;
+                        return;
+                    }
                     if (status.key === 'EXPIRED') {
-                        this.voucherMessage = `Mã freeship [${v.code}] đã hết hạn hoặc hết lượt sử dụng.`;
+                        this.voucherMessage = `Mã freeship [${v.code}] đã hết hạn hoặc tạm ngưng.`;
                         this.voucherSuccess = false;
                         return;
                     }
@@ -2180,8 +2366,18 @@
                     }
 
                     const status = this.getVoucherStatus(matched);
+                    if (status.key === 'EXHAUSTED') {
+                        this.voucherMessage = `Mã [${matched.code}] đã hết lượt sử dụng trên toàn hệ thống.`;
+                        this.voucherSuccess = false;
+                        return;
+                    }
+                    if (status.key === 'EXHAUSTED_USER') {
+                        this.voucherMessage = `Bạn đã sử dụng hết lượt cho phép đối với mã [${matched.code}].`;
+                        this.voucherSuccess = false;
+                        return;
+                    }
                     if (status.key === 'EXPIRED') {
-                        this.voucherMessage = `Mã [${matched.code}] đã hết hạn hoặc hết lượt sử dụng.`;
+                        this.voucherMessage = `Mã [${matched.code}] đã hết hạn hoặc tạm ngưng.`;
                         this.voucherSuccess = false;
                         return;
                     }
@@ -2269,4 +2465,4 @@
         }
     </script>
     @endpush
-</x-app-layout>
+@endsection

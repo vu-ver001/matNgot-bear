@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Voucher;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -59,7 +60,14 @@ class ProductController extends Controller
             ? Category::find($request->input('category_id')) 
             : null;
 
-        return view('shop', compact('categories', 'selectedCategory'));
+        $voucher = null;
+        if ($request->filled('voucher')) {
+            $voucher = Voucher::where('code', $request->input('voucher'))
+                ->with(['categories', 'products'])
+                ->first();
+        }
+
+        return view('shop', compact('categories', 'selectedCategory', 'voucher'));
     }
 
     /**

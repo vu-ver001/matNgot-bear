@@ -4,12 +4,16 @@ use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\PaymentController;
+use App\Http\Controllers\Customer\VoucherController as CustomerVoucherController;
 use App\Http\Controllers\Customer\WishlistKT\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('customer')->name('customer.')->group(function () {
-    // Auth Protected Routes (Giỏ hàng, Thanh toán, Đơn hàng)
+    // Auth Protected Routes (Giỏ hàng, Voucher, Thanh toán, Đơn hàng)
     Route::middleware(['auth'])->group(function () {
+        // 0. Kho Voucher & Khuyến Mãi
+        Route::get('/vouchers', [CustomerVoucherController::class, 'index'])->name('vouchers.index');
+
         // 1. Cart routes (Chuẩn hóa /customer/cart)
         Route::get('/cart', [CartController::class, 'index'])->name('cart');
         Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
@@ -81,3 +85,4 @@ Route::get('/wishlist', fn() => redirect()->route('customer.wishlist.index'));
 Route::get('/cart', fn() => redirect()->route('customer.cart'));
 Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
 Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));
+Route::get('/vouchers', fn() => redirect()->route('customer.vouchers.index'));

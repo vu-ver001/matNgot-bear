@@ -9,54 +9,73 @@
     --bg-card: #FFFFFF;
     --bg-surface: #F8F4EE;
     --bg-cream: #F5EFEB;
-    
+
     --primary: #8D6E63;
     --primary-dark: #5D4037;
     --primary-light: #BCAAA4;
     --primary-pastel: #A1887F;
-    
+
     --honey: #E59819;
     --honey-light: #FFF8E7;
     --honey-dark: #B87309;
     --honey-gold: #F6D89B;
-    
+
     --text-main: #4E342E;
     --text-muted: #795548;
     --text-light: #9E8076;
-    
+
     --border: #EADFCF;
     --border-light: #F2EAE0;
-    
+
     --success: #2E7D32;
     --success-bg: #E8F5E9;
     --danger: #C62828;
     --danger-bg: #FFEBEE;
-    
+
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 20px;
     --radius-xl: 28px;
-    
+
     --shadow-subtle: 0 4px 16px rgba(109, 76, 65, 0.05);
     --shadow-card: 0 10px 30px rgba(109, 76, 65, 0.08);
     --shadow-hover: 0 16px 40px rgba(109, 76, 65, 0.14);
 }
 
-*, ::before, ::after {
+*,
+::before,
+::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-body, button, input, select, textarea {
+body,
+button,
+input,
+select,
+textarea {
     font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.fa, .fas, .far, .fal, .fab, .fa-solid, .fa-regular, .fa-brands, i[class*="fa-"], [class^="fa-"], [class*=" fa-"] {
+.fa,
+.fas,
+.far,
+.fal,
+.fab,
+.fa-solid,
+.fa-regular,
+.fa-brands,
+i[class*="fa-"],
+[class^="fa-"],
+[class*=" fa-"] {
     font-family: "Font Awesome 6 Free" !important;
     font-style: normal;
 }
-.fa-brands, i.fa-brands, [class*="fa-brands"] {
+
+.fa-brands,
+i.fa-brands,
+[class*="fa-brands"] {
     font-family: "Font Awesome 6 Brands" !important;
 }
 
@@ -312,6 +331,12 @@ header.site-header {
     box-shadow: 0 4px 12px rgba(109, 76, 65, 0.12);
 }
 
+.utility-icon-btn.active {
+    background: #FFFFFF;
+    border-color: var(--honey);
+    box-shadow: 0 3px 10px rgba(224, 138, 30, 0.25);
+}
+
 .btn-auth-pill {
     background: linear-gradient(135deg, #8D6E63 0%, #6D4C41 100%);
     color: #FFFFFF !important;
@@ -402,7 +427,8 @@ nav.nav-bar {
     white-space: nowrap;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
     color: var(--honey-dark);
     border-bottom-color: var(--honey);
     background: rgba(255, 255, 255, 0.8);
@@ -583,7 +609,6 @@ footer.site-footer {
     background: linear-gradient(180deg, #5D4037 0%, #4E342E 100%);
     color: #EFEBE9;
     padding: 4rem 1.5rem 2rem 1.5rem;
-    margin-top: 4rem;
 }
 
 .footer-container {
@@ -852,8 +877,15 @@ footer.site-footer {
 }
 
 @keyframes fadeInMenu {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Wishlist Floating Button on Product Cards */
@@ -927,9 +959,17 @@ footer.site-footer {
 }
 
 @keyframes heartBounce {
-    0% { transform: scale(0.6); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(0.6);
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 .heart-pulse-anim {
@@ -937,28 +977,73 @@ footer.site-footer {
 }
 
 @keyframes heartPulse {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.45); color: #E53935; }
-    60% { transform: scale(0.9); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    30% {
+        transform: scale(1.45);
+        color: #E53935;
+    }
+
+    60% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* Responsive */
 @media (max-width: 1200px) {
-    .nav-link { font-size: 11.5px; padding: 12px 8px; }
+    .nav-link {
+        font-size: 11.5px;
+        padding: 12px 8px;
+    }
 }
 
 @media (max-width: 992px) {
-    .header-main-row { flex-wrap: wrap; gap: 1rem; }
-    .header-search-form { order: 3; max-width: 100%; width: 100%; }
-    .footer-container { grid-template-columns: 1fr 1fr; }
-    .nav-menu { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .nav-menu::-webkit-scrollbar { display: none; }
-    .nav-container { flex-wrap: wrap; }
-    .megamenu-panel { display: none !important; }
+    .header-main-row {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-search-form {
+        order: 3;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .nav-menu {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .nav-menu::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-container {
+        flex-wrap: wrap;
+    }
+
+    .megamenu-panel {
+        display: none !important;
+    }
 }
 
 @media (max-width: 576px) {
-    .footer-container { grid-template-columns: 1fr; }
-    .hotline-pill { display: none; }
+    .footer-container {
+        grid-template-columns: 1fr;
+    }
+
+    .hotline-pill {
+        display: none;
+    }
 }

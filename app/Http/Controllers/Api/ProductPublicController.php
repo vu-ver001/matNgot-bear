@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,6 +31,23 @@ class ProductPublicController extends Controller
                 $q->where('name', 'like', "%{$keyword}%")
                   ->orWhere('description', 'like', "%{$keyword}%");
             });
+        }
+
+        // Lọc theo voucher áp dụng
+        if ($request->filled('voucher')) {
+            $voucher = Voucher::where('code', $request->input('voucher'))
+                ->with(['categories', 'products'])
+                ->first();
+
+            if ($voucher) {
+                if ($voucher->apply_scope === 'CATEGORY') {
+                    $catIds = $voucher->categories->pluck('id')->toArray();
+                    $query->whereIn('category_id', $catIds);
+                } elseif ($voucher->apply_scope === 'PRODUCT') {
+                    $prodIds = $voucher->products->pluck('id')->toArray();
+                    $query->whereIn('id', $prodIds);
+                }
+            }
         }
 
         // 2. Lọc theo danh mục

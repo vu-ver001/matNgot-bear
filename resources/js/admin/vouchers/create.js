@@ -84,23 +84,72 @@ export function voucherForm(initialData = {}) {
         },
 
         formatCurrency(val) {
-            if (!val || isNaN(val)) return '0đ';
-            return new Intl.NumberFormat('vi-VN').format(val) + 'đ';
+            if (val === '' || val === null || val === undefined) return '0đ';
+            const clean = typeof val === 'number' ? val : String(val).replace(/\D/g, '');
+            if (!clean || isNaN(clean)) return '0đ';
+            return new Intl.NumberFormat('vi-VN').format(clean) + 'đ';
+        },
+
+        formatNumberWithDots(val) {
+            if (val === '' || val === null || val === undefined) return '';
+            const clean = String(val).replace(/\D/g, '');
+            if (!clean) return '';
+            return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        },
+
+        handleCurrencyInput(event, field) {
+            const input = event.target;
+            const oldVal = input.value;
+            const oldCursor = input.selectionEnd || 0;
+            
+            // Count digits before cursor to preserve caret position
+            const digitsBeforeCursor = oldVal.substring(0, oldCursor).replace(/\D/g, '').length;
+            
+            const rawDigits = oldVal.replace(/\D/g, '');
+            this[field] = rawDigits;
+            
+            const formatted = this.formatNumberWithDots(rawDigits);
+            input.value = formatted;
+            
+            // Restore cursor
+            let newCursor = 0;
+            let countedDigits = 0;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/\d/.test(formatted[i])) {
+                    countedDigits++;
+                }
+                newCursor = i + 1;
+                if (countedDigits >= digitsBeforeCursor) {
+                    break;
+                }
+            }
+            try {
+                input.setSelectionRange(newCursor, newCursor);
+            } catch (err) {}
+        },
+
+        get maxDiscountNumeric() {
+            return parseFloat(String(this.max_discount_value || '').replace(/\D/g, '')) || 0;
         },
 
         get previewDiscountText() {
             const val = parseFloat(this.discount_value) || 0;
+            const suffix = this.voucher_type === 'SHIPPING' ? ' phí ship' : '';
             if (this.discount_type === 'PERCENTAGE') {
-                return `Giảm ${val}%`;
+                return `Giảm ${val}%${suffix}`;
             } else {
-                return `Giảm ${new Intl.NumberFormat('vi-VN').format(val)}đ`;
+                return `Giảm ${new Intl.NumberFormat('vi-VN').format(val)}đ${suffix}`;
             }
         },
 
         get previewConditionText() {
-            const min = parseFloat(this.min_order_value) || 0;
-            if (min <= 0) return 'Áp dụng cho mọi giá trị đơn hàng';
-            return `Áp dụng cho đơn hàng từ ${new Intl.NumberFormat('vi-VN').format(min)}đ`;
+            const min = parseFloat(String(this.min_order_value || '').replace(/\D/g, '')) || 0;
+            const max = this.maxDiscountNumeric;
+            let text = min <= 0 ? 'Áp dụng cho mọi giá trị đơn hàng' : `Áp dụng cho đơn hàng từ ${new Intl.NumberFormat('vi-VN').format(min)}đ`;
+            if (this.discount_type === 'PERCENTAGE' && max > 0) {
+                text += ` • Giảm tối đa ${new Intl.NumberFormat('vi-VN').format(max)}đ`;
+            }
+            return text;
         },
 
         get previewScopeText() {

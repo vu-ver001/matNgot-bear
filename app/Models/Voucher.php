@@ -21,6 +21,7 @@ class Voucher extends Model
         'start_date',
         'end_date',
         'usage_limit',
+        'usage_limit_per_user',
         'used_count',
         'status',
     ];
@@ -32,6 +33,7 @@ class Voucher extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'usage_limit' => 'integer',
+        'usage_limit_per_user' => 'integer',
         'used_count' => 'integer',
     ];
 
@@ -46,16 +48,25 @@ class Voucher extends Model
     }
 
     /**
-     * Kiểm tra xem khách hàng này đã từng sử dụng voucher này hay chưa (kể cả đơn đã hủy).
+     * Đếm số lần khách hàng này đã áp dụng voucher (kể cả đơn đã hủy).
      */
-    public function isUsedByCustomer(int $userId): bool
+    public function countUsedByCustomer(int $userId): int
     {
         return Order::where('customer_id', $userId)
             ->where(function ($query) {
                 $query->where('voucher_id', $this->id)
                       ->orWhere('shipping_voucher_id', $this->id);
             })
-            ->exists();
+            ->count();
+    }
+
+    /**
+     * Kiểm tra xem khách hàng này đã sử dụng hết lượt cho phép hay chưa.
+     */
+    public function isUsedByCustomer(int $userId): bool
+    {
+        $limit = max(1, (int) ($this->usage_limit_per_user ?? 1));
+        return $this->countUsedByCustomer($userId) >= $limit;
     }
 
     /**
@@ -99,11 +110,16 @@ class Voucher extends Model
             ];
         }
 
-        // 4. QUY TẮC: Mỗi khách hàng chỉ được dùng duy nhất 1 lần (kể cả đã hủy đơn)
-        if ($this->isUsedByCustomer($userId)) {
+        // 4. Kiểm tra giới hạn lượt dùng của mỗi khách hàng
+        $limitPerUser = max(1, (int) ($this->usage_limit_per_user ?? 1));
+        $timesUsed = $this->countUsedByCustomer($userId);
+        if ($timesUsed >= $limitPerUser) {
+            $msg = $limitPerUser === 1
+                ? "Bạn đã từng áp dụng mã [{$this->code}] này rồi. Mỗi khách hàng chỉ được sử dụng mã 1 lần duy nhất."
+                : "Bạn đã sử dụng hết {$limitPerUser} lượt áp dụng cho phép của mã [{$this->code}].";
             return [
                 'valid' => false,
-                'message' => "Bạn đã từng áp dụng mã [{$this->code}] này rồi. Mỗi khách hàng chỉ được sử dụng mã 1 lần duy nhất (đơn hàng đã đặt/hủy sẽ không được hoàn lại mã).",
+                'message' => $msg,
             ];
         }
 
