@@ -73,6 +73,7 @@ class Order extends Model
         'discount_amount',
         'shipping_discount_amount',
         'shipping_fee',
+        'shipping_method',
         'total_amount',
         'order_status',
         'payment_method',
@@ -81,6 +82,7 @@ class Order extends Model
         'cancelled_by',
         'stock_restored',
         'confirmed_at',
+        'shipped_at',
         'completed_at',
         'cancelled_at',
     ];
@@ -93,6 +95,7 @@ class Order extends Model
         'total_amount' => 'decimal:2',
         'stock_restored' => 'boolean',
         'confirmed_at' => 'datetime',
+        'shipped_at' => 'datetime',
         'completed_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
@@ -163,5 +166,14 @@ class Order extends Model
     public function toCustomerCardData(): array
     {
         return \App\Presenters\CustomerOrderPresenter::format($this);
+    }
+
+    public function getShippingMethodLabelAttribute(): string
+    {
+        return match ($this->shipping_method) {
+            'fast' => 'Giao hàng nhanh',
+            'express' => 'Giao hàng hỏa tốc',
+            default => 'Giao hàng tiêu chuẩn',
+        };
     }
 }

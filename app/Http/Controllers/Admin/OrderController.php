@@ -107,6 +107,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'order_status' => 'required|in:PENDING,CONFIRMED,PREPARING,SHIPPING,COMPLETED,CANCELLED,RETURNED',
             'cancel_reason' => 'required_if:order_status,CANCELLED|nullable|string|max:255',
+            'stock_returned' => 'nullable|boolean',
         ]);
 
         try {
@@ -114,7 +115,12 @@ class OrderController extends Controller
                 $order,
                 $validated['order_status'],
                 auth()->id(),
-                $validated['cancel_reason'] ?? null
+                $validated['cancel_reason'] ?? match ($validated['order_status']) {
+                    'SHIPPING' => 'Shop bắt đầu giao hàng thủ công.',
+                    'COMPLETED' => 'Shop xác nhận đã giao hàng thành công.',
+                    default => null,
+                },
+                (bool) ($validated['stock_returned'] ?? false)
             );
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());

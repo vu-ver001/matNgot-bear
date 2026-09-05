@@ -147,6 +147,11 @@
                 </div>
             @endif
 
+            <div class="flex items-center gap-1.5" title="Hình thức giao hàng">
+                <i class="fa-solid fa-truck text-amber-600 text-[11px]"></i>
+                <span>{{ $order->shipping_method_label }}</span>
+            </div>
+
             @if(!empty($order->note))
                 <div class="flex items-center gap-1.5 text-amber-800 bg-amber-100/60 px-2 py-0.5 rounded font-medium">
                     <i class="fa-regular fa-note-sticky text-[11px]"></i>
@@ -210,8 +215,8 @@
                             @csrf
                             @method('PATCH')
                             <input type="hidden" name="order_status" value="SHIPPING">
-                            <button type="submit" class="btn-card-action btn-card-primary text-xs" title="Giao hàng ngay">
-                                <i class="fa-solid fa-truck-fast"></i> Giao hàng ngay
+                            <button type="submit" class="btn-card-action btn-card-primary text-xs" title="Bắt đầu giao hàng thủ công">
+                                <i class="fa-solid fa-truck-fast"></i> Bắt đầu giao hàng
                             </button>
                         </form>
                     @elseif($order->payment_method !== 'COD' && $order->payment_status !== 'PAID')

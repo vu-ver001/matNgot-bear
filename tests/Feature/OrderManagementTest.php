@@ -537,7 +537,7 @@ class OrderManagementTest extends TestCase
         foreach ([['admin.orders', false], ['staff.orders', true]] as [$routePrefix, $isStaff]) {
             $html = view('orders.partials.staff-order-card', compact('order', 'routePrefix', 'isStaff'))->render();
             $this->assertStringNotContainsString('title="Chọn đơn để giao hàng"', $html);
-            $this->assertStringNotContainsString('> Giao hàng ngay', $html);
+            $this->assertStringNotContainsString('> Bắt đầu giao hàng', $html);
             $this->assertStringContainsString('Chờ thanh toán', $html);
         }
 
@@ -545,7 +545,7 @@ class OrderManagementTest extends TestCase
         foreach ([['admin.orders', false], ['staff.orders', true]] as [$routePrefix, $isStaff]) {
             $html = view('orders.partials.staff-order-card', compact('order', 'routePrefix', 'isStaff'))->render();
             $this->assertStringContainsString('title="Chọn đơn để giao hàng"', $html);
-            $this->assertStringContainsString('> Giao hàng ngay', $html);
+            $this->assertStringContainsString('> Bắt đầu giao hàng', $html);
         }
 
         $order->update(['order_status' => 'CONFIRMED']);
@@ -553,7 +553,67 @@ class OrderManagementTest extends TestCase
             'order' => $order, 'routePrefix' => 'staff.orders', 'isStaff' => true,
         ])->render();
         $this->assertStringContainsString('Chuẩn bị hàng', $html);
-        $this->assertStringNotContainsString('> Giao hàng ngay', $html);
+        $this->assertStringNotContainsString('> Bắt đầu giao hàng', $html);
+    }
+
+    public function test_manual_shipping_method_and_start_time_are_recorded(): void
+    {
+        $order = app(OrderService::class)->createOrder([
+            'customer_id' => $this->customer->id,
+            'recipient_name' => $this->customer->full_name,
+            'recipient_phone' => '0980000000',
+            'recipient_address' => 'Hà Nội',
+            'payment_method' => 'COD',
+            'shipping_method' => 'express',
+        ], [(object) [
+            'product_id' => $this->product->id,
+            'quantity' => 2,
+        ]]);
+
+        $this->assertSame('express', $order->shipping_method);
+        $this->assertSame('Giao hàng hỏa tốc', $order->shipping_method_label);
+
+        $this->actingAs($this->staff);
+        foreach (['CONFIRMED', 'PREPARING', 'SHIPPING'] as $status) {
+            $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => $status])
+                ->assertRedirect();
+        }
+
+        $order->refresh();
+        $this->assertNotNull($order->shipped_at);
+        $this->assertDatabaseHas('order_status_histories', [
+            'order_id' => $order->id,
+            'to_status' => 'SHIPPING',
+            'note' => 'Shop bắt đầu giao hàng thủ công.',
+        ]);
+    }
+
+    public function test_shipping_order_can_only_be_cancelled_after_stock_returns(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $service = app(OrderService::class);
+        foreach (['CONFIRMED', 'PREPARING', 'SHIPPING'] as $status) {
+            $service->updateStatus($order, $status, $this->staff->id);
+        }
+
+        $this->actingAs($this->staff)
+            ->patch('/staff/orders/'.$order->id.'/status', [
+                'order_status' => 'CANCELLED',
+                'cancel_reason' => 'Khách không nhận hàng',
+            ])
+            ->assertSessionHas('error', 'Chỉ được hủy đơn đang giao sau khi xác nhận hàng đã quay lại kho.');
+
+        $this->assertSame('SHIPPING', $order->fresh()->order_status);
+        $this->assertSame(8, $this->product->fresh()->stock_quantity);
+
+        $this->patch('/staff/orders/'.$order->id.'/status', [
+            'order_status' => 'CANCELLED',
+            'cancel_reason' => 'Khách không nhận hàng',
+            'stock_returned' => true,
+        ])->assertSessionHas('success');
+
+        $this->assertSame('CANCELLED', $order->fresh()->order_status);
+        $this->assertSame(10, $this->product->fresh()->stock_quantity);
     }
 
     public function test_customer_receipt_requires_shipping_and_does_not_confirm_bank_transfer(): void

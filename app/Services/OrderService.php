@@ -42,6 +42,9 @@ class OrderService
             }
 
             $shippingFee = isset($data['shipping_fee']) ? (float) $data['shipping_fee'] : 30000;
+            $shippingMethod = in_array($data['shipping_method'] ?? 'standard', ['standard', 'fast', 'express'], true)
+                ? $data['shipping_method'] ?? 'standard'
+                : 'standard';
             $discountAmount = 0;
             $shippingDiscountAmount = 0;
 
@@ -90,6 +93,7 @@ class OrderService
                 'discount_amount' => $discountAmount,
                 'shipping_discount_amount' => $shippingDiscountAmount,
                 'shipping_fee' => $shippingFee,
+                'shipping_method' => $shippingMethod,
                 'total_amount' => $totalAmount,
                 'order_status' => 'PENDING',
                 'payment_method' => $data['payment_method'],
@@ -133,19 +137,27 @@ class OrderService
         });
     }
 
-    public function updateStatus(Order $order, string $newStatus, ?int $changedBy = null, ?string $note = null): Order
+    public function updateStatus(
+        Order $order,
+        string $newStatus,
+        ?int $changedBy = null,
+        ?string $note = null,
+        bool $stockReturned = false
+    ): Order
     {
-        return DB::transaction(function () use ($order, $newStatus, $changedBy, $note) {
+        return DB::transaction(function () use ($order, $newStatus, $changedBy, $note, $stockReturned) {
             $order->setRawAttributes(Order::lockForUpdate()->findOrFail($order->id)->getAttributes(), true);
             $order->unsetRelations();
             $oldStatus = $order->order_status;
 
-            $this->assertValidTransition($order, $newStatus, $note);
+            $this->assertValidTransition($order, $newStatus, $note, $stockReturned);
 
             $updateData = ['order_status' => $newStatus];
 
             if ($newStatus === 'CONFIRMED') {
                 $updateData['confirmed_at'] = now();
+            } elseif ($newStatus === 'SHIPPING') {
+                $updateData['shipped_at'] = now();
             } elseif ($newStatus === 'COMPLETED') {
                 $updateData['completed_at'] = now();
             } elseif ($newStatus === 'CANCELLED') {
@@ -237,7 +249,12 @@ class OrderService
         });
     }
 
-    private function assertValidTransition(Order $order, string $newStatus, ?string $note = null): void
+    private function assertValidTransition(
+        Order $order,
+        string $newStatus,
+        ?string $note = null,
+        bool $stockReturned = false
+    ): void
     {
         $allowedTransitions = Order::STATUS_TRANSITIONS;
         $oldStatus = $order->order_status;
@@ -260,6 +277,10 @@ class OrderService
 
         if ($newStatus === 'CANCELLED' && blank($note)) {
             throw new \Exception('Lý do hủy đơn là bắt buộc.');
+        }
+
+        if ($oldStatus === 'SHIPPING' && $newStatus === 'CANCELLED' && ! $stockReturned) {
+            throw new \Exception('Chỉ được hủy đơn đang giao sau khi xác nhận hàng đã quay lại kho.');
         }
     }
 

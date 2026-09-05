@@ -57,6 +57,16 @@
                         <dt class="text-[#795548]">Địa chỉ</dt>
                         <dd class="font-medium text-[#4E342E]">{{ $order->recipient_address }}</dd>
                     </div>
+                    <div>
+                        <dt class="text-[#795548]">Hình thức giao hàng</dt>
+                        <dd class="font-medium text-[#4E342E]">{{ $order->shipping_method_label }}</dd>
+                    </div>
+                    @if ($order->shipped_at)
+                        <div>
+                            <dt class="text-[#795548]">Bắt đầu giao</dt>
+                            <dd class="font-medium text-[#4E342E]">{{ $order->shipped_at->format('d/m/Y H:i') }}</dd>
+                        </div>
+                    @endif
                     @if ($order->note)
                         <div class="sm:col-span-2">
                             <dt class="text-[#795548]">Ghi chú</dt>

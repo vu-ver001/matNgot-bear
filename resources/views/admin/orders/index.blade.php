@@ -43,7 +43,7 @@
         <div class="stat-info">
             <div class="stat-label">Đang giao hàng</div>
             <div class="stat-value text-cyan-700">{{ $stats['shipping'] ?? 0 }}</div>
-            <div class="stat-subtext text-cyan-600">Shipper đang vận chuyển</div>
+            <div class="stat-subtext text-cyan-600">Đơn hàng đang được giao</div>
         </div>
         <div class="stat-icon cyan"><i class="fa-solid fa-truck-fast"></i></div>
     </div>
@@ -82,7 +82,7 @@
             'PENDING' => ['label' => 'Chờ xác nhận', 'count' => $stats['pending'] ?? null],
             'CONFIRMED' => ['label' => 'Đã xác nhận', 'count' => $stats['confirmed'] ?? null],
             'PREPARING' => ['label' => 'Chờ lấy hàng', 'count' => $stats['preparing'] ?? null],
-            'SHIPPING' => ['label' => 'Chờ giao hàng', 'count' => $stats['shipping'] ?? null],
+            'SHIPPING' => ['label' => 'Đang giao hàng', 'count' => $stats['shipping'] ?? null],
             'COMPLETED' => ['label' => 'Đã giao', 'count' => $stats['completed'] ?? null],
             'RETURNED' => ['label' => 'Trả hàng', 'count' => $stats['returned'] ?? null],
             'CANCELLED' => ['label' => 'Đã hủy', 'count' => $stats['cancelled'] ?? null],

@@ -6,7 +6,18 @@
                 @include('customer.orders.partials.contact-modal')
 
                 @include('orders.partials.alerts')
-                @include('orders.partials.stats', ['isStaff' => false])
+
+                <header class="customer-orders-hero"
+                        style="--customer-orders-hero-image: url('{{ asset('images/orders/customer-order-banner.png') }}')">
+                    <div class="customer-orders-hero-copy">
+                        <span class="customer-orders-hero-kicker">
+                            <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+                            Đơn hàng của bạn
+                        </span>
+                        <h1>Theo dõi hành trình của những bé gấu</h1>
+                        <p>Cập nhật trạng thái, thanh toán và xác nhận nhận hàng tại đây.</p>
+                    </div>
+                </header>
 
                 <div class="panel-card">
                     <div class="panel-header">
@@ -27,7 +38,7 @@
                             'PENDING' => ['label' => 'Chờ xác nhận', 'count' => $stats['pending'] ?? 0],
                             'CONFIRMED' => ['label' => 'Đã xác nhận', 'count' => $stats['confirmed'] ?? 0],
                             'PREPARING' => ['label' => 'Chờ lấy hàng', 'count' => $stats['preparing'] ?? 0],
-                            'SHIPPING' => ['label' => 'Chờ giao hàng', 'count' => $stats['shipping'] ?? 0],
+                            'SHIPPING' => ['label' => 'Đang giao hàng', 'count' => $stats['shipping'] ?? 0],
                             'COMPLETED' => ['label' => 'Đã giao', 'count' => $stats['completed'] ?? 0],
                             'RETURNED' => ['label' => 'Trả hàng', 'count' => $stats['returned'] ?? 0],
                             'CANCELLED' => ['label' => 'Đã hủy', 'count' => $stats['cancelled'] ?? 0],
@@ -59,34 +70,13 @@
 
                             <!-- Order Card Item -->
                             <div class="order-card-ecommerce" x-data="{ showAllProducts: false }">
-                                <!-- 1. Card Header: Shop info & Order Status -->
+                                <!-- 1. Card Header: Store identity & Order Status -->
                                 <div class="order-card-header flex flex-col md:flex-row md:items-center justify-between gap-3">
                                     <div class="flex flex-wrap items-center gap-2.5">
                                         <div class="w-7 h-7 rounded-lg bg-[#E08A1E]/15 text-[#8C4A19] flex items-center justify-center text-sm font-bold">
                                             🧸
                                         </div>
                                         <span class="font-bold text-sm text-[#4E342E]">{{ $card['shop']['name'] }}</span>
-                                        
-                                        @if($card['shop']['favorite'])
-                                            <span class="badge-shopee-favorite">
-                                                <i class="fa-solid fa-check text-[9px]"></i> Yêu Thích
-                                            </span>
-                                        @endif
-
-                                        @if($card['shop']['chatEnabled'])
-                                            <button type="button" 
-                                                    @click="showContactModal = true" 
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-[#8C4A19] hover:bg-amber-100/60 rounded-lg transition border border-amber-200 cursor-pointer">
-                                                <i class="fa-regular fa-comment-dots text-amber-600"></i>
-                                                <span>Chat</span>
-                                            </button>
-                                        @endif
-
-                                        <a href="{{ $card['shop']['shopUrl'] }}" 
-                                           class="inline-flex items-center gap-1 text-xs font-medium text-stone-500 hover:text-[#B87309] hover:underline">
-                                            <i class="fa-solid fa-store text-[10px]"></i>
-                                            <span>Xem Shop</span>
-                                        </a>
                                     </div>
 
                                     <div class="flex items-center gap-3 shrink-0 flex-wrap">

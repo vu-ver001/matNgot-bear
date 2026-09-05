@@ -28,7 +28,7 @@
             'PENDING' => ['label' => 'Chờ xác nhận', 'count' => $stats['pending'] ?? 0],
             'CONFIRMED' => ['label' => 'Đã xác nhận', 'count' => $stats['confirmed'] ?? 0],
             'PREPARING' => ['label' => 'Chờ lấy hàng', 'count' => $stats['preparing'] ?? 0],
-            'SHIPPING' => ['label' => 'Chờ giao hàng', 'count' => $stats['shipping'] ?? 0],
+            'SHIPPING' => ['label' => 'Đang giao hàng', 'count' => $stats['shipping'] ?? 0],
             'COMPLETED' => ['label' => 'Đã giao', 'count' => $stats['completed'] ?? 0],
             'RETURNED' => ['label' => 'Trả hàng', 'count' => $stats['returned'] ?? 0],
             'CANCELLED' => ['label' => 'Đã hủy', 'count' => $stats['cancelled'] ?? 0],

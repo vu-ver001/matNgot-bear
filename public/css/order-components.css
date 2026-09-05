@@ -112,10 +112,74 @@ table.order-payments-table th, table.order-payments-table td {
 }
 .orders-ui :is(button, input, select, textarea) { font-family: inherit; }
 .orders-ui .panel-card.mb-0 { margin-bottom: 0; }
+
+/* Customer order page hero */
+.customer-orders-hero {
+    position: relative;
+    display: flex;
+    min-height: 190px;
+    align-items: center;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: 1px solid #ead9c9;
+    border-radius: 20px;
+    background: var(--customer-orders-hero-image) center / cover no-repeat;
+    box-shadow: var(--shadow-subtle);
+}
+.customer-orders-hero::before {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background: linear-gradient(90deg, rgba(255, 248, 238, 0.86) 0%, rgba(255, 248, 238, 0.64) 42%, rgba(255, 248, 238, 0.04) 72%);
+}
+.customer-orders-hero-copy {
+    position: relative;
+    z-index: 1;
+    max-width: 620px;
+    padding: 28px 32px;
+}
+.customer-orders-hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    border: 1px solid #eac9a5;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #a9531c;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.customer-orders-hero h1 {
+    margin: 11px 0 0;
+    color: #4c2a1b;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(28px, 2.7vw, 38px);
+    line-height: 1.14;
+    letter-spacing: -.035em;
+}
+.customer-orders-hero p {
+    max-width: 500px;
+    margin: 4px 0 0;
+    color: #796c65;
+    font-size: 13px;
+    line-height: 1.7;
+}
 @media (max-width: 480px) {
     .orders-ui .panel-card { padding: 1rem; }
     .orders-ui .stats-grid { grid-template-columns: minmax(0, 1fr); }
     .orders-ui .search-box { min-width: 0; flex-basis: 100%; }
+    .customer-orders-hero {
+        min-height: 218px;
+        align-items: flex-start;
+        background-position: 72% center;
+    }
+    .customer-orders-hero::before {
+        background: linear-gradient(90deg, rgba(255, 248, 238, 0.92), rgba(255, 248, 238, 0.7));
+    }
+    .customer-orders-hero-copy { padding: 24px 20px; }
 }
 /* 2. Stat Cards Grid */
 .stats-grid {
@@ -748,6 +812,5 @@ table.data-table tbody tr:hover {
 .btn-bulk-ship:disabled i {
     color: #A89587 !important;
 }
-
 
 
