@@ -12,6 +12,7 @@ import './auth/index.js';
 import './PasswordKT/index.js';
 import './ProfileKT/index.js';
 import './wishlistKT/index.js';
+import './ReviewKT/index.js';
 
 flatpickr.localize(Vietnamese);
 

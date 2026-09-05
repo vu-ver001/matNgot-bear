@@ -1,11 +1,36 @@
 <x-customer-account-layout title="Chi tiết đơn hàng" :flush="true">
     <div class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="mb-6 flex items-center justify-between">
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <h2 class="font-bold text-2xl text-[#2B1810] tracking-tight">Chi tiết đơn hàng <span class="text-[#E08A1E] font-mono">{{ $order->order_code }}</span></h2>
-                <a href="{{ route('customer.orders.index') }}" class="text-sm font-semibold text-[#8C4A19] hover:text-[#5C3219] flex items-center gap-1">
-                    <span>← Quay lại danh sách</span>
-                </a>
+                <div class="flex items-center gap-3">
+                    @if ($order->order_status === 'COMPLETED')
+                        @php
+                            $hasReviewed = $order->reviews->isNotEmpty();
+                        @endphp
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl shadow-sm transition {{ $hasReviewed ? 'text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100' : 'text-white bg-amber-600 hover:bg-amber-700' }}"
+                            data-open-order-review-modal
+                            data-order-id="{{ $order->id }}"
+                        >
+                            @if ($hasReviewed)
+                                <svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>Xem đánh giá</span>
+                            @else
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                                <span>Đánh giá đơn hàng</span>
+                            @endif
+                        </button>
+                    @endif
+                    <a href="{{ route('customer.orders.index') }}" class="text-sm font-semibold text-[#8C4A19] hover:text-[#5C3219] flex items-center gap-1">
+                        <span>← Quay lại danh sách</span>
+                    </a>
+                </div>
             </div>
             @if (session('success'))
                 <div class="mb-4 bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-xl">

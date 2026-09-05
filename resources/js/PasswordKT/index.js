@@ -1,3 +1,5 @@
+import { calculatePasswordStrength, requirementChecks } from '../auth/sharedKT/password-rules.js';
+
 const setupPasswordPage = () => {
     const page = document.querySelector('[data-password-page]');
 
@@ -8,25 +10,18 @@ const setupPasswordPage = () => {
     const passwordInput = page.querySelector('[data-new-password]');
     const strength = page.querySelector('[data-password-strength]');
     const strengthLabel = page.querySelector('[data-password-strength-label]');
-    const requirementChecks = {
-        length: (value) => value.length >= 8,
-        case: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value),
-        number: (value) => /\d/.test(value),
-        symbol: (value) => /[^A-Za-z0-9]/.test(value),
-    };
 
     const updateStrength = () => {
         const value = passwordInput?.value ?? '';
-        const results = Object.entries(requirementChecks).map(([name, check]) => {
+
+        // Cập nhật 4 tiêu chuẩn bắt buộc (tick xanh)
+        Object.entries(requirementChecks).forEach(([name, check]) => {
             const isMet = check(value);
-
             page.querySelector(`[data-password-requirement="${name}"]`)?.classList.toggle('is-met', isMet);
-
-            return isMet;
         });
-        const score = results.filter(Boolean).length;
-        const level = value === '' ? 'empty' : ['weak', 'weak', 'medium', 'good', 'strong'][score];
-        const label = value === '' ? 'Chưa nhập' : ['Yếu', 'Yếu', 'Trung bình', 'Khá', 'Mạnh'][score];
+
+        // Đo độ mạnh thông minh theo entropy và nhận diện mẫu dễ đoán
+        const { level, label } = calculatePasswordStrength(value);
 
         if (strength) {
             strength.dataset.level = level;

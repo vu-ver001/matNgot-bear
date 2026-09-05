@@ -104,13 +104,49 @@ class PasswordTest extends TestCase
             'password' => Hash::make('OldPassword1!'),
         ]);
 
+        // 1. Thiếu ký tự đặc biệt
         $this->actingAs($user)
             ->put(route('account.password.update'), [
                 'current_password' => 'OldPassword1!',
-                'password' => 'onlyletters',
-                'password_confirmation' => 'onlyletters',
+                'password' => 'NewPassword123',
+                'password_confirmation' => 'NewPassword123',
             ])
-            ->assertSessionHasErrorsIn('updatePassword', 'password');
+            ->assertSessionHasErrorsIn('updatePassword', [
+                'password' => 'Mật khẩu phải bao gồm ký tự đặc biệt (!@#$%^&*).',
+            ]);
+
+        // 2. Thiếu chữ hoa
+        $this->actingAs($user)
+            ->put(route('account.password.update'), [
+                'current_password' => 'OldPassword1!',
+                'password' => 'newpassword123!',
+                'password_confirmation' => 'newpassword123!',
+            ])
+            ->assertSessionHasErrorsIn('updatePassword', [
+                'password' => 'Mật khẩu phải kết hợp chữ hoa và chữ thường.',
+            ]);
+
+        // 3. Thiếu số
+        $this->actingAs($user)
+            ->put(route('account.password.update'), [
+                'current_password' => 'OldPassword1!',
+                'password' => 'NewPassword!',
+                'password_confirmation' => 'NewPassword!',
+            ])
+            ->assertSessionHasErrorsIn('updatePassword', [
+                'password' => 'Mật khẩu phải bao gồm ít nhất một chữ số (0–9).',
+            ]);
+
+        // 4. Dưới 8 ký tự
+        $this->actingAs($user)
+            ->put(route('account.password.update'), [
+                'current_password' => 'OldPassword1!',
+                'password' => 'Pa1!',
+                'password_confirmation' => 'Pa1!',
+            ])
+            ->assertSessionHasErrorsIn('updatePassword', [
+                'password' => 'Mật khẩu phải có ít nhất 8 ký tự.',
+            ]);
 
         $this->assertTrue(Hash::check('OldPassword1!', $user->fresh()->password));
     }

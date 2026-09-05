@@ -15,7 +15,7 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $query = Order::where('customer_id', auth()->id())->with(['latestPayment', 'details']);
+        $query = Order::where('customer_id', auth()->id())->with(['latestPayment', 'details', 'reviews']);
 
         if ($request->filled('order_status')) {
             $query->where('order_status', $request->order_status);
@@ -32,7 +32,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['details.product', 'payments', 'statusHistories', 'voucher']);
+        $order->load(['details.product', 'payments', 'statusHistories', 'voucher', 'reviews']);
 
         return view('customer.orders.show', compact('order'));
     }

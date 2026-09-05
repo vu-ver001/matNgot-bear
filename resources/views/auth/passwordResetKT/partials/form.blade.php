@@ -119,7 +119,7 @@
                         id="{{ $passwordId }}"
                         type="password"
                         name="password"
-                        placeholder="Nhập mật khẩu mới"
+                        placeholder="Tối thiểu 8 ký tự, chữ hoa, số & ký tự đặc biệt"
                         required
                         autocomplete="new-password"
                         data-password-reset-new-password
@@ -132,6 +132,8 @@
                 @error('password')
                     <p class="auth-error" role="alert">{{ $message }}</p>
                 @enderror
+
+                <x-auth.sharedKT.password-rules target-input="{{ $passwordId }}" />
             </div>
 
             <div class="auth-field">
@@ -155,11 +157,6 @@
                     <p class="auth-error" role="alert">{{ $message }}</p>
                 @enderror
             </div>
-
-            <p class="password-recovery__hint">
-                <x-auth.sharedKT.icon name="shield" />
-                <span>Mật khẩu cần ít nhất 8 ký tự, có chữ cái và chữ số.</span>
-            </p>
 
             <button type="submit" class="auth-submit flex w-full items-center justify-center gap-2">
                 <x-auth.sharedKT.icon name="shield" />

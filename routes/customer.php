@@ -50,6 +50,16 @@ Route::prefix('customer')->name('customer.')->middleware(['auth', 'role:CUSTOMER
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
     })->name('profile');
+
+    // 7. Reviews (Kim Tuyến)
+    Route::prefix('reviews')->name('reviews.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'index'])->name('index');
+        Route::get('/order/{order}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'orderReviewData'])->name('order');
+        Route::get('/eligibility/{product}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'checkEligibility'])->name('eligibility');
+        Route::post('/', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'store'])->name('store');
+        Route::put('/{review}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'update'])->name('update');
+        Route::delete('/{review}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // Shortcut alias routes tiện lợi ngoài root
@@ -57,3 +67,4 @@ Route::get('/wishlist', fn() => redirect()->route('customer.wishlist.index'));
 Route::get('/cart', fn() => redirect()->route('customer.cart'));
 Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
 Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));
+Route::get('/reviews', fn() => redirect()->route('customer.reviews.index'));

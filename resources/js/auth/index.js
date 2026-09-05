@@ -1,5 +1,6 @@
 import { disablePlaceholderLinks } from './sharedKT/placeholder-link.js';
 import { setupPasswordToggles } from './sharedKT/password-toggle.js';
+import { initAllPasswordRules } from './sharedKT/password-rules.js';
 
 const setupRegisterFlow = () => {
     const form = document.querySelector('[data-register-flow]');
@@ -611,4 +612,5 @@ document.addEventListener('DOMContentLoaded', () => {
     disablePlaceholderLinks();
     setupRegisterFlow();
     setupPasswordResetFlow();
+    initAllPasswordRules();
 });

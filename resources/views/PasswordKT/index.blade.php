@@ -114,7 +114,7 @@
                                 type="password"
                                 required
                                 autocomplete="new-password"
-                                placeholder="Tối thiểu 8 ký tự, có chữ và số"
+                                placeholder="Tối thiểu 8 ký tự, chữ hoa, số & ký tự đặc biệt"
                                 data-new-password
                             >
                             <button type="button" class="password-visibility" data-password-toggle="new_password" aria-label="Hiện mật khẩu" aria-pressed="false">

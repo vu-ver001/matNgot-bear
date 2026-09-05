@@ -8,7 +8,7 @@
             'items' => [
                 ['label' => 'Đơn hàng của tôi', 'route' => 'customer.orders.index', 'active' => ['customer.orders.*'], 'icon' => 'package'],
                 ['label' => 'Danh sách yêu thích', 'route' => 'customer.wishlist.index', 'active' => ['customer.wishlist.*'], 'icon' => 'heart'],
-                ['label' => 'Đánh giá của tôi', 'route' => null, 'active' => [], 'icon' => 'star'],
+                ['label' => 'Đánh giá của tôi', 'route' => 'customer.reviews.index', 'active' => ['customer.reviews.*'], 'icon' => 'star'],
             ],
         ],
         [
@@ -234,5 +234,7 @@
                 </main>
             </div>
         </div>
+
+        @include('ReviewKT.partials.review-modal')
     </body>
 </html>
