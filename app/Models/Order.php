@@ -90,4 +90,27 @@ class Order extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    /**
+     * Check if order has any completed product that has not yet been reviewed.
+     */
+    public function hasUnreviewedProducts(): bool
+    {
+        if ($this->order_status !== 'COMPLETED') {
+            return false;
+        }
+
+        $reviewedProductIds = $this->reviews->pluck('product_id')->all();
+        return $this->details->contains(function ($detail) use ($reviewedProductIds) {
+            return !in_array($detail->product_id, $reviewedProductIds);
+        });
+    }
+
+    /**
+     * Convert Order to customer card presentation array.
+     */
+    public function toCustomerCardData(): array
+    {
+        return \App\Presenters\CustomerOrderPresenter::format($this);
+    }
 }

@@ -82,9 +82,6 @@
                                 <th class="text-right">Đơn giá</th>
                                 <th class="text-right">Số lượng</th>
                                 <th class="text-right">Thành tiền</th>
-                                @if (! $isStaff && $order->order_status === 'COMPLETED')
-                                    <th class="text-center">Đánh giá</th>
-                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -93,7 +90,6 @@
                                     $rawImg = $detail->product?->images?->where('is_primary', true)->first()?->image_url
                                         ?? $detail->product?->images?->first()?->image_url;
                                     $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
-                                    $hasReviewed = $order->reviews?->where('product_id', $detail->product_id)->isNotEmpty() ?? false;
                                 @endphp
                                 <tr>
                                     <td class="px-4 py-4 text-sm font-medium text-[#4E342E]">
@@ -119,25 +115,6 @@
                                     <td class="px-4 py-4 text-sm text-[#795548] text-right">{{ number_format($detail->product_price, 0, ',', '.') }} đ</td>
                                     <td class="px-4 py-4 text-sm text-[#795548] text-right">{{ $detail->quantity }}</td>
                                     <td class="px-4 py-4 text-sm font-medium text-[#4E342E] text-right">{{ number_format($detail->line_total, 0, ',', '.') }} đ</td>
-                                    @if (! $isStaff && $order->order_status === 'COMPLETED')
-                                        <td class="px-4 py-4 text-center">
-                                            @if ($hasReviewed)
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-                                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                                                    <span>Đã đánh giá</span>
-                                                </span>
-                                            @else
-                                                <button type="button"
-                                                        class="btn-review-product inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#E08A1E] to-[#8C4A19] hover:from-[#C77815] hover:to-[#733C14] rounded-xl shadow-xs transition transform hover:-translate-y-0.5 cursor-pointer"
-                                                        data-order-id="{{ $order->id }}"
-                                                        data-product-id="{{ $detail->product_id }}"
-                                                        data-product-name="{{ $detail->product_name }}">
-                                                    <i class="fa-solid fa-star text-amber-200"></i>
-                                                    <span>Đánh giá</span>
-                                                </button>
-                                            @endif
-                                        </td>
-                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
@@ -159,6 +136,12 @@
                         <dt class="text-[#795548]">Phí vận chuyển</dt>
                         <dd class="font-medium text-[#4E342E]">{{ number_format($order->shipping_fee, 0, ',', '.') }} đ</dd>
                     </div>
+                    @if ($order->shipping_discount_amount > 0)
+                        <div class="flex justify-between">
+                            <dt class="text-[#795548]">Giảm phí vận chuyển {{ $order->shippingVoucher?->code ? "({$order->shippingVoucher->code})" : '' }}</dt>
+                            <dd class="font-medium text-emerald-600">-{{ number_format($order->shipping_discount_amount, 0, ',', '.') }} đ</dd>
+                        </div>
+                    @endif
                     <div class="flex justify-between text-base pt-2 border-t border-amber-100">
                         <dt class="font-semibold text-[#4E342E]">Tổng cộng</dt>
                         <dd class="font-bold text-amber-600">{{ number_format($order->total_amount, 0, ',', '.') }} đ</dd>

@@ -511,3 +511,128 @@ table.data-table tbody tr:last-child td {
 table.data-table tbody tr:hover {
     background: #FAF6F0;
 }
+
+/* 8. Customer E-Commerce Order Cards */
+.order-card-ecommerce {
+    background: #FFFFFF;
+    border: 1px solid #EFE5D8;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(109, 76, 65, 0.04);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+.order-card-ecommerce:hover {
+    border-color: #DFCDBC;
+    box-shadow: 0 8px 24px rgba(109, 76, 65, 0.08);
+}
+
+.order-card-header {
+    background: #FAF7F2;
+    border-bottom: 1px solid #F0E6DA;
+    padding: 14px 20px;
+}
+
+.badge-shopee-favorite {
+    background: #EE4D2D;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    letter-spacing: 0.2px;
+}
+
+.order-delivery-status {
+    color: #2D6A4F;
+    font-size: 12.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.order-status-badge-tag {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+
+.order-product-row {
+    padding: 16px 20px;
+    border-bottom: 1px solid #F7EFE6;
+    transition: background 0.15s ease;
+}
+
+.order-product-row:last-child {
+    border-bottom: none;
+}
+
+.order-product-row:hover {
+    background: #FFFAF3;
+}
+
+.order-card-footer {
+    background: #FFFCF7;
+    border-top: 1px solid #F0E6DA;
+    padding: 16px 20px;
+}
+
+.btn-card-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 18px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border-radius: 12px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-card-primary {
+    background: linear-gradient(135deg, #E08A1E 0%, #B87309 100%);
+    color: #FFFFFF !important;
+    border: none;
+    box-shadow: 0 4px 12px rgba(224, 138, 30, 0.25);
+}
+
+.btn-card-primary:hover {
+    background: linear-gradient(135deg, #C77815 0%, #965A04 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(224, 138, 30, 0.35);
+}
+
+.btn-card-secondary {
+    background: #FFFFFF;
+    color: #5C3219 !important;
+    border: 1px solid #DFCDBC;
+}
+
+.btn-card-secondary:hover {
+    background: #FDF7EE;
+    border-color: #B87309;
+    color: #B87309 !important;
+    transform: translateY(-1px);
+}
+
+.btn-card-ghost {
+    background: transparent;
+    color: #8E8076 !important;
+    border: 1px solid transparent;
+}
+
+.btn-card-ghost:hover {
+    background: #F5EBE1;
+    color: #4E342E !important;
+}
+

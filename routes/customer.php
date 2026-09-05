@@ -50,12 +50,23 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::patch('/orders/{order}/shipping-address', [OrderController::class, 'updateShippingAddress'])->name('orders.update_shipping_address');
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
+        Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
     });
 
     // 5. Profile
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
     })->name('profile');
+
+    // 7. Reviews (Kim Tuyến)
+    Route::prefix('reviews')->name('reviews.')->middleware(['auth', 'role:CUSTOMER'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'index'])->name('index');
+        Route::get('/order/{order}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'orderReviewData'])->name('order');
+        Route::get('/eligibility/{product}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'checkEligibility'])->name('eligibility');
+        Route::post('/', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'store'])->name('store');
+        Route::put('/{review}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'update'])->name('update');
+        Route::delete('/{review}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // ==========================================
@@ -81,3 +92,4 @@ Route::get('/wishlist', fn() => redirect()->route('customer.wishlist.index'));
 Route::get('/cart', fn() => redirect()->route('customer.cart'));
 Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
 Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));
+Route::get('/reviews', fn() => redirect()->route('customer.reviews.index'));

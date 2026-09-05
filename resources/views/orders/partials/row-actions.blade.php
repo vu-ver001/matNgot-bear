@@ -20,6 +20,19 @@
 }" @keydown.escape.window="if (openActions) { openActions = false; $refs.trigger.focus(); }"
    @resize.window="openActions = false" @scroll.window="openActions = false">
     <a href="{{ route($routePrefix.'.show', $order) }}" class="btn btn-outline btn-sm">Chi tiết</a>
+    @if (! $isStaff && $order->order_status === 'COMPLETED')
+        @php
+            $hasReviewed = $order->reviews?->isNotEmpty();
+        @endphp
+        <button type="button"
+                class="btn btn-sm {{ $hasReviewed ? 'btn-outline text-emerald-700 border-emerald-300 hover:bg-emerald-50' : 'bg-amber-600 text-white hover:bg-amber-700' }}"
+                data-open-order-review-modal
+                data-order-id="{{ $order->id }}"
+                title="{{ $hasReviewed ? 'Xem lại đánh giá' : 'Viết đánh giá sản phẩm' }}">
+            <i class="fa-solid fa-star text-xs {{ $hasReviewed ? 'text-amber-500' : 'text-white' }}" aria-hidden="true"></i>
+            <span>{{ $hasReviewed ? 'Xem đánh giá' : 'Đánh giá' }}</span>
+        </button>
+    @endif
     <button type="button" class="btn btn-outline btn-sm" x-ref="trigger" @click="toggleActions()"
             :aria-expanded="openActions" aria-label="Thao tác khác cho đơn {{ $order->order_code }}" title="Thao tác khác">
         <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
