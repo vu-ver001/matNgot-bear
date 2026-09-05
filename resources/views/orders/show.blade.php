@@ -222,8 +222,8 @@
                 <ol class="relative border-l border-amber-200 ml-3 space-y-6">
                     @forelse ($order->statusHistories->sortBy('changed_at') as $history)
                         <li class="ml-6">
-                            <span class="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white {{ $loop->first ? 'bg-amber-500' : 'bg-amber-100' }}"></span>
-                            <p class="text-sm font-medium text-[#4E342E]">
+                            <span class="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white {{ $loop->last ? 'bg-amber-500' : 'bg-amber-100' }}"></span>
+                            <p class="text-sm {{ $loop->last ? 'font-bold text-[#2C1408]' : 'font-medium text-[#795548]' }}">
                                 {{ $history->to_status ? match ($history->to_status) {
                                     'PENDING' => 'Đơn hàng được tạo',
                                     'CONFIRMED' => 'Đã xác nhận đơn hàng',
