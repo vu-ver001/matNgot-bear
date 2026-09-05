@@ -82,20 +82,62 @@
                                 <th class="text-right">Đơn giá</th>
                                 <th class="text-right">Số lượng</th>
                                 <th class="text-right">Thành tiền</th>
+                                @if (! $isStaff && $order->order_status === 'COMPLETED')
+                                    <th class="text-center">Đánh giá</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($order->details as $detail)
+                                @php
+                                    $rawImg = $detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                        ?? $detail->product?->images?->first()?->image_url;
+                                    $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+                                    $hasReviewed = $order->reviews?->where('product_id', $detail->product_id)->isNotEmpty() ?? false;
+                                @endphp
                                 <tr>
                                     <td class="px-4 py-4 text-sm font-medium text-[#4E342E]">
-                                        {{ $detail->product_name }}
-                                        @if ($isStaff && $detail->product)
-                                            <div class="text-xs text-[#795548]">Mã SP: #{{ $detail->product_id }}</div>
-                                        @endif
+                                        <div class="flex items-center gap-3">
+                                            @if ($primaryImg)
+                                                <img src="{{ $primaryImg }}"
+                                                     alt="{{ $detail->product_name }}"
+                                                     class="w-12 h-12 object-cover rounded-xl border border-amber-200/70 bg-white shrink-0 shadow-2xs"
+                                                     onerror="this.src='https://placehold.co/100x100/f5e6ca/7c4a2d?text=Bear'">
+                                            @else
+                                                <div class="w-12 h-12 rounded-xl border border-amber-200/70 bg-amber-100/70 text-amber-800 font-bold flex items-center justify-center shrink-0 text-xl shadow-2xs">
+                                                    🧸
+                                                </div>
+                                            @endif
+                                            <div class="min-w-0">
+                                                <div class="font-bold text-[#4E342E] leading-snug">{{ $detail->product_name }}</div>
+                                                @if ($isStaff && $detail->product)
+                                                    <div class="text-xs text-[#795548]">Mã SP: #{{ $detail->product_id }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-4 text-sm text-[#795548] text-right">{{ number_format($detail->product_price, 0, ',', '.') }} đ</td>
                                     <td class="px-4 py-4 text-sm text-[#795548] text-right">{{ $detail->quantity }}</td>
                                     <td class="px-4 py-4 text-sm font-medium text-[#4E342E] text-right">{{ number_format($detail->line_total, 0, ',', '.') }} đ</td>
+                                    @if (! $isStaff && $order->order_status === 'COMPLETED')
+                                        <td class="px-4 py-4 text-center">
+                                            @if ($hasReviewed)
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                                    <span>Đã đánh giá</span>
+                                                </span>
+                                            @else
+                                                <button type="button"
+                                                        class="btn-review-product inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#E08A1E] to-[#8C4A19] hover:from-[#C77815] hover:to-[#733C14] rounded-xl shadow-xs transition transform hover:-translate-y-0.5 cursor-pointer"
+                                                        data-order-id="{{ $order->id }}"
+                                                        data-product-id="{{ $detail->product_id }}"
+                                                        data-product-name="{{ $detail->product_name }}">
+                                                    <i class="fa-solid fa-star text-amber-200"></i>
+                                                    <span>Đánh giá</span>
+                                                </button>
+                                            @endif
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>

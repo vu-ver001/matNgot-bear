@@ -63,3 +63,40 @@
         </form>
     </div>
 @endif
+
+{{-- Review Prompt Banner when order is COMPLETED --}}
+@if($order->order_status === 'COMPLETED' && $order->details->isNotEmpty())
+    @php
+        $firstDetail = $order->details->first();
+        $rawImg = $firstDetail?->product?->images?->where('is_primary', true)->first()?->image_url 
+            ?? $firstDetail?->product?->images?->first()?->image_url;
+        $firstImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+        $hasAnyUnreviewed = $order->details->contains(function ($detail) use ($order) {
+            return !($order->reviews?->where('product_id', $detail->product_id)->isNotEmpty() ?? false);
+        });
+    @endphp
+    <div class="mb-6 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border-2 border-amber-300/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+        <div class="flex items-center gap-3.5">
+            <div>
+                <h4 class="text-base font-extrabold text-[#2C1408]">Đơn hàng đã hoàn tất thành công!</h4>
+                <p class="text-xs sm:text-sm text-[#795548] mt-0.5">Cảm ơn bạn đã tin yêu Mật Ngọt Bear! Hãy để lại đánh giá về bé gấu để chúng mình phục vụ bạn tốt hơn nữa nhé.</p>
+            </div>
+        </div>
+
+        @if($hasAnyUnreviewed)
+            <button type="button"
+                    class="btn-review-order w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#E08A1E] to-[#8C4A19] hover:from-[#C77815] hover:to-[#733C14] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-amber-600/25 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                    data-order-id="{{ $order->id }}"
+                    data-product-id="{{ $firstDetail->product_id }}"
+                    data-product-name="{{ $firstDetail->product_name }}">
+                <i class="fa-solid fa-star text-amber-200"></i>
+                <span>Viết đánh giá</span>
+            </button>
+        @else
+            <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-300 shrink-0">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span>Bạn đã đánh giá đơn hàng này</span>
+            </span>
+        @endif
+    </div>
+@endif

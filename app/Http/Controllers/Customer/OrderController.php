@@ -60,7 +60,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['details.product', 'payments', 'statusHistories', 'voucher']);
+        $order->load(['details.product.images', 'payments', 'statusHistories', 'voucher', 'reviews']);
 
         return view('customer.orders.show', compact('order'));
     }
