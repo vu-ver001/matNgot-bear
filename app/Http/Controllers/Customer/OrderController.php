@@ -25,7 +25,7 @@ class OrderController extends Controller
             return redirect()->route('admin.orders.index');
         }
 
-        $query = Order::where('customer_id', auth()->id());
+        $query = Order::where('customer_id', auth()->id())->with(['latestPayment', 'details', 'reviews']);
 
         $counts = (clone $query)->selectRaw('order_status, COUNT(*) as aggregate')
             ->groupBy('order_status')->pluck('aggregate', 'order_status');

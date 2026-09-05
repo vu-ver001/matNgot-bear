@@ -146,7 +146,7 @@
                 <label for="register_password">Mật khẩu</label>
                 <div @class(['auth-input-wrap', 'has-error' => $errors->has('password')])>
                     <x-auth.sharedKT.icon name="lock" class="auth-input-icon" />
-                    <input id="register_password" type="password" name="password" placeholder="Nhập mật khẩu của bạn" required autocomplete="new-password">
+                    <input id="register_password" type="password" name="password" placeholder="Tối thiểu 8 ký tự, chữ hoa, số & ký tự đặc biệt" required autocomplete="new-password">
                     <button class="auth-password-toggle" type="button" data-password-toggle="register_password" aria-label="Hiện mật khẩu" aria-pressed="false">
                         <x-auth.sharedKT.icon name="eye" data-icon-show />
                         <x-auth.sharedKT.icon name="eye-off" class="hidden" data-icon-hide />
@@ -155,6 +155,8 @@
                 @error('password')
                     <p class="auth-error" role="alert">{{ $message }}</p>
                 @enderror
+
+                <x-auth.sharedKT.password-rules target-input="register_password" />
             </div>
 
             <div class="auth-field">
@@ -194,7 +196,7 @@
 
     <a href="{{ route('auth.google.redirect') }}" class="auth-google flex w-full items-center justify-center gap-3">
         <span class="auth-google__mark" aria-hidden="true">G</span>
-        <span>Đăng ký với Google</span>
+        <span>Tiếp tục với Google</span>
     </a>
 
     <p class="auth-footer">

@@ -8,7 +8,7 @@
             'items' => [
                 ['label' => 'Đơn hàng của tôi', 'route' => 'customer.orders.index', 'active' => ['customer.orders.*'], 'icon' => 'package'],
                 ['label' => 'Danh sách yêu thích', 'route' => 'customer.wishlist.index', 'active' => ['customer.wishlist.*'], 'icon' => 'heart'],
-                ['label' => 'Đánh giá của tôi', 'route' => null, 'active' => [], 'icon' => 'star'],
+                ['label' => 'Đánh giá của tôi', 'route' => 'customer.reviews.index', 'active' => ['customer.reviews.*'], 'icon' => 'star'],
             ],
         ],
         [
@@ -188,11 +188,15 @@
                             <span>Hồ sơ</span>
                         </a>
 
-                        <span class="customer-account-nav-item is-disabled" title="Chức năng chưa kết nối">
+                        <a
+                            href="{{ route('account.password.edit') }}"
+                            @class(['customer-account-nav-item', 'is-active' => request()->routeIs('account.password.*')])
+                            @if (request()->routeIs('account.password.*')) aria-current="page" @endif
+                            title="Đổi mật khẩu"
+                        >
                             @include('customer.partials.account-icon', ['name' => 'lock'])
                             <span>Đổi mật khẩu</span>
-                            <small>Chưa kết nối</small>
-                        </span>
+                        </a>
 
                         <div class="customer-account-menu-divider"></div>
 
@@ -234,5 +238,7 @@
                 </main>
             </div>
         </div>
+
+        @include('ReviewKT.partials.review-modal')
     </body>
 </html>

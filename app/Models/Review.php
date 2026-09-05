@@ -17,11 +17,13 @@ class Review extends Model
         'rating',
         'comment',
         'is_hidden',
+        'is_edited',
     ];
 
     protected $casts = [
         'rating' => 'integer',
         'is_hidden' => 'boolean',
+        'is_edited' => 'boolean',
     ];
 
     public function product(): BelongsTo
