@@ -60,12 +60,21 @@ const removeTagFromText = (text, tag) => {
     return updated;
 };
 
+const RATING_LABELS = {
+    1: 'Rất tệ',
+    2: 'Tệ',
+    3: 'Ổn',
+    4: 'Tốt',
+    5: 'Xuất sắc',
+};
+
 /**
  * Gán tương tác (sao, tags, textarea counter, upload preview) cho từng sản phẩm trong popup
  */
-const bindProductItem = (itemEl) => {
+const bindProductItem = (itemEl, initialImages = []) => {
     const ratingInput = itemEl.querySelector('[data-item-rating]');
     const starButtons = [...itemEl.querySelectorAll('[data-star-index]')];
+    const ratingLabel = itemEl.querySelector('[data-rating-label]');
     const tagButtons = [...itemEl.querySelectorAll('[data-review-tag]')];
     const textarea = itemEl.querySelector('[data-item-comment]');
     const counter = itemEl.querySelector('[data-item-counter]');
@@ -83,6 +92,12 @@ const bindProductItem = (itemEl) => {
             btn.classList.toggle('is-active', isActive);
             btn.setAttribute('aria-checked', index === itemRating ? 'true' : 'false');
         });
+
+        if (ratingLabel) {
+            const score = stars || itemRating || 5;
+            ratingLabel.textContent = RATING_LABELS[score] || 'Xuất sắc';
+            ratingLabel.dataset.ratingLevel = score;
+        }
     };
 
     renderItemStars(itemRating);
@@ -151,69 +166,111 @@ const bindProductItem = (itemEl) => {
         });
     }
 
-    // Quản lý tải ảnh (GIỚI HẠN TỐI ĐA 5 ẢNH)
-    let currentFiles = [];
+    // Lấy prefix của input name, ví dụ: "items[0]"
+    const pIdInput = itemEl.querySelector('[data-item-product-id]');
+    const inputPrefix = pIdInput?.name?.replace(/\[product_id\]$/, '') || 'items[0]';
+
+    // Quản lý ảnh: hỗ trợ ảnh có sẵn (khi chỉnh sửa) + file mới tải lên (tối đa 5 ảnh)
+    let existingImages = Array.isArray(initialImages) ? [...initialImages] : [];
+    let newFiles = [];
+
+    itemEl._newFiles = newFiles;
 
     const updateFileInputAndPreviews = () => {
-        // Đồng bộ DataTransfer để form input mang đúng các file chưa bị xóa
+        itemEl._newFiles = newFiles;
+        const totalCount = existingImages.length + newFiles.length;
+
+        // Cập nhật DataTransfer để fileInput luôn có danh sách file mới chưa bị xóa
         try {
             const dt = new DataTransfer();
-            currentFiles.forEach((file) => dt.items.add(file));
+            newFiles.forEach((file) => dt.items.add(file));
             fileInput.files = dt.files;
         } catch (e) {
             // bỏ qua nếu trình duyệt không hỗ trợ DataTransfer constructor
         }
 
-        // Render danh sách ảnh xem trước
-        if (currentFiles.length === 0) {
-            previewsContainer.hidden = true;
-            previewsContainer.innerHTML = '';
+        // Render danh sách ảnh xem trước (ảnh có sẵn + ảnh mới)
+        if (totalCount === 0) {
+            if (previewsContainer) {
+                previewsContainer.hidden = true;
+                previewsContainer.innerHTML = '';
+            }
         } else {
-            previewsContainer.hidden = false;
-            previewsContainer.innerHTML = '';
+            if (previewsContainer) {
+                previewsContainer.hidden = false;
+                previewsContainer.innerHTML = '';
 
-            currentFiles.forEach((file, idx) => {
-                const previewItem = document.createElement('div');
-                previewItem.className = 'review-modal__preview-item';
-                previewItem.innerHTML = `
-                    <img src="" alt="Ảnh preview ${idx + 1}">
-                    <button type="button" class="review-modal__preview-remove" title="Xóa ảnh">&times;</button>
-                `;
+                // 1. Render ảnh có sẵn từ trước (khi chỉnh sửa đánh giá)
+                existingImages.forEach((imgUrl, idx) => {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'review-modal__preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${imgUrl}" alt="Ảnh có sẵn ${idx + 1}">
+                        <input type="hidden" name="${inputPrefix}[existing_images][]" value="${imgUrl}">
+                        <button type="button" class="review-modal__preview-remove" title="Xóa ảnh này">&times;</button>
+                    `;
 
-                const imgEl = previewItem.querySelector('img');
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    imgEl.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
+                    previewItem.querySelector('.review-modal__preview-remove')?.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        existingImages.splice(idx, 1);
+                        updateFileInputAndPreviews();
+                    });
 
-                previewItem.querySelector('.review-modal__preview-remove')?.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    currentFiles.splice(idx, 1);
-                    updateFileInputAndPreviews();
+                    previewsContainer.appendChild(previewItem);
                 });
 
-                previewsContainer.appendChild(previewItem);
-            });
+                // 2. Render các file mới upload
+                newFiles.forEach((file, idx) => {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'review-modal__preview-item';
+                    previewItem.innerHTML = `
+                        <img src="" alt="Ảnh preview ${idx + 1}">
+                        <button type="button" class="review-modal__preview-remove" title="Xóa ảnh">&times;</button>
+                    `;
+
+                    const imgEl = previewItem.querySelector('img');
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        imgEl.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+
+                    previewItem.querySelector('.review-modal__preview-remove')?.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        newFiles.splice(idx, 1);
+                        updateFileInputAndPreviews();
+                    });
+
+                    previewsContainer.appendChild(previewItem);
+                });
+            }
         }
 
         // Cập nhật trạng thái ô upload khi đạt giới hạn 5 ảnh
         if (uploadBox) {
             const copyEl = uploadBox.querySelector('.review-modal__upload-copy');
-            if (currentFiles.length >= 5) {
+            if (totalCount >= 5) {
                 uploadBox.classList.add('is-max-files');
-                fileInput.disabled = true;
+                // TUYỆT ĐỐI KHÔNG set fileInput.disabled = true vì FormData sẽ loại bỏ input bị disabled
+                uploadBox.style.opacity = '0.6';
+                uploadBox.style.cursor = 'not-allowed';
+                if (fileInput) fileInput.style.pointerEvents = 'none';
                 if (copyEl) {
                     copyEl.innerHTML = `
-                        <strong style="color:#d97736;">Đã tải đủ 5/5 ảnh</strong>
+                        <strong style="color:#d97736;">Đã đủ 5/5 ảnh</strong>
                         <small>Bấm ✕ trên ảnh để xóa nếu muốn đổi ảnh khác</small>
                     `;
                 }
             } else {
                 uploadBox.classList.remove('is-max-files');
-                fileInput.disabled = false;
+                uploadBox.style.opacity = '1';
+                uploadBox.style.cursor = 'pointer';
+                if (fileInput) {
+                    fileInput.disabled = false;
+                    fileInput.style.pointerEvents = 'auto';
+                }
                 if (copyEl) {
-                    const countSuffix = currentFiles.length > 0 ? ` (${currentFiles.length}/5)` : '';
+                    const countSuffix = totalCount > 0 ? ` (${totalCount}/5)` : '';
                     copyEl.innerHTML = `
                         <strong>Tải ảnh lên${countSuffix}</strong>
                         <small>Tối đa 5 ảnh (PNG, JPG ≤ 5MB)</small>
@@ -223,29 +280,37 @@ const bindProductItem = (itemEl) => {
         }
     };
 
+    // Khởi tạo hiển thị previews ban đầu (nếu có ảnh có sẵn)
+    updateFileInputAndPreviews();
+
     if (fileInput && previewsContainer) {
         fileInput.addEventListener('change', () => {
             const newlySelected = [...(fileInput.files || [])].filter((f) => f.type.startsWith('image/'));
             fileInput.value = ''; // Reset để có thể click chọn tiếp các ảnh sau
             if (newlySelected.length === 0) return;
 
+            const totalCurrent = existingImages.length + newFiles.length;
             const maxAllowed = 5;
-            const remaining = maxAllowed - currentFiles.length;
+            const remaining = maxAllowed - totalCurrent;
             const modal = itemEl.closest('[data-review-modal]');
 
             if (remaining <= 0) {
-                if (modal) showModalAlert(modal, 'Bạn đã tải lên tối đa 5 ảnh cho sản phẩm này.', 'error');
+                if (modal) showModalAlert(modal, 'Bạn đã chọn đủ 5 ảnh (mỗi sản phẩm chỉ được tải tối đa 5 ảnh).', 'error');
                 return;
             }
 
             if (newlySelected.length > remaining) {
                 if (modal) {
-                    showModalAlert(modal, `Chỉ được tải thêm tối đa ${remaining} ảnh nữa (giới hạn 5 ảnh/sản phẩm).`, 'error');
+                    if (totalCurrent === 0) {
+                        showModalAlert(modal, 'Bạn chỉ được tải lên tối đa 5 ảnh cho mỗi sản phẩm.', 'error');
+                    } else {
+                        showModalAlert(modal, `Bạn chỉ có thể chọn thêm tối đa ${remaining} ảnh nữa (đã có ${totalCurrent}/5 ảnh).`, 'error');
+                    }
                 }
             }
 
             const filesToAdd = newlySelected.slice(0, remaining);
-            currentFiles = currentFiles.concat(filesToAdd);
+            newFiles = newFiles.concat(filesToAdd);
             updateFileInputAndPreviews();
         });
     }
@@ -374,6 +439,7 @@ export const openOrderReviewModal = async (orderId) => {
 
                 const existingReview = item.review;
                 let isItemEdited = false;
+                let initialImages = [];
 
                 if (existingReview) {
                     if (rIdInput) rIdInput.value = existingReview.id;
@@ -381,9 +447,15 @@ export const openOrderReviewModal = async (orderId) => {
                     if (textarea) textarea.value = existingReview.comment;
                     if (counter) counter.textContent = (existingReview.comment || '').length;
 
-                    isItemEdited = Boolean(existingReview.is_edited);
+                    if (Array.isArray(existingReview.images)) {
+                        initialImages = existingReview.images;
+                    }
 
-                    if (isItemEdited) {
+                    const canBeEdited = existingReview.can_be_edited !== undefined
+                        ? Boolean(existingReview.can_be_edited)
+                        : !existingReview.is_edited;
+
+                    if (!canBeEdited) {
                         itemNode.querySelectorAll('button, textarea, input:not([type="hidden"])').forEach((el) => {
                             el.disabled = true;
                         });
@@ -391,7 +463,9 @@ export const openOrderReviewModal = async (orderId) => {
                         editedNotice.className = 'review-modal__alert is-error';
                         editedNotice.style.fontSize = '12px';
                         editedNotice.style.padding = '6px 12px';
-                        editedNotice.textContent = 'Đánh giá này đã từng được chỉnh sửa (chỉ được sửa 1 lần duy nhất).';
+                        editedNotice.textContent = existingReview.is_edited
+                            ? 'Đánh giá này đã từng được chỉnh sửa (chỉ được sửa 1 lần duy nhất).'
+                            : 'Đã quá thời hạn 7 ngày. Không thể chỉnh sửa đánh giá này nữa.';
                         itemNode.appendChild(editedNotice);
                     } else {
                         allEdited = false;
@@ -405,7 +479,7 @@ export const openOrderReviewModal = async (orderId) => {
                     itemNode.querySelectorAll('[data-review-tag]').forEach((btn) => btn.classList.remove('is-selected'));
                 }
 
-                bindProductItem(itemNode);
+                bindProductItem(itemNode, initialImages);
                 productsContainer.appendChild(itemNode);
             });
 
@@ -452,7 +526,9 @@ export const openReviewModal = (options = {}) => {
         rating = 5,
         comment = '',
         selected_tags = [],
+        images = [],
         is_edited = false,
+        can_be_edited = true,
     } = options;
 
     const modalTitle = modal.querySelector('[data-review-modal-title]');
@@ -479,7 +555,7 @@ export const openReviewModal = (options = {}) => {
 
     if (modalSubtitle) {
         modalSubtitle.textContent = isEditMode
-            ? (is_edited ? 'Đánh giá này đã được chỉnh sửa 1 lần và không thể sửa thêm.' : 'Lưu ý: Bạn chỉ được chỉnh sửa đánh giá 1 lần duy nhất.')
+            ? (!can_be_edited || is_edited ? 'Đánh giá này không thể chỉnh sửa nữa.' : 'Lưu ý: Bạn chỉ được chỉnh sửa đánh giá 1 lần duy nhất trong vòng 7 ngày.')
             : 'Chia sẻ cảm nhận của bạn về sản phẩm này';
     }
 
@@ -533,17 +609,17 @@ export const openReviewModal = (options = {}) => {
             btn.classList.toggle('is-selected', tagsToSelect.includes(btn.dataset.reviewTag));
         });
 
-        if (is_edited) {
+        if (!can_be_edited || is_edited) {
             itemNode.querySelectorAll('button, textarea, input:not([type="hidden"])').forEach((el) => {
                 el.disabled = true;
             });
             if (submitBtn) submitBtn.disabled = true;
-            showModalAlert(modal, 'Đánh giá này đã từng được chỉnh sửa tối đa 1 lần duy nhất.', 'error');
+            showModalAlert(modal, is_edited ? 'Đánh giá này đã từng được chỉnh sửa tối đa 1 lần duy nhất.' : 'Đã quá thời hạn 7 ngày kể từ khi gửi đánh giá. Không thể chỉnh sửa nữa.', 'error');
         } else if (submitBtn) {
             submitBtn.disabled = false;
         }
 
-        bindProductItem(itemNode);
+        bindProductItem(itemNode, images);
         productsContainer.appendChild(itemNode);
     }
 
@@ -594,6 +670,21 @@ export const initReviewModal = () => {
         }
 
         const formData = new FormData(form);
+
+        // Đảm bảo toàn bộ các file ảnh mới tải lên của từng sản phẩm được đính kèm chắc chắn vào formData
+        const productItems = modal.querySelectorAll('[data-product-item]');
+        productItems.forEach((pItem) => {
+            const pIdInput = pItem.querySelector('[data-item-product-id]');
+            const prefix = pIdInput?.name?.replace(/\[product_id\]$/, '') || 'items[0]';
+            const files = pItem._newFiles || [];
+            if (files.length > 0) {
+                formData.delete(`${prefix}[images][]`);
+                files.forEach((file) => {
+                    formData.append(`${prefix}[images][]`, file);
+                });
+            }
+        });
+
         const submitUrl = form.action;
 
         if (submitBtn) submitBtn.disabled = true;
@@ -677,6 +768,15 @@ export const initReviewModal = () => {
             const rawTags = singleTrigger.dataset.selectedTags || (singleTrigger.dataset.selectedTag ? [singleTrigger.dataset.selectedTag] : []);
             const selectedTags = Array.isArray(rawTags) ? rawTags : rawTags.split(',').map((t) => t.trim());
 
+            let parsedImages = [];
+            try {
+                if (singleTrigger.dataset.images) {
+                    parsedImages = JSON.parse(singleTrigger.dataset.images);
+                }
+            } catch (err) {
+                parsedImages = [];
+            }
+
             openReviewModal({
                 review_id: singleTrigger.dataset.reviewId,
                 product_id: singleTrigger.dataset.productId || '1',
@@ -687,7 +787,9 @@ export const initReviewModal = () => {
                 rating: singleTrigger.dataset.rating ? parseInt(singleTrigger.dataset.rating, 10) : 5,
                 comment: singleTrigger.dataset.comment || '',
                 selected_tags: selectedTags,
+                images: Array.isArray(parsedImages) ? parsedImages : [],
                 is_edited: singleTrigger.dataset.isEdited === 'true' || singleTrigger.dataset.isEdited === '1',
+                can_be_edited: singleTrigger.dataset.canBeEdited !== 'false',
             });
         }
     });

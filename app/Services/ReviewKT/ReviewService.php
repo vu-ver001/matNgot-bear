@@ -56,6 +56,16 @@ class ReviewService
                 ];
             }
 
+            $completedDate = $order->completed_at ?? $order->updated_at;
+            if ($completedDate && $completedDate->copy()->addDays(30)->isPast()) {
+                return [
+                    'eligible' => false,
+                    'message' => 'Đã quá thời hạn 30 ngày kể từ khi giao hàng thành công. Không thể đánh giá đơn hàng này nữa.',
+                    'order_id' => $orderId,
+                    'existing_review' => null,
+                ];
+            }
+
             $hasProduct = $order->details()->where('product_id', $productId)->exists();
             if (! $hasProduct) {
                 return [
@@ -171,22 +181,70 @@ class ReviewService
             ]);
         }
 
+        $trashed = Review::onlyTrashed()
+            ->where('user_id', $user->id)
+            ->where('product_id', $productId)
+            ->first();
+
+        $newImageUrls = !empty($data['images']) && is_array($data['images'])
+            ? $this->handleReviewImageUploads($data['images'])
+            : [];
+        $existingImageUrls = !empty($data['existing_images']) && is_array($data['existing_images'])
+            ? array_values(array_filter($data['existing_images'], fn ($u) => is_string($u) && !empty($u)))
+            : [];
+        $imageUrls = array_slice(array_merge($existingImageUrls, $newImageUrls), 0, 5);
+
+        if ($trashed) {
+            $trashed->restore();
+            $trashed->update([
+                'order_id' => $check['order_id'],
+                'rating' => (int) $data['rating'],
+                'comment' => trim((string) $data['comment']),
+                'images' => !empty($imageUrls) ? $imageUrls : null,
+                'is_hidden' => false,
+                'is_edited' => false,
+            ]);
+
+            return $trashed;
+        }
+
         return Review::query()->create([
             'user_id' => $user->id,
             'product_id' => $productId,
             'order_id' => $check['order_id'],
             'rating' => (int) $data['rating'],
             'comment' => trim((string) $data['comment']),
+            'images' => !empty($imageUrls) ? $imageUrls : null,
             'is_hidden' => false,
             'is_edited' => false,
         ]);
     }
 
     /**
+     * Upload và lưu danh sách ảnh đánh giá.
+     *
+     * @param  array<mixed>  $files
+     * @return array<string>
+     */
+    protected function handleReviewImageUploads(array $files): array
+    {
+        $urls = [];
+        foreach ($files as $file) {
+            if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                $path = $file->store('reviews', 'public');
+                $urls[] = asset('storage/' . $path);
+            } elseif (is_string($file) && !empty($file)) {
+                $urls[] = $file;
+            }
+        }
+        return array_slice($urls, 0, 5);
+    }
+
+    /**
      * Cập nhật đánh giá của chính mình.
      * Quy tắc Shopee: Mỗi đánh giá chỉ được chỉnh sửa 1 lần duy nhất!
      *
-     * @param  array{rating: int, comment: string}  $data
+     * @param  array{rating: int, comment: string, images?: ?array}  $data
      *
      * @throws ValidationException
      */
@@ -204,11 +262,30 @@ class ReviewService
             ]);
         }
 
-        $review->update([
+        if ($review->created_at && $review->created_at->copy()->addDays(7)->isPast()) {
+            throw ValidationException::withMessages([
+                'review' => 'Đã quá thời hạn 7 ngày kể từ khi gửi đánh giá. Bạn không thể chỉnh sửa đánh giá này nữa.',
+            ]);
+        }
+
+        $payload = [
             'rating' => (int) $data['rating'],
             'comment' => trim((string) $data['comment']),
             'is_edited' => true,
-        ]);
+        ];
+
+        if (array_key_exists('images', $data) || array_key_exists('existing_images', $data)) {
+            $newUrls = isset($data['images']) && is_array($data['images'])
+                ? $this->handleReviewImageUploads($data['images'])
+                : [];
+            $existingUrls = isset($data['existing_images']) && is_array($data['existing_images'])
+                ? array_values(array_filter($data['existing_images'], fn ($u) => is_string($u) && !empty($u)))
+                : [];
+            $allUrls = array_slice(array_merge($existingUrls, $newUrls), 0, 5);
+            $payload['images'] = !empty($allUrls) ? $allUrls : null;
+        }
+
+        $review->update($payload);
 
         return $review;
     }
@@ -248,6 +325,13 @@ class ReviewService
             ]);
         }
 
+        $completedDate = $order->completed_at ?? $order->updated_at;
+        if ($completedDate && $completedDate->copy()->addDays(30)->isPast()) {
+            throw ValidationException::withMessages([
+                'order' => 'Đã quá thời hạn 30 ngày kể từ khi giao hàng thành công. Đơn hàng này không còn trong thời hạn đánh giá.',
+            ]);
+        }
+
         $order->load(['details.product.images', 'reviews']);
 
         $items = $order->details->map(function ($detail) use ($order, $user) {
@@ -271,7 +355,9 @@ class ReviewService
                     'id' => $review->id,
                     'rating' => (int) $review->rating,
                     'comment' => $review->comment,
+                    'images' => $review->images,
                     'is_edited' => (bool) $review->is_edited,
+                    'can_be_edited' => $review->canBeEdited(),
                 ] : null,
             ];
         })->values()->all();
@@ -307,6 +393,13 @@ class ReviewService
             ]);
         }
 
+        $completedDate = $order->completed_at ?? $order->updated_at;
+        if ($completedDate && $completedDate->copy()->addDays(30)->isPast()) {
+            throw ValidationException::withMessages([
+                'order' => 'Đã quá thời hạn 30 ngày kể từ khi giao hàng thành công. Bạn không thể gửi đánh giá cho đơn hàng này nữa.',
+            ]);
+        }
+
         $orderProductIds = $order->details()->pluck('product_id')->all();
 
         return \Illuminate\Support\Facades\DB::transaction(function () use ($user, $order, $items, $orderProductIds) {
@@ -319,6 +412,16 @@ class ReviewService
                     continue;
                 }
 
+                $newImageUrls = !empty($itemData['images']) && is_array($itemData['images'])
+                    ? $this->handleReviewImageUploads($itemData['images'])
+                    : [];
+
+                $existingImageUrls = !empty($itemData['existing_images']) && is_array($itemData['existing_images'])
+                    ? array_values(array_filter($itemData['existing_images'], fn ($u) => is_string($u) && !empty($u)))
+                    : [];
+
+                $imageUrls = array_slice(array_merge($existingImageUrls, $newImageUrls), 0, 5);
+
                 $existingReview = Review::query()
                     ->where('user_id', $user->id)
                     ->where('product_id', $productId)
@@ -326,28 +429,132 @@ class ReviewService
                     ->first();
 
                 if ($existingReview) {
-                    if (! $existingReview->is_edited) {
-                        $existingReview = $this->updateReview($user, $existingReview, [
+                    if ($existingReview->canBeEdited()) {
+                        $updateData = [
                             'rating' => (int) $itemData['rating'],
                             'comment' => trim((string) $itemData['comment']),
-                        ]);
+                            'images' => !empty($imageUrls) ? $imageUrls : null,
+                        ];
+                        $existingReview = $this->updateReview($user, $existingReview, $updateData);
                     }
                     $savedReviews[] = $existingReview;
                 } else {
-                    $newReview = Review::query()->create([
-                        'user_id' => $user->id,
-                        'product_id' => $productId,
-                        'order_id' => $order->id,
-                        'rating' => (int) $itemData['rating'],
-                        'comment' => trim((string) $itemData['comment']),
-                        'is_hidden' => false,
-                        'is_edited' => false,
-                    ]);
-                    $savedReviews[] = $newReview;
+                    $trashed = Review::onlyTrashed()
+                        ->where('user_id', $user->id)
+                        ->where('product_id', $productId)
+                        ->first();
+
+                    if ($trashed) {
+                        $trashed->restore();
+                        $trashed->update([
+                            'order_id' => $order->id,
+                            'rating' => (int) $itemData['rating'],
+                            'comment' => trim((string) $itemData['comment']),
+                            'images' => !empty($imageUrls) ? $imageUrls : $trashed->images,
+                            'is_hidden' => false,
+                            'is_edited' => false,
+                        ]);
+                        $savedReviews[] = $trashed;
+                    } else {
+                        $newReview = Review::query()->create([
+                            'user_id' => $user->id,
+                            'product_id' => $productId,
+                            'order_id' => $order->id,
+                            'rating' => (int) $itemData['rating'],
+                            'comment' => trim((string) $itemData['comment']),
+                            'images' => !empty($imageUrls) ? $imageUrls : null,
+                            'is_hidden' => false,
+                            'is_edited' => false,
+                        ]);
+                        $savedReviews[] = $newReview;
+                    }
                 }
             }
 
             return $savedReviews;
         });
+    }
+
+    /**
+     * Lấy danh sách sản phẩm khách hàng đã mua trong các đơn hàng COMPLETED nhưng chưa viết đánh giá cho đơn đó (trong vòng 30 ngày).
+     * Quy tắc chuẩn Shopee: Mỗi đơn hàng hoàn thành có các sản phẩm cần đánh giá riêng biệt, sau 30 ngày không thể đánh giá.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getPendingReviewItems(User $user, string $sort = 'latest')
+    {
+        $query = \App\Models\OrderDetail::query()
+            ->whereHas('order', function ($q) use ($user) {
+                $q->where('customer_id', $user->id)
+                  ->where('order_status', 'COMPLETED')
+                  ->where(function ($dateQ) {
+                      $dateQ->where('completed_at', '>=', now()->subDays(30))
+                            ->orWhere(function ($fallbackQ) {
+                                $fallbackQ->whereNull('completed_at')
+                                          ->where('updated_at', '>=', now()->subDays(30));
+                            });
+                  });
+            })
+            ->whereNotExists(function ($q) use ($user) {
+                $q->select(\Illuminate\Support\Facades\DB::raw(1))
+                  ->from('reviews')
+                  ->whereColumn('reviews.order_id', 'order_details.order_id')
+                  ->whereColumn('reviews.product_id', 'order_details.product_id')
+                  ->where('reviews.user_id', $user->id)
+                  ->whereNull('reviews.deleted_at');
+            })
+            ->with(['product.images', 'order']);
+
+        if ($sort === 'oldest') {
+            $query->orderBy('id', 'asc');
+        } else {
+            $query->orderByDesc('id');
+        }
+
+        return $query->get()
+            ->filter(fn ($detail) => $detail->product !== null)
+            ->filter(function ($detail) {
+                $cDate = $detail->order?->completed_at ?? $detail->order?->updated_at;
+                return $cDate && ! $cDate->copy()->addDays(30)->isPast();
+            })
+            ->unique(fn ($detail) => $detail->order_id . '-' . $detail->product_id)
+            ->values();
+    }
+
+    /**
+     * Đếm số lượng sản phẩm chưa đánh giá.
+     */
+    public function getPendingReviewsCount(User $user): int
+    {
+        return $this->getPendingReviewItems($user)->count();
+    }
+
+    /**
+     * Lấy danh sách các đánh giá của chính khách hàng (phân trang).
+     */
+    public function getUserReviews(User $user, int $perPage = 9, string $sort = 'latest')
+    {
+        $query = Review::query()
+            ->with(['product.images', 'order'])
+            ->where('user_id', $user->id);
+
+        match ($sort) {
+            'oldest' => $query->oldest(),
+            'rating_desc' => $query->orderByDesc('rating')->latest(),
+            'rating_asc' => $query->orderBy('rating')->latest(),
+            default => $query->latest(),
+        };
+
+        return $query->paginate($perPage);
+    }
+
+    /**
+     * Đếm số lượng đánh giá khách hàng đã viết.
+     */
+    public function getUserReviewsCount(User $user): int
+    {
+        return Review::query()
+            ->where('user_id', $user->id)
+            ->count();
     }
 }
