@@ -74,7 +74,7 @@
                     <dt class="text-xs font-bold text-[#8E8076] uppercase">Người nhận hàng</dt>
                     <dd class="font-extrabold text-[#4E342E] text-base mt-0.5">{{ $order->recipient_name }}</dd>
                     @if ($order->customer)
-                        <span class="text-[11px] text-[#8D6E63] font-medium"><i class="fa-solid fa-user-tag text-[10px]"></i> Tài khoản: {{ $order->customer->full_name }} ({{ $order->customer->email }})</span>
+                        <span class="text-[11px] text-[#8D6E63] font-medium"><i class="fa-solid fa-user-tag text-[10px]"></i> Tài khoản: {{ $order->customer->full_name }}</span>
                     @endif
                 </div>
                 <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
@@ -89,6 +89,13 @@
                 <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
                     <dt class="text-xs font-bold text-[#8E8076] uppercase">Phương thức thanh toán</dt>
                     <dd class="font-bold text-[#4E342E] mt-0.5">{{ $order->payment_method }}</dd>
+                </div>
+                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
+                    <dt class="text-xs font-bold text-[#8E8076] uppercase">Hình thức giao hàng</dt>
+                    <dd class="font-bold text-[#4E342E] mt-0.5">{{ $order->shipping_method_label }}</dd>
+                    @if ($order->shipped_at)
+                        <span class="text-[11px] text-[#8E8076]">Bắt đầu giao: {{ $order->shipped_at->format('d/m/Y H:i') }}</span>
+                    @endif
                 </div>
                 <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
                     <dt class="text-xs font-bold text-[#8E8076] uppercase">Ngày tạo đơn</dt>
@@ -246,25 +253,37 @@
                     Đơn hàng đã kết thúc ở trạng thái <strong>{{ $order->order_status }}</strong>, không thể cập nhật thêm.
                 </div>
             @else
-                <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" x-data="{ status: '{{ $order->order_status }}' }">
+                <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" x-data="{ status: '' }">
                     @csrf
                     @method('PATCH')
                     <div>
                         <label class="block text-xs font-bold text-[#795548] uppercase mb-1.5">Chuyển sang trạng thái:</label>
-                        <select name="order_status" x-model="status" class="select-control">
-                            @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Chờ giao hàng', 'COMPLETED' => 'Đã giao thành công', 'RETURNED' => 'Trả hàng / Hoàn tiền', 'CANCELLED' => 'Hủy đơn hàng'] as $value => $label)
-                                <option value="{{ $value }}" @selected($order->order_status === $value)>{{ $label }}</option>
+                        <select name="order_status" x-model="status" class="select-control" required>
+                            <option value="" disabled>Chọn trạng thái mới</option>
+                            @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Đang giao hàng', 'COMPLETED' => 'Đã giao thành công', 'RETURNED' => 'Trả hàng / Hoàn tiền', 'CANCELLED' => 'Hủy đơn hàng'] as $value => $label)
+                                @if (in_array($value, $order->allowedNextStatuses(), true))
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endif
                             @endforeach
                         </select>
                     </div>
 
                     <div x-show="status === 'CANCELLED'" x-cloak class="mt-3">
                         <label class="block text-xs font-bold text-rose-700 uppercase mb-1.5">Lý do hủy đơn <span class="text-rose-600">*</span></label>
-                        <textarea name="cancel_reason" rows="3" placeholder="Nhập lý do hủy đơn chi tiết..."
+                        <textarea name="cancel_reason" rows="3" maxlength="255" :required="status === 'CANCELLED'" :disabled="status !== 'CANCELLED'" placeholder="Nhập lý do hủy đơn chi tiết..."
                                   class="input-control"></textarea>
+
+                        @if ($order->order_status === 'SHIPPING')
+                            <label class="mt-3 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">
+                                <input type="checkbox" name="stock_returned" value="1"
+                                       :required="status === 'CANCELLED'" :disabled="status !== 'CANCELLED'"
+                                       class="mt-0.5 rounded border-rose-300 text-rose-600 focus:ring-rose-500">
+                                <span>Tôi xác nhận kiện hàng đã quay lại kho và có thể hoàn lại tồn kho.</span>
+                            </label>
+                        @endif
                     </div>
 
-                    <button type="submit" class="mt-4 w-full btn btn-primary">
+                    <button type="submit" :disabled="!status" class="mt-4 w-full btn btn-primary">
                         <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
                     </button>
                 </form>

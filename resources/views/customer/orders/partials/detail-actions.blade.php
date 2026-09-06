@@ -1,7 +1,5 @@
 @php
-    $canPayOnline = in_array($order->payment_method, ['BANK_TRANSFER', 'CARD', 'E_WALLET'])
-        && in_array($order->payment_status, ['UNPAID', 'FAILED'])
-        && $order->order_status !== 'CANCELLED';
+    $canPayOnline = $order->canPayOnline();
 @endphp
 
 @if($canPayOnline)
@@ -63,4 +61,3 @@
         </form>
     </div>
 @endif
-

@@ -161,7 +161,7 @@ class OrderController extends Controller
 
     /**
      * Customer confirms they have received the package and completed the order.
-     * Marks order as COMPLETED, updates completed_at, payment_status, and increments sold_count!
+     * Completes a shipped order and confirms pending COD payments.
      */
     public function complete(Request $request, Order $order)
     {
@@ -169,53 +169,15 @@ class OrderController extends Controller
             abort(403);
         }
 
-        if (!in_array($order->order_status, ['SHIPPING', 'PREPARING', 'CONFIRMED'])) {
+        if ($order->order_status !== 'SHIPPING') {
             return back()->with('error', 'Đơn hàng chưa ở trạng thái đang giao hàng để xác nhận hoàn tất.');
         }
 
         try {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
-                $oldStatus = $order->order_status;
-                
-                $order->update([
-                    'order_status' => 'COMPLETED',
-                    'completed_at' => now(),
-                    'payment_status' => 'PAID',
-                ]);
-
-                // Record status history
-                \App\Models\OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'from_status' => $oldStatus,
-                    'to_status' => 'COMPLETED',
-                    'changed_by' => auth()->id(),
-                    'note' => 'Khách hàng đã nhận hàng và xác nhận hoàn tất đơn hàng.',
-                    'changed_at' => now(),
-                ]);
-
-                // Tăng lượt đã bán (sold_count) cho các sản phẩm trong đơn hàng
-                foreach ($order->details as $detail) {
-                    $detail->product()->withTrashed()->first()?->increment('sold_count', $detail->quantity);
-                }
-
-                // Cập nhật bản ghi thanh toán thành PAID nếu là COD
-                if ($order->payment_method === 'COD') {
-                    $payment = \App\Models\Payment::firstOrCreate(
-                        ['order_id' => $order->id],
-                        [
-                            'method' => 'COD',
-                            'amount' => $order->total_amount,
-                            'status' => 'PAID',
-                            'transaction_ref' => 'COD_' . $order->order_code,
-                            'paid_at' => now(),
-                        ]
-                    );
-                    $payment->update([
-                        'status' => 'PAID',
-                        'paid_at' => now(),
-                    ]);
-                }
-            });
+            $this->orderService->updateStatus(
+                $order, 'COMPLETED', auth()->id(),
+                'Khách hàng đã nhận hàng và xác nhận hoàn tất đơn hàng.'
+            );
 
             return back()->with('success', '🎉 Cảm ơn bạn! Đơn hàng đã được xác nhận hoàn tất thành công. Hãy để lại đánh giá cho bé gấu nhé!');
         } catch (\Exception $e) {
@@ -230,6 +192,10 @@ class OrderController extends Controller
     {
         if ($order->customer_id !== auth()->id()) {
             abort(403);
+        }
+
+        if (! $order->canBeReordered()) {
+            return back()->with('error', 'Bạn chỉ có thể mua lại từ đơn hàng đã hoàn thành, đã hủy hoặc đã trả hàng.');
         }
 
         $order->loadMissing('details.product');

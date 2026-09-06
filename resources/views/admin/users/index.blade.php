@@ -167,6 +167,7 @@
                         <th>Số Điện Thoại</th>
                         <th>Địa Chỉ</th>
                         <th>Vai Trò</th>
+                        <th>Đơn Hàng</th>
                         <th>Trạng Thái</th>
                         <th>Ngày Tạo</th>
                         <th class="text-right">Thao Tác</th>
@@ -190,6 +191,19 @@
                             <td class="text-[#795548] font-medium">{{ $user->phone ?? '—' }}</td>
                             <td class="text-xs text-[#795548] max-w-[200px] truncate" title="{{ $user->address }}">{{ $user->address ?? '—' }}</td>
                             <td><x-role-badge :role="$user->role" /></td>
+                            <td>
+                                @if ($user->role === \App\Models\User::ROLE_CUSTOMER)
+                                    <a href="{{ route('admin.orders.index', ['customer_id' => $user->id]) }}"
+                                       class="inline-flex flex-col rounded-lg px-2 py-1 text-left transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                       title="Xem đơn hàng của {{ $user->full_name }}">
+                                        <span class="text-sm font-extrabold text-[#B87309]">
+                                            {{ $user->orders_count }} đơn hàng
+                                        </span>
+                                    </a>
+                                @else
+                                    <span class="text-[#A8988A]">—</span>
+                                @endif
+                            </td>
                             <td>
                                 @if ($user->status === 'ACTIVE')
                                     <span class="badge-pastel green">
@@ -241,7 +255,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="p-10 text-center text-[#8E8076]">
+                            <td colspan="9" class="p-10 text-center text-[#8E8076]">
                                 <i class="fa-solid fa-users-slash text-3xl text-amber-300 mb-2 block"></i>
                                 Không tìm thấy tài khoản người dùng nào.
                             </td>
