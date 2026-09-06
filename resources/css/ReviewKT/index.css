@@ -288,14 +288,54 @@
 }
 
 /* ==========================================
-   3. STAR RATING (CENTERED)
+   3. STAR RATING (TIKTOK STYLE: STARS ON TOP, CENTERED LABEL BELOW)
    ========================================== */
 .review-modal__rating-row {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center; /* CĂN GIỮA CHUẨN MOCKUP */
-    gap: 14px;
-    margin: 4px 0 8px;
+    justify-content: center;
+    gap: 8px;
+    margin: 4px 0 0;
+}
+
+.review-modal__stars-list {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.review-modal__rating-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    color: #e08a1e;
+    line-height: 1.2;
+    transition: color 150ms ease, transform 150ms ease;
+    user-select: none;
+    letter-spacing: 0.2px;
+}
+
+.review-modal__rating-label[data-rating-level="1"] {
+    color: #e11d48; /* Rất tệ */
+}
+
+.review-modal__rating-label[data-rating-level="2"] {
+    color: #f43f5e; /* Tệ */
+}
+
+.review-modal__rating-label[data-rating-level="3"] {
+    color: #d97706; /* Ổn */
+}
+
+.review-modal__rating-label[data-rating-level="4"] {
+    color: #b45309; /* Tốt */
+}
+
+.review-modal__rating-label[data-rating-level="5"] {
+    color: #e08a1e; /* Xuất sắc */
 }
 
 .review-modal__star-btn {
@@ -309,8 +349,8 @@
 }
 
 .review-modal__star-icon {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.5;
@@ -340,7 +380,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 2px;
+    margin-top: 8px;
 }
 
 .review-modal__tag-btn {
@@ -721,305 +761,1159 @@
     }
 }
 
-/* ==========================================
-   TRANG "ĐÁNH GIÁ CỦA TÔI" (MY REVIEWS PAGE)
-   ========================================== */
+/* ==========================================================================
+   MY REVIEWS PAGE (TRANG ĐÁNH GIÁ CỦA TÔI - REVIEWKT)
+   Brand: Mật Ngọt Bear - Giao diện chuẩn theo mẫu thiết kế
+   ========================================================================== */
+
 .my-reviews-page {
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 24px;
     padding-bottom: 48px;
 }
 
-/* HERO BANNER */
+/* 1. HERO BANNER - ẢNH GỐC KHÔNG LÀM TRẮNG GÓC */
 .my-reviews-hero {
+    position: relative;
     display: flex;
+    min-height: 180px;
     align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 32px 36px;
-    background: linear-gradient(135deg, #fffaf5 0%, #fdf2e9 100%);
-    border: 1px solid #f2e2d5;
+    overflow: hidden;
+    border: 1px solid #ebdcd1;
     border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(184, 91, 53, 0.06);
+    background: var(--my-reviews-banner, url('/images/ReviewKT/my-reviews-banner.png')) center right / cover no-repeat;
+    padding: 26px 36px;
+    box-shadow: 0 4px 18px rgba(60, 30, 15, 0.04);
 }
 
-.my-reviews-hero__kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
+.my-reviews-hero__copy {
+    position: relative;
+    z-index: 2;
+    max-width: 480px;
+}
+
+.my-reviews-hero__calligraphy-title {
+    margin: 0;
+    font-family: 'Dancing Script', 'Caveat', cursive;
+    font-size: clamp(26px, 2.8vw, 34px);
     font-weight: 700;
-    color: #b85b35;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 8px;
+    color: #873c1a;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
+    display: flex;
+    flex-direction: column;
 }
 
-.my-reviews-hero__title {
-    margin: 0 0 8px;
-    font-size: 26px;
-    font-weight: 800;
-    color: #3b2214;
+.my-reviews-hero__heart {
+    color: #dc4632;
+    display: inline-block;
+    margin-left: 4px;
+    font-style: normal;
+    text-shadow: none;
 }
 
 .my-reviews-hero__desc {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.6;
-    color: #7a5c48;
-    max-width: 580px;
+    margin: 8px 0 0;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: #6b442e;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
 }
 
-.my-reviews-demo-btn {
+/* 2. FLASH ALERT */
+.my-reviews-flash-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.my-reviews-flash-alert.is-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.my-reviews-flash-alert.is-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+/* 3. MAIN SECTION & TOOLBAR ROW (TABS & SẮP XẾP) */
+.my-reviews-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.my-reviews-toolbar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 0;
+}
+
+.my-reviews-tab-pills {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.my-reviews-tab-pill {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 22px;
-    background: linear-gradient(135deg, #b85b35 0%, #a44f2d 100%);
-    color: #ffffff;
+    height: 42px;
+    padding: 0 20px;
+    border-radius: 12px;
     font-size: 14px;
-    font-weight: 700;
-    border: none;
-    border-radius: 999px;
+    font-weight: 600;
     cursor: pointer;
-    white-space: nowrap;
-    box-shadow: 0 4px 14px rgba(184, 91, 53, 0.28);
-    transition: all 180ms ease;
+    transition: all 160ms ease;
+    background: #ffffff;
+    color: #543322;
+    border: 1.5px solid #ebdcd1;
 }
 
-.my-reviews-demo-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(184, 91, 53, 0.38);
+.my-reviews-tab-pill:hover {
+    background: #fdfaf6;
+    border-color: #d6c0b0;
 }
 
-/* TOOLBAR */
-.my-reviews-toolbar {
+.my-reviews-tab-pill.is-active {
+    background: #543322;
+    color: #ffffff;
+    border-color: #543322;
+    font-weight: 700;
+    box-shadow: 0 3px 10px rgba(84, 51, 34, 0.22);
+}
+
+.my-reviews-tab-pill__icon {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+}
+
+/* Khung sắp xếp */
+.my-reviews-sort-box {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding-bottom: 14px;
-    border-bottom: 2px solid #f2e7de;
+    gap: 10px;
 }
 
-.my-reviews-toolbar__title {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 800;
-    color: #3b2214;
+.my-reviews-sort-label {
+    font-size: 13.5px;
+    color: #7c6555;
+    font-weight: 500;
 }
 
-.my-reviews-toolbar__hint {
-    font-size: 13px;
-    font-weight: 600;
-    color: #8c6e5a;
+.my-reviews-sort-select-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
 }
 
-/* EMPTY STATE */
-.my-reviews-empty {
-    text-align: center;
-    padding: 60px 24px;
+.my-reviews-sort-select {
+    height: 42px;
+    padding: 0 34px 0 16px;
     background: #ffffff;
-    border: 1px dashed #e8d7cb;
-    border-radius: 20px;
-}
-
-.my-reviews-empty__icon {
-    font-size: 48px;
-    margin-bottom: 12px;
-}
-
-.my-reviews-empty h3 {
-    margin: 0 0 8px;
-    font-size: 18px;
-    font-weight: 700;
+    border: 1.5px solid #ebdcd1;
+    border-radius: 12px;
     color: #3b2214;
+    font-size: 13.5px;
+    font-weight: 600;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 150ms ease;
 }
 
-.my-reviews-empty p {
-    margin: 0 auto 20px;
-    max-width: 440px;
-    font-size: 14px;
-    color: #7a5c48;
-    line-height: 1.5;
+.my-reviews-sort-select:hover,
+.my-reviews-sort-select:focus {
+    border-color: #cbb29e;
 }
 
-.my-reviews-empty__btn {
-    margin: 0 auto;
+.my-reviews-sort-select__arrow {
+    position: absolute;
+    right: 12px;
+    pointer-events: none;
+    width: 16px;
+    height: 16px;
+    color: #7c6555;
 }
 
-/* LIST & CARDS */
-.my-reviews-list {
+/* 4. TAB PANELS */
+.my-reviews-tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 5. GRID 3 CỘT CHO CẢ 2 TAB */
+.my-reviews-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+}
+
+/* ============================================================== */
+/* 6. TAB 1: CHƯA ĐÁNH GIÁ (DANH SÁCH THEO ĐƠN HÀNG)              */
+/* ============================================================== */
+.my-reviews-orders-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.my-review-card {
+.my-reviews-order-card {
     background: #ffffff;
-    border: 1px solid #f0e2d7;
-    border-radius: 18px;
-    padding: 20px 24px;
-    box-shadow: 0 2px 10px rgba(60, 30, 15, 0.03);
-    transition: border-color 160ms ease, box-shadow 160ms ease;
-}
-
-.my-review-card:hover {
-    border-color: #dfcbbe;
-    box-shadow: 0 4px 16px rgba(60, 30, 15, 0.07);
-}
-
-.my-review-card__main {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-}
-
-.my-review-card__image-wrap {
-    width: 80px;
-    height: 80px;
-    border-radius: 12px;
+    border: 1px solid #ebdcd1;
+    border-radius: 16px;
     overflow: hidden;
-    background: #fbf5ef;
-    border: 1px solid #ede1d6;
+    box-shadow: 0 2px 8px rgba(60, 30, 15, 0.03);
+    cursor: pointer;
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 160ms ease;
+}
+
+.my-reviews-order-card:hover {
+    border-color: #d6beae;
+    box-shadow: 0 6px 20px rgba(60, 30, 15, 0.07);
+}
+
+.my-reviews-order-card:focus-visible {
+    outline: 2px solid #a8582d;
+    outline-offset: 2px;
+}
+
+/* Header đơn hàng: Đơn hàng: #... | Hoàn thành: ... */
+.my-reviews-order-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 22px;
+    background: #fbf8f5;
+    border-bottom: 1px solid #f2e7de;
+    font-size: 13.5px;
+}
+
+.my-reviews-order-card__header-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.my-reviews-order-card__header-icon {
+    color: #9c6c4c;
     flex-shrink: 0;
 }
 
-.my-review-card__img {
+.my-reviews-order-card__code-label {
+    color: #7d6453;
+    font-weight: 500;
+}
+
+.my-reviews-order-card__code-val {
+    color: #3b2011;
+    font-weight: 700;
+}
+
+.my-reviews-order-card__sep {
+    color: #d9cac0;
+    margin: 0 4px;
+}
+
+.my-reviews-order-card__date-label {
+    color: #7d6453;
+    font-weight: 500;
+}
+
+.my-reviews-order-card__date-val {
+    color: #5c3f2d;
+    font-weight: 600;
+}
+
+.my-reviews-order-card__chevron {
+    color: #bfaea2;
+    transition: transform 180ms ease, color 180ms ease;
+    flex-shrink: 0;
+}
+
+.my-reviews-order-card:hover .my-reviews-order-card__chevron {
+    color: #7d492b;
+    transform: translateX(3px);
+}
+
+/* Body chứa các sản phẩm */
+.my-reviews-order-card__body {
+    display: flex;
+    flex-direction: column;
+}
+
+.my-reviews-order-item {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 20px 22px;
+}
+
+.my-reviews-order-item + .my-reviews-order-item {
+    border-top: 1px solid #f5ede4;
+}
+
+/* Cột 1: Khối sản phẩm (Chỉ hiện 1 sản phẩm ban đầu, có nút Xem thêm để mở rộng) */
+.my-reviews-order-item__product-col {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 380px;
+    min-width: 260px;
+}
+
+.my-reviews-order-item__product {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.my-reviews-order-item__img {
+    width: 82px;
+    height: 82px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #ebdcd1;
+    background: #fdfaf7;
+    flex-shrink: 0;
+}
+
+.my-reviews-order-item__info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.my-reviews-order-item__name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #2b170c;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.my-reviews-order-item__variant {
+    font-size: 12.5px;
+    color: #826c5d;
+    line-height: 1.4;
+}
+
+.my-reviews-order-item__qty {
+    font-size: 12.5px;
+    color: #826c5d;
+}
+
+.my-reviews-order-item__qty-num {
+    color: #b54a2a;
+    font-weight: 600;
+}
+
+.my-reviews-order-item__price {
+    margin-top: 2px;
+    font-size: 15px;
+    font-weight: 800;
+    color: #9c3b1e;
+}
+
+/* Nút Xem thêm / Thu gọn sản phẩm */
+.my-reviews-toggle-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 5px 12px;
+    background: #faf4ed;
+    border: 1px solid #ebdcd1;
+    border-radius: 8px;
+    color: #8f461e;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    width: fit-content;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.my-reviews-toggle-more:hover {
+    background: #f4e8dc;
+    border-color: #dcc4b2;
+    color: #6d2f0f;
+}
+
+.my-reviews-toggle-more__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Danh sách các sản phẩm phụ hiển thị khi ấn Xem thêm */
+.my-reviews-order-extra-products {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.my-reviews-order-subproduct {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+/* Cột 2: Khối hành động bên phải gồm 2 hàng (Hàng trên: Hạn đánh giá, Hàng dưới: Nút Viết đánh giá) */
+.my-reviews-order-item__side {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: 9px;
+    flex-shrink: 0;
+    min-width: 215px;
+    align-self: flex-end;
+    margin-top: auto;
+}
+
+/* Hàng trên: Huy hiệu đếm ngược số ngày còn lại để đánh giá (sau 30 ngày GTC không đánh giá được nữa) */
+.my-reviews-order-countdown {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: #fff8f2;
+    border: 1px solid #fae2d0;
+    border-radius: 9px;
+    color: #9c4b1d;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.my-reviews-order-countdown svg {
+    color: #c85e26;
+    flex-shrink: 0;
+}
+
+.my-reviews-order-countdown.is-urgent {
+    background: #fff0ed;
+    border-color: #fcd4cb;
+    color: #c53018;
+}
+
+.my-reviews-order-countdown.is-urgent svg {
+    color: #d9381e;
+}
+
+.my-reviews-order-countdown.is-expired {
+    background: #f7f5f3;
+    border-color: #e8ded6;
+    color: #8f7d71;
+}
+
+.my-reviews-order-countdown.is-expired svg {
+    color: #8f7d71;
+}
+
+/* Hàng dưới: Nút Viết đánh giá */
+.my-reviews-order-item__btn-write {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    padding: 10px 20px;
+    background: #63381e;
+    color: #ffffff;
+    border: none;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 160ms ease, transform 150ms ease, box-shadow 160ms ease;
+    white-space: nowrap;
+}
+
+.my-reviews-order-item__btn-write:hover:not(:disabled) {
+    background: #4a2712;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(99, 56, 30, 0.25);
+}
+
+.my-reviews-order-item__btn-write:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.my-reviews-order-item__btn-write.is-disabled,
+.my-reviews-order-item__btn-write:disabled {
+    background: #e6ded7;
+    color: #8c7c70;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* ============================================================== */
+/* 7. TAB 2: ĐÃ ĐÁNH GIÁ (DANH SÁCH THEO CHIỀU NGANG)             */
+/* ============================================================== */
+.my-reviews-reviewed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.my-reviews-reviewed-card {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #ebdcd1;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(60, 30, 15, 0.03);
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 160ms ease;
+}
+
+.my-reviews-reviewed-card:hover {
+    border-color: #d6beae;
+    box-shadow: 0 6px 20px rgba(60, 30, 15, 0.07);
+}
+
+/* Header thanh ngang của thẻ đã đánh giá */
+.my-reviews-reviewed-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 22px;
+    background: #fbf8f5;
+    border-bottom: 1px solid #f2e7de;
+    font-size: 13.5px;
+    gap: 12px;
+}
+
+.my-reviews-reviewed-card__header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.my-reviews-reviewed-card__header-icon {
+    color: #9c6c4c;
+    flex-shrink: 0;
+}
+
+.my-reviews-reviewed-card__code-label {
+    color: #7d6453;
+    font-weight: 500;
+}
+
+.my-reviews-reviewed-card__code-val {
+    color: #3b2011;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 150ms ease;
+}
+
+.my-reviews-reviewed-card__code-val:hover {
+    color: #b54a2a;
+    text-decoration: underline;
+}
+
+.my-reviews-reviewed-card__sep {
+    color: #d9cac0;
+    margin: 0 4px;
+}
+
+.my-reviews-reviewed-card__date-label {
+    color: #7d6453;
+    font-weight: 500;
+}
+
+.my-reviews-reviewed-card__date-val {
+    color: #5c3f2d;
+    font-weight: 600;
+}
+
+.my-reviews-reviewed-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+    font-size: 11.5px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+/* Body hàng ngang */
+.my-reviews-reviewed-card__body {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 20px 22px;
+}
+
+/* Cột chính bên trái: Ảnh + Nội dung đánh giá */
+.my-reviews-reviewed-card__main {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    flex: 1 1 500px;
+    min-width: 0;
+}
+
+.my-reviews-reviewed-card__img-wrap {
+    width: 86px;
+    height: 86px;
+    flex: 0 0 86px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #ebdcd1;
+    background: #faf5ee;
+}
+
+.my-reviews-reviewed-card__img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 200ms ease;
 }
 
-.my-review-card__body {
+.my-reviews-reviewed-card__img-wrap:hover .my-reviews-reviewed-card__img {
+    transform: scale(1.05);
+}
+
+.my-reviews-reviewed-card__info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     flex: 1;
     min-width: 0;
 }
 
-.my-review-card__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 4px;
-}
-
-.my-review-card__prod-name {
+.my-reviews-reviewed-card__name {
     margin: 0;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
+    line-height: 1.35;
+}
+
+.my-reviews-reviewed-card__name a {
     color: #2b170c;
+    text-decoration: none;
+    transition: color 150ms ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-.my-review-card__date {
-    font-size: 12px;
-    color: #9a7d69;
-    white-space: nowrap;
+.my-reviews-reviewed-card__name a:hover {
+    color: #b54a2a;
 }
 
-.my-review-card__order-meta {
-    font-size: 12px;
-    color: #8c6e5a;
-    margin-bottom: 8px;
+/* Hàng sao đánh giá & phân loại */
+.my-reviews-reviewed-card__stars-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.my-review-card__stars {
+.my-reviews-reviewed-card__stars {
     display: flex;
     align-items: center;
     gap: 3px;
-    margin-bottom: 10px;
 }
 
-.my-review-card__star {
+.my-reviews-star-filled {
     width: 16px;
     height: 16px;
 }
 
-.my-review-card__star.is-filled {
+.my-reviews-star-filled.is-gold {
     color: #f59e0b;
 }
 
-.my-review-card__star.is-empty {
-    color: #e5d7cc;
+.my-reviews-star-filled.is-gray {
+    color: #e5d8cc;
 }
 
-.my-review-card__rating-num {
-    margin-left: 6px;
-    font-size: 12px;
+.my-reviews-reviewed-card__rating-text {
+    font-size: 12.5px;
     font-weight: 700;
-    color: #b85b35;
+    color: #b56a23;
 }
 
-.my-review-card__comment {
-    margin: 0 0 14px;
-    font-size: 14px;
-    line-height: 1.55;
-    color: #442a19;
-    background: #fffcf9;
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1px solid #f6eee6;
+.my-reviews-reviewed-card__variant {
+    font-size: 12.5px;
+    color: #826c5d;
 }
 
-.my-review-card__footer {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.my-reviews-reviewed-card__dot {
+    color: #d1c4b8;
+    font-size: 11px;
+    user-select: none;
 }
 
-.my-review-card__badge-edited {
+.my-reviews-reviewed-card__date {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     font-size: 12px;
-    font-weight: 700;
-    color: #718096;
-    background: #edf2f7;
-    padding: 5px 12px;
-    border-radius: 999px;
+    color: #8c7667;
+    font-weight: 500;
+    white-space: nowrap;
+    padding-top: 2px;
 }
 
-.my-review-card__edit-btn {
+.my-reviews-reviewed-card__date svg {
+    color: #a89485;
+    flex-shrink: 0;
+}
+
+/* Hộp nhận xét của khách hàng */
+.my-reviews-reviewed-card__comment-box {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    background: #faf6f2;
+    border: 1px solid #f2e5d9;
+    border-radius: 12px;
+    margin-top: 4px;
+}
+
+.my-reviews-reviewed-card__quote-icon {
+    color: #c9a88f;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.my-reviews-reviewed-card__comment-text {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: #3d2315;
+    font-style: italic;
+    word-break: break-word;
+}
+
+.my-reviews-reviewed-card__edited-note {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #b85b35;
-    background: #fff6ee;
-    border: 1px solid #f2d2be;
-    padding: 6px 14px;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: all 160ms ease;
+    gap: 5px;
+    font-size: 11.5px;
+    color: #9c8371;
+    margin-top: 2px;
 }
 
-.my-review-card__edit-btn:hover {
-    background: #b85b35;
+/* Danh sách ảnh đính kèm của đánh giá */
+.my-reviews-reviewed-photos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    margin-bottom: 2px;
+}
+
+.my-reviews-reviewed-photo-item {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1.5px solid #ebdcd1;
+    background: #fdfaf7;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(61, 35, 21, 0.06);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+.my-reviews-reviewed-photo-item:hover,
+.my-reviews-reviewed-photo-item:focus-visible {
+    transform: translateY(-2px) scale(1.04);
+    border-color: #d97736;
+    box-shadow: 0 6px 16px rgba(217, 119, 54, 0.22);
+    outline: none;
+}
+
+.my-reviews-reviewed-photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.my-reviews-reviewed-photo-item:hover img {
+    transform: scale(1.08);
+}
+
+.my-reviews-reviewed-photo-zoom-icon {
+    position: absolute;
+    inset: 0;
+    background: rgba(30, 20, 15, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #ffffff;
-    border-color: #b85b35;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    backdrop-filter: blur(1px);
+}
+
+.my-reviews-reviewed-photo-item:hover .my-reviews-reviewed-photo-zoom-icon,
+.my-reviews-reviewed-photo-item:focus-visible .my-reviews-reviewed-photo-zoom-icon {
+    opacity: 1;
+}
+
+/* Lightbox phóng to ảnh đánh giá */
+.my-reviews-lightbox-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(18, 12, 9, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: myReviewsFadeIn 0.2s ease-out;
+}
+
+.my-reviews-lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 88vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: myReviewsZoomIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.my-reviews-lightbox-img {
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: 16px;
+    object-fit: contain;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.my-reviews-lightbox-close {
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #3d2315;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    z-index: 10;
+}
+
+.my-reviews-lightbox-close:hover {
+    transform: scale(1.1);
+    background: #fef3c7;
+    color: #b45309;
+}
+
+@keyframes myReviewsFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes myReviewsZoomIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Cột phải: Góc trên là Ngày đánh giá, Góc dưới là Nút Sửa đánh giá */
+.my-reviews-reviewed-card__side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+    min-width: 140px;
+    align-self: stretch;
+}
+
+.my-reviews-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 18px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 160ms ease;
+    border: 1px solid transparent;
+    width: auto;
+    min-width: 135px;
+    white-space: nowrap;
+}
+
+.my-reviews-action-btn.is-edit {
+    background: #ffffff;
+    border-color: #dcc4b2;
+    color: #843c16;
+}
+
+.my-reviews-action-btn.is-edit:hover {
+    background: #faf2eb;
+    border-color: #b56a38;
+    color: #632a0c;
+}
+
+.my-reviews-action-btn.is-edited {
+    background: #f3ede7;
+    border-color: #e5ded7;
+    color: #8c7c70;
+    cursor: default;
+}
+
+.my-reviews-action-btn.is-view {
+    background: #63381e;
+    color: #ffffff;
+    border-color: #63381e;
+}
+
+.my-reviews-action-btn.is-view:hover {
+    background: #4a2712;
+    border-color: #4a2712;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 56, 30, 0.2);
+}
+
+.my-reviews-action-btn.is-delete {
+    background: transparent;
+    color: #b91c1c;
+    border-color: transparent;
+    height: 32px;
+    font-size: 12px;
+}
+
+.my-reviews-action-btn.is-delete:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.my-reviews-action-delete-form {
+    margin: 0;
+    display: flex;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .my-reviews-reviewed-card__body {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .my-reviews-reviewed-card__side {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+        justify-content: space-between;
+    }
+    .my-reviews-action-btn {
+        width: auto;
+        flex: 1;
+    }
+    .my-reviews-action-delete-form {
+        width: auto;
+        flex: 0 0 auto;
+    }
+}
+
+/* 8. EMPTY STATES */
+.my-reviews-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 56px 24px;
+    background: #ffffff;
+    border: 1.5px dashed #ebdcd1;
+    border-radius: 20px;
+}
+
+.my-reviews-empty__icon-wrap {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #fdf6ee;
+    border: 1px solid #f5dfcb;
+    display: grid;
+    place-items: center;
+    margin-bottom: 16px;
+}
+
+.my-reviews-empty__emoji {
+    font-size: 32px;
+}
+
+.my-reviews-empty__title {
+    margin: 0 0 8px;
+    font-size: 19px;
+    font-weight: 800;
+    color: #3b2012;
+}
+
+.my-reviews-empty__desc {
+    margin: 0 auto 22px;
+    max-width: 460px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #795d4b;
+}
+
+.my-reviews-empty-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    background: #543322;
+    color: #ffffff;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 150ms ease;
+}
+
+.my-reviews-empty-btn:hover {
+    background: #402315;
+}
+
+/* 9. PHÂN TRANG */
+.my-reviews-pagination {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+/* 10. RESPONSIVE BREAKPOINTS */
+@media (max-width: 1024px) {
+    .my-reviews-grid-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+}
+
+@media (max-width: 960px) {
+    .my-reviews-order-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .my-reviews-order-item__product-col {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .my-reviews-order-item__product {
+        flex: 1 1 auto;
+    }
+
+    .my-reviews-order-item__side {
+        width: 100%;
+        min-width: 0;
+        align-self: stretch;
+        margin-top: 0;
+    }
+
+    .my-reviews-order-item__btn-write {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .my-reviews-hero {
+        padding: 20px 22px;
+        min-height: auto;
+    }
+
+    .my-reviews-hero__calligraphy-title {
+        font-size: 23px;
+    }
+
+    .my-reviews-toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .my-reviews-sort-box {
+        justify-content: space-between;
+    }
 }
 
 @media (max-width: 640px) {
-    .my-reviews-hero {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 24px 20px;
+    .my-reviews-grid-3 {
+        grid-template-columns: 1fr;
     }
 
-    .my-reviews-demo-btn {
+    .my-reviews-tab-pills {
         width: 100%;
+    }
+
+    .my-reviews-tab-pill {
+        flex: 1;
         justify-content: center;
-    }
-
-    .my-review-card__main {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .my-review-card__image-wrap {
-        width: 64px;
-        height: 64px;
+        padding: 0 12px;
+        font-size: 13px;
     }
 }
+
+

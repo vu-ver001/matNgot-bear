@@ -78,20 +78,23 @@
                         <label class="review-modal__section-title">Đánh giá của bạn</label>
 
                         <div class="review-modal__rating-row" role="radiogroup" aria-label="Đánh giá chất lượng từ 1 đến 5 sao">
-                            @for ($i = 1; $i <= 5; $i++)
-                                <button
-                                    type="button"
-                                    class="review-modal__star-btn is-active"
-                                    data-star-index="{{ $i }}"
-                                    role="radio"
-                                    aria-checked="{{ $i === 5 ? 'true' : 'false' }}"
-                                    aria-label="Đánh giá {{ $i }} sao"
-                                >
-                                    <svg class="review-modal__star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                    </svg>
-                                </button>
-                            @endfor
+                            <div class="review-modal__stars-list">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <button
+                                        type="button"
+                                        class="review-modal__star-btn is-active"
+                                        data-star-index="{{ $i }}"
+                                        role="radio"
+                                        aria-checked="{{ $i === 5 ? 'true' : 'false' }}"
+                                        aria-label="Đánh giá {{ $i }} sao"
+                                    >
+                                        <svg class="review-modal__star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
+                                    </button>
+                                @endfor
+                            </div>
+                            <span class="review-modal__rating-label" data-rating-label data-rating-level="5">Xuất sắc</span>
                         </div>
 
                         <div class="review-modal__tags-wrap" aria-label="Gợi ý cảm nhận nhanh">
@@ -223,20 +226,23 @@
                 <label class="review-modal__section-title">Đánh giá của bạn</label>
 
                 <div class="review-modal__rating-row" role="radiogroup" aria-label="Đánh giá chất lượng từ 1 đến 5 sao">
-                    @for ($i = 1; $i <= 5; $i++)
-                        <button
-                            type="button"
-                            class="review-modal__star-btn"
-                            data-star-index="{{ $i }}"
-                            role="radio"
-                            aria-checked="{{ $i === 5 ? 'true' : 'false' }}"
-                            aria-label="Đánh giá {{ $i }} sao"
-                        >
-                            <svg class="review-modal__star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                        </button>
-                    @endfor
+                    <div class="review-modal__stars-list">
+                        @for ($i = 1; $i <= 5; $i++)
+                            <button
+                                type="button"
+                                class="review-modal__star-btn"
+                                data-star-index="{{ $i }}"
+                                role="radio"
+                                aria-checked="{{ $i === 5 ? 'true' : 'false' }}"
+                                aria-label="Đánh giá {{ $i }} sao"
+                            >
+                                <svg class="review-modal__star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                            </button>
+                        @endfor
+                    </div>
+                    <span class="review-modal__rating-label" data-rating-label data-rating-level="5">Xuất sắc</span>
                 </div>
 
                 <div class="review-modal__tags-wrap" aria-label="Gợi ý cảm nhận nhanh">
