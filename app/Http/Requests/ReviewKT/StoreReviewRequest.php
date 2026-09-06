@@ -23,6 +23,8 @@ class StoreReviewRequest extends FormRequest
                 'items.*.review_id' => ['nullable', 'integer', 'exists:reviews,id'],
                 'items.*.images' => ['nullable', 'array', 'max:5'],
                 'items.*.images.*' => ['file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+                'items.*.existing_images' => ['nullable', 'array', 'max:5'],
+                'items.*.existing_images.*' => ['string'],
             ];
         }
 
@@ -33,6 +35,8 @@ class StoreReviewRequest extends FormRequest
             'order_id' => ['nullable', 'integer', 'exists:orders,id'],
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'existing_images' => ['nullable', 'array', 'max:5'],
+            'existing_images.*' => ['string'],
         ];
     }
 

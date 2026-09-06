@@ -18,6 +18,8 @@ class UpdateReviewRequest extends FormRequest
             'comment' => ['required', 'string', 'max:1000'],
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'existing_images' => ['nullable', 'array', 'max:5'],
+            'existing_images.*' => ['string'],
         ];
     }
 

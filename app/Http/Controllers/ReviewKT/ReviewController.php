@@ -21,27 +21,47 @@ class ReviewController extends Controller
     ) {}
 
     /**
-     * Trang "Đánh giá của tôi" cho khách hàng.
+     * Trang "Đánh giá của tôi" cho khách hàng (2 tab: Chưa đánh giá & Đã đánh giá).
      */
     public function index(Request $request): View|JsonResponse
     {
         $user = $request->user();
-        $reviews = Review::query()
-            ->with(['product.images', 'order'])
-            ->where('user_id', $user->id)
-            ->latest()
-            ->paginate(10);
+        $sort = $request->query('sort', 'latest');
 
-        $sampleProduct = Product::query()->first();
+        $pendingItems = $this->reviewService->getPendingReviewItems($user, $sort);
+        $pendingCount = $this->reviewService->getPendingReviewsCount($user);
+
+        $reviews = $this->reviewService->getUserReviews($user, 9, $sort);
+        $reviewedCount = $this->reviewService->getUserReviewsCount($user);
+
+        // Mặc định chọn tab Chưa đánh giá, hoặc nếu chưa đánh giá hết thì chuyển sang Đã đánh giá
+        $requestedTab = $request->query('tab');
+        $activeTab = in_array($requestedTab, ['pending', 'reviewed'], true)
+            ? $requestedTab
+            : ($pendingCount > 0 ? 'pending' : ($reviewedCount > 0 ? 'reviewed' : 'pending'));
 
         if ($request->expectsJson() && ! $request->hasHeader('X-Inertia')) {
             return response()->json([
                 'success' => true,
-                'data' => $reviews,
+                'data' => [
+                    'pending_items' => $pendingItems,
+                    'pending_count' => $pendingCount,
+                    'reviews' => $reviews,
+                    'reviewed_count' => $reviewedCount,
+                    'active_tab' => $activeTab,
+                    'sort' => $sort,
+                ],
             ]);
         }
 
-        return view('ReviewKT.index', compact('reviews', 'sampleProduct'));
+        return view('ReviewKT.index', compact(
+            'pendingItems',
+            'pendingCount',
+            'reviews',
+            'reviewedCount',
+            'activeTab',
+            'sort'
+        ));
     }
 
     /**
@@ -92,7 +112,8 @@ class ReviewController extends Controller
     {
         if ($request->has('items')) {
             $order = Order::query()->findOrFail($request->input('order_id'));
-            $reviews = $this->reviewService->createReviewsForOrder($request->user(), $order, $request->input('items'));
+            $items = $request->all()['items'] ?? $request->input('items', []);
+            $reviews = $this->reviewService->createReviewsForOrder($request->user(), $order, $items);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

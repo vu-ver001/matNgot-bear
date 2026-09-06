@@ -16,12 +16,14 @@ class Review extends Model
         'order_id',
         'rating',
         'comment',
+        'images',
         'is_hidden',
         'is_edited',
     ];
 
     protected $casts = [
         'rating' => 'integer',
+        'images' => 'array',
         'is_hidden' => 'boolean',
         'is_edited' => 'boolean',
     ];
@@ -39,5 +41,23 @@ class Review extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Kiểm tra xem đánh giá có còn trong thời hạn và điều kiện được chỉnh sửa hay không:
+     * - Chưa từng chỉnh sửa lần nào (is_edited == false).
+     * - Chưa quá 7 ngày kể từ khi gửi đánh giá (created_at + 7 days > now).
+     */
+    public function canBeEdited(): bool
+    {
+        if ($this->is_edited) {
+            return false;
+        }
+
+        if (! $this->created_at) {
+            return true;
+        }
+
+        return ! $this->created_at->copy()->addDays(7)->isPast();
     }
 }
