@@ -451,6 +451,16 @@
                                     <dt class="text-[#64748B]">Địa chỉ</dt>
                                     <dd class="font-medium text-[#1E293B]">{{ $order->recipient_address }}</dd>
                                 </div>
+                                <div>
+                                    <dt class="text-[#64748B]">Hình thức giao hàng</dt>
+                                    <dd class="font-medium text-[#1E293B]">{{ $order->shipping_method_label }}</dd>
+                                </div>
+                                @if ($order->shipped_at)
+                                    <div>
+                                        <dt class="text-[#64748B]">Bắt đầu giao</dt>
+                                        <dd class="font-medium text-[#1E293B]">{{ $order->shipped_at->format('d/m/Y H:i') }}</dd>
+                                    </div>
+                                @endif
                                 @if ($order->note)
                                     <div class="sm:col-span-2">
                                         <dt class="text-[#64748B]">Ghi chú</dt>
@@ -704,7 +714,7 @@
                                             
                                             <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-amber-200"
                                                  @click.stop>
-                                                <form method="POST" action="{{ route('customer.orders.request_cancel', $order) }}">
+                                                <form method="POST" action="{{ route($isDirectCancel ? 'customer.orders.cancel' : 'customer.orders.request_cancel', $order) }}">
                                                     @csrf
                                                     
                                                     {{-- Modal Header --}}

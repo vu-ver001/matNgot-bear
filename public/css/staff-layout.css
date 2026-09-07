@@ -1,3 +1,5 @@
+@import url('./order-components.css');
+
 /* ==========================================================================
    MAT NGOT BEAR - STAFF DASHBOARD LAYOUT CSS
    Pastel Brown Theme, Mini/Full Sidebar, Topbar, Content & Responsive
@@ -9,35 +11,35 @@
     --bg-card: #FFFFFF;
     --bg-surface: #F8F4EE;
     --bg-cream: #F5EFEB;
-    
+
     --pastel-brown-main: #8D6E63;
     --pastel-brown-dark: #5D4037;
     --pastel-brown-deep: #4E342E;
     --pastel-brown-light: #EFEBE9;
     --pastel-brown-surface: #FAF6F0;
-    
+
     --honey: #E59819;
     --honey-light: #FFF8E7;
     --honey-dark: #B87309;
     --honey-gold: #F6D89B;
-    
+
     --text-main: #4E342E;
     --text-muted: #795548;
     --text-light: #9E8076;
-    
+
     --border: #EADFCF;
     --border-light: #F2EAE0;
     --danger: #C62828;
-    
+
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 20px;
     --radius-xl: 28px;
-    
+
     --shadow-subtle: 0 4px 16px rgba(109, 76, 65, 0.05);
     --shadow-card: 0 10px 30px rgba(109, 76, 65, 0.08);
     --shadow-hover: 0 16px 40px rgba(109, 76, 65, 0.14);
-    
+
     --sidebar-width: 270px;
     --sidebar-collapsed-width: 72px;
 }
@@ -68,11 +70,11 @@ body {
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ====== STAFF SIDEBAR (NÂU PASTEL THEME) ====== */
+/* ====== STAFF SIDEBAR (THEO GIAO DIỆN ẢNH 1 & ẢNH 2) ====== */
 .staff-sidebar {
     width: var(--sidebar-width);
-    background: linear-gradient(180deg, #795548 0%, #5D4037 100%);
-    color: #FDFBF7;
+    background: #FAF3EC;
+    color: #4A2E2B;
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -80,13 +82,331 @@ body {
     left: 0;
     bottom: 0;
     z-index: 100;
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s ease;
-    box-shadow: 4px 0 24px rgba(78, 52, 46, 0.12);
+    border-right: 1px solid #EADFCF;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 2px 0 16px rgba(78, 52, 46, 0.04);
 }
 
-/* Khi Sidebar Thu Gọn (Mini Sidebar) */
+/* Header */
+.sidebar-brand {
+    padding: 1.5rem 1.25rem 1.25rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #EADFCF;
+    min-height: 86px;
+    background: #FAF3EC;
+}
+
+.sidebar-brand-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.sidebar-brand-name {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #4A2E2B;
+    text-decoration: none;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+    transition: color 0.2s ease;
+}
+
+.sidebar-brand-name:hover {
+    color: #C86A3B;
+}
+
+.sidebar-brand-sub {
+    font-size: 11px;
+    color: #8D6E63;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.sidebar-collapse-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 12px;
+    background: #FAF5F0;
+    border: 1px solid #EADFCF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #4A2E2B;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.sidebar-collapse-btn:hover {
+    background: #EAD8C3;
+    color: #3E2723;
+    transform: scale(1.05);
+}
+
+/* Navigation */
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 0;
+}
+
+.sidebar-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8D6E63;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 0.85rem 1.4rem 0.4rem;
+    white-space: nowrap;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    margin: 2px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4A2E2B;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    position: relative;
+}
+
+.sidebar-link i {
+    width: 20px;
+    min-width: 20px;
+    text-align: center;
+    font-size: 16px;
+    color: #4A2E2B;
+}
+
+.sidebar-link:hover {
+    background: rgba(234, 216, 195, 0.45);
+    color: #3E2723;
+}
+
+.sidebar-link.active {
+    background: #EAD8C3;
+    color: #3E2723;
+    font-weight: 700;
+}
+
+.badge-not-connected {
+    border: 1px solid #D7CCC8;
+    color: #8D6E63;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+}
+
+/* Sidebar Footer & User Profile Card */
+.sidebar-footer-wrap {
+    padding: 12px 14px;
+    border-top: 1px solid #EADFCF;
+    position: relative;
+    background: #FAF3EC;
+}
+
+.sidebar-user-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.sidebar-user-trigger:hover {
+    background: rgba(234, 216, 195, 0.5);
+}
+
+.sidebar-user-avatar {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 50%;
+    background: #D48B38;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(212, 139, 56, 0.25);
+}
+
+.sidebar-user-details {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.sidebar-user-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #3E2723;
+    line-height: 1.3;
+}
+
+.sidebar-user-email {
+    font-size: 11.5px;
+    color: #8D6E63;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+}
+
+/* Popup Card (Ảnh 2) */
+.sidebar-user-popup {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 12px;
+    right: 12px;
+    background: #FAF5EF;
+    border: 1px solid #E8DDD0;
+    border-radius: 20px;
+    box-shadow: 0 12px 36px rgba(78, 52, 46, 0.16);
+    padding: 14px;
+    z-index: 999;
+    animation: popupFadeIn 0.2s ease forwards;
+}
+
+.sidebar-user-popup.show {
+    display: block;
+}
+
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-popup-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 4px 8px;
+}
+
+.user-popup-avatar {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    background: #D48B38;
+    color: #FFFFFF;
+    font-size: 17px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-popup-info {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.user-popup-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #3E2723;
+}
+
+.user-popup-email {
+    font-size: 11.5px;
+    color: #8D6E63;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-popup-divider {
+    height: 1px;
+    background: #EADFCF;
+    margin: 8px 0;
+}
+
+.user-popup-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-popup-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #4A2E2B;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.user-popup-item i {
+    font-size: 16px;
+    width: 18px;
+    text-align: center;
+}
+
+.user-popup-item.active {
+    background: #EAD8C3;
+    color: #3E2723;
+    font-weight: 700;
+}
+
+.user-popup-item:hover:not(.active):not(.disabled) {
+    background: rgba(234, 216, 195, 0.4);
+}
+
+.user-popup-item.disabled {
+    cursor: default;
+    color: #8D6E63;
+}
+
+.user-popup-item.logout-btn {
+    color: #5D4037;
+    margin-top: 2px;
+}
+
+.user-popup-item.logout-btn:hover {
+    background: rgba(198, 40, 40, 0.08);
+    color: #C62828;
+}
+
+/* Collapsed Sidebar Styles */
 html.staff-sidebar-collapsed .staff-sidebar,
 .staff-sidebar.collapsed {
     width: var(--sidebar-collapsed-width);
@@ -97,21 +417,46 @@ html.staff-sidebar-collapsed .staff-main,
     margin-left: var(--sidebar-collapsed-width);
 }
 
-html.staff-sidebar-collapsed .sidebar-brand-text,
+html.staff-sidebar-collapsed .sidebar-brand-content,
 html.staff-sidebar-collapsed .sidebar-section-label,
 html.staff-sidebar-collapsed .sidebar-link-text,
-html.staff-sidebar-collapsed .sidebar-user-info,
-html.staff-sidebar-collapsed .sidebar-logout-btn span,
-.staff-sidebar.collapsed .sidebar-brand-text,
+html.staff-sidebar-collapsed .badge-not-connected,
+html.staff-sidebar-collapsed .sidebar-user-details,
+.staff-sidebar.collapsed .sidebar-brand-content,
 .staff-sidebar.collapsed .sidebar-section-label,
 .staff-sidebar.collapsed .sidebar-link-text,
-.staff-sidebar.collapsed .sidebar-user-info,
-.staff-sidebar.collapsed .sidebar-logout-btn span {
-    opacity: 0;
-    display: none;
+.staff-sidebar.collapsed .badge-not-connected,
+.staff-sidebar.collapsed .sidebar-user-details {
+    display: none !important;
 }
 
-html.staff-sidebar-collapsed .sidebar-link:hover::after,
+html.staff-sidebar-collapsed .sidebar-brand,
+.staff-sidebar.collapsed .sidebar-brand {
+    justify-content: center;
+    padding: 1.25rem 0.5rem;
+}
+
+html.staff-sidebar-collapsed .sidebar-link,
+.staff-sidebar.collapsed .sidebar-link {
+    justify-content: center;
+    padding: 12px 0;
+    margin: 4px 8px;
+}
+
+html.staff-sidebar-collapsed .sidebar-user-trigger,
+.staff-sidebar.collapsed .sidebar-user-trigger {
+    justify-content: center;
+    padding: 6px 0;
+}
+
+html.staff-sidebar-collapsed .sidebar-user-popup,
+.staff-sidebar.collapsed .sidebar-user-popup {
+    left: calc(var(--sidebar-collapsed-width) + 8px);
+    bottom: 12px;
+    width: 250px;
+}
+
+/* Tooltip khi hover trên mini sidebar */
 .staff-sidebar.collapsed .sidebar-link:hover::after {
     content: attr(data-title);
     position: absolute;
@@ -122,235 +467,30 @@ html.staff-sidebar-collapsed .sidebar-link:hover::after,
     background: #4E342E;
     color: #FFFFFF;
     padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-    z-index: 999;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    pointer-events: none;
-}
-
-.sidebar-brand {
-    padding: 1.25rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    position: relative;
-}
-
-.sidebar-brand-icon {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    background: linear-gradient(135deg, #F6D89B 0%, #E59819 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    color: #4E342E;
-    box-shadow: 0 4px 12px rgba(229, 152, 25, 0.3);
-    cursor: pointer;
-}
-
-.sidebar-brand-text {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    white-space: nowrap;
-    transition: opacity 0.2s ease;
-}
-
-.staff-sidebar.collapsed .sidebar-brand-text {
-    opacity: 0;
-    display: none;
-}
-
-.sidebar-brand-name {
-    font-size: 17px;
-    font-weight: 800;
-    color: #FFFFFF;
-    letter-spacing: -0.3px;
-}
-
-.sidebar-brand-sub {
-    font-size: 10px;
-    color: #D7CCC8;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.sidebar-nav {
-    flex: 1;
-    padding: 0.75rem 0;
-}
-
-.sidebar-section-label {
-    font-size: 9.5px;
-    font-weight: 800;
-    color: #D7CCC8;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    padding: 0.75rem 1.25rem 0.35rem;
-    white-space: nowrap;
-    transition: opacity 0.2s ease;
-}
-
-.staff-sidebar.collapsed .sidebar-section-label {
-    opacity: 0;
-    display: none;
-}
-
-.sidebar-link {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 1.25rem;
-    font-size: 13px;
-    font-weight: 700;
-    color: #EFEBE9;
-    text-decoration: none;
-    border-left: 3px solid transparent;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    position: relative;
-}
-
-.sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #FFFFFF;
-    border-left-color: var(--honey-gold);
-}
-
-.sidebar-link.active {
-    background: rgba(246, 216, 155, 0.2);
-    color: var(--honey-gold);
-    border-left-color: var(--honey-gold);
-    font-weight: 800;
-}
-
-.sidebar-link i {
-    width: 22px;
-    min-width: 22px;
-    text-align: center;
-    font-size: 16px;
-}
-
-.sidebar-link-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: opacity 0.2s ease;
-}
-
-.staff-sidebar.collapsed .sidebar-link-text {
-    opacity: 0;
-    display: none;
-}
-
-/* Tooltip khi thu gọn */
-.staff-sidebar.collapsed .sidebar-link:hover::after {
-    content: attr(data-title);
-    position: absolute;
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    margin-left: 10px;
-    background: #4E342E;
-    color: #FFFFFF;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-    z-index: 999;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    pointer-events: none;
-}
-
-.sidebar-footer {
-    padding: 1rem 1.25rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.sidebar-footer-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.sidebar-avatar {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #F6D89B, #E59819);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #4E342E;
-    font-size: 13px;
-}
-
-.sidebar-user-info {
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.staff-sidebar.collapsed .sidebar-user-info {
-    display: none;
-}
-
-.sidebar-user-name {
-    font-size: 12.5px;
-    font-weight: 800;
-    color: #FFFFFF;
-}
-
-.sidebar-user-role {
-    font-size: 10px;
-    color: #D7CCC8;
-}
-
-.sidebar-logout-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 8px 10px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    color: #FFCDD2;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
     white-space: nowrap;
-}
-
-.sidebar-logout-btn:hover {
-    background: rgba(198, 40, 40, 0.4);
-    color: #FFFFFF;
-}
-
-.staff-sidebar.collapsed .sidebar-logout-btn span {
-    display: none;
+    z-index: 999;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    pointer-events: none;
 }
 
 /* ====== MAIN AREA ====== */
 .staff-main {
     margin-left: var(--sidebar-width);
     flex: 1;
+    min-width: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    background-color: var(--bg-page);
+    background-image: url('/images/auth/auth-panel-background.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center top;
 }
 
 .staff-main.expanded {
@@ -358,7 +498,9 @@ html.staff-sidebar-collapsed .sidebar-link:hover::after,
 }
 
 .staff-topbar {
-    background: #FFFFFF;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 0.85rem 2rem;
     display: flex;
@@ -508,4 +650,86 @@ html.staff-sidebar-collapsed .sidebar-link:hover::after,
     .staff-main {
         margin-left: 0 !important;
     }
+}
+
+/* ==========================================================================
+   MAT NGOT BEAR - UNIFIED UI COMPONENTS (Pastel Brown Theme)
+   ========================================================================== */
+
+/* 1. Welcome Banner */
+.admin-banner, .staff-banner {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FAF6F0 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    box-shadow: var(--shadow-subtle);
+}
+
+.admin-banner-title, .staff-banner-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--pastel-brown-deep);
+    letter-spacing: -0.3px;
+}
+
+.admin-banner-subtitle, .staff-banner-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.admin-banner-pill, .staff-banner-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--honey-light);
+    border: 1px solid var(--honey-gold);
+    color: var(--honey-dark);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* 8. Badge Styling */
+.badge-pastel {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-pastel.green  { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+.badge-pastel.amber  { background: #FFF8E1; color: #B78103; border: 1px solid #FFE082; }
+.badge-pastel.blue   { background: #E3F2FD; color: #1565C0; border: 1px solid #BBDEFB; }
+.badge-pastel.cyan   { background: #E0F7FA; color: #00838F; border: 1px solid #B2EBF2; }
+.badge-pastel.red    { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+.badge-pastel.purple { background: #F3E5F5; color: #6A1B9A; border: 1px solid #E1BEE7; }
+.badge-pastel.brown  { background: #EFEBE9; color: #5D4037; border: 1px solid #D7CCC8; }
+
+/* 9. Avatar Component */
+.avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #F6D89B, #E59819);
+    color: #4E342E;
+    font-weight: 800;
+    font-size: 13.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 2px 6px rgba(109, 76, 65, 0.15);
 }

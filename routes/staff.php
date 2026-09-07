@@ -14,11 +14,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->group(function () {
 
-    // Trang chủ Staff (mặc định vào Dashboard vận hành)
+    // Trang chủ Staff (Dashboard vận hành)
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Quản lý đơn hàng
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders/bulk-update-status', [OrderController::class, 'bulkUpdateStatus'])->name('orders.bulkUpdateStatus');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     Route::post('/orders/{order}/approve-cancel', [OrderController::class, 'approveCancel'])->name('orders.approve_cancel');

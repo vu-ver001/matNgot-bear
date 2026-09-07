@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Auth\RegistrationKT;
 
 use App\Models\User;
+use App\Support\PasswordKT\PasswordRulesKT;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class RegisterCustomerRequest extends FormRequest
 {
@@ -37,13 +37,13 @@ class RegisterCustomerRequest extends FormRequest
                 Rule::unique(User::class, 'email'),
             ],
             'phone' => ['nullable', 'regex:/^(0|\+84)[0-9]{9,10}$/'],
-            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+            'password' => ['required', 'confirmed', PasswordRulesKT::rule()],
         ];
     }
 
     public function messages(): array
     {
-        return [
+        return array_merge([
             'full_name.required' => 'Vui lòng nhập họ và tên.',
             'full_name.min' => 'Họ và tên phải có ít nhất 2 ký tự.',
             'full_name.max' => 'Họ và tên không được vượt quá 100 ký tự.',
@@ -53,11 +53,6 @@ class RegisterCustomerRequest extends FormRequest
             'email.max' => 'Email không được vượt quá 150 ký tự.',
             'email.unique' => 'Email này đã được sử dụng.',
             'phone.regex' => 'Số điện thoại phải bắt đầu bằng 0 hoặc +84 và có độ dài hợp lệ.',
-            'password.required' => 'Vui lòng nhập mật khẩu.',
-            'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
-            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
-            'password.letters' => 'Mật khẩu phải có ít nhất một chữ cái.',
-            'password.numbers' => 'Mật khẩu phải có ít nhất một chữ số.',
-        ];
+        ], PasswordRulesKT::messages('password', false));
     }
 }

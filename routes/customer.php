@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('customer')->name('customer.')->group(function () {
     // Auth Protected Routes (Giỏ hàng, Voucher, Thanh toán, Đơn hàng)
     Route::middleware(['auth'])->group(function () {
+        // Dashboard / Account Redirect
+        Route::get('/dashboard', fn() => redirect()->route('profile.edit'))->name('dashboard');
+
         // 0. Kho Voucher & Khuyến Mãi
         Route::get('/vouchers', [CustomerVoucherController::class, 'index'])->name('vouchers.index');
 
@@ -58,12 +61,23 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('/orders/{order}/request-cancel', [OrderController::class, 'requestCancel'])->name('orders.request_cancel');
         Route::post('/orders/{order}/withdraw-cancel', [OrderController::class, 'withdrawCancel'])->name('orders.withdraw_cancel');
         Route::post('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
+        Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
     });
 
     // 5. Profile
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
     })->name('profile');
+
+    // 7. Reviews (Kim Tuyến)
+    Route::prefix('reviews')->name('reviews.')->middleware(['auth', 'role:CUSTOMER'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'index'])->name('index');
+        Route::get('/order/{order}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'orderReviewData'])->name('order');
+        Route::get('/eligibility/{product}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'checkEligibility'])->name('eligibility');
+        Route::post('/', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'store'])->name('store');
+        Route::put('/{review}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'update'])->name('update');
+        Route::delete('/{review}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // ==========================================
@@ -90,3 +104,4 @@ Route::get('/cart', fn() => redirect()->route('customer.cart'));
 Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
 Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));
 Route::get('/vouchers', fn() => redirect()->route('customer.vouchers.index'));
+Route::get('/reviews', fn() => redirect()->route('customer.reviews.index'));

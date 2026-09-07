@@ -17,7 +17,14 @@ class UserController extends Controller
     {
         $users = $this->userService->list($request->only('role', 'status', 'search'));
 
-        return view('admin.users.index', compact('users'));
+        $stats = [
+            'total' => User::count(),
+            'customer' => User::where('role', 'CUSTOMER')->count(),
+            'staff' => User::where('role', 'STAFF')->count(),
+            'admin' => User::where('role', 'ADMIN')->count(),
+        ];
+
+        return view('admin.users.index', compact('users', 'stats'));
     }
 
     public function store(Request $request)

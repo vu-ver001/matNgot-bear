@@ -5,7 +5,6 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\LoginKT\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\LoginKT\GoogleAuthController;
-use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetKT\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetKT\PasswordResetOtpController;
 use App\Http\Controllers\Auth\RegistrationKT\RegisteredUserController;
@@ -42,18 +41,20 @@ Route::middleware('guest')->group(function () {
     Route::get('forgot-password', [PasswordResetOtpController::class, 'create'])
         ->name('password.request');
 
-    Route::post('forgot-password/send-code', [PasswordResetOtpController::class, 'sendCode'])
-        ->middleware('throttle:5,5')
-        ->name('password.otp.send');
-
-    Route::post('forgot-password/verify-code', [PasswordResetOtpController::class, 'verifyCode'])
-        ->middleware('throttle:10,5')
-        ->name('password.otp.verify');
-
-    Route::post('forgot-password/reset', [NewPasswordController::class, 'store'])
-        ->middleware('throttle:10,5')
-        ->name('password.store');
 });
+
+// Dùng chung cho trang quên mật khẩu của khách và popup của người đã đăng nhập.
+Route::post('forgot-password/send-code', [PasswordResetOtpController::class, 'sendCode'])
+    ->middleware('throttle:5,5')
+    ->name('password.otp.send');
+
+Route::post('forgot-password/verify-code', [PasswordResetOtpController::class, 'verifyCode'])
+    ->middleware('throttle:10,5')
+    ->name('password.otp.verify');
+
+Route::post('forgot-password/reset', [NewPasswordController::class, 'store'])
+    ->middleware('throttle:10,5')
+    ->name('password.store');
 
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
@@ -71,8 +72,6 @@ Route::middleware('auth')->group(function () {
         ->name('password.confirm');
 
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
-
-    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');

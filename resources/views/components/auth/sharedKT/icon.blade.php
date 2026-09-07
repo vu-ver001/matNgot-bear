@@ -43,6 +43,9 @@
             <path d="m22 2-7 20-4-9-9-4 20-7Z" />
             <path d="M22 2 11 13" />
             @break
+        @case('check')
+            <path d="M20 6 9 17l-5-5" />
+            @break
         @case('paw')
             <circle cx="7" cy="7" r="2" fill="currentColor" stroke="none" />
             <circle cx="17" cy="7" r="2" fill="currentColor" stroke="none" />

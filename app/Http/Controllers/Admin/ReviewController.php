@@ -22,7 +22,14 @@ class ReviewController extends Controller
 
         $reviews = $query->latest()->paginate(15);
 
-        return view('admin.reviews.index', compact('reviews'));
+        $stats = [
+            'total' => Review::count(),
+            'visible' => Review::where('is_hidden', false)->count(),
+            'hidden' => Review::where('is_hidden', true)->count(),
+            'avg_rating' => round(Review::avg('rating') ?? 5.0, 1),
+        ];
+
+        return view('admin.reviews.index', compact('reviews', 'stats'));
     }
 
     public function destroy(Review $review)

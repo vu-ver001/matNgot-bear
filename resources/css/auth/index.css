@@ -945,3 +945,134 @@
 .auth-page small {
     font-size: 100%;
 }
+
+/* ==========================================
+   PASSWORD RULES & STRENGTH METER (STANDARDIZED KT)
+   ========================================== */
+.auth-password-rules {
+    margin-top: 10px;
+}
+
+.auth-password-strength {
+    margin-bottom: 12px;
+}
+
+.auth-password-strength__copy {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: #8f7c72;
+    font-size: 11.5px;
+}
+
+.auth-password-strength__copy strong {
+    color: #7b665b;
+    font-weight: 700;
+}
+
+.auth-password-strength__bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.auth-password-strength__bar span {
+    height: 4.5px;
+    border-radius: 999px;
+    background: #ebe0d6;
+    transition: background 180ms ease;
+}
+
+.auth-password-strength[data-level='weak'] .auth-password-strength__bar span:nth-child(-n + 1) {
+    background: #e25444;
+}
+
+.auth-password-strength[data-level='medium'] .auth-password-strength__bar span:nth-child(-n + 2) {
+    background: #e6852e;
+}
+
+.auth-password-strength[data-level='good'] .auth-password-strength__bar span:nth-child(-n + 3) {
+    background: #d49826;
+}
+
+.auth-password-strength[data-level='strong'] .auth-password-strength__bar span {
+    background: #2ea65a;
+}
+
+.auth-password-strength[data-level='weak'] .auth-password-strength__copy strong {
+    color: #cf4738;
+}
+
+.auth-password-strength[data-level='medium'] .auth-password-strength__copy strong {
+    color: #c76f1c;
+}
+
+.auth-password-strength[data-level='good'] .auth-password-strength__copy strong {
+    color: #b57e1b;
+}
+
+.auth-password-strength[data-level='strong'] .auth-password-strength__copy strong {
+    color: #278c4c;
+}
+
+.auth-password-requirements-box {
+    padding: 12px 14px;
+    border: 1px solid #eee1d5;
+    border-radius: 12px;
+    background: #fbf6f2;
+}
+
+.auth-password-requirements-caption {
+    display: block;
+    margin-bottom: 9px;
+    color: #5c3523;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.auth-password-requirements {
+    display: grid;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.auth-password-requirements li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #7d6b61;
+    font-size: 12px;
+    line-height: 1.4;
+    transition: color 160ms ease;
+}
+
+.auth-password-requirement-icon {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    place-items: center;
+    border-radius: 50%;
+    color: #9f8c81;
+    background: #e9ded4;
+    transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.auth-password-requirement-icon .auth-icon {
+    width: 12px;
+    height: 12px;
+}
+
+.auth-password-requirements li.is-met {
+    color: #276939;
+    font-weight: 600;
+}
+
+.auth-password-requirements li.is-met .auth-password-requirement-icon {
+    color: #fff;
+    background: #2ea65a;
+    box-shadow: 0 2px 6px rgba(46, 166, 90, 0.28);
+}
+
