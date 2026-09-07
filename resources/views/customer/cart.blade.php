@@ -290,7 +290,7 @@
                                             {{-- Product Name --}}
                                             <h3>
                                                 <a href="{{ route('products.show', $product->id) }}"
-                                                    class="font-black text-[#2C1408] text-base truncate block hover:text-[#E08A1E] transition leading-snug"
+                                                    class="font-black font-semibold text-[#2C1408] text-base truncate block hover:text-[#E08A1E] transition leading-snug"
                                                     title="Xem chi tiết {{ $product->name }}">
                                                     {{ $product->name }}
                                                 </a>

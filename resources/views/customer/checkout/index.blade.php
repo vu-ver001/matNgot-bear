@@ -1258,7 +1258,9 @@
                                         $unitPrice = $item->product->sale_price ?? $item->product->price;
                                         $lineTotal = $unitPrice * $item->quantity;
                                         $primaryImage = $item->product->images->firstWhere('is_primary', true) ?? $item->product->images->first();
-                                        $imageUrl = $primaryImage ? asset($primaryImage->image_path) : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=300&auto=format&fit=crop&q=80';
+                                        $imageUrl = $primaryImage 
+                                            ? (str_starts_with($primaryImage->image_url, 'http') ? $primaryImage->image_url : asset($primaryImage->image_url))
+                                            : asset('images/products/butterbear-chef.jpg');
                                         
                                         $specs = [];
                                         if (!empty($item->product->size)) { $specs[] = $item->product->size; }
@@ -1270,7 +1272,7 @@
                                         <div class="mn-product-thumb">
                                             <img src="{{ $imageUrl }}" 
                                                  alt="{{ $item->product->name }}" 
-                                                 onerror="this.src='https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=300&auto=format&fit=crop&q=80'">
+                                                 onerror="this.src='{{ asset('images/products/butterbear-chef.jpg') }}'">
                                         </div>
 
                                         {{-- Details --}}

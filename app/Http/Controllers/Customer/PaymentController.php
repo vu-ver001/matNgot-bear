@@ -153,8 +153,25 @@ class PaymentController extends Controller
 
         $errorMessage = $this->vnpayService->getResponseMessage($responseCode ?? '99');
 
-        return redirect()->route('payment.result', $order->id)
-            ->with('error', "Thanh toán VNPay chưa thành công: {$errorMessage}");
+        // Khi thanh toán onl thất bại: Đơn hàng vẫn được tạo, trạng thái thanh toán là chưa thanh toán (UNPAID)
+        if ($order->payment_status !== 'PAID') {
+            $order->update([
+                'payment_status' => 'UNPAID',
+            ]);
+
+            Payment::updateOrCreate(
+                ['order_id' => $order->id],
+                [
+                    'method' => 'CARD',
+                    'amount' => $order->total_amount,
+                    'status' => 'FAILED',
+                    'gateway_response' => json_encode($inputData),
+                ]
+            );
+        }
+
+        return redirect()->route('customer.orders.show', $order->id)
+            ->with('error', "Thanh toán qua VNPAY chưa hoàn tất ({$errorMessage}). Đơn hàng #{$order->order_code} đã được tạo với trạng thái 'Chưa thanh toán', bạn có thể bấm nút 'Thanh toán ngay' để thanh toán lại hoặc đổi phương thức.");
     }
 
     /**
@@ -299,8 +316,25 @@ class PaymentController extends Controller
 
         $errorMessage = $data['message'] ?? 'Giao dịch MoMo chưa hoàn tất hoặc bị hủy.';
 
-        return redirect()->route('payment.result', $order->id)
-            ->with('error', "Thanh toán MoMo chưa thành công: {$errorMessage}");
+        // Khi thanh toán onl thất bại: Đơn hàng vẫn được tạo, trạng thái thanh toán là chưa thanh toán (UNPAID)
+        if ($order->payment_status !== 'PAID') {
+            $order->update([
+                'payment_status' => 'UNPAID',
+            ]);
+
+            Payment::updateOrCreate(
+                ['order_id' => $order->id],
+                [
+                    'method' => 'E_WALLET',
+                    'amount' => $order->total_amount,
+                    'status' => 'FAILED',
+                    'gateway_response' => json_encode($data),
+                ]
+            );
+        }
+
+        return redirect()->route('customer.orders.show', $order->id)
+            ->with('error', "Thanh toán qua Ví MoMo chưa hoàn tất ({$errorMessage}). Đơn hàng #{$order->order_code} đã được tạo với trạng thái 'Chưa thanh toán', bạn có thể bấm nút 'Thanh toán ngay' để thanh toán lại hoặc đổi phương thức.");
     }
 
     /**
@@ -401,6 +435,21 @@ class PaymentController extends Controller
      */
     public function retryPayment(Order $order, Request $request): RedirectResponse
     {
+        if ($order->customer_id !== auth()->id() && auth()->user()?->role !== 'ADMIN') {
+            abort(403, 'Bạn không có quyền thao tác trên đơn hàng này.');
+        }
+
+        // Nếu đơn hàng là thu COD thì không cho phép thanh toán kiểu đổi phương thức khác nữa mà sẽ là thu COD
+        if ($order->payment_method === 'COD') {
+            return redirect()->route('customer.orders.show', $order->id)
+                ->with('error', 'Đơn hàng chọn hình thức thu COD không được phép đổi sang phương thức thanh toán khác.');
+        }
+
+        if ($order->payment_status === 'PAID') {
+            return redirect()->route('customer.orders.show', $order->id)
+                ->with('info', 'Đơn hàng này đã được thanh toán thành công trước đó.');
+        }
+
         $rawMethod = $request->input('payment_method', $order->payment_method);
 
         // Normalize method name

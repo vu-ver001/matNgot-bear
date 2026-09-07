@@ -214,7 +214,9 @@
                                 @php
                                     $prod = $item->product;
                                     $primaryImage = $prod?->images?->firstWhere('is_primary', true) ?? $prod?->images?->first();
-                                    $imageUrl = $primaryImage ? asset($primaryImage->image_path) : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=300&auto=format&fit=crop&q=80';
+                                    $imageUrl = $primaryImage 
+                                        ? (str_starts_with($primaryImage->image_url, 'http') ? $primaryImage->image_url : asset($primaryImage->image_url)) 
+                                        : asset('images/products/butterbear-chef.jpg');
                                     
                                     $specs = [];
                                     if (!empty($prod?->size)) { $specs[] = $prod->size; }
@@ -227,7 +229,7 @@
                                             <img src="{{ $imageUrl }}" 
                                                  alt="{{ $item->product_name }}" 
                                                  class="w-full h-full object-cover rounded-lg"
-                                                 onerror="this.src='https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=300&auto=format&fit=crop&q=80'">
+                                                 onerror="this.src='{{ asset('images/products/butterbear-chef.jpg') }}'">
                                         </div>
 
                                         <div class="min-w-0">

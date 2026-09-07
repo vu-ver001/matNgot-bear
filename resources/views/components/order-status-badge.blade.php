@@ -1,4 +1,4 @@
-@props(['status'])
+@props(['status', 'cancelRequestStatus' => null])
 
 @php
     $colors = [
@@ -22,6 +22,14 @@
     ];
 @endphp
 
-<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap {{ $colors[$status] ?? 'bg-gray-100 text-gray-800' }}">
-    {{ $labels[$status] ?? $status }}
-</span>
+<div class="inline-flex items-center gap-1.5 flex-wrap">
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap {{ $colors[$status] ?? 'bg-gray-100 text-gray-800' }}">
+        {{ $labels[$status] ?? $status }}
+    </span>
+    @if ($cancelRequestStatus === 'PENDING')
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+            Chờ duyệt hủy
+        </span>
+    @endif
+</div>

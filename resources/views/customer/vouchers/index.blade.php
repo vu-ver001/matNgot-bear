@@ -348,7 +348,7 @@
                                     @endif
                                 </div>
 
-                                {{-- Line 2: Scope & Used badge --}}
+                                {{-- Line 2: Scope --}}
                                 <div class="flex items-baseline gap-1 text-[11.5px] truncate">
                                     <span class="text-[#8C7A6B] shrink-0">Áp dụng:</span>
                                     <span class="text-[#2B1810] truncate">
@@ -360,11 +360,52 @@
                                             Toàn bộ sản phẩm
                                         @endif
                                     </span>
-                                    @if($isAuthenticated && $voucher->customer_used_count > 0)
-                                        <span class="text-[10px] text-amber-700 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/50 shrink-0 ml-1">
-                                            Đã dùng: {{ $voucher->customer_used_count }}/{{ $voucher->limit_per_user }}
-                                        </span>
+                                </div>
+
+                                {{-- Line 3: Chi tiết lượt dùng voucher toàn shop (Progress bar) & Mỗi khách hàng --}}
+                                <div class="pt-1.5 pb-0.5 space-y-1.5">
+                                    {{-- 1. Thanh progress chạy tổng số lượt dùng toàn hệ thống --}}
+                                    @if($voucher->usage_limit)
+                                        @php
+                                            $percent = $voucher->usage_limit > 0 ? min(100, round(($voucher->used_count / $voucher->usage_limit) * 100)) : 0;
+                                        @endphp
+                                        <div class="space-y-1">
+                                            <div class="flex items-center justify-between text-[11px] leading-none">
+                                                <span class="text-[#7D6B5D] flex items-center gap-1">
+                                                    <i class="fa-solid fa-fire text-[10px] {{ $percent >= 85 ? 'text-rose-500 animate-pulse' : 'text-[#E08A1E]' }}"></i>
+                                                    <span>Đã dùng <strong class="text-[#2B1810] font-bold">{{ $voucher->used_count }}/{{ $voucher->usage_limit }}</strong> lượt</span>
+                                                </span>
+                                                <span class="font-bold text-[10.5px] {{ $percent >= 85 ? 'text-rose-600' : 'text-[#E08A1E]' }}">
+                                                    {{ $percent }}%
+                                                </span>
+                                            </div>
+                                            {{-- Track & Bar --}}
+                                            <div class="w-full h-1.5 bg-[#F2E6D8] rounded-full overflow-hidden shadow-inner">
+                                                <div class="h-full rounded-full transition-all duration-300 {{ $percent >= 85 ? 'bg-gradient-to-r from-amber-500 to-rose-500' : 'bg-gradient-to-r from-[#E08A1E] to-[#F59E0B]' }}"
+                                                     style="width: {{ $percent > 0 ? max(5, $percent) : 0 }}%;"></div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="flex items-center justify-between text-[11px] text-[#7D6B5D] leading-none">
+                                            <span class="flex items-center gap-1">
+                                                <i class="fa-solid fa-ticket text-[10px] text-[#E08A1E]"></i>
+                                                <span>Đã dùng <strong class="text-[#2B1810]">{{ $voucher->used_count }}</strong> lượt <span class="text-[10px] text-[#A8988B]">(Không giới hạn)</span></span>
+                                            </span>
+                                        </div>
                                     @endif
+
+                                    {{-- 2. Thông tin lượt dùng của mỗi khách hàng --}}
+                                    <div class="flex items-center gap-1.5 text-[10.5px] text-[#7D6B5D] flex-wrap">
+                                        <span class="flex items-center gap-1">
+                                            <i class="fa-solid fa-user-check text-[9px] {{ ($isAuthenticated && $voucher->customer_reached_limit) ? 'text-rose-500' : 'text-[#8C7A6B]' }}"></i>
+                                            <span>Lượt dùng: <strong class="text-[#2B1810]">{{ $voucher->limit_per_user }} lượt</strong></span>
+                                        </span>
+                                        @if($isAuthenticated)
+                                            <span class="px-1.5 py-0.5 rounded text-[9.5px] font-semibold {{ $voucher->customer_reached_limit ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200' }}">
+                                                {{ $voucher->customer_reached_limit ? 'Bạn đã hết lượt' : 'Bạn còn ' . max(0, $voucher->limit_per_user - $voucher->customer_used_count) . ' lượt' }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
 

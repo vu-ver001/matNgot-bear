@@ -12,8 +12,8 @@
     border-radius: 14px;
     border: 1px solid #EBDDCD;
     overflow: hidden;
-    height: 156px;
-    min-height: 156px;
+    min-height: 164px;
+    height: auto;
     box-shadow: 0 2px 8px rgba(109, 76, 65, 0.04);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -29,6 +29,7 @@
     min-width: 128px;
     max-width: 128px;
     flex-shrink: 0;
+    min-height: 164px;
     height: 100%;
     color: #FFFFFF;
     padding: 10px 8px;
@@ -85,7 +86,8 @@
 .voucher-body {
     flex: 1;
     min-width: 0;
-    height: 100%;
+    min-height: 164px;
+    height: auto;
     padding: 10px 14px;
     display: flex;
     flex-direction: column;
