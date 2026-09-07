@@ -54,16 +54,20 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'order_status' => 'required|in:PENDING,CONFIRMED,PREPARING,SHIPPING,COMPLETED,CANCELLED,RETURNED',
-            'cancel_reason' => 'required_if:order_status,CANCELLED|nullable|string|max:255',
+            'cancel_reason' => 'nullable|string|max:255',
         ]);
 
         try {
-            $this->orderService->updateStatus(
-                $order,
-                $validated['order_status'],
-                auth()->id(),
-                $validated['cancel_reason'] ?? null
-            );
+            if ($validated['order_status'] === 'CANCELLED' && $order->hasPendingCancelRequest()) {
+                $this->orderService->approveCancelOrder($order, auth()->id(), $validated['cancel_reason'] ?? null);
+            } else {
+                $this->orderService->updateStatus(
+                    $order,
+                    $validated['order_status'],
+                    auth()->id(),
+                    $validated['cancel_reason'] ?? null
+                );
+            }
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }

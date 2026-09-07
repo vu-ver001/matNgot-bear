@@ -2,7 +2,7 @@
 @section('page-title', "Chi tiết đơn hàng {$order->order_code}")
 @section('content')
 <div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8" x-data="{ openApproveModal: false, openRejectModal: false }">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
             <h2 class="font-semibold text-xl text-[#1E293B] leading-tight">Chi tiết đơn hàng <span class="font-mono text-amber-700">{{ $order->order_code }}</span></h2>
             <div class="flex items-center gap-3">
@@ -107,78 +107,116 @@
                 @endif
 
                 {{-- 2 Nút thao tác dành cho nhân viên --}}
-                <div class="mt-5 pt-4 border-t border-rose-200 flex flex-wrap items-center justify-end gap-3" x-data="{ openReject: false, openApprove: false }">
-                    <button type="button" @click="openReject = true"
+                <div class="mt-5 pt-4 border-t border-rose-200 flex flex-wrap items-center justify-end gap-3">
+                    {{-- Nút Từ chối hủy (Mở popup modal) --}}
+                    <button type="button" @click="openRejectModal = true"
                             class="px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm rounded-xl border border-gray-300 shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
                         <i class="fa-solid fa-xmark text-rose-500"></i>
-                        <span>Từ chối hủy đơn</span>
+                        <span>Từ chối hủy</span>
                     </button>
 
-                    <button type="button" @click="openApprove = true"
+                    {{-- Nút Chấp nhận hủy đơn (Mở popup modal) --}}
+                    <button type="button" @click="openApproveModal = true"
                             class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-check"></i>
-                        <span>Xác nhận duyệt hủy đơn</span>
+                        <span>Chấp nhận hủy đơn</span>
                     </button>
+                </div>
+            </div>
 
-                    {{-- Modal Duyệt hủy --}}
-                    <div x-show="openApprove" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-                        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                            <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openApprove = false"></div>
-                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200" @click.stop>
-                                <form method="POST" action="{{ route('admin.orders.approve_cancel', $order) }}">
-                                    @csrf
-                                    <div class="p-6">
-                                        <h3 class="text-lg font-bold text-[#1E293B]">Xác nhận duyệt hủy đơn hàng {{ $order->order_code }}</h3>
-                                        <p class="text-xs text-[#64748B] mt-1 leading-relaxed">
-                                            Hành động này sẽ hủy đơn hàng, khôi phục tồn kho sản phẩm, hoàn lại lượt dùng voucher (nếu có), và cập nhật thanh toán sang ĐÃ HOÀN TIỀN (nếu đơn đã trả tiền).
-                                        </p>
-                                        @if($order->payment_status === 'PAID')
-                                            <div class="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
-                                                ⚠️ Vui lòng chắc chắn bạn đã liên hệ khách và chuyển khoản hoàn lại số tiền <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>.
-                                            </div>
-                                            <div class="mt-3">
-                                                <label class="block text-xs font-bold text-[#1E293B] mb-1">Ghi chú đối soát hoàn tiền (tùy chọn)</label>
-                                                <input type="text" name="refund_note" placeholder="Ví dụ: Đã chuyển tiền hoàn qua MB Bank lúc 10h"
-                                                       class="w-full rounded-xl border-gray-300 text-xs p-2.5 focus:border-amber-500 focus:ring-amber-500">
-                                            </div>
-                                        @endif
+            {{-- POPUP MODAL 1: Xác nhận chấp nhận hủy đơn --}}
+            <div x-show="openApproveModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+                <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openApproveModal = false"></div>
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                    <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-rose-200" @click.stop>
+                        <form method="POST" action="{{ route('admin.orders.approve_cancel', $order) }}">
+                            @csrf
+                            <div class="p-6 sm:p-7">
+                                <div class="flex items-center gap-3.5 mb-4 pb-4 border-b border-gray-100">
+                                    <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl shrink-0 shadow-xs">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
                                     </div>
-                                    <div class="bg-gray-50 px-6 py-3.5 flex justify-end gap-2.5 border-t border-gray-100">
-                                        <button type="button" @click="openApprove = false" class="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50">Đóng</button>
-                                        <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 shadow-xs">Đồng ý duyệt hủy</button>
+                                    <div>
+                                        <h3 class="text-base sm:text-lg font-black text-[#2B1810]">Chấp nhận hủy đơn hàng</h3>
+                                        <p class="text-xs text-[#7D6B5D] mt-0.5">Mã đơn: <strong class="text-rose-700 font-mono">#{{ $order->order_code }}</strong></p>
                                     </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                                </div>
 
-                    {{-- Modal Từ chối hủy --}}
-                    <div x-show="openReject" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-                        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                            <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openReject = false"></div>
-                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200" @click.stop>
-                                <form method="POST" action="{{ route('admin.orders.reject_cancel', $order) }}">
-                                    @csrf
-                                    <div class="p-6">
-                                        <h3 class="text-lg font-bold text-[#1E293B]">Từ chối yêu cầu hủy đơn hàng</h3>
-                                        <p class="text-xs text-[#64748B] mt-1">
-                                            Đơn hàng sẽ tiếp tục quy trình xử lý và giao hàng. Vui lòng nhập lý do từ chối để thông báo cho khách hàng:
-                                        </p>
-                                        <div class="mt-3">
-                                            <label class="block text-xs font-bold text-[#1E293B] mb-1">Lý do từ chối <span class="text-rose-500">*</span></label>
-                                            <textarea name="rejection_reason" rows="3" required placeholder="Ví dụ: Đơn hàng đã đóng gói và giao cho bưu tá..."
-                                                      class="w-full rounded-xl border-gray-300 text-xs p-2.5 focus:border-amber-500 focus:ring-amber-500"></textarea>
+                                <div class="space-y-3.5 text-xs text-[#5C3219]">
+                                    <div class="p-3.5 bg-rose-50/80 rounded-2xl border border-rose-200">
+                                        <span class="font-bold text-rose-900 block mb-1">Lý do khách hàng đưa ra:</span>
+                                        <p class="italic text-rose-800 font-medium">"{{ $order->cancel_request_reason }}"</p>
+                                    </div>
+
+                                    @if($order->payment_status === 'PAID')
+                                        <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-300 space-y-1.5">
+                                            <div class="font-bold text-amber-900 flex items-center gap-1.5 text-xs">
+                                                <i class="fa-solid fa-hand-holding-dollar text-amber-600"></i>
+                                                <span>LƯU Ý ĐƠN HÀNG ĐÃ THANH TOÁN</span>
+                                            </div>
+                                            <p class="text-[#786B61] leading-relaxed">
+                                                Số tiền cần hoàn: <strong class="text-amber-800 text-sm font-extrabold">{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>.
+                                                Vui lòng liên hệ SĐT <strong>{{ $order->recipient_phone }}</strong> để lấy STK chuyển trả tiền cho khách.
+                                            </p>
                                         </div>
-                                    </div>
-                                    <div class="bg-gray-50 px-6 py-3.5 flex justify-end gap-2.5 border-t border-gray-100">
-                                        <button type="button" @click="openReject = false" class="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50">Đóng</button>
-                                        <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-gray-800 rounded-xl hover:bg-black shadow-xs">Xác nhận từ chối</button>
-                                    </div>
-                                </form>
+                                    @else
+                                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-[#786B61]">
+                                            Sau khi chấp nhận, đơn hàng sẽ chuyển sang trạng thái <strong>Đã hủy</strong> và toàn bộ sản phẩm sẽ được tự động hoàn lại vào kho.
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
+                            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2.5 border-t border-gray-100">
+                                <button type="button" @click="openApproveModal = false" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+                                    Quay lại
+                                </button>
+                                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>Xác nhận duyệt hủy</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- POPUP MODAL 2: Từ chối hủy đơn --}}
+            <div x-show="openRejectModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+                <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openRejectModal = false"></div>
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                    <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-gray-200" @click.stop>
+                        <form method="POST" action="{{ route('admin.orders.reject_cancel', $order) }}">
+                            @csrf
+                            <div class="p-6 sm:p-7">
+                                <div class="flex items-center gap-3.5 mb-4 pb-4 border-b border-gray-100">
+                                    <div class="w-12 h-12 rounded-2xl bg-gray-100 text-gray-700 flex items-center justify-center text-xl shrink-0">
+                                        <i class="fa-solid fa-xmark text-rose-500"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-base sm:text-lg font-black text-[#2B1810]">Từ chối yêu cầu hủy đơn</h3>
+                                        <p class="text-xs text-[#7D6B5D] mt-0.5">Mã đơn: <strong class="text-amber-800 font-mono">#{{ $order->order_code }}</strong></p>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-[#64748B] mb-3 leading-relaxed">
+                                    Đơn hàng sẽ tiếp tục quy trình giao hàng bình thường. Vui lòng nhập lý do từ chối để giải thích cho khách hàng:
+                                </p>
+                                <div>
+                                    <label class="block text-xs font-bold text-[#1E293B] mb-1.5">Lý do từ chối <span class="text-rose-500">*</span></label>
+                                    <textarea name="rejection_reason" rows="3" required placeholder="Ví dụ: Đơn hàng đã được đóng gói và bàn giao cho bưu tá..."
+                                              class="w-full rounded-2xl border-gray-300 text-xs p-3 focus:border-amber-500 focus:ring-amber-500 shadow-2xs"></textarea>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2.5 border-t border-gray-100">
+                                <button type="button" @click="openRejectModal = false" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+                                    Đóng
+                                </button>
+                                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-gray-900 hover:bg-black rounded-xl shadow-xs transition cursor-pointer">
+                                    Xác nhận từ chối
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -335,6 +373,51 @@
                         <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Cập nhật trạng thái</h3>
                         @if (in_array($order->order_status, ['CANCELLED', 'RETURNED']))
                             <p class="text-sm text-[#64748B]">Đơn hàng đã ở trạng thái kết thúc, không thể thay đổi.</p>
+                        @elseif ($order->hasPendingCancelRequest())
+                            {{-- Khách hàng yêu cầu hủy đơn --}}
+                            <div class="p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 space-y-3 mb-4">
+                                <div class="flex items-center gap-2 text-rose-900 font-bold text-sm">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                                    <span>Khách yêu cầu hủy đơn này!</span>
+                                </div>
+                                <div class="text-xs text-[#7D6B5D] bg-white p-2.5 rounded-xl border border-rose-200">
+                                    <strong class="text-[#2B1810]">Lý do khách đưa ra:</strong>
+                                    <p class="text-rose-800 italic mt-0.5 font-medium">"{{ $order->cancel_request_reason }}"</p>
+                                </div>
+
+                                {{-- Nút Chấp nhận hủy đơn (Mở popup modal) --}}
+                                <button type="button" @click="openApproveModal = true"
+                                        class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>Chấp nhận hủy đơn</span>
+                                </button>
+
+                                {{-- Nút Từ chối hủy (Mở popup modal) --}}
+                                <button type="button" @click="openRejectModal = true"
+                                        class="w-full py-2.5 px-4 bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm rounded-xl border border-gray-300 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-xmark text-rose-500"></i>
+                                    <span>Từ chối hủy</span>
+                                </button>
+                            </div>
+
+                            {{-- Tùy chọn chuyển trạng thái thông thường khác --}}
+                            <details class="text-xs text-[#7D6B5D] pt-2 border-t border-gray-100">
+                                <summary class="cursor-pointer font-medium hover:text-[#2B1810]">Chuyển trạng thái thông thường khác</summary>
+                                <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" class="mt-3">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div>
+                                        <select name="order_status" class="w-full rounded-xl border-amber-200 text-xs p-2 focus:border-amber-500 focus:ring-amber-500">
+                                            @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Chờ giao hàng', 'COMPLETED' => 'Đã giao', 'RETURNED' => 'Trả hàng', 'CANCELLED' => 'Hủy đơn'] as $value => $label)
+                                                <option value="{{ $value }}" @selected($order->order_status === $value)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="mt-2 w-full py-1.5 text-xs font-medium text-white bg-amber-500 rounded-lg hover:bg-[#8B5A2B]">
+                                        Lưu thay đổi
+                                    </button>
+                                </form>
+                            </details>
                         @else
                             <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" x-data="{ status: '{{ $order->order_status }}' }">
                                 @csrf
@@ -349,8 +432,8 @@
                                     </select>
                                 </div>
                                 <div x-show="status === 'CANCELLED'" x-cloak class="mt-3" style="display: none;">
-                                    <label class="block text-sm font-medium text-[#64748B] mb-1">Lý do hủy <span class="text-rose-600">*</span></label>
-                                    <textarea name="cancel_reason" rows="3" placeholder="Nhập lý do hủy đơn..."
+                                    <label class="block text-sm font-medium text-[#64748B] mb-1">Lý do hủy (tùy chọn)</label>
+                                    <textarea name="cancel_reason" rows="2" placeholder="Nhập lý do hủy (nếu để trống sẽ dùng lý do mặc định)..."
                                               class="w-full rounded-xl border-amber-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm"></textarea>
                                 </div>
                                 <button type="submit" class="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-full hover:bg-[#8B5A2B]">

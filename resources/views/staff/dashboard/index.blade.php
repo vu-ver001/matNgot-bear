@@ -52,7 +52,7 @@
                                 <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ $order->order_code }}</td>
                                 <td class="px-4 py-3 text-sm text-[#64748B]">{{ $order->customer?->full_name ?? '—' }}</td>
                                 <td class="px-4 py-3 text-sm font-medium text-[#1E293B] text-right">{{ number_format($order->total_amount, 0, ',', '.') }} đ</td>
-                                <td class="px-4 py-3"><x-order-status-badge :status="$order->order_status" /></td>
+                                <td class="px-4 py-3"><x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" /></td>
                                 <td class="px-4 py-3"><x-payment-status-badge :status="$order->payment_status" /></td>
                                 <td class="px-4 py-3 text-sm text-[#64748B]">{{ $order->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="px-4 py-3 text-right">

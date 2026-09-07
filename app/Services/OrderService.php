@@ -345,9 +345,15 @@ class OrderService
             } elseif ($newStatus === 'COMPLETED') {
                 $updateData['completed_at'] = now();
             } elseif ($newStatus === 'CANCELLED') {
+                $actualNote = $note ?: ($order->cancel_request_reason ?: 'Nhân viên đã xác nhận hủy đơn');
                 $updateData['cancelled_at'] = now();
                 $updateData['cancelled_by'] = $changedBy;
-                $updateData['cancel_reason'] = $note;
+                $updateData['cancel_reason'] = $actualNote;
+                $note = $actualNote;
+
+                if ($order->hasPendingCancelRequest()) {
+                    $updateData['cancel_request_status'] = 'APPROVED';
+                }
 
                 $paidPayment = $order->payments->firstWhere('status', 'PAID');
 
@@ -419,9 +425,6 @@ class OrderService
             throw new \Exception("Không thể chuyển đơn hàng từ '{$oldStatus}' sang '{$newStatus}'.");
         }
 
-        if ($newStatus === 'CANCELLED' && blank($note)) {
-            throw new \Exception('Lý do hủy đơn là bắt buộc.');
-        }
     }
 
     public function createPayment(Order $order, array $data): Payment

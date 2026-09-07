@@ -1,6 +1,8 @@
-@props(['status', 'cancelRequestStatus' => null])
+@props(['status', 'cancelRequestStatus' => null, 'forStaff' => null])
 
 @php
+    $isStaffView = $forStaff ?? (request()->is('admin*') || request()->is('staff*'));
+
     $colors = [
         'PENDING' => 'bg-amber-100 text-amber-800',
         'CONFIRMED' => 'bg-blue-100 text-blue-800',
@@ -23,13 +25,21 @@
 @endphp
 
 <div class="inline-flex items-center gap-1.5 flex-wrap">
-    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap {{ $colors[$status] ?? 'bg-gray-100 text-gray-800' }}">
-        {{ $labels[$status] ?? $status }}
-    </span>
     @if ($cancelRequestStatus === 'PENDING')
-        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap">
-            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-            Chờ duyệt hủy
+        @if ($isStaffView)
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap shadow-2xs">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                Khách yêu cầu hủy (Chờ duyệt)
+            </span>
+        @else
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap shadow-2xs">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                Chờ xác nhận hủy
+            </span>
+        @endif
+    @else
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap {{ $colors[$status] ?? 'bg-gray-100 text-gray-800' }}">
+            {{ $labels[$status] ?? $status }}
         </span>
     @endif
 </div>

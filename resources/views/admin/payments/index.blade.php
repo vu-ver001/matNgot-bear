@@ -3,7 +3,7 @@
 @section('page-title', 'Quản lý thanh toán & Đối soát dòng tiền')
 
 @section('content')
-<div class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-sans" x-data="{
+<div class=" px-2 sm:px-4 lg:px-6 max-w-7xl mx-auto font-sans" x-data="{
     drawerOpen: false,
     selectedPayment: null,
     refundModalOpen: false,
