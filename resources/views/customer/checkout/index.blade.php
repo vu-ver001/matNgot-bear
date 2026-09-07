@@ -322,6 +322,20 @@
             border-color: #EADBCC;
         }
 
+        .shopee-voucher-card.ineligible {
+            opacity: 0.55 !important;
+            background: #F9FAFB !important;
+            border-color: #E5E7EB !important;
+            filter: grayscale(40%);
+            cursor: not-allowed !important;
+        }
+
+        .shopee-voucher-card.ineligible .voucher-stub-order,
+        .shopee-voucher-card.ineligible .voucher-stub-shipping {
+            background-color: #9CA3AF !important;
+            filter: grayscale(50%);
+        }
+
         .shopee-voucher-card.exhausted {
             opacity: 0.55 !important;
             background: #F8F8F8 !important;
@@ -1049,7 +1063,8 @@
                                                     <div class="shopee-voucher-card"
                                                          :class="{
                                                             'selected': selectedShippingVoucher && selectedShippingVoucher.id === v.id,
-                                                            'disabled': getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v),
+                                                            'ineligible': !isVoucherApplicable(v),
+                                                            'disabled': !isVoucherApplicable(v),
                                                             'exhausted': getVoucherStatus(v).key === 'EXHAUSTED' || getVoucherStatus(v).key === 'EXHAUSTED_USER'
                                                          }">
                                                         {{-- Left Stub --}}
@@ -1072,9 +1087,19 @@
                                                                               x-text="v.code"></span>
                                                                         <span class="font-bold text-[11.5px] text-[#2B1810]"
                                                                               x-text="v.discount_type === 'PERCENTAGE' ? 'Giảm ' + parseFloat(v.discount_value) + '% phí ship' + (v.max_discount_value && parseFloat(v.max_discount_value) > 0 ? ' (Tối đa ' + formatVND(v.max_discount_value) + ')' : '') : 'Giảm ' + formatVND(v.discount_value)"></span>
+                                                                        <template x-if="v.apply_scope && v.apply_scope !== 'ALL'">
+                                                                            <span class="px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 font-medium text-[9px] border border-amber-200"
+                                                                                  x-text="v.scope_text"></span>
+                                                                        </template>
                                                                     </div>
                                                                     <div class="text-[10px] text-[#7D6B5D] mt-0.5">
                                                                         Đơn tối thiểu: <span class="font-semibold text-[#2B1810]" x-text="formatVND(v.min_order_value || 0)"></span>
+                                                                    </div>
+
+                                                                    {{-- Inapplicable Reason Alert Badge --}}
+                                                                    <div x-show="!isVoucherApplicable(v)" class="mt-1 px-2 py-0.5 rounded bg-rose-50 border border-rose-200/90 text-rose-700 text-[9.5px] flex items-start gap-1">
+                                                                        <svg class="w-3 h-3 shrink-0 mt-0.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                                        <span class="leading-tight font-medium" x-text="getInapplicableReason(v)"></span>
                                                                     </div>
 
                                                                     {{-- Usage remaining badges --}}
@@ -1096,21 +1121,23 @@
                                                                 {{-- Action Button --}}
                                                                 <div class="shrink-0">
                                                                     <button type="button" @click="toggleShippingVoucher(v)"
-                                                                            :disabled="getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v)"
+                                                                            :disabled="!isVoucherApplicable(v)"
                                                                             class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition"
                                                                             :class="selectedShippingVoucher && selectedShippingVoucher.id === v.id ? 
                                                                                 'bg-[#0D9488] text-white shadow-xs cursor-pointer' : 
-                                                                                (getVoucherStatus(v).key === 'ACTIVE' && isEligible(v) ? 'bg-[#FFF0DC] text-[#D68729] hover:bg-[#0D9488] hover:text-white border border-[#FAD9B5] cursor-pointer' : 'bg-[#F4F4F4] text-[#A0A0A0] cursor-not-allowed')">
-                                                                        <span x-text="selectedShippingVoucher && selectedShippingVoucher.id === v.id ? '✓ Đang dùng' : (getVoucherStatus(v).key === 'ACTIVE' ? (isEligible(v) ? 'Áp dụng' : 'Chưa đủ ĐK') : getVoucherStatus(v).btnText)"></span>
+                                                                                (isVoucherApplicable(v) ? 'bg-[#FFF0DC] text-[#D68729] hover:bg-[#0D9488] hover:text-white border border-[#FAD9B5] cursor-pointer' : 'bg-[#F4F4F4] text-[#A0A0A0] cursor-not-allowed border border-gray-200')">
+                                                                        <span x-text="selectedShippingVoucher && selectedShippingVoucher.id === v.id ? '✓ Đang dùng' : (isVoucherApplicable(v) ? 'Áp dụng' : (getVoucherStatus(v).key !== 'ACTIVE' ? getVoucherStatus(v).btnText : 'K.khả dụng'))"></span>
                                                                     </button>
                                                                 </div>
                                                             </div>
 
                                                             {{-- Status Badge & Timing --}}
                                                             <div class="flex items-center justify-between text-[10px] mt-1 pt-1 border-t border-[#F7EFE6]">
-                                                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold border"
-                                                                      :class="getVoucherStatus(v).badgeClass"
-                                                                      x-text="getVoucherStatus(v).label"></span>
+                                                                <div class="flex items-center gap-1.5">
+                                                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold border"
+                                                                          :class="isVoucherApplicable(v) ? getVoucherStatus(v).badgeClass : 'bg-gray-100 text-gray-500 border-gray-200'"
+                                                                          x-text="isVoucherApplicable(v) ? getVoucherStatus(v).label : 'Không áp dụng đơn này'"></span>
+                                                                </div>
                                                                 <span class="text-[#A8988A] text-[9.5px]" x-text="v.end_date ? 'HSD: ' + formatDate(v.end_date) : 'Vô thời hạn'"></span>
                                                             </div>
                                                         </div>
@@ -1159,7 +1186,8 @@
                                                     <div class="shopee-voucher-card"
                                                          :class="{
                                                             'selected': selectedOrderVoucher && selectedOrderVoucher.id === v.id,
-                                                            'disabled': getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v),
+                                                            'ineligible': !isVoucherApplicable(v),
+                                                            'disabled': !isVoucherApplicable(v),
                                                             'exhausted': getVoucherStatus(v).key === 'EXHAUSTED' || getVoucherStatus(v).key === 'EXHAUSTED_USER'
                                                          }">
                                                         {{-- Left Stub --}}
@@ -1182,9 +1210,19 @@
                                                                               x-text="v.code"></span>
                                                                         <span class="font-bold text-[11.5px] text-[#2B1810]"
                                                                               x-text="v.discount_type === 'PERCENTAGE' ? 'Giảm ' + parseFloat(v.discount_value) + '%' + (v.max_discount_value && parseFloat(v.max_discount_value) > 0 ? ' (Tối đa ' + formatVND(v.max_discount_value) + ')' : '') : 'Giảm ' + formatVND(v.discount_value)"></span>
+                                                                        <template x-if="v.apply_scope && v.apply_scope !== 'ALL'">
+                                                                            <span class="px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 font-medium text-[9px] border border-amber-200"
+                                                                                  x-text="v.scope_text"></span>
+                                                                        </template>
                                                                     </div>
                                                                     <div class="text-[10px] text-[#7D6B5D] mt-0.5">
                                                                         Đơn tối thiểu: <span class="font-semibold text-[#2B1810]" x-text="formatVND(v.min_order_value || 0)"></span>
+                                                                    </div>
+
+                                                                    {{-- Inapplicable Reason Alert Badge --}}
+                                                                    <div x-show="!isVoucherApplicable(v)" class="mt-1 px-2 py-0.5 rounded bg-rose-50 border border-rose-200/90 text-rose-700 text-[9.5px] flex items-start gap-1">
+                                                                        <svg class="w-3 h-3 shrink-0 mt-0.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                                        <span class="leading-tight font-medium" x-text="getInapplicableReason(v)"></span>
                                                                     </div>
 
                                                                     {{-- Usage remaining badges --}}
@@ -1206,21 +1244,23 @@
                                                                 {{-- Action Button --}}
                                                                 <div class="shrink-0">
                                                                     <button type="button" @click="toggleOrderVoucher(v)"
-                                                                            :disabled="getVoucherStatus(v).key !== 'ACTIVE' || !isEligible(v)"
+                                                                            :disabled="!isVoucherApplicable(v)"
                                                                             class="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition"
                                                                             :class="selectedOrderVoucher && selectedOrderVoucher.id === v.id ? 
                                                                                 'bg-[#D68729] text-white shadow-xs cursor-pointer' : 
-                                                                                (getVoucherStatus(v).key === 'ACTIVE' && isEligible(v) ? 'bg-[#FFF0DC] text-[#D68729] hover:bg-[#D68729] hover:text-white border border-[#FAD9B5] cursor-pointer' : 'bg-[#F4F4F4] text-[#A0A0A0] cursor-not-allowed')">
-                                                                        <span x-text="selectedOrderVoucher && selectedOrderVoucher.id === v.id ? '✓ Đang dùng' : (getVoucherStatus(v).key === 'ACTIVE' ? (isEligible(v) ? 'Áp dụng' : 'Chưa đủ ĐK') : getVoucherStatus(v).btnText)"></span>
+                                                                                (isVoucherApplicable(v) ? 'bg-[#FFF0DC] text-[#D68729] hover:bg-[#D68729] hover:text-white border border-[#FAD9B5] cursor-pointer' : 'bg-[#F4F4F4] text-[#A0A0A0] cursor-not-allowed border border-gray-200')">
+                                                                        <span x-text="selectedOrderVoucher && selectedOrderVoucher.id === v.id ? '✓ Đang dùng' : (isVoucherApplicable(v) ? 'Áp dụng' : (getVoucherStatus(v).key !== 'ACTIVE' ? getVoucherStatus(v).btnText : 'K.khả dụng'))"></span>
                                                                     </button>
                                                                 </div>
                                                             </div>
 
                                                             {{-- Status Badge & Timing --}}
                                                             <div class="flex items-center justify-between text-[10px] mt-1 pt-1 border-t border-[#F7EFE6]">
-                                                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold border"
-                                                                      :class="getVoucherStatus(v).badgeClass"
-                                                                      x-text="getVoucherStatus(v).label"></span>
+                                                                <div class="flex items-center gap-1.5">
+                                                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold border"
+                                                                          :class="isVoucherApplicable(v) ? getVoucherStatus(v).badgeClass : 'bg-gray-100 text-gray-500 border-gray-200'"
+                                                                          x-text="isVoucherApplicable(v) ? getVoucherStatus(v).label : 'Không áp dụng đơn này'"></span>
+                                                                </div>
                                                                 <span class="text-[#A8988A] text-[9.5px]" x-text="v.end_date ? 'HSD: ' + formatDate(v.end_date) : 'Vô thời hạn'"></span>
                                                             </div>
                                                         </div>
@@ -1417,7 +1457,7 @@
                 voucherInput: '',
                 voucherMessage: '',
                 voucherSuccess: false,
-                suggestedChips: (config.allVouchers || []).map(v => v.code).slice(0, 4),
+                suggestedChips: ((config.allVouchers || []).filter(v => v.is_applicable).length > 0 ? (config.allVouchers || []).filter(v => v.is_applicable) : (config.allVouchers || [])).map(v => v.code).slice(0, 4),
 
                 // Shipping options & distance info
                 shippingOptions: initialShip && initialShip.options ? initialShip.options : {
@@ -2160,13 +2200,47 @@
 
                 voucherTab: 'ORDER',
 
-                isEligible(v) {
+                isVoucherApplicable(v) {
                     if (!v) return false;
-                    return this.subtotal >= parseFloat(v.min_order_value || 0);
+                    // If explicitly marked inapplicable from backend cart validation
+                    if (v.is_applicable === false) return false;
+                    // Check status
+                    if (this.getVoucherStatus(v).key !== 'ACTIVE') return false;
+                    // Check subtotal against minimum order value
+                    const checkAmount = (v.eligible_subtotal !== undefined && v.eligible_subtotal !== null)
+                        ? parseFloat(v.eligible_subtotal)
+                        : this.subtotal;
+                    if (checkAmount < parseFloat(v.min_order_value || 0)) return false;
+                    return true;
+                },
+
+                isEligible(v) {
+                    return this.isVoucherApplicable(v);
+                },
+
+                getInapplicableReason(v) {
+                    if (!v) return '';
+                    if (v.inapplicable_reason) return v.inapplicable_reason;
+                    const status = this.getVoucherStatus(v);
+                    if (status.key === 'EXHAUSTED') return 'Mã đã hết lượt dùng toàn shop';
+                    if (status.key === 'EXHAUSTED_USER') return 'Bạn đã dùng hết lượt mã này';
+                    if (status.key === 'EXPIRED') return 'Mã đã hết hạn hoặc tạm ngưng';
+                    if (status.key === 'UPCOMING') return `Chưa mở (từ ${this.formatDate(v.start_date)})`;
+                    const checkAmount = (v.eligible_subtotal !== undefined && v.eligible_subtotal !== null)
+                        ? parseFloat(v.eligible_subtotal)
+                        : this.subtotal;
+                    if (checkAmount < parseFloat(v.min_order_value || 0)) {
+                        const diff = parseFloat(v.min_order_value || 0) - checkAmount;
+                        return `Đơn chưa đạt tối thiểu ${this.formatVND(v.min_order_value)} (thiếu ${this.formatVND(diff)})`;
+                    }
+                    return 'Không đủ điều kiện áp dụng cho đơn này';
                 },
 
                 calculateSavings(v) {
                     if (!v) return 0;
+                    if (v.expected_discount !== undefined && v.expected_discount !== null) {
+                        return parseFloat(v.expected_discount);
+                    }
                     const baseAmount = v.voucher_type === 'SHIPPING' ? this.shippingFee : this.subtotal;
                     let discount = 0;
                     if (v.discount_type === 'PERCENTAGE') {
@@ -2214,69 +2288,51 @@
 
                 get sortedOrderVouchers() {
                     return [...this.orderVouchers].sort((a, b) => {
+                        // 1. Khả dụng lên trên, không áp dụng được xuống dưới
+                        const aApp = this.isVoucherApplicable(a) ? 1 : 0;
+                        const bApp = this.isVoucherApplicable(b) ? 1 : 0;
+                        if (aApp !== bApp) return bApp - aApp;
+
+                        // 2. Trạng thái hoạt động trước
                         const aStatus = this.getVoucherStatus(a).key;
                         const bStatus = this.getVoucherStatus(b).key;
-                        
                         const statusWeight = { 'ACTIVE': 3, 'UPCOMING': 2, 'EXHAUSTED_USER': 1, 'EXHAUSTED': 1, 'EXPIRED': 0 };
                         if ((statusWeight[aStatus] || 0) !== (statusWeight[bStatus] || 0)) {
                             return (statusWeight[bStatus] || 0) - (statusWeight[aStatus] || 0);
                         }
 
-                        const aEligible = this.isEligible(a) ? 1 : 0;
-                        const bEligible = this.isEligible(b) ? 1 : 0;
-                        if (aEligible !== bEligible) return bEligible - aEligible;
-                        
-                        const aVal = a.discount_type === 'PERCENTAGE' ? (this.subtotal * parseFloat(a.discount_value)) / 100 : parseFloat(a.discount_value);
-                        const bVal = b.discount_type === 'PERCENTAGE' ? (this.subtotal * parseFloat(b.discount_value)) / 100 : parseFloat(b.discount_value);
+                        // 3. Giảm nhiều hơn lên trước
+                        const aVal = a.expected_discount !== undefined ? parseFloat(a.expected_discount) : (a.discount_type === 'PERCENTAGE' ? (this.subtotal * parseFloat(a.discount_value)) / 100 : parseFloat(a.discount_value));
+                        const bVal = b.expected_discount !== undefined ? parseFloat(b.expected_discount) : (b.discount_type === 'PERCENTAGE' ? (this.subtotal * parseFloat(b.discount_value)) / 100 : parseFloat(b.discount_value));
                         return bVal - aVal;
                     });
                 },
 
                 get sortedShippingVouchers() {
                     return [...this.shippingVouchers].sort((a, b) => {
+                        // 1. Khả dụng lên trên, không áp dụng được xuống dưới
+                        const aApp = this.isVoucherApplicable(a) ? 1 : 0;
+                        const bApp = this.isVoucherApplicable(b) ? 1 : 0;
+                        if (aApp !== bApp) return bApp - aApp;
+
+                        // 2. Trạng thái hoạt động trước
                         const aStatus = this.getVoucherStatus(a).key;
                         const bStatus = this.getVoucherStatus(b).key;
-                        
                         const statusWeight = { 'ACTIVE': 3, 'UPCOMING': 2, 'EXHAUSTED_USER': 1, 'EXHAUSTED': 1, 'EXPIRED': 0 };
                         if ((statusWeight[aStatus] || 0) !== (statusWeight[bStatus] || 0)) {
                             return (statusWeight[bStatus] || 0) - (statusWeight[aStatus] || 0);
                         }
 
-                        const aEligible = this.isEligible(a) ? 1 : 0;
-                        const bEligible = this.isEligible(b) ? 1 : 0;
-                        if (aEligible !== bEligible) return bEligible - aEligible;
-
-                        const aVal = a.discount_type === 'PERCENTAGE' ? (this.shippingFee * parseFloat(a.discount_value)) / 100 : parseFloat(a.discount_value);
-                        const bVal = b.discount_type === 'PERCENTAGE' ? (this.shippingFee * parseFloat(b.discount_value)) / 100 : parseFloat(b.discount_value);
+                        // 3. Giảm nhiều hơn lên trước
+                        const aVal = a.expected_discount !== undefined ? parseFloat(a.expected_discount) : (a.discount_type === 'PERCENTAGE' ? (this.shippingFee * parseFloat(a.discount_value)) / 100 : parseFloat(a.discount_value));
+                        const bVal = b.expected_discount !== undefined ? parseFloat(b.expected_discount) : (b.discount_type === 'PERCENTAGE' ? (this.shippingFee * parseFloat(b.discount_value)) / 100 : parseFloat(b.discount_value));
                         return bVal - aVal;
                     });
                 },
 
                 toggleOrderVoucher(v) {
-                    const status = this.getVoucherStatus(v);
-                    if (status.key === 'EXHAUSTED') {
-                        this.voucherMessage = `Mã [${v.code}] đã hết lượt sử dụng trên toàn hệ thống.`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'EXHAUSTED_USER') {
-                        this.voucherMessage = `Bạn đã sử dụng hết lượt cho phép đối với mã [${v.code}].`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'EXPIRED') {
-                        this.voucherMessage = `Mã [${v.code}] đã hết hạn hoặc tạm ngưng.`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'UPCOMING') {
-                        this.voucherMessage = `Mã [${v.code}] sắp diễn ra (bắt đầu từ ${this.formatDate(v.start_date)}).`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (!this.isEligible(v)) {
-                        const diff = parseFloat(v.min_order_value) - this.subtotal;
-                        this.voucherMessage = `Đơn hàng chưa đủ điều kiện (mua thêm ${this.formatVND(diff)} để áp dụng).`;
+                    if (!this.isVoucherApplicable(v)) {
+                        this.voucherMessage = this.getInapplicableReason(v);
                         this.voucherSuccess = false;
                         return;
                     }
@@ -2292,30 +2348,8 @@
                 },
 
                 toggleShippingVoucher(v) {
-                    const status = this.getVoucherStatus(v);
-                    if (status.key === 'EXHAUSTED') {
-                        this.voucherMessage = `Mã freeship [${v.code}] đã hết lượt sử dụng trên toàn hệ thống.`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'EXHAUSTED_USER') {
-                        this.voucherMessage = `Bạn đã sử dụng hết lượt cho phép đối với mã freeship [${v.code}].`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'EXPIRED') {
-                        this.voucherMessage = `Mã freeship [${v.code}] đã hết hạn hoặc tạm ngưng.`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'UPCOMING') {
-                        this.voucherMessage = `Mã freeship [${v.code}] sắp diễn ra (bắt đầu từ ${this.formatDate(v.start_date)}).`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (!this.isEligible(v)) {
-                        const diff = parseFloat(v.min_order_value) - this.subtotal;
-                        this.voucherMessage = `Đơn hàng chưa đủ điều kiện (mua thêm ${this.formatVND(diff)} để áp dụng).`;
+                    if (!this.isVoucherApplicable(v)) {
+                        this.voucherMessage = this.getInapplicableReason(v);
                         this.voucherSuccess = false;
                         return;
                     }
@@ -2367,30 +2401,8 @@
                         return;
                     }
 
-                    const status = this.getVoucherStatus(matched);
-                    if (status.key === 'EXHAUSTED') {
-                        this.voucherMessage = `Mã [${matched.code}] đã hết lượt sử dụng trên toàn hệ thống.`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'EXHAUSTED_USER') {
-                        this.voucherMessage = `Bạn đã sử dụng hết lượt cho phép đối với mã [${matched.code}].`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'EXPIRED') {
-                        this.voucherMessage = `Mã [${matched.code}] đã hết hạn hoặc tạm ngưng.`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (status.key === 'UPCOMING') {
-                        this.voucherMessage = `Mã [${matched.code}] chưa tới thời gian áp dụng (bắt đầu từ ${this.formatDate(matched.start_date)}).`;
-                        this.voucherSuccess = false;
-                        return;
-                    }
-                    if (!this.isEligible(matched)) {
-                        const diff = parseFloat(matched.min_order_value) - this.subtotal;
-                        this.voucherMessage = `Đơn hàng chưa đủ điều kiện (mua thêm ${this.formatVND(diff)} để áp dụng mã [${matched.code}]).`;
+                    if (!this.isVoucherApplicable(matched)) {
+                        this.voucherMessage = this.getInapplicableReason(matched);
                         this.voucherSuccess = false;
                         return;
                     }
@@ -2416,16 +2428,20 @@
                 get orderDiscount() {
                     if (!this.selectedOrderVoucher) return 0;
                     const v = this.selectedOrderVoucher;
-                    if (this.subtotal < parseFloat(v.min_order_value || 0)) return 0;
+                    if (!this.isVoucherApplicable(v)) return 0;
+
+                    const baseAmount = (v.eligible_subtotal !== undefined && v.eligible_subtotal !== null)
+                        ? parseFloat(v.eligible_subtotal)
+                        : this.subtotal;
 
                     let discount = 0;
                     if (v.discount_type === 'PERCENTAGE') {
-                        discount = (this.subtotal * parseFloat(v.discount_value)) / 100;
+                        discount = (baseAmount * parseFloat(v.discount_value)) / 100;
                         if (v.max_discount_value) {
                             discount = Math.min(discount, parseFloat(v.max_discount_value));
                         }
                     } else {
-                        discount = Math.min(this.subtotal, parseFloat(v.discount_value));
+                        discount = Math.min(baseAmount, parseFloat(v.discount_value));
                     }
                     return discount;
                 },

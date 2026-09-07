@@ -222,6 +222,115 @@
             </div>
         @endif
 
+        {{-- Khung cảnh báo hoàn tiền cho đơn đã hủy nhưng đã thanh toán --}}
+        @if($order->needsRefund())
+            <div x-data="{ openRefundConfirmModal: false }" class="mb-6 bg-gradient-to-r from-amber-500/15 via-amber-50 to-orange-500/10 border-2 border-amber-400 rounded-2xl p-6 shadow-sm">
+                <div class="flex items-start justify-between gap-4 flex-wrap">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-amber-600/30">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-base sm:text-lg font-bold text-amber-950">Đơn hàng đã hủy - CẦN HOÀN TIỀN CHO KHÁCH</h3>
+                                <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-xs animate-pulse">CHỜ HOÀN TIỀN</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1">
+                                Số tiền cần chuyển khoản trả khách: <strong class="text-amber-900 text-base font-black">{{ number_format($order->total_amount, 0, ',', '.') }} đ</strong>
+                            </p>
+                            <p class="text-xs text-[#7D6B5D] mt-0.5">
+                                Liên hệ khách qua SĐT: <strong class="text-[#2B1810] text-sm">{{ $order->recipient_phone }}</strong> (Khách nhận: <strong>{{ $order->recipient_name }}</strong>)
+                            </p>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="openRefundConfirmModal = true"
+                            class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Xác nhận đã hoàn tiền</span>
+                    </button>
+                </div>
+
+                {{-- Thông tin STK nếu khách đã cung cấp --}}
+                @if($order->refund_bank_account || $order->refund_bank_name)
+                    <div class="mt-4 p-3.5 bg-white rounded-xl border border-amber-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Ngân hàng:</span>
+                            <strong class="text-[#2B1810] text-sm">{{ $order->refund_bank_name ?: '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Số tài khoản:</span>
+                            <strong class="text-amber-800 font-mono text-sm tracking-wide">{{ $order->refund_bank_account ?: '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Chủ tài khoản:</span>
+                            <strong class="text-[#2B1810] uppercase text-sm">{{ $order->refund_account_holder ?: '—' }}</strong>
+                        </div>
+                    </div>
+                @else
+                    <div class="mt-3 p-3 bg-white/80 rounded-xl border border-amber-200 text-xs text-amber-900">
+                        💡 Khách hàng chưa điền sẵn STK. Vui lòng gọi điện tới <strong>{{ $order->recipient_phone }}</strong> để xin STK ngân hàng hoàn tiền.
+                    </div>
+                @endif
+
+                {{-- POPUP Xác nhận đã hoàn tiền --}}
+                <div x-show="openRefundConfirmModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+                    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openRefundConfirmModal = false"></div>
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-amber-300" @click.stop>
+                            <form method="POST" action="{{ route('admin.orders.confirm_refund', $order) }}">
+                                @csrf
+                                <div class="p-6 sm:p-7">
+                                    <div class="flex items-center gap-3.5 mb-4 pb-4 border-b border-gray-100">
+                                        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0 shadow-xs">
+                                            <i class="fa-solid fa-circle-check"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-base sm:text-lg font-black text-[#2B1810]">Xác nhận đã hoàn tiền</h3>
+                                            <p class="text-xs text-[#7D6B5D] mt-0.5">Mã đơn: <strong class="text-amber-800 font-mono">#{{ $order->order_code }}</strong></p>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3.5 text-xs text-[#5C3219]">
+                                        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                                            Bạn xác nhận đã chuyển khoản số tiền <strong class="text-amber-900 text-sm font-bold">{{ number_format($order->total_amount, 0, ',', '.') }} đ</strong> cho khách hàng <strong>{{ $order->recipient_name }}</strong>?
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-bold text-[#2B1810] mb-1">Ghi chú hoàn tiền (Mã GD / STK / Lưu ý):</label>
+                                            <textarea name="refund_note" rows="2" placeholder="Ví dụ: Đã chuyển khoản qua Vietcombank ngày..."
+                                                      class="w-full rounded-xl border-gray-300 text-xs p-2.5 focus:border-amber-500 focus:ring-amber-500"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2.5 border-t border-gray-100">
+                                    <button type="button" @click="openRefundConfirmModal = false" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+                                        Hủy
+                                    </button>
+                                    <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition cursor-pointer">
+                                        Xác nhận hoàn tất
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($order->order_status === 'CANCELLED' && $order->payment_status === 'REFUNDED')
+            <div class="mb-6 bg-emerald-50 border border-emerald-300 rounded-2xl p-4 flex items-center gap-3 text-emerald-900 text-xs sm:text-sm">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-xl"></i>
+                <div>
+                    <strong>Đơn hàng đã được hoàn tiền thành công.</strong>
+                    @if($order->refund_note)
+                        <p class="text-xs text-emerald-800 mt-0.5">Ghi chú: {{ $order->refund_note }}</p>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
@@ -229,7 +338,7 @@
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-[#1E293B]">Thông tin đơn hàng</h3>
                             <div class="flex gap-2">
-                                <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" />
+                                <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" />
                                 <x-payment-status-badge :status="$order->payment_status" />
                             </div>
                         </div>

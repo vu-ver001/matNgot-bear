@@ -97,7 +97,9 @@ class PaymentController extends Controller
         $inputData = $request->all();
         $isValidSignature = $this->vnpayService->verifyReturn($inputData);
 
-        $orderCode = $request->input('vnp_TxnRef');
+        $rawTxnRef = (string) $request->input('vnp_TxnRef');
+        // Extract base order code (in case timestamp suffix was appended to prevent duplicate TxnRef)
+        $orderCode = explode('_', $rawTxnRef)[0];
         $responseCode = $request->input('vnp_ResponseCode');
         $transactionNo = $request->input('vnp_TransactionNo', 'VNP' . time());
         $bankCode = $request->input('vnp_BankCode', 'VNPAY');
@@ -105,13 +107,15 @@ class PaymentController extends Controller
         $amountInVnp = (int) ($request->input('vnp_Amount') / 100);
 
         Log::info("📥 [VNPAY RETURN] Nhận phản hồi từ trình duyệt qua VNPay Return URL:", [
+            'raw_txn_ref' => $rawTxnRef,
             'order_code' => $orderCode,
             'response_code' => $responseCode,
             'is_valid_signature' => $isValidSignature,
             'amount' => $amountInVnp,
         ]);
 
-        $order = Order::where('order_code', $orderCode)->first();
+        $order = Order::where('order_code', $orderCode)->first()
+            ?? Order::where('order_code', $rawTxnRef)->first();
 
         if (!$order) {
             return redirect()->route('home')->with('error', 'Không tìm thấy đơn hàng cần thanh toán.');
@@ -143,6 +147,7 @@ class PaymentController extends Controller
 
                     $order->update([
                         'payment_status' => 'PAID',
+                        'payment_method' => 'CARD',
                     ]);
                 });
             }
@@ -153,10 +158,11 @@ class PaymentController extends Controller
 
         $errorMessage = $this->vnpayService->getResponseMessage($responseCode ?? '99');
 
-        // Khi thanh toán onl thất bại: Đơn hàng vẫn được tạo, trạng thái thanh toán là chưa thanh toán (UNPAID)
+        // Khi thanh toán online chưa thành công: Giữ đơn hàng, trạng thái thanh toán UNPAID
         if ($order->payment_status !== 'PAID') {
             $order->update([
                 'payment_status' => 'UNPAID',
+                'payment_method' => 'CARD',
             ]);
 
             Payment::updateOrCreate(
@@ -182,12 +188,14 @@ class PaymentController extends Controller
         $inputData = $request->all();
         $isValidSignature = $this->vnpayService->verifyIpn($inputData);
 
-        $orderCode = $request->input('vnp_TxnRef');
+        $rawTxnRef = (string) $request->input('vnp_TxnRef');
+        $orderCode = explode('_', $rawTxnRef)[0];
         $responseCode = $request->input('vnp_ResponseCode');
         $transactionNo = $request->input('vnp_TransactionNo', 'VNP' . time());
         $amountInVnp = (int) (($request->input('vnp_Amount') ?? 0) / 100);
 
         Log::info("🔔 [VNPAY IPN] Server VNPay gọi Webhook IPN:", [
+            'raw_txn_ref' => $rawTxnRef,
             'order_code' => $orderCode,
             'response_code' => $responseCode,
             'is_valid_signature' => $isValidSignature,
@@ -199,7 +207,9 @@ class PaymentController extends Controller
             return response()->json(['RspCode' => '97', 'Message' => 'Invalid signature']);
         }
 
-        $order = Order::where('order_code', $orderCode)->first();
+        $order = Order::where('order_code', $orderCode)->first()
+            ?? Order::where('order_code', $rawTxnRef)->first();
+
         if (!$order) {
             Log::warning("⚠️ [VNPAY IPN] Không tìm thấy đơn hàng: {$orderCode}");
             return response()->json(['RspCode' => '01', 'Message' => 'Order not found']);
@@ -240,6 +250,7 @@ class PaymentController extends Controller
 
                 $order->update([
                     'payment_status' => 'PAID',
+                    'payment_method' => 'CARD',
                 ]);
             });
 
@@ -256,6 +267,7 @@ class PaymentController extends Controller
 
         return response()->json(['RspCode' => '00', 'Message' => 'Confirm Success']);
     }
+
 
     /**
      * Handle return response callback from MoMo Gateway (Browser redirect).

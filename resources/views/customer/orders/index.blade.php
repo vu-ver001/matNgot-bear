@@ -60,7 +60,7 @@
                                             {{ number_format($order->total_amount, 0, ',', '.') }} đ
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" />
+                                            <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" />
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <x-payment-status-badge :status="$order->payment_status" />

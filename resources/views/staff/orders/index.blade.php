@@ -47,6 +47,17 @@
                         </span>
                     @endif
                 </a>
+
+                {{-- Tab riêng cho Đơn cần hoàn tiền --}}
+                <a href="{{ route('staff.orders.index', array_merge(request()->except('order_status', 'tab', 'page'), ['tab' => 'need_refund'])) }}"
+                   class="px-3.5 py-1.5 rounded-full text-sm font-bold inline-flex items-center gap-1.5 transition {{ request('tab') === 'need_refund' ? 'bg-amber-600 text-white shadow-sm' : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300' }}">
+                    <span>💰 Cần hoàn tiền</span>
+                    @if(($needRefundCount ?? 0) > 0)
+                        <span class="px-2 py-0.5 rounded-full text-xs font-black {{ request('tab') === 'need_refund' ? 'bg-white text-amber-800' : 'bg-amber-600 text-white animate-pulse' }}">
+                            {{ $needRefundCount }}
+                        </span>
+                    @endif
+                </a>
             </div>
 
             <form method="GET" class="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -91,17 +102,24 @@
                                 <td class="px-4 py-4 text-sm text-[#64748B] whitespace-nowrap">{{ $order->customer?->full_name ?? '—' }}</td>
                                 <td class="px-4 py-4 text-sm text-[#64748B] whitespace-nowrap">{{ $order->recipient_phone }}</td>
                                 <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right whitespace-nowrap">{{ number_format($order->total_amount, 0, ',', '.') }} đ</td>
-                                <td class="px-4 py-4 whitespace-nowrap"><x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" /></td>
+                                <td class="px-4 py-4 whitespace-nowrap"><x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" /></td>
                                 <td class="px-4 py-4 whitespace-nowrap"><x-payment-status-badge :status="$order->payment_status" /></td>
                                 <td class="px-4 py-4 text-sm text-[#64748B] whitespace-nowrap">{{ $order->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="px-4 py-4 text-right">
+                                    @php
+                                        $btnClass = 'text-[#8B5A2B] bg-amber-100 hover:bg-amber-200';
+                                        $btnText = 'Xử lý';
+                                        if ($order->hasPendingCancelRequest()) {
+                                            $btnClass = 'text-white bg-rose-600 hover:bg-rose-700 animate-pulse shadow-xs';
+                                            $btnText = 'Duyệt hủy';
+                                        } elseif ($order->needsRefund()) {
+                                            $btnClass = 'text-amber-900 bg-amber-200 hover:bg-amber-300 font-extrabold shadow-xs';
+                                            $btnText = 'Hoàn tiền';
+                                        }
+                                    @endphp
                                     <a href="{{ route('staff.orders.show', $order) }}" 
-                                       class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold {{ $order->hasPendingCancelRequest() ? 'text-white bg-rose-600 hover:bg-rose-700 animate-pulse shadow-xs' : 'text-[#8B5A2B] bg-amber-100 hover:bg-amber-200' }} rounded-full transition">
-                                        @if($order->hasPendingCancelRequest())
-                                            <span>Xử lý hủy</span>
-                                        @else
-                                            <span>Xử lý</span>
-                                        @endif
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold {{ $btnClass }} rounded-full transition">
+                                        <span>{{ $btnText }}</span>
                                     </a>
                                 </td>
                             </tr>

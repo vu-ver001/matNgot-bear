@@ -29,6 +29,50 @@
                     && $order->order_status !== 'CANCELLED';
             @endphp
 
+            {{-- Banner thông báo Đơn đã hủy nhưng đã thanh toán online - Chờ shop liên hệ hoàn tiền --}}
+            @if($order->order_status === 'CANCELLED' && $order->payment_status === 'PAID')
+                <div class="mb-6 bg-gradient-to-r from-amber-500/10 via-amber-100/80 to-orange-500/10 border-2 border-amber-400 rounded-3xl p-5 sm:p-6 shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 shadow-md shadow-amber-500/30">
+                            💸
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="text-base font-black text-[#2C1408]">Đơn hàng đã hủy - Đang đợi shop liên hệ hoàn tiền</h4>
+                                <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-[11px]">CHỜ HOÀN TIỀN</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1 leading-relaxed">
+                                Đơn hàng của bạn đã được hủy thành công. Do đơn hàng đã được thanh toán online số tiền <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>, nhân viên của <strong>Mật Ngọt Bear</strong> sẽ sớm liên hệ qua SĐT <strong>{{ $order->recipient_phone }}</strong> để lấy thông tin STK và chuyển khoản hoàn lại 100% tiền cho bạn.
+                            </p>
+                            @if($order->refund_bank_account)
+                                <div class="mt-2.5 inline-flex items-center gap-2 p-2.5 bg-white/90 rounded-xl border border-amber-300 text-xs text-amber-900">
+                                    <i class="fa-solid fa-building-columns text-amber-600"></i>
+                                    <span>Thông tin STK bạn đã cung cấp: <strong>{{ $order->refund_bank_name }}</strong> - <strong>{{ $order->refund_bank_account }}</strong> ({{ $order->refund_account_holder }})</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner thông báo Đơn đã hủy và ĐÃ HOÀN TIỀN XONG --}}
+            @if($order->order_status === 'CANCELLED' && $order->payment_status === 'REFUNDED')
+                <div class="mb-6 bg-emerald-50 border-2 border-emerald-300 rounded-3xl p-5 shadow-xs flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                        <i class="fa-solid fa-check text-white"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-emerald-900">Đơn hàng đã hủy & Shop đã hoàn tiền thành công</h4>
+                        <p class="text-xs text-emerald-700 mt-0.5">
+                            Shop đã xử lý hoàn lại số tiền <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong> vào tài khoản của bạn.
+                            @if($order->refund_note)
+                                <br><span class="italic text-emerald-800">Ghi chú đối soát: {{ $order->refund_note }}</span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            @endif
+
             {{-- Banner thông báo Đang chờ duyệt hủy đơn hàng --}}
             @if($order->hasPendingCancelRequest())
                 <div class="mb-6 bg-gradient-to-r from-amber-500/10 via-amber-100/70 to-amber-500/10 border-2 border-amber-400 rounded-3xl p-5 sm:p-6 shadow-sm">
@@ -249,7 +293,7 @@
                                                 <div class="text-[11px] text-[#786B61]">Nhận hàng và thanh toán tiền mặt cho bưu tá</div>
                                             </div>
                                         </div>
-                                        <span class="text-xs font-bold text-amber-800 bg-amber-100/60 px-2.5 py-1 rounded-lg group-hover:bg-amber-600 group-hover:text-white transition">Chọn</span>
+                                        <span class="text-xs font-bold text-amber-700 bg-amber-100/60 px-2.5 py-1 rounded-lg group-hover:bg-amber-600 group-hover:text-white transition">Chọn</span>
                                     </button>
                                 @endif
                             </form>
@@ -602,7 +646,7 @@
                         <div class="p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-semibold text-[#1E293B]">Lịch sử trạng thái</h3>
-                                <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" />
+                                <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" />
                             </div>
                             <ol class="relative border-l border-amber-200 ml-3 space-y-6">
                                 @forelse ($order->statusHistories->sortBy('changed_at') as $history)
@@ -629,7 +673,10 @@
                                 @endforelse
                             </ol>
 
-                            @if ($order->canRequestCancel())
+                            @if ($order->canBeCancelledByCustomer())
+                                @php
+                                    $isDirectCancel = $order->canCancelDirectly();
+                                @endphp
                                 <div class="mt-6" x-data="{ 
                                     open: false, 
                                     selectedReason: '', 
@@ -646,10 +693,10 @@
                                     <button @click="open = true"
                                             class="w-full inline-flex justify-center items-center gap-2 px-4 py-2.5 text-sm font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition shadow-2xs cursor-pointer">
                                         <i class="fa-solid fa-ban"></i>
-                                        <span>Yêu cầu hủy đơn hàng</span>
+                                        <span>{{ $isDirectCancel ? 'Hủy đơn hàng' : 'Yêu cầu hủy đơn hàng' }}</span>
                                     </button>
 
-                                    {{-- Modal Yêu Cầu Hủy Đơn Hàng --}}
+                                    {{-- Modal Hủy / Yêu Cầu Hủy Đơn Hàng --}}
                                     <div x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
                                         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                                             <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="open = false"></div>
@@ -667,7 +714,7 @@
                                                                 <i class="fa-solid fa-triangle-exclamation"></i>
                                                             </div>
                                                             <div>
-                                                                <h3 class="text-base font-black text-[#2B1810]">Yêu cầu hủy đơn hàng</h3>
+                                                                <h3 class="text-base font-black text-[#2B1810]">{{ $isDirectCancel ? 'Xác nhận hủy đơn hàng' : 'Yêu cầu hủy đơn hàng' }}</h3>
                                                                 <p class="text-xs text-[#7D6B5D]">Mã đơn: <strong class="text-amber-800 font-mono">#{{ $order->order_code }}</strong></p>
                                                             </div>
                                                         </div>
@@ -686,7 +733,11 @@
                                                                     <span>Đơn hàng đã thanh toán ({{ number_format($order->total_amount, 0, ',', '.') }}đ)</span>
                                                                 </div>
                                                                 <p class="text-[11.5px] text-[#7D6B5D] leading-relaxed">
-                                                                    Sau khi gửi yêu cầu, nhân viên CSKH của <strong>Mật Ngọt Bear</strong> sẽ liên hệ qua SĐT <strong>{{ $order->recipient_phone }}</strong> để lấy số tài khoản và hoàn lại 100% số tiền cho bạn.
+                                                                    @if($isDirectCancel)
+                                                                        Đơn hàng đang ở trạng thái <strong>Chờ xác nhận</strong> nên sẽ được <strong>hủy ngay</strong>. Shop sẽ sớm liên hệ SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% số tiền cho bạn.
+                                                                    @else
+                                                                        Đơn hàng đã xác nhận, yêu cầu hủy sẽ được nhân viên xem xét. Khi được hủy, shop sẽ liên hệ qua SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% tiền cho bạn.
+                                                                    @endif
                                                                 </p>
                                                                 <div class="pt-1 text-[11px] text-amber-800 font-medium">
                                                                     💡 Bạn có thể điền trước STK bên dưới để nhân viên hoàn tiền nhanh hơn:
@@ -714,7 +765,11 @@
                                                         @else
                                                             <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[#7D6B5D] text-[11.5px] leading-relaxed">
                                                                 <i class="fa-solid fa-circle-info text-amber-600 mr-1"></i>
-                                                                Đơn hàng chưa thanh toán. Yêu cầu hủy đơn sẽ được gửi đến nhân viên để xác nhận hủy.
+                                                                @if($isDirectCancel)
+                                                                    Đơn hàng đang chờ nhân viên xác nhận và chưa thanh toán. Đơn sẽ được <strong>hủy ngay lập tức</strong> sau khi bạn xác nhận.
+                                                                @else
+                                                                    Đơn hàng đã được xác nhận. Yêu cầu hủy đơn sẽ được gửi đến nhân viên cửa hàng để xem xét.
+                                                                @endif
                                                             </div>
                                                         @endif
 
@@ -758,10 +813,9 @@
                                                         </button>
                                                         <button type="submit" 
                                                                 class="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition flex items-center gap-2">
-                                                            <i class="fa-solid fa-paper-plane text-[10px]"></i>
-                                                            <span>Gửi yêu cầu hủy</span>
+                                                            <i class="fa-solid {{ $isDirectCancel ? 'fa-ban' : 'fa-paper-plane' }} text-[10px]"></i>
+                                                            <span>{{ $isDirectCancel ? 'Xác nhận hủy đơn ngay' : 'Gửi yêu cầu hủy' }}</span>
                                                         </button>
-                                                    </div>
                                                 </form>
                                             </div>
                                         </div>

@@ -194,21 +194,22 @@ class CheckoutController extends Controller
 
         $usedVoucherCodes = Voucher::withTrashed()->whereIn('id', $blockedVoucherIds)->pluck('code')->toArray();
 
-        // 2. Fetch all active vouchers and enrich with remaining usage counts (both shop-wide and per-customer)
+        // 2. Fetch all active vouchers and enrich with usage counts & cart applicability
         $voucherFields = [
             'id', 'code', 'voucher_type', 'discount_type', 'discount_value',
             'min_order_value', 'max_discount_value', 'start_date', 'end_date',
-            'usage_limit', 'usage_limit_per_user', 'used_count', 'status'
+            'usage_limit', 'usage_limit_per_user', 'used_count', 'status', 'apply_scope'
         ];
 
         $now = now();
         $rawVouchers = Voucher::where('status', 'ACTIVE')
             ->where('end_date', '>=', $now)
+            ->with(['categories:id,name', 'products:id,name'])
             ->select($voucherFields)
             ->orderBy('id', 'desc')
             ->get();
 
-        $allVouchers = $rawVouchers->map(function ($v) use ($voucherUsageCounts) {
+        $allVouchers = $rawVouchers->map(function ($v) use ($voucherUsageCounts, $userId, $subtotal, $shippingFee, $cartItems) {
             $userUsed = (int) ($voucherUsageCounts[$v->id] ?? 0);
             $userLimit = max(1, (int) ($v->usage_limit_per_user ?? 1));
             $userRemaining = max(0, $userLimit - $userUsed);
@@ -221,6 +222,22 @@ class CheckoutController extends Controller
             $isGlobalExhausted = $globalLimit > 0 && $globalUsed >= $globalLimit;
             $isExhausted = $isUserExhausted || $isGlobalExhausted;
 
+            // Validate against the current cart items & current customer
+            $validation = $v->validateForCustomer($userId, (float) $subtotal, (float) $shippingFee, $cartItems->all());
+            $isApplicable = (bool) ($validation['valid'] ?? false);
+            $inapplicableReason = ! $isApplicable ? ($validation['message'] ?? 'Không đủ điều kiện áp dụng') : null;
+            $eligibleSubtotal = (float) ($validation['eligible_subtotal'] ?? $subtotal);
+            $expectedDiscount = (float) ($validation['discount_amount'] ?? 0);
+
+            // Scope description badge text
+            $scopeText = 'Toàn bộ sản phẩm';
+            if ($v->apply_scope === 'CATEGORY') {
+                $categoryNames = $v->categories->pluck('name')->join(', ');
+                $scopeText = ! empty($categoryNames) ? "Danh mục: {$categoryNames}" : 'Theo danh mục';
+            } elseif ($v->apply_scope === 'PRODUCT') {
+                $scopeText = 'Sản phẩm chỉ định';
+            }
+
             $v->user_used_count = $userUsed;
             $v->user_limit = $userLimit;
             $v->user_remaining = $userRemaining;
@@ -230,11 +247,38 @@ class CheckoutController extends Controller
             $v->is_user_exhausted = $isUserExhausted;
             $v->is_global_exhausted = $isGlobalExhausted;
 
+            $v->is_applicable = $isApplicable;
+            $v->inapplicable_reason = $inapplicableReason;
+            $v->eligible_subtotal = $eligibleSubtotal;
+            $v->expected_discount = $expectedDiscount;
+            $v->scope_text = $scopeText;
+
             return $v;
         });
 
-        $orderVouchers = $allVouchers->where('voucher_type', 'ORDER')->values();
-        $shippingVouchers = $allVouchers->where('voucher_type', 'SHIPPING')->values();
+        // Sắp xếp: Ưu tiên voucher khả dụng lên trên, không áp dụng được đẩy xuống dưới
+        $voucherSorter = function ($a, $b) {
+            // 1. Khả dụng lên đầu, không khả dụng xuống dưới
+            if ($a->is_applicable !== $b->is_applicable) {
+                return $a->is_applicable ? -1 : 1;
+            }
+            // 2. Không bị hết lượt ưu tiên trước
+            $aExhausted = $a->is_exhausted ? 1 : 0;
+            $bExhausted = $b->is_exhausted ? 1 : 0;
+            if ($aExhausted !== $bExhausted) {
+                return $aExhausted - $bExhausted;
+            }
+            // 3. Số tiền dự kiến giảm nhiều hơn lên trước
+            if ($a->expected_discount != $b->expected_discount) {
+                return $b->expected_discount <=> $a->expected_discount;
+            }
+            // 4. Giá trị giảm cao hơn lên trước
+            return $b->discount_value <=> $a->discount_value;
+        };
+
+        $orderVouchers = $allVouchers->where('voucher_type', 'ORDER')->sort($voucherSorter)->values();
+        $shippingVouchers = $allVouchers->where('voucher_type', 'SHIPPING')->sort($voucherSorter)->values();
+        $allVouchers = $allVouchers->sort($voucherSorter)->values();
 
         $googleMapsApiKey = config('services.google_maps.api_key', '');
 

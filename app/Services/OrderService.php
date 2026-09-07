@@ -121,9 +121,9 @@ class OrderService
         });
     }
 
-    public function cancelOrder(Order $order, ?int $cancelledBy = null, ?string $reason = null): Order
+    public function cancelOrder(Order $order, ?int $cancelledBy = null, ?string $reason = null, array $refundData = []): Order
     {
-        return DB::transaction(function () use ($order, $cancelledBy, $reason) {
+        return DB::transaction(function () use ($order, $cancelledBy, $reason, $refundData) {
             if (! in_array($order->order_status, ['PENDING', 'CONFIRMED'])) {
                 throw new \Exception('Không thể hủy đơn hàng ở trạng thái hiện tại.');
             }
@@ -134,24 +134,38 @@ class OrderService
 
             $oldStatus = $order->order_status;
 
-            $paidPayment = $order->payments->firstWhere('status', 'PAID');
-            if ($paidPayment) {
-                $this->refundPayment($paidPayment);
-            }
-
-            $order->update([
+            $updateData = [
                 'order_status' => 'CANCELLED',
                 'cancel_reason' => $reason,
                 'cancelled_by' => $cancelledBy,
                 'cancelled_at' => now(),
-            ]);
+            ];
+
+            if (! empty($refundData['refund_bank_name'])) {
+                $updateData['refund_bank_name'] = $refundData['refund_bank_name'];
+            }
+            if (! empty($refundData['refund_bank_account'])) {
+                $updateData['refund_bank_account'] = $refundData['refund_bank_account'];
+            }
+            if (! empty($refundData['refund_account_holder'])) {
+                $updateData['refund_account_holder'] = $refundData['refund_account_holder'];
+            }
+
+            // Với đơn đã thanh toán online bị hủy khi chờ xác nhận, payment_status vẫn giữ là PAID
+            // để nhân viên CSKH biết cần liên hệ khách và chuyển khoản hoàn tiền, sau đó mới bấm xác nhận hoàn tiền.
+            $order->update($updateData);
+
+            $historyNote = $reason;
+            if ($order->payment_status === 'PAID') {
+                $historyNote .= ' (Đơn đã thanh toán online - Chờ shop liên hệ hoàn tiền)';
+            }
 
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'from_status' => $oldStatus,
                 'to_status' => 'CANCELLED',
                 'changed_by' => $cancelledBy,
-                'note' => $reason,
+                'note' => $historyNote,
                 'changed_at' => now(),
             ]);
 
@@ -167,6 +181,35 @@ class OrderService
             if ($order->shipping_discount_amount > 0 && ! empty($order->shipping_voucher_id)) {
                 Voucher::where('id', $order->shipping_voucher_id)->where('used_count', '>', 0)->decrement('used_count');
             }
+
+            return $order->fresh();
+        });
+    }
+
+    /**
+     * Nhân viên xác nhận đã chuyển tiền hoàn lại cho khách hàng
+     */
+    public function confirmRefundOrder(Order $order, int $adminId, ?string $refundNote = null): Order
+    {
+        return DB::transaction(function () use ($order, $adminId, $refundNote) {
+            $paidPayment = $order->payments->firstWhere('status', 'PAID');
+            if ($paidPayment) {
+                $paidPayment->update(['status' => 'REFUNDED']);
+            }
+
+            $order->update([
+                'payment_status' => 'REFUNDED',
+                'refund_note' => $refundNote,
+            ]);
+
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'from_status' => $order->order_status,
+                'to_status' => $order->order_status,
+                'changed_by' => $adminId,
+                'note' => 'Nhân viên đã xác nhận chuyển tiền hoàn cho khách.' . ($refundNote ? ' Ghi chú: ' . $refundNote : ''),
+                'changed_at' => now(),
+            ]);
 
             return $order->fresh();
         });

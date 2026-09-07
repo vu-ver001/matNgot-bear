@@ -70,9 +70,24 @@ class Order extends Model
         return $this->cancel_request_status === 'REJECTED';
     }
 
+    public function canCancelDirectly(): bool
+    {
+        return $this->order_status === 'PENDING';
+    }
+
     public function canRequestCancel(): bool
     {
-        return in_array($this->order_status, ['PENDING', 'CONFIRMED']) && ! $this->hasPendingCancelRequest();
+        return $this->order_status === 'CONFIRMED' && ! $this->hasPendingCancelRequest();
+    }
+
+    public function canBeCancelledByCustomer(): bool
+    {
+        return $this->canCancelDirectly() || $this->canRequestCancel();
+    }
+
+    public function needsRefund(): bool
+    {
+        return $this->order_status === 'CANCELLED' && $this->payment_status === 'PAID';
     }
 
     public function customer(): BelongsTo

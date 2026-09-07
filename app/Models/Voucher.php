@@ -103,7 +103,7 @@ class Voucher extends Model
         }
 
         // 3. Kiểm tra tổng lượt dùng hệ thống
-        if ($this->used_count >= $this->usage_limit) {
+        if ($this->usage_limit !== null && (int)$this->usage_limit > 0 && $this->used_count >= (int)$this->usage_limit) {
             return [
                 'valid' => false,
                 'message' => "Mã giảm giá [{$this->code}] đã hết lượt sử dụng.",
@@ -126,7 +126,7 @@ class Voucher extends Model
         // 5. Kiểm tra phạm vi áp dụng (Category / Product / All)
         $eligibleSubtotal = $orderSubtotal;
 
-        if ($this->voucher_type === 'ORDER' && !empty($cartItems)) {
+        if (!empty($cartItems)) {
             if ($this->apply_scope === 'CATEGORY') {
                 $allowedCategoryIds = $this->categories->pluck('id')->toArray();
                 $eligibleSubtotal = 0;

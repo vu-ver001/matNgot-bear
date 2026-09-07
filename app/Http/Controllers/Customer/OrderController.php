@@ -105,8 +105,8 @@ class OrderController extends Controller
             abort(403);
         }
 
-        if (! $order->canRequestCancel()) {
-            return redirect()->back()->with('error', 'Đơn hàng này hiện không thể gửi yêu cầu hủy.');
+        if (! $order->canCancelDirectly() && ! $order->canRequestCancel()) {
+            return redirect()->back()->with('error', 'Đơn hàng này hiện không thể hủy hoặc gửi yêu cầu hủy.');
         }
 
         $validated = $request->validate([
@@ -120,17 +120,37 @@ class OrderController extends Controller
         ]);
 
         try {
-            $this->orderService->requestCancelOrder($order, $validated, auth()->id());
+            // Trường hợp 1: Đơn ở trạng thái Chờ xác nhận (PENDING) -> HỦY TRỰC TIẾP KHÔNG CẦN NHÂN VIÊN DUYỆT
+            // Kể cả đơn đã thanh toán online hay chưa thanh toán, trạng thái nhảy ngay sang ĐÃ HỦY
+            if ($order->canCancelDirectly()) {
+                $this->orderService->cancelOrder($order, auth()->id(), $validated['reason'], [
+                    'refund_bank_name' => $validated['refund_bank_name'] ?? null,
+                    'refund_bank_account' => $validated['refund_bank_account'] ?? null,
+                    'refund_account_holder' => $validated['refund_account_holder'] ?? null,
+                ]);
+
+                $msg = 'Đơn hàng của bạn đã được hủy thành công.';
+                if ($order->payment_status === 'PAID') {
+                    $msg .= ' Do đơn hàng đã được thanh toán online, Mật Ngọt Bear sẽ sớm liên hệ qua số điện thoại để hoàn tiền lại cho bạn.';
+                }
+
+                return redirect()->back()->with('success', $msg);
+            }
+
+            // Trường hợp 2: Đơn đã được nhân viên xác nhận (CONFIRMED) nhưng chưa đóng gói -> CẦN NHÂN VIÊN XÁC NHẬN HỦY
+            if ($order->canRequestCancel()) {
+                $this->orderService->requestCancelOrder($order, $validated, auth()->id());
+
+                $msg = 'Yêu cầu hủy đơn hàng đã được gửi thành công và đang chờ nhân viên xác nhận.';
+                if ($order->payment_status === 'PAID') {
+                    $msg .= ' Do đơn hàng đã thanh toán, sau khi nhân viên duyệt hủy sẽ liên hệ với bạn để hoàn tiền.';
+                }
+
+                return redirect()->back()->with('success', $msg);
+            }
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
-
-        $msg = 'Yêu cầu hủy đơn hàng đã được gửi thành công và đang chờ nhân viên xác nhận.';
-        if ($order->payment_status === 'PAID') {
-            $msg .= ' Do đơn hàng đã thanh toán, nhân viên CSKH của Mật Ngọt Bear sẽ liên hệ với bạn để đối soát và hoàn tiền.';
-        }
-
-        return redirect()->back()->with('success', $msg);
     }
 
     /**

@@ -17,9 +17,11 @@ class OrderController extends Controller
     {
         $query = Order::with(['customer', 'latestPayment']);
 
-        // Filter for cancellation requests
+        // Filter for cancellation requests or orders needing refund
         if ($request->query('tab') === 'cancel_requests') {
             $query->where('cancel_request_status', 'PENDING');
+        } elseif ($request->query('tab') === 'need_refund') {
+            $query->where('order_status', 'CANCELLED')->where('payment_status', 'PAID');
         } elseif ($request->filled('order_status')) {
             $query->where('order_status', $request->order_status);
         }
@@ -38,9 +40,10 @@ class OrderController extends Controller
         }
 
         $pendingCancelRequestsCount = Order::where('cancel_request_status', 'PENDING')->count();
+        $needRefundCount = Order::where('order_status', 'CANCELLED')->where('payment_status', 'PAID')->count();
         $orders = $query->latest()->paginate(15);
 
-        return view('admin.orders.index', compact('orders', 'pendingCancelRequestsCount'));
+        return view('admin.orders.index', compact('orders', 'pendingCancelRequestsCount', 'needRefundCount'));
     }
 
     public function show(Order $order)
@@ -112,5 +115,23 @@ class OrderController extends Controller
         }
 
         return redirect()->back()->with('success', 'Đã từ chối yêu cầu hủy đơn hàng.');
+    }
+
+    /**
+     * Admin xác nhận đã hoàn tiền cho đơn hàng đã hủy
+     */
+    public function confirmRefund(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'refund_note' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->orderService->confirmRefundOrder($order, auth()->id(), $validated['refund_note'] ?? null);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Đã xác nhận hoàn tiền thành công cho đơn hàng.');
     }
 }
