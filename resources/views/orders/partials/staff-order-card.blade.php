@@ -37,6 +37,9 @@
             <div class="flex items-center gap-1.5 text-sm font-bold text-[#4E342E]">
                 <i class="fa-regular fa-user text-xs text-[#8E8076]"></i>
                 <span>{{ $order->recipient_name }}</span>
+                @if($order->recipient_phone)
+                    <span class="text-xs text-[#8E8076] font-normal">({{ $order->recipient_phone }})</span>
+                @endif
             </div>
 
             <!-- Nút Nhắn tin là icon (chuyển hướng đến trang nhắn tin) -->
@@ -49,7 +52,7 @@
 
         <!-- Trạng thái đơn hàng & Trạng thái thanh toán -->
         <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
-            <x-order-status-badge :status="$order->order_status" />
+            <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" />
             <x-payment-status-badge :status="$order->payment_status" />
         </div>
     </div>
@@ -181,6 +184,16 @@
             <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action btn-card-secondary text-xs">
                 <i class="fa-regular fa-eye"></i> Chi tiết
             </a>
+
+            @if($order->hasPendingCancelRequest())
+                <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action bg-rose-600 hover:bg-rose-700 text-white! text-xs font-bold animate-pulse" title="Xử lý yêu cầu hủy đơn">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Duyệt hủy
+                </a>
+            @elseif($order->needsRefund())
+                <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action bg-amber-600 hover:bg-amber-700 text-white! text-xs font-bold" title="Xử lý hoàn tiền cho khách">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Hoàn tiền
+                </a>
+            @endif
 
             <!-- In hóa đơn / Phiếu gửi nếu có -->
             @if(Route::has('customer.orders.invoice'))

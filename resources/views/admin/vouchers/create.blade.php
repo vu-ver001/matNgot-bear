@@ -52,6 +52,7 @@
                 start_date: '{{ old('start_date', now()->format('Y-m-d H:i')) }}',
                 end_date: '{{ old('end_date', now()->addDays(30)->format('Y-m-d H:i')) }}',
                 usage_limit: '{{ old('usage_limit', 100) }}',
+                usage_limit_per_user: '{{ old('usage_limit_per_user', 1) }}',
                 status: '{{ old('status', 'ACTIVE') }}',
             })"
                 class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -318,12 +319,25 @@
                                     Giá Trị Giảm <span class="text-rose-500">*</span>
                                 </label>
                                 <div class="relative">
-                                    <input type="number" name="discount_value" x-model="discount_value"
-                                        placeholder="VD: 15 hoặc 30" min="1" step="any" required
-                                        class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 pr-10 text-sm font-bold text-[#2C1408] placeholder:text-[#9CA3AF] placeholder:font-normal focus:border-[#E08A1E] focus:ring-0">
+                                    <input type="hidden" name="discount_value" :value="discount_value">
+                                    <template x-if="discount_type === 'PERCENTAGE'">
+                                        <input type="number" x-model="discount_value"
+                                            placeholder="VD: 15 hoặc 30" min="1" max="100" step="any" required
+                                            class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 pr-10 text-sm font-bold text-[#2C1408] placeholder:text-[#9CA3AF] placeholder:font-normal focus:border-[#E08A1E] focus:ring-0">
+                                    </template>
+                                    <template x-if="discount_type === 'FIXED'">
+                                        <input type="text" inputmode="numeric"
+                                            :value="formatNumberWithDots(discount_value)"
+                                            @input="handleCurrencyInput($event, 'discount_value')"
+                                            placeholder="VD: 30.000 hoặc 50.000" required
+                                            class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 pr-14 text-sm font-bold text-[#2C1408] placeholder:text-[#9CA3AF] placeholder:font-normal focus:border-[#E08A1E] focus:ring-0">
+                                    </template>
                                     <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#786B61]"
                                         x-text="discount_type === 'PERCENTAGE' ? '%' : 'VNĐ'">%</span>
                                 </div>
+                                <template x-if="discount_type === 'FIXED' && discount_value">
+                                    <p class="text-xs text-[#E08A1E] font-bold mt-1" x-text="'Giảm: ' + formatCurrency(discount_value)"></p>
+                                </template>
                                 @error('discount_value')
                                     <p class="text-xs text-rose-500 font-bold mt-1">{{ $message }}</p>
                                 @enderror
@@ -331,17 +345,23 @@
                         </div>
 
                         {{-- Row 2: Mức Giảm Tối Đa (VNĐ) --}}
-                        <div>
+                        <div x-show="discount_type === 'PERCENTAGE'" x-transition>
                             <div class="flex items-center justify-between mb-1.5">
                                 <label class="block text-xs font-bold text-[#2C1408]">Mức Giảm Tối Đa (VNĐ)</label>
                                 <span class="text-xs text-[#9CA3AF]">Tùy chọn</span>
                             </div>
                             <div class="relative">
-                                <input type="number" name="max_discount_value" x-model="max_discount_value"
-                                    placeholder="VD: 50000 (Để trống nếu không giới hạn tối đa)" min="0" step="any"
+                                <input type="hidden" name="max_discount_value" :value="max_discount_value">
+                                <input type="text" inputmode="numeric"
+                                    :value="formatNumberWithDots(max_discount_value)"
+                                    @input="handleCurrencyInput($event, 'max_discount_value')"
+                                    placeholder="VD: 50.000 (Để trống nếu không giới hạn tối đa)"
                                     class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 pr-14 text-sm font-bold text-[#2C1408] placeholder:text-[#9CA3AF] placeholder:font-normal focus:border-[#E08A1E] focus:ring-0">
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#786B61]">VNĐ</span>
                             </div>
+                            <template x-if="max_discount_value">
+                                <p class="text-xs text-[#E08A1E] font-bold mt-1" x-text="'Tối đa: ' + formatCurrency(max_discount_value)"></p>
+                            </template>
                             @error('max_discount_value')
                                 <p class="text-xs text-rose-500 font-bold mt-1">{{ $message }}</p>
                             @enderror
@@ -355,19 +375,22 @@
                             <span class="voucher-section-title">ĐIỀU KIỆN & THỜI GIAN</span>
                         </div>
 
-                        {{-- Row 1: Đơn Hàng Tối Thiểu & Tổng Số Lượt Dùng --}}
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {{-- Row 1: Đơn Hàng Tối Thiểu, Tổng Số Lượt Dùng & Lượt Dùng / Khách --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-[#2C1408] mb-1.5">
                                     Đơn Hàng Tối Thiểu (VNĐ)
                                 </label>
                                 <div class="relative">
-                                    <input type="number" name="min_order_value" x-model="min_order_value"
-                                        min="0" step="any"
+                                    <input type="hidden" name="min_order_value" :value="min_order_value">
+                                    <input type="text" inputmode="numeric"
+                                        :value="formatNumberWithDots(min_order_value)"
+                                        @input="handleCurrencyInput($event, 'min_order_value')"
+                                        placeholder="VD: 100.000 (0 nếu mọi đơn)"
                                         class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 pr-14 text-sm font-bold text-[#2C1408] focus:border-[#E08A1E] focus:ring-0">
                                     <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#786B61]">VNĐ</span>
                                 </div>
-                                <p class="text-xs text-[#9CA3AF] mt-1">Nhập 0 nếu áp dụng cho mọi đơn.</p>
+                                <p class="text-xs text-[#9CA3AF] mt-1" x-text="min_order_value > 0 ? ('Đơn từ: ' + formatCurrency(min_order_value)) : 'Nhập 0 nếu áp dụng cho mọi đơn.'"></p>
                                 @error('min_order_value')
                                     <p class="text-xs text-rose-500 font-bold mt-1">{{ $message }}</p>
                                 @enderror
@@ -375,12 +398,28 @@
 
                             <div>
                                 <label class="block text-xs font-bold text-[#2C1408] mb-1.5">
-                                    Tổng Số Lượt Dùng <span class="text-rose-500">*</span>
+                                    Tổng Lượt Dùng Toàn Sàn <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="number" name="usage_limit" x-model="usage_limit" min="1" required
+                                    @input="if (Number(usage_limit_per_user) > Number(usage_limit)) usage_limit_per_user = usage_limit"
                                     class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 text-sm font-bold text-[#2C1408] focus:border-[#E08A1E] focus:ring-0">
-                                <p class="text-xs text-[#9CA3AF] mt-1">Mỗi khách hàng chỉ được dùng 1 lần.</p>
+                                <p class="text-xs text-[#9CA3AF] mt-1">Tổng số lần voucher được dùng.</p>
                                 @error('usage_limit')
+                                    <p class="text-xs text-rose-500 font-bold mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-[#2C1408] mb-1.5">
+                                    Lượt Dùng / Khách Hàng <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="number" name="usage_limit_per_user" x-model="usage_limit_per_user" min="1" :max="usage_limit" required
+                                    @input="if (Number(usage_limit_per_user) > Number(usage_limit)) usage_limit_per_user = usage_limit; if (Number(usage_limit_per_user) < 1) usage_limit_per_user = 1;"
+                                    class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 text-sm font-bold text-[#2C1408] focus:border-[#E08A1E] focus:ring-0">
+                                <p class="text-xs text-[#9CA3AF] mt-1">
+                                    Từ 1 đến tối đa <span class="font-bold text-[#E08A1E]" x-text="usage_limit || 1"></span> lượt/khách.
+                                </p>
+                                @error('usage_limit_per_user')
                                     <p class="text-xs text-rose-500 font-bold mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -497,15 +536,23 @@
                             </span>
                         </div>
 
-                        {{-- Big Discount Headline --}}
-                        <div class="text-3xl sm:text-4xl font-extrabold text-white mt-4 tracking-tight"
-                            x-text="previewDiscountText">
-                            Giảm 0đ
-                        </div>
+                        {{-- Big Discount Headline & Max Cap Badge --}}
+                        <div class="mt-4">
+                            <div class="flex items-baseline gap-2 flex-wrap">
+                                <div class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight"
+                                    x-text="previewDiscountText">
+                                    Giảm 0đ
+                                </div>
+                                <span x-show="discount_type === 'PERCENTAGE' && maxDiscountNumeric > 0"
+                                    class="text-xs sm:text-sm font-bold text-[#FDE68A] bg-white/10 px-2.5 py-0.5 rounded-lg border border-[#FDE68A]/30 self-center">
+                                    Tối đa <span x-text="formatCurrency(max_discount_value)"></span>
+                                </span>
+                            </div>
 
-                        {{-- Subtitle condition --}}
-                        <div class="text-xs text-[#D1C4B5] font-medium mt-1" x-text="previewConditionText">
-                            Áp dụng cho mọi giá trị đơn hàng
+                            {{-- Subtitle condition --}}
+                            <div class="text-xs text-[#D1C4B5] font-medium mt-1" x-text="previewConditionText">
+                                Áp dụng cho mọi giá trị đơn hàng
+                            </div>
                         </div>
 
                         {{-- Scope capsule badge --}}
@@ -533,6 +580,9 @@
                                 <div class="text-white font-bold text-sm sm:text-base mt-0.5">
                                     <span x-text="usage_limit">100</span> lượt
                                 </div>
+                                <span class="text-[10px] text-[#D1C4B5] block mt-0.5" x-text="'Tối đa ' + usage_limit_per_user + ' lượt/khách'">
+                                    Tối đa 1 lượt/khách
+                                </span>
                             </div>
                         </div>
 

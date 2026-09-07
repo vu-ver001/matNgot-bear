@@ -69,7 +69,7 @@
                             @endphp
 
                             <!-- Order Card Item -->
-                            <div class="order-card-ecommerce" x-data="{ showAllProducts: false }">
+                            <div class="order-card-ecommerce" x-data="{ showAllProducts: false, showNotReceived: false, openChangePayment: false }">
                                 <!-- 1. Card Header: Store identity & Order Status -->
                                 <div class="order-card-header flex flex-col md:flex-row md:items-center justify-between gap-3">
                                     <div class="flex flex-wrap items-center gap-2.5">
@@ -77,6 +77,10 @@
                                             🧸
                                         </div>
                                         <span class="font-bold text-sm text-[#4E342E]">{{ $card['shop']['name'] }}</span>
+                                        <span class="text-stone-300">|</span>
+                                        <a href="{{ route('customer.orders.show', $order) }}" class="text-xs text-[#8E8076] hover:text-amber-800 font-mono font-bold">
+                                            #{{ $order->order_code }}
+                                        </a>
                                     </div>
 
                                     <div class="flex items-center gap-3 shrink-0 flex-wrap">
@@ -87,18 +91,8 @@
 
                                         <span class="text-stone-300 hidden md:inline">|</span>
 
-                                        <span class="order-status-badge-tag {{ match($card['order']['status']) {
-                                            'COMPLETED' => 'bg-emerald-100 text-emerald-800',
-                                            'SHIPPING'  => 'bg-cyan-100 text-cyan-800',
-                                            'PREPARING' => 'bg-purple-100 text-purple-800',
-                                            'CONFIRMED' => 'bg-blue-100 text-blue-800',
-                                            'PENDING'   => 'bg-amber-100 text-amber-800',
-                                            'CANCELLED' => 'bg-rose-100 text-rose-800',
-                                            'RETURNED'  => 'bg-stone-200 text-stone-700',
-                                            default     => 'bg-stone-100 text-stone-800'
-                                        } }}">
-                                            {{ $card['order']['statusLabel'] }}
-                                        </span>
+                                        <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" />
+                                        <x-payment-status-badge :status="$order->payment_status" />
                                     </div>
                                 </div>
 
@@ -130,7 +124,6 @@
                                                             <span>Số lượng: <strong class="text-[#4E342E] font-bold">x{{ $product['quantity'] }}</strong></span>
                                                         </div>
                                                     </div>
-
                                                     <div class="text-left sm:text-right shrink-0">
                                                         @if($product['price']['original'] > $product['price']['current'])
                                                             <div class="text-xs text-stone-400 line-through">
@@ -159,7 +152,7 @@
                                     </div>
                                 @endif
 
-                                <!-- 3. Clean Payment Summary Bar (Chỉ Ngày đặt và Thành tiền) -->
+                                <!-- 3. Clean Payment Summary Bar -->
                                 <div class="bg-[#FDFBF7] px-5 py-3.5 border-t border-b border-[#F0E6DA] flex items-center justify-between gap-3 text-xs text-[#795548]">
                                     <div class="flex items-center gap-2">
                                         <span>Ngày đặt: <strong class="text-[#4E342E] font-medium">{{ $order->created_at->format('d/m/Y H:i') }}</strong></span>
@@ -213,12 +206,9 @@
                                             </button>
                                         @endif
 
-                                        <!-- Đánh giá (review) -->
+                                        <!-- Đánh giá -->
                                         @if($card['actions']['review'])
-                                            @php
-                                                $firstProdId = $order->details->first()?->product_id;
-                                            @endphp
-                                            <a href="{{ $firstProdId ? route('products.show', $firstProdId) . '#reviews-section' : '#' }}" 
+                                            <a href="{{ route('customer.orders.review', $order) }}" 
                                                class="btn-card-action btn-card-primary">
                                                 <i class="fa-solid fa-star text-amber-200"></i> Đánh giá
                                             </a>
@@ -226,10 +216,11 @@
 
                                         <!-- Thanh toán online nếu chưa thanh toán -->
                                         @if($hasUnpaidOnline)
-                                            <a href="{{ route('customer.payment.qr', $order) }}" 
-                                               class="btn-card-action bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white!">
-                                                <i class="fa-solid fa-credit-card"></i> Thanh toán ngay
-                                            </a>
+                                            <button type="button" @click="openChangePayment = true"
+                                                    class="btn-card-action bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white! cursor-pointer">
+                                                <i class="fa-solid fa-credit-card"></i> Thanh toán
+                                            </button>
+                                            @include('customer.orders.partials.payment-method-modal', ['modalState' => 'openChangePayment'])
                                         @endif
 
                                         <!-- Xác nhận đã nhận hàng nếu đang SHIPPING -->
@@ -248,7 +239,7 @@
                                         @if($order->order_status === 'PENDING')
                                             <form action="{{ route('customer.orders.cancel', $order->id) }}" 
                                                   method="POST" 
-                                                  onsubmit="return confirm('Bạn có chắc chắn muốn yêu cầu hủy đơn hàng #{{ $order->order_code }}?')">
+                                                  onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng #{{ $order->order_code }}?')">
                                                 @csrf
                                                 <button type="submit" class="btn-card-action text-rose-700! hover:bg-rose-50 border border-rose-200">
                                                     <i class="fa-solid fa-xmark"></i> Hủy đơn

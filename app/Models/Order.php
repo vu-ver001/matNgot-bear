@@ -80,6 +80,14 @@ class Order extends Model
         'payment_status',
         'cancel_reason',
         'cancelled_by',
+        'cancel_request_status',
+        'cancel_request_reason',
+        'cancel_requested_at',
+        'cancel_rejection_reason',
+        'refund_bank_name',
+        'refund_bank_account',
+        'refund_account_holder',
+        'refund_note',
         'stock_restored',
         'confirmed_at',
         'shipped_at',
@@ -98,7 +106,43 @@ class Order extends Model
         'shipped_at' => 'datetime',
         'completed_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'cancel_requested_at' => 'datetime',
     ];
+
+    public function hasPendingCancelRequest(): bool
+    {
+        return $this->cancel_request_status === 'PENDING';
+    }
+
+    public function isCancelApproved(): bool
+    {
+        return $this->cancel_request_status === 'APPROVED';
+    }
+
+    public function isCancelRejected(): bool
+    {
+        return $this->cancel_request_status === 'REJECTED';
+    }
+
+    public function canCancelDirectly(): bool
+    {
+        return $this->order_status === 'PENDING';
+    }
+
+    public function canRequestCancel(): bool
+    {
+        return $this->order_status === 'CONFIRMED' && ! $this->hasPendingCancelRequest();
+    }
+
+    public function canBeCancelledByCustomer(): bool
+    {
+        return $this->canCancelDirectly() || $this->canRequestCancel();
+    }
+
+    public function needsRefund(): bool
+    {
+        return $this->order_status === 'CANCELLED' && $this->payment_status === 'PAID';
+    }
 
     public function customer(): BelongsTo
     {

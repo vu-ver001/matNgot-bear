@@ -52,12 +52,18 @@ class VnpayService
     /**
      * Build VNPAY Gateway URL for Card / ATM / Visa / QR redirection.
      */
-    public function createPaymentUrl(Order $order, ?string $returnUrl = null, string $ipAddress = '127.0.0.1'): string
+    public function createPaymentUrl(Order $order, ?string $returnUrl = null, string $ipAddress = '127.0.0.1', ?string $customTxnRef = null): string
     {
         $returnUrl = $returnUrl ?? config('services.vnpay.return_url', route('payment.vnpay.return'));
         $createDate = date('YmdHis');
         $expireDate = date('YmdHis', strtotime('+15 minutes', strtotime($createDate)));
         $cleanOrderInfo = "Thanh toan don hang " . preg_replace('/[^A-Za-z0-9]/', '', $order->order_code);
+
+        // VNPay requires valid IPv4. Localhost IPv6 '::1' causes gateway issues.
+        $cleanIp = filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? $ipAddress : '127.0.0.1';
+
+        // Use unique suffix so multiple payment attempts for the same order don't collide with VNPay's 'TxnRef already exists' constraint
+        $txnRef = $customTxnRef ?? ($order->order_code . '_' . date('His'));
 
         $vnp_Params = [
             "vnp_Version" => "2.1.0",
@@ -66,12 +72,12 @@ class VnpayService
             "vnp_Command" => "pay",
             "vnp_CreateDate" => $createDate,
             "vnp_CurrCode" => "VND",
-            "vnp_IpAddr" => $ipAddress,
+            "vnp_IpAddr" => $cleanIp,
             "vnp_Locale" => "vn",
             "vnp_OrderInfo" => $cleanOrderInfo,
             "vnp_OrderType" => "other",
             "vnp_ReturnUrl" => $returnUrl,
-            "vnp_TxnRef" => $order->order_code,
+            "vnp_TxnRef" => $txnRef,
             "vnp_ExpireDate" => $expireDate,
         ];
 
@@ -82,12 +88,12 @@ class VnpayService
 
         foreach ($vnp_Params as $key => $value) {
             if ($i == 1) {
-                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+                $hashdata .= '&' . urlencode((string) $key) . "=" . urlencode((string) $value);
             } else {
-                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $hashdata .= urlencode((string) $key) . "=" . urlencode((string) $value);
                 $i = 1;
             }
-            $query .= urlencode($key) . "=" . urlencode($value) . '&';
+            $query .= urlencode((string) $key) . "=" . urlencode((string) $value) . '&';
         }
 
         $vnp_Url = $this->vnpUrl . "?" . $query;
@@ -109,27 +115,76 @@ class VnpayService
 
     /**
      * Verify VNPAY return response signature.
+     * Strictly filters for parameters prefixed with 'vnp_' to prevent extra query or route parameters from corrupting the hash.
      */
     public function verifyResponse(array $inputData): bool
     {
-        $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
-        unset($inputData['vnp_SecureHash'], $inputData['vnp_SecureHashType']);
+        $vnp_SecureHash = (string) ($inputData['vnp_SecureHash'] ?? '');
+        if (empty($vnp_SecureHash) || empty($this->hashSecret)) {
+            return false;
+        }
 
-        ksort($inputData);
+        // Only include keys starting with 'vnp_' as defined by VNPay specification
+        $vnpData = [];
+        foreach ($inputData as $key => $value) {
+            if (str_starts_with((string) $key, 'vnp_')) {
+                $vnpData[$key] = $value;
+            }
+        }
+
+        unset($vnpData['vnp_SecureHash'], $vnpData['vnp_SecureHashType']);
+
+        ksort($vnpData);
         $i = 0;
         $hashData = "";
-        foreach ($inputData as $key => $value) {
+        foreach ($vnpData as $key => $value) {
             if ($i == 1) {
-                $hashData .= '&' . urlencode($key) . "=" . urlencode($value);
+                $hashData .= '&' . urlencode((string) $key) . "=" . urlencode((string) $value);
             } else {
-                $hashData .= urlencode($key) . "=" . urlencode($value);
+                $hashData .= urlencode((string) $key) . "=" . urlencode((string) $value);
                 $i = 1;
             }
         }
 
         $secureHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
-        return hash_equals($secureHash, $vnp_SecureHash);
+        return hash_equals(strtolower($secureHash), strtolower($vnp_SecureHash));
+    }
+
+    /**
+     * Generate mock signed response params for testing / sandbox demonstration.
+     */
+    public function generateMockResponse(Order $order, string $responseCode = '00', ?string $txnRef = null): array
+    {
+        $params = [
+            'vnp_Amount' => ((int) $order->total_amount) * 100,
+            'vnp_BankCode' => 'NCB',
+            'vnp_BankTranNo' => 'VNP' . date('YmdHis'),
+            'vnp_CardType' => 'ATM',
+            'vnp_OrderInfo' => 'Thanh toan don hang ' . $order->order_code,
+            'vnp_PayDate' => date('YmdHis'),
+            'vnp_ResponseCode' => $responseCode,
+            'vnp_TmnCode' => $this->tmnCode,
+            'vnp_TransactionNo' => (string) rand(10000000, 99999999),
+            'vnp_TransactionStatus' => $responseCode,
+            'vnp_TxnRef' => $txnRef ?? ($order->order_code . '_' . date('His')),
+        ];
+
+        ksort($params);
+        $hashData = "";
+        $i = 0;
+        foreach ($params as $k => $v) {
+            if ($i == 1) {
+                $hashData .= '&' . urlencode((string) $k) . "=" . urlencode((string) $v);
+            } else {
+                $hashData .= urlencode((string) $k) . "=" . urlencode((string) $v);
+                $i = 1;
+            }
+        }
+
+        $params['vnp_SecureHash'] = hash_hmac('sha512', $hashData, $this->hashSecret);
+
+        return $params;
     }
 
     /**

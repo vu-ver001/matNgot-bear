@@ -42,7 +42,12 @@ class OrderController extends Controller
             $statusCountsQuery->whereRaw('1 = 0');
         }
 
-        if ($request->filled('order_status')) {
+        // Filter for cancellation requests or orders needing refund
+        if ($request->query('tab') === 'cancel_requests') {
+            $query->where('cancel_request_status', 'PENDING');
+        } elseif ($request->query('tab') === 'need_refund') {
+            $query->where('order_status', 'CANCELLED')->where('payment_status', 'PAID');
+        } elseif ($request->filled('order_status')) {
             $query->where('order_status', $request->order_status);
         }
 
@@ -93,7 +98,7 @@ class OrderController extends Controller
                 $validated['order_ids'],
                 $targetStatus,
                 $changedBy,
-                'Cập nhật trạng thái hàng loạt bởi ' . (auth()->user()->full_name ?? auth()->user()->name ?? 'Admin')
+                'Cập nhật trạng thái hàng loạt bởi '.(auth()->user()->full_name ?? auth()->user()->name ?? 'Admin')
             );
 
             $statusLabels = [
@@ -109,12 +114,13 @@ class OrderController extends Controller
                 if ($result['skipped'] > 0) {
                     $msg .= " (Bỏ qua {$result['skipped']} đơn do trạng thái không phù hợp).";
                 }
+
                 return redirect()->back()->with('success', $msg);
             }
 
             return redirect()->back()->with('error', "Không có đơn hàng nào hợp lệ để chuyển sang trạng thái '{$label}'.");
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Lỗi khi thao tác hàng loạt: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Lỗi khi thao tác hàng loạt: '.$e->getMessage());
         }
     }
 
@@ -150,5 +156,62 @@ class OrderController extends Controller
         }
 
         return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+    }
+
+    /**
+     * Nhân viên duyệt hủy đơn hàng
+     */
+    public function approveCancel(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'refund_note' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->orderService->approveCancelOrder($order, auth()->id(), $validated['refund_note'] ?? null);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Đã duyệt yêu cầu hủy đơn hàng thành công!');
+    }
+
+    /**
+     * Nhân viên từ chối hủy đơn hàng
+     */
+    public function rejectCancel(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|min:5|max:500',
+        ], [
+            'rejection_reason.required' => 'Vui lòng nhập lý do từ chối hủy đơn.',
+            'rejection_reason.min' => 'Lý do từ chối cần ít nhất 5 ký tự.',
+        ]);
+
+        try {
+            $this->orderService->rejectCancelOrder($order, auth()->id(), $validated['rejection_reason']);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Đã từ chối yêu cầu hủy đơn hàng.');
+    }
+
+    /**
+     * Admin xác nhận đã hoàn tiền cho đơn hàng đã hủy
+     */
+    public function confirmRefund(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'refund_note' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->orderService->confirmRefundOrder($order, auth()->id(), $validated['refund_note'] ?? null);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Đã xác nhận hoàn tiền thành công cho đơn hàng.');
     }
 }

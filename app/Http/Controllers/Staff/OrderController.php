@@ -17,7 +17,12 @@ class OrderController extends Controller
     {
         $query = Order::with(['customer', 'latestPayment', 'details.product.images']);
 
-        if ($request->filled('order_status')) {
+        // Lọc theo tab Yêu cầu hủy hoặc Cần hoàn tiền
+        if ($request->query('tab') === 'cancel_requests') {
+            $query->where('cancel_request_status', 'PENDING');
+        } elseif ($request->query('tab') === 'need_refund') {
+            $query->where('order_status', 'CANCELLED')->where('payment_status', 'PAID');
+        } elseif ($request->filled('order_status')) {
             $query->where('order_status', $request->order_status);
         }
 
@@ -127,5 +132,62 @@ class OrderController extends Controller
         }
 
         return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+    }
+
+    /**
+     * Nhân viên duyệt hủy đơn hàng (Không bắt buộc nhập lý do)
+     */
+    public function approveCancel(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'refund_note' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->orderService->approveCancelOrder($order, auth()->id(), $validated['refund_note'] ?? null);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Đã duyệt yêu cầu hủy đơn hàng thành công!');
+    }
+
+    /**
+     * Nhân viên từ chối hủy đơn hàng (Bắt buộc nhập lý do từ chối)
+     */
+    public function rejectCancel(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|min:5|max:500',
+        ], [
+            'rejection_reason.required' => 'Vui lòng nhập lý do từ chối hủy đơn.',
+            'rejection_reason.min' => 'Lý do từ chối cần ít nhất 5 ký tự.',
+        ]);
+
+        try {
+            $this->orderService->rejectCancelOrder($order, auth()->id(), $validated['rejection_reason']);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Đã từ chối yêu cầu hủy đơn hàng.');
+    }
+
+    /**
+     * Nhân viên xác nhận đã hoàn tiền cho đơn hàng đã hủy
+     */
+    public function confirmRefund(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'refund_note' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->orderService->confirmRefundOrder($order, auth()->id(), $validated['refund_note'] ?? null);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Đã xác nhận hoàn tiền thành công cho đơn hàng.');
     }
 }

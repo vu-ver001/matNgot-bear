@@ -36,14 +36,32 @@
     @endphp
     <div class="nav-pills">
         @foreach ($tabs as $value => $tab)
-            <a href="{{ route($routePrefix.'.index', array_merge(request()->except('order_status', 'page'), $value ? ['order_status' => $value] : [])) }}"
-               class="nav-pill {{ (string) request('order_status') === $value ? 'active' : '' }}">
+            <a href="{{ route($routePrefix.'.index', array_merge(request()->except('order_status', 'tab', 'page'), $value ? ['order_status' => $value] : [])) }}"
+               class="nav-pill {{ (string) request('order_status') === $value && request('tab') !== 'cancel_requests' && request('tab') !== 'need_refund' ? 'active' : '' }}">
                 <span>{{ $tab['label'] }}</span>
                 @if (isset($tab['count']))
                     <span class="nav-pill-count">{{ $tab['count'] }}</span>
                 @endif
             </a>
         @endforeach
+
+        @if($isStaff)
+            <a href="{{ route($routePrefix.'.index', array_merge(request()->except('order_status', 'tab', 'page'), ['tab' => 'cancel_requests'])) }}"
+               class="nav-pill {{ request('tab') === 'cancel_requests' ? 'active bg-rose-600! text-white!' : 'text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200' }}">
+                <span>⚠️ Yêu cầu hủy</span>
+                @if(($pendingCancelRequestsCount ?? 0) > 0)
+                    <span class="nav-pill-count bg-rose-600 text-white animate-pulse">{{ $pendingCancelRequestsCount }}</span>
+                @endif
+            </a>
+
+            <a href="{{ route($routePrefix.'.index', array_merge(request()->except('order_status', 'tab', 'page'), ['tab' => 'need_refund'])) }}"
+               class="nav-pill {{ request('tab') === 'need_refund' ? 'active bg-amber-600! text-white!' : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300' }}">
+                <span>💰 Cần hoàn tiền</span>
+                @if(($needRefundCount ?? 0) > 0)
+                    <span class="nav-pill-count bg-amber-600 text-white animate-pulse">{{ $needRefundCount }}</span>
+                @endif
+            </a>
+        @endif
     </div>
 
     @include('orders.partials.filters')

@@ -37,6 +37,10 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'last_login_at',
         'address',
         'avatar',
+        'province',
+        'district',
+        'ward',
+        'address_detail',
     ];
 
     protected $hidden = [
