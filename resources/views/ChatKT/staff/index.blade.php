@@ -776,7 +776,7 @@
                             <span class="staff-support-case-meta-val" data-tooltip="{{ $selectedCase->case_code }}">{{ $selectedCase->case_code }}</span>
                         </div>
                         <div class="staff-support-case-meta-row">
-                            <span class="staff-support-case-meta-label">Mã đơn liên quan:</span>
+                            <span class="staff-support-case-meta-label">Mã đơn:</span>
                             <span class="staff-support-case-meta-val" data-related-order-code data-tooltip="{{ $selectedCase->order ? '#' . $selectedCase->order->order_code : 'Không có' }}">
                                 {{ $selectedCase->order ? '#' . $selectedCase->order->order_code : 'Không có' }}
                             </span>
