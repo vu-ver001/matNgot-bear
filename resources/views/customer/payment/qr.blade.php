@@ -1,4 +1,8 @@
-<x-app-layout>
+@extends('layouts.customer')
+
+@section('title', 'Thanh Toán QR VietQR - Mật Ngọt Bear')
+
+@section('content')
     <div class="py-10 bg-[#FAF6EE] min-h-[calc(100vh-140px)] pb-24 font-sans" x-data="paymentGateway({
         orderCode: '{{ $order->order_code }}',
         amount: {{ $amount }},
@@ -344,4 +348,4 @@
         }
     </script>
     @endpush
-</x-app-layout>
+@endsection

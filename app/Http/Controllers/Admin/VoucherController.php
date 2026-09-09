@@ -105,6 +105,17 @@ class VoucherController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Sanitize currency inputs (strip dots / commas from formatting)
+        $cleanInputs = [];
+        foreach (['discount_value', 'min_order_value', 'max_discount_value'] as $field) {
+            if ($request->has($field) && is_string($request->$field)) {
+                $cleanInputs[$field] = str_replace(['.', ','], '', $request->$field);
+            }
+        }
+        if (!empty($cleanInputs)) {
+            $request->merge($cleanInputs);
+        }
+
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50', Rule::unique('vouchers', 'code')->whereNull('deleted_at'), 'regex:/^[A-Z0-9_\-]+$/i'],
             'voucher_type' => 'required|in:ORDER,SHIPPING',
@@ -129,6 +140,7 @@ class VoucherController extends Controller
             'start_date' => 'required|date|after_or_equal:' . now()->subMinutes(5)->toDateTimeString(),
             'end_date' => 'required|date|after:start_date',
             'usage_limit' => 'required|integer|min:1',
+            'usage_limit_per_user' => 'required|integer|min:1|lte:usage_limit',
             'status' => 'nullable|in:ACTIVE,INACTIVE',
         ], [
             'code.required' => 'Vui lòng nhập mã voucher.',
@@ -144,6 +156,9 @@ class VoucherController extends Controller
             'end_date.after' => 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu voucher.',
             'usage_limit.required' => 'Vui lòng nhập số lượt sử dụng tối đa.',
             'usage_limit.min' => 'Số lượt sử dụng tối đa phải từ 1 trở lên.',
+            'usage_limit_per_user.required' => 'Vui lòng nhập số lượt sử dụng tối đa cho mỗi khách hàng.',
+            'usage_limit_per_user.min' => 'Số lượt sử dụng cho mỗi khách hàng phải từ 1 trở lên.',
+            'usage_limit_per_user.lte' => 'Số lượt dùng của mỗi khách hàng không được vượt quá tổng số lượt dùng của voucher (:value lượt).',
         ]);
 
         // Custom validation for scope
@@ -193,6 +208,17 @@ class VoucherController extends Controller
      */
     public function update(Request $request, Voucher $voucher): RedirectResponse
     {
+        // Sanitize currency inputs (strip dots / commas from formatting)
+        $cleanInputs = [];
+        foreach (['discount_value', 'min_order_value', 'max_discount_value'] as $field) {
+            if ($request->has($field) && is_string($request->$field)) {
+                $cleanInputs[$field] = str_replace(['.', ','], '', $request->$field);
+            }
+        }
+        if (!empty($cleanInputs)) {
+            $request->merge($cleanInputs);
+        }
+
         $validated = $request->validate([
             'code' => [
                 'required',
@@ -223,6 +249,7 @@ class VoucherController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'usage_limit' => "required|integer|min:{$voucher->used_count}",
+            'usage_limit_per_user' => 'required|integer|min:1|lte:usage_limit',
             'status' => 'nullable|in:ACTIVE,INACTIVE',
         ], [
             'code.required' => 'Vui lòng nhập mã voucher.',
@@ -234,6 +261,9 @@ class VoucherController extends Controller
             'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
             'end_date.after' => 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu voucher.',
             'usage_limit.min' => "Số lượt sử dụng tối đa không thể nhỏ hơn số lượt đã dùng ({$voucher->used_count} lượt).",
+            'usage_limit_per_user.required' => 'Vui lòng nhập số lượt sử dụng tối đa cho mỗi khách hàng.',
+            'usage_limit_per_user.min' => 'Số lượt sử dụng cho mỗi khách hàng phải từ 1 trở lên.',
+            'usage_limit_per_user.lte' => 'Số lượt dùng của mỗi khách hàng không được vượt quá tổng số lượt dùng của voucher (:value lượt).',
         ]);
 
         // Custom validation for scope

@@ -23,6 +23,7 @@
     <!-- Customer Layout CSS (Tách riêng bởi Khánh Vân) -->
     <link rel="stylesheet" href="{{ asset('css/customer-layout.css') }}">
     @yield('styles')
+    @stack('styles')
 </head>
 <body>
 
@@ -46,7 +47,8 @@
         <!-- Component Header (Không gồm thanh danh mục con) -->
         @include('partials.header')
 
-        <!-- Navigation Menu Row with Mega Menu (Image 1 Style) -->
+        <!-- Navigation Menu Row with Mega Menu (Image 1 Style) (Hidden on Cart & Checkout) -->
+        @if (!request()->routeIs('customer.cart*') && !request()->routeIs('customer.checkout*') && !request()->routeIs('customer.payment.*'))
         <nav class="nav-bar">
             <div class="nav-container">
                 @php
@@ -274,6 +276,7 @@
                 </ul>
             </div>
         </nav>
+        @endif
     </header>
 
     <!-- Main Content Body -->
@@ -672,5 +675,6 @@
     </div>
 
     @yield('scripts')
+    @stack('scripts')
 </body>
 </html>

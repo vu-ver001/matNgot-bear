@@ -233,17 +233,21 @@
                         @foreach($order->details as $index => $detail)
                             @php
                                 $product = $detail->product;
+                                $specs = [];
+                                if (!empty($product?->size)) { $specs[] = $product->size; }
+                                if (!empty($product?->color)) { $specs[] = $product->color; }
+                                $specsText = !empty($specs) ? implode(' · ', $specs) : ($product?->category?->name ?? 'Chuẩn');
                             @endphp
                             <tr class="hover:bg-amber-50/30 transition">
                                 <td class="py-3 px-3 text-center text-[#7D6B5D]">{{ $index + 1 }}</td>
                                 <td class="py-3 px-3">
-                                    <div class="font-bold text-[#2B1810] text-xs sm:text-sm">{{ $product->name ?? 'Sản phẩm' }}</div>
-                                    <div class="text-[11px] text-[#8C4A19] mt-0.5">Mã SP: #{{ $product->id ?? '---' }}</div>
+                                    <div class="font-bold text-[#2B1810] text-xs sm:text-sm">{{ $detail->product_name ?? $product->name ?? 'Sản phẩm' }}</div>
+                                    <div class="text-[11px] text-[#8C4A19] mt-0.5">Mã SP: #{{ $detail->product_id ?? $product->id ?? '---' }}</div>
                                 </td>
-                                <td class="py-3 px-3 text-center text-[#4A3B32] font-medium">{{ $product->size ?? 'Chuẩn' }}</td>
+                                <td class="py-3 px-3 text-center text-[#4A3B32] font-medium">{{ $specsText }}</td>
                                 <td class="py-3 px-3 text-center font-bold text-[#2B1810]">{{ $detail->quantity }}</td>
-                                <td class="py-3 px-3 text-right text-[#4A3B32] font-semibold">{{ number_format($detail->unit_price, 0, ',', '.') }} đ</td>
-                                <td class="py-3 px-3 text-right font-extrabold text-[#2B1810]">{{ number_format($detail->total_price, 0, ',', '.') }} đ</td>
+                                <td class="py-3 px-3 text-right text-[#4A3B32] font-semibold">{{ number_format($detail->product_price ?? 0, 0, ',', '.') }} đ</td>
+                                <td class="py-3 px-3 text-right font-extrabold text-[#2B1810]">{{ number_format($detail->line_total ?? (($detail->product_price ?? 0) * $detail->quantity), 0, ',', '.') }} đ</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -258,9 +262,9 @@
                 <p><em>* Hóa đơn điện tử có giá trị tra cứu và bảo hành chính hãng.</em></p>
             </div>
 
-            <div class="w-full sm:w-72 space-y-2 text-xs">
+            <div class="w-full sm:w-80 space-y-2 text-xs">
                 @php
-                    $subtotal = $order->details->sum('total_price');
+                    $subtotal = $order->subtotal ?? $order->details->sum('line_total');
                 @endphp
                 <div class="flex justify-between text-[#4A3B32]">
                     <span>Tạm tính tiền hàng:</span>
@@ -270,10 +274,16 @@
                     <span>Phí vận chuyển:</span>
                     <span class="font-bold">+{{ number_format($order->shipping_fee ?? 0, 0, ',', '.') }} đ</span>
                 </div>
-                @if(($order->voucher_discount ?? 0) > 0)
+                @if(($order->shipping_discount_amount ?? 0) > 0)
+                    <div class="flex justify-between text-teal-700 font-bold">
+                        <span>Giảm phí vận chuyển {{ $order->shippingVoucher?->code ? "({$order->shippingVoucher->code})" : '' }}:</span>
+                        <span>-{{ number_format($order->shipping_discount_amount, 0, ',', '.') }} đ</span>
+                    </div>
+                @endif
+                @if(($order->discount_amount ?? 0) > 0)
                     <div class="flex justify-between text-emerald-700 font-bold">
-                        <span>Giảm giá Voucher:</span>
-                        <span>-{{ number_format($order->voucher_discount, 0, ',', '.') }} đ</span>
+                        <span>Giảm giá Voucher {{ $order->voucher?->code ? "({$order->voucher->code})" : '' }}:</span>
+                        <span>-{{ number_format($order->discount_amount, 0, ',', '.') }} đ</span>
                     </div>
                 @endif
                 <div class="flex justify-between items-baseline pt-2 border-t border-[#EBDDCD] text-sm">

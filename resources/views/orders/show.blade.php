@@ -58,7 +58,7 @@
                         <dt class="text-[#795548]">Người nhận</dt>
                         <dd class="font-medium text-[#4E342E]">{{ $order->recipient_name }}</dd>
                         @if ($isStaff && $order->customer)
-                            <dd class="text-xs text-[#795548] mt-1">Tài khoản: {{ $order->customer->full_name }} ({{ $order->customer->email }})</dd>
+                            <dd class="text-xs text-[#795548] mt-1">Tài khoản: {{ $order->customer->full_name }}</dd>
                         @endif
                     </div>
                     <div>
@@ -69,6 +69,16 @@
                         <dt class="text-[#795548]">Địa chỉ</dt>
                         <dd class="font-medium text-[#4E342E]">{{ $order->recipient_address }}</dd>
                     </div>
+                    <div>
+                        <dt class="text-[#795548]">Hình thức giao hàng</dt>
+                        <dd class="font-medium text-[#4E342E]">{{ $order->shipping_method_label }}</dd>
+                    </div>
+                    @if ($order->shipped_at)
+                        <div>
+                            <dt class="text-[#795548]">Bắt đầu giao</dt>
+                            <dd class="font-medium text-[#4E342E]">{{ $order->shipped_at->format('d/m/Y H:i') }}</dd>
+                        </div>
+                    @endif
                     @if ($order->note)
                         <div class="sm:col-span-2">
                             <dt class="text-[#795548]">Ghi chú</dt>
@@ -184,7 +194,7 @@
                     </div>
                 </div>
 
-                @if(! $isStaff && $order->payment_status === 'UNPAID' && $order->order_status !== 'CANCELLED')
+                @if(! $isStaff && $order->canPayOnline())
                     <div class="mt-4 pt-4 border-t border-amber-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                         <span class="text-xs text-amber-800 font-semibold flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>

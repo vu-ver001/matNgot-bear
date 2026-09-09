@@ -70,7 +70,7 @@
                         </button>
                     </div>
                 </div>
-            @elseif($order->payment_status === 'FAILED')
+            @elseif($order->payment_status === 'FAILED' || $order->payment_status === 'UNPAID')
                 <div class="status-banner-failed">
                     <div class="status-icon-circle">
                         <svg style="width: 38px; height: 38px; color: #ffffff;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,10 +78,10 @@
                         </svg>
                     </div>
                     <h1 class="status-title">
-                        THANH TOÁN CHƯA THÀNH CÔNG
+                        ĐƠN HÀNG CHƯA HOÀN TẤT THANH TOÁN
                     </h1>
                     <p class="status-subtitle">
-                        Giao dịch chưa được hoàn tất hoặc xảy ra lỗi từ cổng thanh toán. Quý khách có thể quét lại mã QR bên dưới.
+                        Đơn hàng của bạn đã được ghi nhận thành công trong hệ thống. Vui lòng bấm nút thanh toán bên dưới để hoàn tất giao dịch.
                     </p>
                     <div class="order-code-badge">
                         <span>Mã đơn hàng:</span>
@@ -317,14 +317,14 @@
                                 </a>
                             </div>
                         @else
-                            <a href="{{ route('customer.payment.qr', $order->id) }}" class="btn-primary-action">
-                                <i class="fa-solid fa-qrcode"></i>
-                                <span>Mở lại mã QR thanh toán</span>
+                            <a href="{{ route('customer.orders.show', $order->id) }}" class="btn-primary-action">
+                                <i class="fa-solid fa-credit-card"></i>
+                                <span>Thanh toán lại đơn hàng này</span>
                             </a>
 
-                            <a href="{{ route('customer.orders.show', $order->id) }}" class="btn-secondary-action">
-                                <i class="fa-solid fa-clock-rotate-left" style="color: #E08A1E;"></i>
-                                <span>Xem chi tiết đơn hàng</span>
+                            <a href="{{ route('customer.payment.qr', $order->id) }}" class="btn-secondary-action">
+                                <i class="fa-solid fa-qrcode" style="color: #E08A1E;"></i>
+                                <span>Quét mã QR thanh toán</span>
                             </a>
                         @endif
                     </div>

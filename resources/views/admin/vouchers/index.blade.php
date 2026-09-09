@@ -30,7 +30,7 @@
                 <div class="flex items-center gap-2.5 shrink-0">
                     @if($isTrashed)
                         <a href="{{ route('admin.vouchers.index') }}"
-                            class="inline-flex items-center gap-2 bg-white hover:bg-[#FFF5E6] text-[#5C3219] border border-[#EBDDCD] font-bold px-4 py-2.5 rounded-2xl shadow-xs text-xs sm:text-sm transition">
+                            class="inline-flex items-center gap-2 bg-white hover:bg-[#FFF5E6] text-[#5C3219] border border-[#EBDDCD] font-bold px-4 py-2.5 rounded-xl shadow-xs text-xs sm:text-sm transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                             </svg>
@@ -38,18 +38,18 @@
                         </a>
                     @else
                         <a href="{{ route('admin.vouchers.index', ['status' => 'TRASHED']) }}"
-                            class="inline-flex items-center gap-2 bg-white hover:bg-rose-50 text-[#786B61] hover:text-rose-600 border border-[#EBDDCD] font-bold px-4 py-2.5 rounded-2xl shadow-xs text-xs sm:text-sm transition">
+                            class="inline-flex items-center gap-2 bg-white hover:bg-rose-50 text-[#786B61] hover:text-rose-600 border border-[#EBDDCD] font-bold px-4 py-2.5 rounded-xl shadow-xs text-xs sm:text-sm transition">
                             <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                 </path>
                             </svg>
-                            <span>Thùng rác ({{ $stats['trashed'] }})</span>
+                            <span>({{ $stats['trashed'] }})</span>
                         </a>
                     @endif
 
                     <a href="{{ route('admin.vouchers.create') }}"
-                        class="inline-flex items-center justify-center gap-2 bg-[#E08A1E] hover:bg-[#C97810] text-white font-bold px-5 py-2.5 rounded-2xl shadow-md shadow-[#E08A1E]/20 text-xs sm:text-sm transition">
+                        class="inline-flex items-center justify-center gap-2 bg-[#E08A1E] hover:bg-[#C97810] text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-[#E08A1E]/20 text-xs sm:text-sm transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
                         </svg>
@@ -188,11 +188,11 @@
                     <table class="voucher-table">
                         <thead>
                             <tr>
-                                <th class="w-[24%]">MÃ VOUCHER</th>
+                                <th class="w-[28%]">MÃ VOUCHER</th>
                                 <th class="w-[20%]">MỨC GIẢM & ĐIỀU KIỆN</th>
                                 <th class="w-[18%]">THỜI GIAN ÁP DỤNG</th>
-                                <th class="w-[12%]">LƯỢT DÙNG</th>
-                                <th class="w-[16%]">TRẠNG THÁI</th>
+                                <th class="w-[11%]">LƯỢT DÙNG</th>
+                                <th class="w-[13%]">TRẠNG THÁI</th>
                                 <th class="w-[10%] text-center">THAO TÁC</th>
                             </tr>
                         </thead>
@@ -321,8 +321,11 @@
                                                 <div class="h-full rounded-full transition-all duration-300 {{ $isOutOfStock ? 'bg-[#EF4444]' : ($isRunning ? 'bg-[#10B981]' : 'bg-[#94A3B8]') }}"
                                                     style="width: {{ $usagePercent }}%;"></div>
                                             </div>
+                                            <span class="text-[11px] text-[#A8988B] font-medium block mt-1 whitespace-nowrap">
+                                                Tối đa {{ $voucher->usage_limit_per_user ?? 1 }} lượt/khách
+                                            </span>
                                             @if($isOutOfStock)
-                                                <span class="text-[10px] text-rose-500 font-bold mt-1 block">
+                                                <span class="text-[10px] text-rose-500 font-bold mt-0.5 block">
                                                     Hết lượt dùng
                                                 </span>
                                             @endif
@@ -331,28 +334,28 @@
 
                                     {{-- 5. Trạng Thái --}}
                                     <td>
-                                        <div class="space-y-2 min-w-[130px]">
+                                        <div class="space-y-1.5">
                                             @if($voucher->trashed())
-                                                <span class="bg-rose-50 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 whitespace-nowrap border border-rose-200">
+                                                <span class="bg-rose-50 text-rose-700 text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap border border-rose-200">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span> Đã trong thùng rác
                                                 </span>
                                                 <div class="text-[10px] text-[#A8988B] font-medium">
                                                     Xóa: {{ $voucher->deleted_at?->format('d/m/Y H:i') }}
                                                 </div>
                                             @elseif($voucher->status === 'INACTIVE')
-                                                <span class="bg-[#F1F5F9] text-[#64748B] text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 whitespace-nowrap">
+                                                <span class="bg-[#F1F5F9] text-[#64748B] text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-[#64748B] shrink-0"></span> Vô hiệu hóa
                                                 </span>
                                             @elseif($isExpired || $isOutOfStock)
-                                                <span class="bg-[#FFEBEE] text-[#C62828] text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 whitespace-nowrap">
+                                                <span class="bg-[#FFEBEE] text-[#C62828] text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-[#C62828] shrink-0"></span> Đã hết hạn
                                                 </span>
                                             @elseif($isUpcoming)
-                                                <span class="bg-[#FFF3E0] text-[#EF6C00] text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 whitespace-nowrap">
+                                                <span class="bg-[#FFF3E0] text-[#EF6C00] text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-[#EF6C00] shrink-0"></span> Sắp diễn ra
                                                 </span>
                                             @else
-                                                <span class="bg-[#E8F5E9] text-[#2E7D32] text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 whitespace-nowrap">
+                                                <span class="bg-[#E8F5E9] text-[#2E7D32] text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-[#2E7D32] shrink-0"></span> Đang diễn ra
                                                 </span>
                                             @endif

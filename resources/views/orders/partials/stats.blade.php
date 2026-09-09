@@ -19,7 +19,7 @@
         <div class="stat-info">
             <div class="stat-label">Đang giao hàng</div>
             <div class="stat-value text-cyan-700">{{ $stats['shipping'] ?? 0 }}</div>
-            <div class="stat-subtext text-cyan-600">Shipper đang vận chuyển</div>
+            <div class="stat-subtext text-cyan-600">Đơn hàng đang được giao</div>
         </div>
         <div class="stat-icon cyan"><i class="fa-solid fa-truck-fast"></i></div>
     </div>

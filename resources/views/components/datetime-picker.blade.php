@@ -4,13 +4,15 @@
     'placeholder' => 'Chọn ngày giờ...',
     'required' => false,
     'minDate' => null,
+    'disablePast' => true,
 ])
 
 <div class="relative" 
      x-data="cuteDateTimePicker({
          name: '{{ $name }}',
          initialValue: '{{ $value }}',
-         minDate: '{{ $minDate }}'
+         minDate: '{{ $minDate }}',
+         disablePast: {{ $disablePast ? 'true' : 'false' }}
      })"
      @click.outside="open = false"
      @keydown.escape.window="open = false">
@@ -61,7 +63,9 @@
                 <div class="bg-gradient-to-r from-[#7E4A28] to-[#5C3219] rounded-2xl p-2 px-3 text-white flex items-center justify-between shadow-sm mb-3">
                     <button type="button" 
                             @click="prevMonth()"
-                            class="p-1.5 hover:bg-white/20 rounded-xl transition flex items-center justify-center">
+                            :disabled="isPrevMonthDisabled"
+                            class="p-1.5 rounded-xl transition flex items-center justify-center"
+                            :class="isPrevMonthDisabled ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'hover:bg-white/20'">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                     </button>
 
@@ -95,12 +99,12 @@
                         <button type="button"
                                 @click="day.clickable ? selectDay(day.year, day.month, day.date) : null"
                                 :disabled="!day.clickable"
-                                class="h-8 w-8 rounded-xl flex items-center justify-center mx-auto transition-all text-xs"
+                                class="h-8 w-8 rounded-xl flex items-center justify-center mx-auto transition-all text-xs select-none"
                                 :class="{
-                                    'text-gray-300 cursor-not-allowed': !day.clickable,
+                                    'text-[#C4B5A5] opacity-20 cursor-not-allowed pointer-events-none bg-transparent': !day.clickable,
                                     'text-[#8E8076] opacity-50': day.isOtherMonth && day.clickable,
                                     'text-[#2E190E] hover:bg-[#FFF5E6] hover:scale-105': !day.isSelected && !day.isToday && day.clickable,
-                                    'border-2 border-[#E09028] font-bold text-[#5C3219] bg-[#FFF5E6]': day.isToday && !day.isSelected,
+                                    'border-2 border-[#E09028] font-bold text-[#5C3219] bg-[#FFF5E6]': day.isToday && !day.isSelected && day.clickable,
                                     'bg-gradient-to-r from-[#E09028] to-[#5C3219] text-white font-bold shadow-md shadow-[#5C3219]/25 scale-105': day.isSelected
                                 }">
                             <span x-text="day.date"></span>

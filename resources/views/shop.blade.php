@@ -32,6 +32,10 @@
             <span>&gt;</span>
             <span>Tìm kiếm: "{{ request('search') }}"</span>
         @endif
+        @if(request('voucher'))
+            <span>&gt;</span>
+            <span class="current">Mã ưu đãi: {{ request('voucher') }}</span>
+        @endif
     </div>
 
     <!-- 2. 4 PROMISE BADGES (Exact Match to Image 2) -->
@@ -176,6 +180,49 @@
         <!-- RIGHT PRODUCTS MAIN AREA -->
         <section class="catalog-main">
             
+            @if(isset($voucher) && $voucher)
+                <div class="voucher-applied-banner" style="margin-bottom: 18px; background: linear-gradient(135deg, #FFFDF8 0%, #FFF7EC 100%); border: 1.5px dashed #E08A1E; border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(224, 138, 30, 0.08);">
+                    <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                        <div style="width: 42px; height: 42px; border-radius: 12px; background: {{ $voucher->voucher_type === 'SHIPPING' ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #E08A1E, #C2751D)' }}; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                            {{ $voucher->voucher_type === 'SHIPPING' ? '🚚' : '🏷️' }}
+                        </div>
+                        <div style="min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px;">
+                                <span style="font-size: 13px; font-weight: 700; color: #2B1810;">
+                                    Sản phẩm áp dụng mã:
+                                </span>
+                                <span style="font-family: monospace; font-weight: 800; font-size: 13.5px; background: #FFFFFF; padding: 2px 8px; border-radius: 6px; border: 1px solid #EBDDCD; color: #E08A1E; letter-spacing: 0.5px;">
+                                    {{ $voucher->code }}
+                                </span>
+                                <span style="font-size: 11px; font-weight: 700; color: #FFFFFF; background: {{ $voucher->voucher_type === 'SHIPPING' ? '#0D9488' : '#E08A1E' }}; padding: 2px 8px; border-radius: 9999px;">
+                                    @if(in_array($voucher->discount_type, ['PERCENT', 'PERCENTAGE']))
+                                        Giảm {{ (int)$voucher->discount_value }}% {{ $voucher->max_discount_value > 0 ? '(Tối đa ' . number_format($voucher->max_discount_value, 0, ',', '.') . 'đ)' : '' }}
+                                    @else
+                                        Giảm {{ number_format($voucher->discount_value, 0, ',', '.') }}đ
+                                    @endif
+                                </span>
+                            </div>
+                            <div style="font-size: 12px; color: #7D6B5D; line-height: 1.4;">
+                                Đơn tối thiểu: <strong>{{ number_format($voucher->min_order_value ?? 0, 0, ',', '.') }}đ</strong> • 
+                                @if($voucher->apply_scope === 'CATEGORY')
+                                    Chỉ áp dụng cho: <strong>{{ $voucher->categories->pluck('name')->join(', ') }}</strong>
+                                @elseif($voucher->apply_scope === 'PRODUCT')
+                                    Áp dụng cho các sản phẩm hợp lệ trong chương trình
+                                @else
+                                    Áp dụng cho toàn bộ sản phẩm trên cửa hàng
+                                @endif
+                                @if($voucher->start_date > now())
+                                    • <span style="color: #0D9488; font-weight: 600;">Mở vào {{ $voucher->start_date->format('H:i d/m/Y') }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ route('products.index') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #B91C1C; text-decoration: none; padding: 7px 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid #FECACA; transition: all 0.2s;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='#FFFFFF'">
+                        <i class="fa-solid fa-xmark"></i> Bỏ lọc voucher
+                    </a>
+                </div>
+            @endif
+
             <!-- Toolbar (Image 2 style) -->
             <div class="catalog-toolbar">
                 <div class="toolbar-results-info" id="catalog-results-info">
@@ -259,6 +306,11 @@
     }
 
     function resetAllFilters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('voucher')) {
+            window.location.href = "{{ route('products.index') }}";
+            return;
+        }
         document.querySelectorAll('input[name="cat_filter"]').forEach(r => r.checked = (r.value === ''));
         document.getElementById('filter-min-price').value = '';
         document.getElementById('filter-max-price').value = '';
@@ -296,6 +348,7 @@
         const sort = document.getElementById('catalog-sort-select').value;
         const urlParams = new URLSearchParams(window.location.search);
         const search = urlParams.get('search') || '';
+        const voucher = urlParams.get('voucher') || '';
 
         const params = new URLSearchParams({
             page: currentPage,
@@ -304,6 +357,7 @@
         });
 
         if (search) params.append('search', search);
+        if (voucher) params.append('voucher', voucher);
         if (categoryId) params.append('category_id', categoryId);
         if (minPrice) params.append('min_price', minPrice);
         if (maxPrice) params.append('max_price', maxPrice);
@@ -353,7 +407,13 @@
             }
 
             if (info && meta) {
-                info.innerHTML = `Hiển thị tất cả <strong>${meta.total}</strong> kết quả (Trang ${meta.current_page}/${meta.last_page})`;
+                const urlParams = new URLSearchParams(window.location.search);
+                const voucherCode = urlParams.get('voucher');
+                if (voucherCode) {
+                    info.innerHTML = `Tìm thấy <strong>${meta.total}</strong> sản phẩm áp dụng mã <strong style="color: #E08A1E;">${voucherCode}</strong> (Trang ${meta.current_page}/${meta.last_page})`;
+                } else {
+                    info.innerHTML = `Hiển thị tất cả <strong>${meta.total}</strong> kết quả (Trang ${meta.current_page}/${meta.last_page})`;
+                }
             }
 
             grid.innerHTML = products.map(p => {

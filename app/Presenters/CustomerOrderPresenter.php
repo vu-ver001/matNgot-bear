@@ -119,7 +119,7 @@ class CustomerOrderPresenter
                 'currency' => 'VND',
             ],
             'actions' => [
-                'buyAgain' => true,
+                'buyAgain' => $order->canBeReordered(),
                 'contactSeller' => true,
                 'review' => $hasUnreviewed,
             ],

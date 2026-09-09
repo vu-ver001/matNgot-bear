@@ -4,12 +4,19 @@ use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\PaymentController;
+use App\Http\Controllers\Customer\VoucherController as CustomerVoucherController;
 use App\Http\Controllers\Customer\WishlistKT\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('customer')->name('customer.')->group(function () {
-    // Auth Protected Routes (Giỏ hàng, Thanh toán, Đơn hàng)
+    // Auth Protected Routes (Giỏ hàng, Voucher, Thanh toán, Đơn hàng)
     Route::middleware(['auth'])->group(function () {
+        // Dashboard / Account Redirect
+        Route::get('/dashboard', fn() => redirect()->route('profile.edit'))->name('dashboard');
+
+        // 0. Kho Voucher & Khuyến Mãi
+        Route::get('/vouchers', [CustomerVoucherController::class, 'index'])->name('vouchers.index');
+
         // 1. Cart routes (Chuẩn hóa /customer/cart)
         Route::get('/cart', [CartController::class, 'index'])->name('cart');
         Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
@@ -47,8 +54,12 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+        Route::get('/orders/{order}/review', [\App\Http\Controllers\Customer\ReviewController::class, 'create'])->name('orders.review');
+        Route::post('/orders/{order}/review', [\App\Http\Controllers\Customer\ReviewController::class, 'store'])->name('orders.review.store');
         Route::patch('/orders/{order}/shipping-address', [OrderController::class, 'updateShippingAddress'])->name('orders.update_shipping_address');
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('/orders/{order}/request-cancel', [OrderController::class, 'requestCancel'])->name('orders.request_cancel');
+        Route::post('/orders/{order}/withdraw-cancel', [OrderController::class, 'withdrawCancel'])->name('orders.withdraw_cancel');
         Route::post('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
         Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
     });
@@ -99,6 +110,7 @@ Route::get('/wishlist', fn() => redirect()->route('customer.wishlist.index'));
 Route::get('/cart', fn() => redirect()->route('customer.cart'));
 Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
 Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));
+Route::get('/vouchers', fn() => redirect()->route('customer.vouchers.index'));
 Route::get('/reviews', fn() => redirect()->route('customer.reviews.index'));
 Route::get('/messages', fn() => redirect()->route('customer.messages.index'));
 Route::get('/account/messages', fn() => redirect()->route('customer.messages.index'))->name('account.messages');

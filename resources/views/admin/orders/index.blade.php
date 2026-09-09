@@ -1,5 +1,10 @@
 @extends('layouts.admin-dashboard')
 @section('page-title', 'Quản Lý Đơn Hàng')
+
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('css/order-components.css') }}">
+@endsection
+
 @section('content')
 
 @if (session('success'))
@@ -13,6 +18,40 @@
     <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
         <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
         <span>{{ session('error') }}</span>
+    </div>
+@endif
+
+@if ($selectedCustomer)
+    <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-user-tag text-blue-600"></i>
+                <span>
+                    Đang xem đơn hàng của
+                    <strong>{{ $selectedCustomer->full_name }}</strong>
+                </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 pl-6 text-xs">
+                <span class="rounded-full border border-blue-200 bg-white px-2.5 py-1 font-bold text-blue-800">
+                    {{ $stats['total'] ?? 0 }} đơn hàng
+                </span>
+                <span class="rounded-full border border-emerald-200 bg-white px-2.5 py-1 font-bold text-emerald-700">
+                    {{ $stats['completed'] ?? 0 }} đã hoàn thành
+                </span>
+                <span class="rounded-full border border-amber-200 bg-white px-2.5 py-1 font-bold text-amber-700">
+                    Tổng chi tiêu: {{ number_format((float) ($selectedCustomer->total_spent ?? 0), 0, ',', '.') }} đ
+                </span>
+            </div>
+        </div>
+        <a href="{{ route('admin.orders.index') }}"
+           class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 transition hover:bg-blue-100">
+            <i class="fa-solid fa-xmark"></i> Bỏ lọc khách hàng
+        </a>
+    </div>
+@elseif (request()->filled('customer_id'))
+    <div class="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <span>Không tìm thấy tài khoản khách hàng phù hợp.</span>
+        <a href="{{ route('admin.orders.index') }}" class="text-xs font-bold text-amber-800 hover:underline">Xem tất cả đơn</a>
     </div>
 @endif
 
@@ -38,7 +77,7 @@
         <div class="stat-info">
             <div class="stat-label">Đang giao hàng</div>
             <div class="stat-value text-cyan-700">{{ $stats['shipping'] ?? 0 }}</div>
-            <div class="stat-subtext text-cyan-600">Shipper đang vận chuyển</div>
+            <div class="stat-subtext text-cyan-600">Đơn hàng đang được giao</div>
         </div>
         <div class="stat-icon cyan"><i class="fa-solid fa-truck-fast"></i></div>
     </div>
@@ -52,8 +91,14 @@
     </div>
 </div>
 
-<!-- 2. Orders Panel -->
-<div class="panel-card">
+@php
+    $bulkShippingOrderIds = $orders
+        ->filter(fn ($order) => $order->canTransitionTo('SHIPPING'))
+        ->pluck('id')->values()->all();
+@endphp
+<div class="orders-ui">
+<!-- 2. Orders Panel with Order Cards & Bulk Toolbar -->
+<div class="panel-card" x-data="bulkOrderManager({{ json_encode($bulkShippingOrderIds) }})">
     <div class="panel-header">
         <div>
             <div class="panel-title">
@@ -69,8 +114,9 @@
         $tabs = [
             '' => ['label' => 'Tất cả', 'count' => $stats['total'] ?? null],
             'PENDING' => ['label' => 'Chờ xác nhận', 'count' => $stats['pending'] ?? null],
+            'CONFIRMED' => ['label' => 'Đã xác nhận', 'count' => $stats['confirmed'] ?? null],
             'PREPARING' => ['label' => 'Chờ lấy hàng', 'count' => $stats['preparing'] ?? null],
-            'SHIPPING' => ['label' => 'Chờ giao hàng', 'count' => $stats['shipping'] ?? null],
+            'SHIPPING' => ['label' => 'Đang giao hàng', 'count' => $stats['shipping'] ?? null],
             'COMPLETED' => ['label' => 'Đã giao', 'count' => $stats['completed'] ?? null],
             'RETURNED' => ['label' => 'Trả hàng', 'count' => $stats['returned'] ?? null],
             'CANCELLED' => ['label' => 'Đã hủy', 'count' => $stats['cancelled'] ?? null],
@@ -79,7 +125,7 @@
     <div class="nav-pills">
         @foreach ($tabs as $value => $tab)
             <a href="{{ route('admin.orders.index', array_merge(request()->except('order_status', 'page'), $value ? ['order_status' => $value] : [])) }}"
-               class="nav-pill {{ request('order_status') === $value ? 'active' : '' }}">
+               class="nav-pill {{ (string) request('order_status') === $value ? 'active' : '' }}">
                 <span>{{ $tab['label'] }}</span>
                 @if (isset($tab['count']))
                     <span class="nav-pill-count">{{ $tab['count'] }}</span>
@@ -89,101 +135,34 @@
     </div>
 
     <!-- Toolbar Filters -->
-    <form method="GET" action="{{ route('admin.orders.index') }}" class="toolbar-grid">
-        @if (request('order_status'))
-            <input type="hidden" name="order_status" value="{{ request('order_status') }}">
-        @endif
+    @include('orders.partials.filters', ['routePrefix' => 'admin.orders'])
 
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" value="{{ request('search') }}"
-                   placeholder="Tìm kiếm theo mã đơn, tên khách, số điện thoại..."
-                   class="input-control">
-        </div>
+    <!-- Bulk Operations Toolbar -->
+    @include('orders.partials.bulk-toolbar', ['routePrefix' => 'admin.orders'])
 
-        <div style="min-width: 180px;">
-            <select name="payment_status" class="select-control">
-                <option value="">-- Thanh toán: Tất cả --</option>
-                @foreach (['UNPAID' => 'Chưa thanh toán', 'PENDING' => 'Chờ xác nhận', 'PAID' => 'Đã thanh toán', 'FAILED' => 'Thất bại', 'REFUNDED' => 'Đã hoàn tiền'] as $value => $label)
-                    <option value="{{ $value }}" @selected(request('payment_status') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <button type="submit" class="btn btn-primary">
-                <i class="fa-solid fa-filter text-xs"></i> Lọc
-            </button>
-            @if (request()->hasAny(['search', 'payment_status', 'order_status']))
-                <a href="{{ route('admin.orders.index') }}" class="btn btn-outline" title="Xóa bộ lọc">
-                    <i class="fa-solid fa-rotate-left text-xs"></i> Đặt lại
-                </a>
-            @endif
-        </div>
-    </form>
-
-    <!-- Orders Data Table -->
-    <div class="table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Mã Đơn</th>
-                    <th>Khách Hàng</th>
-                    <th>Số Điện Thoại</th>
-                    <th class="text-right">Tổng Tiền</th>
-                    <th>Trạng Thái Đơn</th>
-                    <th>Thanh Toán</th>
-                    <th>Ngày Đặt</th>
-                    <th class="text-right">Thao Tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($orders as $order)
-                    <tr>
-                        <td>
-                            <a href="{{ route('admin.orders.show', $order) }}" class="font-bold text-[#4E342E] hover:text-[#B87309] hover:underline">
-                                {{ $order->order_code }}
-                            </a>
-                        </td>
-                        <td>
-                            <div class="font-bold text-[#4E342E]">{{ $order->customer?->full_name ?? $order->recipient_name }}</div>
-                            @if ($order->customer)
-                                <div class="text-[11px] text-[#8E8076]"><i class="fa-regular fa-user text-[10px]"></i> Thành viên</div>
-                            @else
-                                <div class="text-[11px] text-[#8E8076]">Khách vãng lai</div>
-                            @endif
-                        </td>
-                        <td class="text-[#795548] font-medium">{{ $order->recipient_phone }}</td>
-                        <td class="text-right font-extrabold text-amber-700">
-                            {{ number_format($order->total_amount, 0, ',', '.') }} đ
-                        </td>
-                        <td><x-order-status-badge :status="$order->order_status" /></td>
-                        <td><x-payment-status-badge :status="$order->payment_status" /></td>
-                        <td class="text-xs text-[#795548]">{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="text-right">
-                            <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-outline btn-sm">
-                                Chi tiết
-                            </a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="p-10 text-center text-[#8E8076]">
-                            <i class="fa-solid fa-box-open text-3xl text-amber-300 mb-2 block"></i>
-                            Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+    <!-- Orders Cards List -->
+    <div class="orders-cards-container space-y-4">
+        @forelse ($orders as $order)
+            @include('orders.partials.staff-order-card', [
+                'order' => $order,
+                'routePrefix' => 'admin.orders',
+                'isStaff' => false
+            ])
+        @empty
+            <div class="p-10 text-center text-[#8E8076] bg-white rounded-2xl border border-amber-200/60">
+                <i class="fa-solid fa-box-open text-3xl text-amber-300 mb-2 block"></i>
+                Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.
+            </div>
+        @endforelse
     </div>
 
     <!-- Pagination -->
     @if ($orders->hasPages())
-        <div class="mt-4">
+        <div class="mt-6">
             {{ $orders->withQueryString()->links() }}
         </div>
     @endif
+</div>
 </div>
 
 @endsection

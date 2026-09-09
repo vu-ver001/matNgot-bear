@@ -102,7 +102,7 @@
         <div>
             <div class="panel-title">
                 <i class="fa-solid fa-calendar-days"></i>
-                Doanh Thu Phân Bổ Theo Ngày
+                Doanh thu theo ngày
             </div>
             <div class="panel-subtitle">Tổng hợp biến động doanh số và số lượng đơn hàng theo từng ngày trong kỳ</div>
         </div>
