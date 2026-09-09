@@ -78,6 +78,13 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::put('/{review}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'update'])->name('update');
         Route::delete('/{review}', [\App\Http\Controllers\ReviewKT\ReviewController::class, 'destroy'])->name('destroy');
     });
+
+    // 8. Tin nhắn / Hỗ trợ khách hàng (Kim Tuyến)
+    Route::prefix('messages')->name('messages.')->middleware(['auth', 'role:CUSTOMER'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\ChatKT\ChatController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\ChatKT\ChatController::class, 'send'])->name('send');
+        Route::get('/poll', [\App\Http\Controllers\ChatKT\ChatController::class, 'poll'])->name('poll');
+    });
 });
 
 // ==========================================
@@ -105,3 +112,5 @@ Route::get('/my-orders', fn() => redirect()->route('customer.orders.index'));
 Route::get('/checkout', fn() => redirect()->route('customer.checkout.index'));
 Route::get('/vouchers', fn() => redirect()->route('customer.vouchers.index'));
 Route::get('/reviews', fn() => redirect()->route('customer.reviews.index'));
+Route::get('/messages', fn() => redirect()->route('customer.messages.index'));
+Route::get('/account/messages', fn() => redirect()->route('customer.messages.index'))->name('account.messages');

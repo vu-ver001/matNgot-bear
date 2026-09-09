@@ -135,7 +135,7 @@
                 }
             })();
         </script>
-        <div class="staff-content">
+        <div class="staff-content {{ $contentClass ?? '' }}">
             @yield('content')
         </div>
     </div>

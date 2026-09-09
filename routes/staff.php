@@ -42,7 +42,18 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->grou
 
     // Các trang mục phụ & placeholder
     Route::get('/order-status', fn() => view('staff.placeholder', ['currentPage' => 'order-status']))->name('order-status.index');
-    Route::get('/support', fn() => view('staff.placeholder', ['currentPage' => 'support']))->name('support.index');
+    Route::get('/payments', fn() => view('staff.placeholder', ['currentPage' => 'payments']))->name('payments.index');
+    // Hỗ trợ khách hàng (Kim Tuyến)
+    Route::prefix('support')->name('support.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'index'])->name('index');
+        Route::get('/{case}', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'show'])->name('show');
+        Route::post('/{case}/accept', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'accept'])->name('accept');
+        Route::post('/{case}/handover', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'handover'])->name('handover');
+        Route::post('/{case}/close', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'close'])->name('close');
+        Route::post('/{case}/reopen', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'reopen'])->name('reopen');
+        Route::post('/{case}/messages', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'sendMessage'])->name('messages.send');
+        Route::get('/{case}/poll', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'poll'])->name('poll');
+    });
     Route::get('/page/{page}', function (string $page) {
         return view('staff.placeholder', ['currentPage' => $page]);
     })->name('page');

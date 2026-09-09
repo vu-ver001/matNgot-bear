@@ -14,7 +14,7 @@
         [
             'label' => 'Hỗ trợ',
             'items' => [
-                ['label' => 'Tin nhắn / Hỗ trợ', 'route' => null, 'active' => [], 'icon' => 'message'],
+                ['label' => 'Tin nhắn / Hỗ trợ', 'route' => 'customer.messages.index', 'active' => ['customer.messages.*', 'account.messages*'], 'icon' => 'message'],
             ],
         ],
     ];
@@ -27,7 +27,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ $title }} - {{ config('app.name', 'Mật Ngọt Bear') }}</title>
+        <title>{{ $title ?? 'Tài khoản' }} - {{ config('app.name', 'Mật Ngọt Bear') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=montserrat:400,500,600,700&display=swap" rel="stylesheet">
@@ -234,9 +234,9 @@
                     @include('customer.partials.account-icon', ['name' => 'menu'])
                 </button>
 
-                <main @class(['customer-account-page', 'is-flush-page' => $flush, 'orders-page' => request()->routeIs('customer.orders.*')])>
-                    <div @class(['customer-account-content', 'is-flush' => $flush])>
-                        {{ $slot }}
+                <main @class(['customer-account-page', 'is-flush-page' => ($flush ?? false), 'orders-page' => request()->routeIs('customer.orders.*')])>
+                    <div @class(['customer-account-content', 'is-flush' => ($flush ?? false)])>
+                        {!! $slot ?? $__env->yieldContent('content') !!}
                     </div>
                 </main>
             </div>

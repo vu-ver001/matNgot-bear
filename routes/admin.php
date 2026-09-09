@@ -78,7 +78,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
     // 9. Placeholder / Hỗ trợ
     Route::get('/customers', fn() => view('admin.placeholder', ['currentPage' => 'customers']))->name('customers.index');
     Route::get('/staff', fn() => view('admin.placeholder', ['currentPage' => 'staff']))->name('staff.index');
-    Route::get('/support', fn() => view('admin.placeholder', ['currentPage' => 'support']))->name('support.index');
+    
+    // Hỗ trợ khách hàng (Kim Tuyến - Admin xem toàn bộ và nhắn tin như nhân viên)
+    Route::prefix('support')->name('support.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'index'])->name('index');
+        Route::get('/{case}', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'show'])->name('show');
+        Route::post('/{case}/accept', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'accept'])->name('accept');
+        Route::post('/{case}/handover', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'handover'])->name('handover');
+        Route::post('/{case}/close', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'close'])->name('close');
+        Route::post('/{case}/reopen', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'reopen'])->name('reopen');
+        Route::post('/{case}/takeover', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'takeover'])->name('takeover');
+        Route::post('/{case}/revoke', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'revoke'])->name('revoke');
+        Route::post('/{case}/assign', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'assign'])->name('assign');
+        Route::post('/{case}/messages', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'sendMessage'])->name('messages.send');
+        Route::get('/{case}/poll', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'poll'])->name('poll');
+    });
 
     Route::get('/page/{page}', function (string $page) {
         if ($page === 'vouchers') {
