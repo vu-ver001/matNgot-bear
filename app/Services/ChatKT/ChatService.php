@@ -150,7 +150,7 @@ class ChatService
      *
      * @throws ValidationException
      */
-    public function staffSendMessage(User $staffOrAdmin, SupportCase $case, string $content): Message
+    public function staffSendMessage(User $staffOrAdmin, SupportCase $case, string $content, ?int $orderId = null): Message
     {
         $cleanContent = trim($content);
         if ($cleanContent === '') {
@@ -165,15 +165,62 @@ class ChatService
             ]);
         }
 
-        // Khi Shop (Staff hoặc Admin) chủ động nhắn trước cho khách ở ca đã kết thúc:
-        // Tự động mở lại cuộc trò chuyện (Reopen -> IN_PROGRESS), gán người gửi làm người phụ trách
+        // Helper gán mã đơn liên quan vào case khi nhân viên bấm gửi đơn
+        $linkOrderIfProvided = function (SupportCase $targetCase) use ($orderId, $cleanContent) {
+            if ($orderId) {
+                $matchedOrder = Order::where('id', $orderId)->where('customer_id', $targetCase->customer_id)->first();
+                if ($matchedOrder) {
+                    $targetCase->update(['order_id' => $matchedOrder->id]);
+                }
+            } elseif (str_contains($cleanContent, '📦 [ĐƠN HÀNG #')) {
+                if (preg_match('/#([A-Z0-9\-]+)/', $cleanContent, $matches)) {
+                    $matchedOrder = Order::where('order_code', $matches[1])->where('customer_id', $targetCase->customer_id)->first();
+                    if ($matchedOrder) {
+                        $targetCase->update(['order_id' => $matchedOrder->id]);
+                    }
+                }
+            }
+        };
+
+        // Case CLOSED: Khi Staff/Admin gửi tin nhắn mới -> tự động MỞ LẠI (Reopen) về IN_PROGRESS
         if ($case->isClosed()) {
-            $case->update([
-                'status' => SupportCase::STATUS_IN_PROGRESS,
-                'assigned_staff_id' => $staffOrAdmin->id,
-                'closed_at' => null,
-                'last_activity_at' => now(),
-            ]);
+            return DB::transaction(function () use ($staffOrAdmin, $case, $cleanContent, $linkOrderIfProvided) {
+                /** @var SupportCase|null $lockedCase */
+                $lockedCase = SupportCase::where('id', $case->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $lockedCase) {
+                    throw ValidationException::withMessages([
+                        'case' => 'Không tìm thấy cuộc hỗ trợ.',
+                    ]);
+                }
+
+                $lockedCase->update([
+                    'status' => SupportCase::STATUS_IN_PROGRESS,
+                    'assigned_staff_id' => $staffOrAdmin->id,
+                    'closed_at' => null,
+                    'last_activity_at' => now(),
+                ]);
+
+                $linkOrderIfProvided($lockedCase);
+
+                $message = Message::create([
+                    'conversation_id' => $lockedCase->conversation_id,
+                    'support_case_id' => $lockedCase->id,
+                    'sender_id' => $staffOrAdmin->id,
+                    'content' => $cleanContent,
+                    'is_read' => false,
+                    'read_at' => null,
+                    'sent_at' => now(),
+                ]);
+
+                $this->markMessagesAsReadForStaff($lockedCase);
+                $lockedCase->update(['last_activity_at' => now()]);
+                $lockedCase->conversation->touch();
+
+                return $message;
+            });
         }
 
         if ($case->isWaiting()) {
@@ -184,7 +231,7 @@ class ChatService
             }
 
             // ADMIN gửi tin vào WAITING case: Claim Case cho Admin + lưu Message trong cùng transaction
-            return DB::transaction(function () use ($staffOrAdmin, $case, $cleanContent) {
+            return DB::transaction(function () use ($staffOrAdmin, $case, $cleanContent, $linkOrderIfProvided) {
                 /** @var SupportCase|null $lockedCase */
                 $lockedCase = SupportCase::where('id', $case->id)
                     ->lockForUpdate()
@@ -213,6 +260,8 @@ class ChatService
                         'case' => 'Case này đã được người khác tiếp nhận.',
                     ]);
                 }
+
+                $linkOrderIfProvided($lockedCase);
 
                 $message = Message::create([
                     'conversation_id' => $lockedCase->conversation_id,
@@ -246,6 +295,8 @@ class ChatService
                 ]);
             }
         }
+
+        $linkOrderIfProvided($case);
 
         $message = Message::create([
             'conversation_id' => $case->conversation_id,
@@ -599,31 +650,14 @@ class ChatService
             ->first();
 
         if ($existingCase) {
-            if ($existingCase->isClosed()) {
-                $existingCase->update([
-                    'status' => SupportCase::STATUS_IN_PROGRESS,
-                    'assigned_staff_id' => $staffOrAdmin->id,
-                    'closed_at' => null,
-                    'last_activity_at' => now(),
-                    'order_id' => $orderId ?: $existingCase->order_id,
-                ]);
-            } elseif ($existingCase->isWaiting()) {
-                $existingCase->update([
-                    'status' => SupportCase::STATUS_IN_PROGRESS,
-                    'assigned_staff_id' => $staffOrAdmin->id,
-                    'last_activity_at' => now(),
-                    'order_id' => $orderId ?: $existingCase->order_id,
-                ]);
-            } elseif ($orderId) {
-                $existingCase->update(['order_id' => $orderId]);
-            }
+            // Không tự ý gán order_id vào case cho đến khi nhân viên bấm Gửi đơn này hoặc gửi tin nhắn
             return $existingCase;
         }
 
         return SupportCase::create([
             'conversation_id' => $conversation->id,
             'customer_id' => $customer->id,
-            'order_id' => $orderId,
+            'order_id' => null, // Chỉ được gán khi nhân viên bấm gửi đơn
             'assigned_staff_id' => $staffOrAdmin->id,
             'case_code' => $this->generateCaseCode(),
             'status' => SupportCase::STATUS_IN_PROGRESS,
@@ -665,15 +699,17 @@ class ChatService
     /**
      * Lấy số lượng thực tế của từng tab phía Staff / Admin.
      * Mỗi khách hàng chỉ đếm 1 lần đại diện bởi phiên mới nhất của khách đó.
+     * Chỉ tính những cuộc trò chuyện ĐÃ CÓ tin nhắn (không tính các ca nháp chưa gửi gì).
      * Đối với Nhân viên (Staff): Tab "Đang xử lý" chỉ đếm các cuộc trò chuyện do chính nhân viên đó phụ trách.
      *
      * @return array{all: int, waiting: int, in_progress: int, closed: int}
      */
     public function getStaffCounts(?string $search = null, ?User $user = null): array
     {
-        // Gom theo khách hàng: Mỗi nick đại diện bởi 1 SupportCase mới nhất
+        // Gom theo khách hàng: Mỗi nick đại diện bởi 1 SupportCase mới nhất đã có tin nhắn
         $baseQuery = SupportCase::query()
-            ->whereIn('id', SupportCase::selectRaw('MAX(id)')->groupBy('customer_id'));
+            ->whereHas('messages')
+            ->whereIn('id', SupportCase::whereHas('messages')->selectRaw('MAX(id)')->groupBy('customer_id'));
 
         if ($search && trim($search) !== '') {
             $search = trim($search);
@@ -715,14 +751,16 @@ class ChatService
 
     /**
      * Lấy danh sách các Support Cases theo tab status và từ khóa tìm kiếm.
+     * Chỉ hiển thị các cuộc trò chuyện ĐÃ CÓ tin nhắn (không hiển thị ca nháp trống).
      * Đối với Nhân viên (Staff): Duy nhất tab "Đang xử lý" mới chỉ hiển thị các cuộc trò chuyện do chính nhân viên đó phụ trách.
      * Tab "Tất cả" vẫn hiển thị toàn bộ các cuộc trò chuyện.
      */
     public function getStaffCases(string $statusTab = 'all', ?string $search = null, int $perPage = 25, ?User $user = null): LengthAwarePaginator
     {
-        // Gom theo khách hàng: Mỗi nick chỉ hiển thị 1 dòng duy nhất trên danh sách chat
+        // Gom theo khách hàng: Mỗi nick chỉ hiển thị 1 dòng duy nhất trên danh sách chat (chỉ tính case có tin nhắn)
         $query = SupportCase::query()
-            ->whereIn('id', SupportCase::selectRaw('MAX(id)')->groupBy('customer_id'))
+            ->whereHas('messages')
+            ->whereIn('id', SupportCase::whereHas('messages')->selectRaw('MAX(id)')->groupBy('customer_id'))
             ->with([
                 'customer',
                 'assignedStaff',

@@ -1009,13 +1009,18 @@ class SupportChatTest extends TestCase
         // Lấy case vừa được tạo / liên kết
         $case = SupportCase::where('customer_id', $customer->id)->first();
         $this->assertNotNull($case);
-        $this->assertEquals($order->id, $case->order_id);
+        // Khi mới nhấn vào khách hàng nhưng CHƯA gửi đơn hay tin nhắn:
+        // 1. Chưa có mã đơn liên quan (order_id là null)
+        // 2. Cuộc trò chuyện không được hiển thị trong danh sách cuộc trò chuyện bên trái (không thấy "Chưa có tin nhắn")
+        $this->assertNull($case->order_id);
+        $response->assertDontSee('Chưa có tin nhắn');
 
         // 2. Staff bấm "Gửi đơn này" -> gửi tin nhắn định dạng Order Card
         $formattedMessage = "📦 [ĐƠN HÀNG #{$order->order_code}]\n• Sản phẩm: Gấu bông Teddy Nơ Hồng 50cm\n• Tổng tiền: " . number_format($order->total_amount, 0, ',', '.') . "đ\n• Trạng thái: Chờ xác nhận\n• Mã đơn hàng: #{$order->order_code}";
 
         $sendResponse = $this->actingAs($staff)->postJson(route('staff.support.messages.send', $case), [
             'content' => $formattedMessage,
+            'order_id' => $order->id,
         ]);
 
         $sendResponse->assertCreated();
@@ -1025,6 +1030,10 @@ class SupportChatTest extends TestCase
             'content' => $formattedMessage,
         ]);
 
+        // Sau khi bấm gửi: Mã đơn liên quan mới được nhảy / liên kết
+        $case->refresh();
+        $this->assertEquals($order->id, $case->order_id);
+
         // 3. Khách hàng mở chat xem -> thẻ đơn hàng được hiển thị dưới dạng card Shopee đẹp mắt
         $customerResponse = $this->actingAs($customer)->get(route('customer.messages.index'));
         $customerResponse->assertOk();
@@ -1032,6 +1041,227 @@ class SupportChatTest extends TestCase
         $customerResponse->assertSee('Đơn hàng #' . $order->order_code);
         $customerResponse->assertSee('PENDING');
         $customerResponse->assertSee('250.000');
+    }
+
+    public function test_abandoned_draft_case_without_messages_disappears_when_navigating_away(): void
+    {
+        $staff = $this->createStaff();
+        $customer = $this->createCustomer(['full_name' => 'Khách Hàng Mới Chưa Chat']);
+
+        // 1. Staff mở khung chat với khách hàng mới nhưng KHÔNG gửi tin nhắn nào
+        $response = $this->actingAs($staff)->get(route('staff.support.index', [
+            'customer_id' => $customer->id,
+        ]));
+        $response->assertOk();
+
+        // Danh sách cuộc trò chuyện bên trái không được hiện ca trống này
+        $response->assertDontSee('Chưa có tin nhắn');
+
+        // 2. Staff thoát ra / chuyển sang trang danh sách hỗ trợ chung mà chưa gửi gì
+        $indexResponse = $this->actingAs($staff)->get(route('staff.support.index'));
+        $indexResponse->assertOk();
+
+        // Ca nháp trống không có tin nhắn nào phải tự động biến mất hoàn toàn
+        $this->assertEquals(0, SupportCase::where('customer_id', $customer->id)->count());
+    }
+
+    public function test_all_customer_orders_are_rendered_in_support_info_panel(): void
+    {
+        $staff = $this->createStaff(['full_name' => 'Nhân viên Mai']);
+        $customer = $this->createCustomer(['full_name' => 'Khách Hàng Thân Thiết']);
+
+        // Tạo 2 đơn hàng cho khách hàng này
+        $order1 = Order::create([
+            'order_code' => 'ORD-11111',
+            'customer_id' => $customer->id,
+            'recipient_name' => 'Khách Hàng Thân Thiết',
+            'recipient_phone' => '0987654321',
+            'recipient_address' => '123 Đường ABC, TP.HCM',
+            'subtotal' => 200000,
+            'total_amount' => 200000,
+            'order_status' => 'PENDING',
+            'payment_method' => 'COD',
+            'payment_status' => 'UNPAID',
+        ]);
+
+        $order2 = Order::create([
+            'order_code' => 'ORD-22222',
+            'customer_id' => $customer->id,
+            'recipient_name' => 'Khách Hàng Thân Thiết',
+            'recipient_phone' => '0987654321',
+            'recipient_address' => '123 Đường ABC, TP.HCM',
+            'subtotal' => 450000,
+            'total_amount' => 450000,
+            'order_status' => 'COMPLETED',
+            'payment_method' => 'VNPAY',
+            'payment_status' => 'PAID',
+        ]);
+
+        $chatService = app(ChatService::class);
+        $msg = $chatService->customerSendMessage($customer, 'Tư vấn giúp em với shop');
+        $case = $msg->supportCase;
+        $case->update(['order_id' => $order1->id]);
+        $chatService->acceptCase($staff, $case);
+
+        // Staff mở xem ca hỗ trợ
+        $response = $this->actingAs($staff)->get(route('staff.support.index', ['case_id' => $case->id]));
+        $response->assertOk();
+
+        // Kiểm tra hiển thị thông tin đơn hàng
+        $response->assertSee('Thông tin đơn hàng');
+        $response->assertSee('2 đơn');
+        $response->assertSee('ORD-11111');
+        $response->assertSee('ORD-22222');
+        $response->assertSee('Đơn liên quan');
+        $response->assertSee('Chờ xác nhận');
+        $response->assertSee('Hoàn thành');
+        $response->assertSee('200.000');
+        $response->assertSee('450.000');
+    }
+
+    public function test_opening_new_customer_without_sending_does_not_show_in_list_and_related_order_links_only_on_send(): void
+    {
+        $admin = $this->createAdmin();
+        $otherCustomer = $this->createCustomer(['full_name' => 'Khách Hàng Cũ Đã Chat']);
+        $newCustomer = $this->createCustomer(['full_name' => 'Trần Thị Bình']);
+
+        // Khách hàng cũ đã có tin nhắn từ trước
+        $chatService = app(ChatService::class);
+        $oldMsg = $chatService->customerSendMessage($otherCustomer, 'Em cần hỏi mẫu này');
+        $oldCase = $oldMsg->supportCase;
+
+        // Tạo đơn hàng cho khách hàng mới Trần Thị Bình
+        $order = Order::create([
+            'order_code' => 'ORD-TB-999',
+            'customer_id' => $newCustomer->id,
+            'recipient_name' => 'Trần Thị Bình',
+            'recipient_phone' => '0982222222',
+            'recipient_address' => 'TP. Hồ Chí Minh',
+            'subtotal' => 199000,
+            'total_amount' => 199000,
+            'order_status' => 'COMPLETED',
+            'payment_method' => 'VNPAY',
+            'payment_status' => 'PAID',
+        ]);
+
+        // 1. Admin bấm vào "Nhắn tin cho khách" từ đơn hàng của Trần Thị Bình
+        $response = $this->actingAs($admin)->get(route('admin.support.index', [
+            'customer_id' => $newCustomer->id,
+            'order_id' => $order->id,
+        ]));
+
+        $response->assertOk();
+
+        // A. Trong danh sách cuộc trò chuyện bên trái:
+        // - Phải thấy khách hàng cũ đã chat
+        // - KHÔNG được thấy 'Chưa có tin nhắn'
+        $response->assertSee('Khách Hàng Cũ Đã Chat');
+        $response->assertDontSee('Chưa có tin nhắn');
+
+        // B. Trong panel Thông tin hỗ trợ (Card 2):
+        // - Mã đơn liên quan PHẢI là 'Không có' (chưa được nhảy mã đơn liên quan)
+        $response->assertSee('Không có');
+
+        // C. Khung gợi ý Shopee phải hiển thị sẵn sàng
+        $response->assertSee('Gợi ý: Gửi thông tin đơn hàng này cho khách');
+        $response->assertSee('Gửi đơn này');
+
+        // D. Trong cơ sở dữ liệu: Case được tạo nhưng order_id là NULL
+        $case = SupportCase::where('customer_id', $newCustomer->id)->first();
+        $this->assertNotNull($case);
+        $this->assertNull($case->order_id);
+
+        // 2. Admin bấm "Gửi đơn này"
+        $formattedMsg = "📦 [ĐƠN HÀNG #{$order->order_code}]\n• Sản phẩm: Gấu bông Mật Ngọt\n• Tổng tiền: 199.000 đ\n• Trạng thái: Hoàn thành\n• Mã đơn hàng: #{$order->order_code}";
+        $sendResponse = $this->actingAs($admin)->postJson(route('admin.support.messages.send', $case), [
+            'content' => $formattedMsg,
+            'order_id' => $order->id,
+        ]);
+
+        $sendResponse->assertCreated()
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'order_id' => $order->id,
+                    'order_code' => 'ORD-TB-999',
+                    'is_first_message' => true,
+                ],
+            ]);
+
+        // E. Sau khi bấm gửi: Mã đơn liên quan đã nhảy thành công vào case
+        $case->refresh();
+        $this->assertEquals($order->id, $case->order_id);
+
+        // F. Mở lại trang xem phiên chat sau khi đã gửi:
+        $afterResponse = $this->actingAs($admin)->get(route('admin.support.index', [
+            'case_id' => $case->id,
+        ]));
+        $afterResponse->assertOk();
+
+        // Giờ đây Trần Thị Bình ĐÃ xuất hiện trên danh sách cuộc trò chuyện bên trái cùng mã đơn
+        $afterResponse->assertSee('Trần Thị Bình');
+        $afterResponse->assertSee('#ORD-TB-999');
+        $afterResponse->assertSee('Đơn liên quan');
+    }
+
+    public function test_customer_order_list_scroll_behavior_at_five_orders(): void
+    {
+        $staff = $this->createStaff(['full_name' => 'Nhân viên Scroll Test']);
+        $customer = $this->createCustomer(['full_name' => 'Khách Hàng Nhiều Đơn']);
+
+        // Tạo 4 đơn hàng đầu tiên
+        for ($i = 1; $i <= 4; $i++) {
+            Order::create([
+                'order_code' => "ORD-TEST-0{$i}",
+                'customer_id' => $customer->id,
+                'recipient_name' => 'Khách Hàng Nhiều Đơn',
+                'recipient_phone' => '0987654321',
+                'recipient_address' => '123 Đường ABC, TP.HCM',
+                'subtotal' => 100000 * $i,
+                'total_amount' => 100000 * $i,
+                'order_status' => 'PENDING',
+                'payment_method' => 'COD',
+                'payment_status' => 'UNPAID',
+            ]);
+        }
+
+        $chatService = app(ChatService::class);
+        $msg = $chatService->customerSendMessage($customer, 'Chào shop kiểm tra đơn giúp mình');
+        $case = $msg->supportCase;
+        $chatService->acceptCase($staff, $case);
+
+        // 1. Khi có 4 đơn hàng: KHÔNG CÓ class 'has-scroll'
+        $response4 = $this->actingAs($staff)->get(route('staff.support.index', [
+            'case_id' => $case->id,
+        ]));
+        $response4->assertOk();
+        $response4->assertSee('4 đơn');
+        $response4->assertSee('staff-support-order-list ');
+        $response4->assertDontSee('staff-support-order-list has-scroll');
+
+        // Tạo thêm đơn hàng thứ 5
+        Order::create([
+            'order_code' => 'ORD-TEST-05',
+            'customer_id' => $customer->id,
+            'recipient_name' => 'Khách Hàng Nhiều Đơn',
+            'recipient_phone' => '0987654321',
+            'recipient_address' => '123 Đường ABC, TP.HCM',
+            'subtotal' => 500000,
+            'total_amount' => 500000,
+            'order_status' => 'COMPLETED',
+            'payment_method' => 'VNPAY',
+            'payment_status' => 'PAID',
+        ]);
+
+        // 2. Khi có từ 5 đơn hàng trở lên: BẮT BUỘC CÓ class 'has-scroll'
+        $response5 = $this->actingAs($staff)->get(route('staff.support.index', [
+            'case_id' => $case->id,
+        ]));
+        $response5->assertOk();
+        $response5->assertSee('5 đơn');
+        $response5->assertSee('staff-support-order-list has-scroll');
+        $response5->assertSee('#ORD-TEST-01');
+        $response5->assertSee('#ORD-TEST-05');
     }
 }
 
