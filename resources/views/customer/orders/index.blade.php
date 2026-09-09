@@ -1,9 +1,7 @@
 <x-customer-account-layout title="Đơn hàng của tôi" :flush="true">
     <div class="p-4 sm:p-8">
         <div class="min-w-0">
-            <div class="orders-ui" x-data="{ showContactModal: false }">
-                <!-- Contact Seller Modal -->
-                @include('customer.orders.partials.contact-modal')
+            <div class="orders-ui">
 
                 @include('orders.partials.alerts')
 
@@ -77,6 +75,14 @@
                                             🧸
                                         </div>
                                         <span class="font-bold text-sm text-[#4E342E]">{{ $card['shop']['name'] }}</span>
+
+                                        <!-- Nút Nhắn tin là icon (giống bên Staff) -->
+                                        <a href="{{ route('customer.messages.index') }}" 
+                                           class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 flex items-center justify-center transition shadow-2xs hover:scale-105" 
+                                           title="Chat với Shop">
+                                            <i class="fa-regular fa-comment-dots text-xs"></i>
+                                        </a>
+
                                         <span class="text-stone-300">|</span>
                                         <a href="{{ route('customer.orders.show', $order) }}" class="text-xs text-[#8E8076] hover:text-amber-800 font-mono font-bold">
                                             #{{ $order->order_code }}
@@ -197,14 +203,12 @@
                                             </form>
                                         @endif
 
-                                        <!-- Liên hệ Người bán (contactSeller) -->
-                                        @if($card['actions']['contactSeller'])
-                                            <button type="button" 
-                                                    @click="showContactModal = true" 
-                                                    class="btn-card-action btn-card-secondary">
-                                                <i class="fa-regular fa-message"></i> Liên hệ Người bán
-                                            </button>
-                                        @endif
+                                        <!-- Chat với Shop -->
+                                        <a href="{{ route('customer.messages.index') }}" 
+                                           class="btn-card-action btn-card-secondary"
+                                           title="Chat với Shop">
+                                            <i class="fa-regular fa-comment-dots text-amber-700"></i> Chat với Shop
+                                        </a>
 
                                         <!-- Đánh giá -->
                                         @if($card['actions']['review'])
