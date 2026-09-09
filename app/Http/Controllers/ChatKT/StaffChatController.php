@@ -28,9 +28,6 @@ class StaffChatController extends Controller
         $statusTab = $request->query('tab', 'all');
         $search = $request->query('q');
 
-        $counts = $this->chatService->getStaffCounts($search, $user);
-        $cases = $this->chatService->getStaffCases($statusTab, $search, 30, $user);
-
         // Lấy case đang được chọn hiển thị trong khung chat (chỉ khi được chọn rõ ràng qua case_id hoặc customer_id)
         $selectedCase = null;
         if ($request->filled('case_id')) {
@@ -48,10 +45,15 @@ class StaffChatController extends Controller
                 $request->filled('order_id') ? (int) $request->query('order_id') : null
             );
             $selectedCase->loadMissing(['customer', 'assignedStaff', 'order.details', 'messages.sender']);
-            // Làm mới lại danh sách cases và counts để case mới xuất hiện ngay
-            $counts = $this->chatService->getStaffCounts($search, $user);
-            $cases = $this->chatService->getStaffCases($statusTab, $search, 30, $user);
         }
+
+        // Tự động dọn dẹp các ca nháp chưa có tin nhắn nào bị bỏ dở khi nhân viên chuyển sang ca khác hoặc thoát
+        SupportCase::doesntHave('messages')
+            ->when($selectedCase, fn ($q) => $q->where('id', '!=', $selectedCase->id))
+            ->delete();
+
+        $counts = $this->chatService->getStaffCounts($search, $user);
+        $cases = $this->chatService->getStaffCases($statusTab, $search, 30, $user);
 
         // Đánh dấu đã đọc các tin nhắn từ khách hàng trong case đang mở (chỉ khi là người phụ trách, không đánh dấu khi đang đồng bộ ngầm bg_sync hoặc người xem không phải người phụ trách)
         if (! $request->boolean('bg_sync') && $selectedCase && (int) $selectedCase->assigned_staff_id === (int) $user->id) {
@@ -88,6 +90,14 @@ class StaffChatController extends Controller
             }
         }
 
+        // Danh sách tất cả đơn hàng của khách hàng trong case đang mở
+        $customerOrders = collect();
+        if ($selectedCase && $selectedCase->customer_id) {
+            $customerOrders = Order::where('customer_id', $selectedCase->customer_id)
+                ->latest()
+                ->get();
+        }
+
         return view('ChatKT.staff.index', compact(
             'user',
             'statusTab',
@@ -98,7 +108,8 @@ class StaffChatController extends Controller
             'layout',
             'routePrefix',
             'staffList',
-            'suggestedOrder'
+            'suggestedOrder',
+            'customerOrders'
         ));
     }
 
@@ -303,9 +314,14 @@ class StaffChatController extends Controller
     public function sendMessage(StaffSendMessageRequest $request, SupportCase $case): JsonResponse|RedirectResponse
     {
         $user = $request->user();
-        $message = $this->chatService->staffSendMessage($user, $case, $request->input('content'));
+        $orderId = $request->filled('order_id') ? (int) $request->input('order_id') : null;
+        $isFirstMessage = $case->messages()->count() === 0;
+
+        $message = $this->chatService->staffSendMessage($user, $case, $request->input('content'), $orderId);
 
         if ($request->expectsJson() || $request->ajax()) {
+            $case->refresh()->loadMissing(['order']);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Phản hồi đã được gửi thành công.',
@@ -318,6 +334,10 @@ class StaffChatController extends Controller
                     'sent_at' => $message->sent_at?->format('H:i'),
                     'date' => $message->sent_at?->format('d/m/Y'),
                     'is_read' => (bool) $message->is_read,
+                    'case_id' => $case->id,
+                    'order_id' => $case->order_id,
+                    'order_code' => $case->order?->order_code,
+                    'is_first_message' => $isFirstMessage,
                 ],
             ], 201);
         }

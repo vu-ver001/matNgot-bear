@@ -1,8 +1,9 @@
 {{-- Thẻ đơn hàng (Order Card) chuyên dụng cho Staff & Admin --}}
 @php
     $productCount = $order->details->count();
-    $chatRoute = Route::has(($isStaff ? 'staff' : 'admin') . '.support.index') 
-        ? route(($isStaff ? 'staff' : 'admin') . '.support.index') 
+    $supportPrefix = (isset($isStaff) && $isStaff) ? 'staff' : (str_starts_with($routePrefix ?? '', 'admin') ? 'admin' : 'staff');
+    $chatRoute = ($order->customer_id && Route::has($supportPrefix . '.support.index')) 
+        ? route($supportPrefix . '.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]) 
         : route('home');
 @endphp
 

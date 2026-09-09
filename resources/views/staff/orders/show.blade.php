@@ -26,6 +26,14 @@
         </div>
 
         <div class="flex items-center gap-2.5">
+            @if ($order->customer_id)
+                <a href="{{ route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]) }}"
+                   class="btn btn-primary btn-sm flex items-center gap-1.5"
+                   title="Nhắn tin hỗ trợ khách hàng về đơn này">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Nhắn tin cho khách</span>
+                </a>
+            @endif
             <a href="{{ route('customer.orders.invoice', $order) }}" target="_blank"
                class="btn btn-outline btn-sm">
                 <i class="fa-solid fa-file-invoice text-amber-600"></i>
@@ -365,11 +373,19 @@
         <div class="lg:col-span-2 space-y-6">
             <!-- Thông tin người nhận & vận chuyển -->
             <div class="panel-card mb-0">
-                <div class="panel-header">
+                <div class="panel-header flex items-center justify-between">
                     <div class="panel-title">
                         <i class="fa-solid fa-truck-ramp-box"></i>
                         Thông tin nhận hàng & Vận chuyển
                     </div>
+                    @if ($order->customer_id)
+                        <a href="{{ route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]) }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer"
+                           title="Mở cuộc trò chuyện hỗ trợ khách hàng cho đơn này">
+                            <i class="fa-solid fa-comments"></i>
+                            <span>Nhắn tin cho khách</span>
+                        </a>
+                    @endif
                 </div>
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">

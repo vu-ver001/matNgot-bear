@@ -16,6 +16,7 @@ class StaffSendMessageRequest extends FormRequest
     {
         return [
             'content' => ['required', 'string', 'max:2000'],
+            'order_id' => ['nullable', 'integer', 'exists:orders,id'],
         ];
     }
 
