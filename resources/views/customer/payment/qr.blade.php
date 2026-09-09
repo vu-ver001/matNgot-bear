@@ -171,10 +171,15 @@
                                     <span class="text-[#786B61] font-medium">Chủ tài khoản ví:</span>
                                     <span class="font-bold text-[#2C1408]">{{ $paymentConfig['momo_name'] }}</span>
                                 </div>
-                                <div class="pt-1">
+                                <div class="pt-2 space-y-2">
+                                    <a href="{{ route('customer.payment.momo.redirect', $order->id) }}" 
+                                       class="w-full bg-gradient-to-r from-[#A50064] to-[#C2185B] hover:from-[#880052] hover:to-[#AD1457] text-white font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md shadow-[#A50064]/25 tracking-wide">
+                                        <span>👛 CHUYỂN ĐẾN CỔNG MOMO (APP / ATM / QR) ➔</span>
+                                    </a>
                                     <a href="momo://" 
-                                       class="w-full bg-gradient-to-r from-[#A50064] to-[#C2185B] hover:from-[#880052] hover:to-[#AD1457] text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-sm">
-                                        <span>📱 Bấm để mở App MoMo trên điện thoại</span>
+                                       class="w-full bg-[#FFF0F5] hover:bg-[#FFE4EE] text-[#A50064] border border-[#FAD2E1] font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                                        <i class="fa-solid fa-mobile-screen-button"></i>
+                                        <span>Mở ứng dụng MoMo trên điện thoại</span>
                                     </a>
                                 </div>
                             @elseif($order->payment_method === 'CARD')

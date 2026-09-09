@@ -433,7 +433,7 @@
                 <div class="panel-header">
                     <div class="panel-title">
                         <i class="fa-solid fa-basket-shopping"></i>
-                        Sản phẩm đã đặt ({{ $order->details->sum('quantity') }} món)
+                        Sản phẩm đã đặt
                     </div>
                 </div>
 

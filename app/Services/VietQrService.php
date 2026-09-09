@@ -11,12 +11,15 @@ class VietQrService
     protected string $accountNumber;
     protected string $accountName;
 
-    public function __construct()
+    public function __construct(?PaymentSettingService $settingService = null)
     {
-        $this->bankCode = config('services.vietqr.bank_code', env('VIETQR_BANK_CODE', 'MB'));
-        $this->bankName = config('services.vietqr.bank_name', env('VIETQR_BANK_NAME', 'MB Bank (Ngân hàng Quân Đội)'));
-        $this->accountNumber = config('services.vietqr.account_number', env('VIETQR_ACCOUNT_NUMBER', '0377466205'));
-        $this->accountName = config('services.vietqr.account_name', env('VIETQR_ACCOUNT_NAME', 'NGUYỄN NGỌC ANH'));
+        $settingService = $settingService ?? app(PaymentSettingService::class);
+        $settings = $settingService->getSettings();
+
+        $this->bankCode = $settings['vietqr_bank_code'];
+        $this->bankName = $settings['vietqr_bank_name'];
+        $this->accountNumber = $settings['vietqr_account_number'];
+        $this->accountName = $settings['vietqr_account_name'];
     }
 
     /**

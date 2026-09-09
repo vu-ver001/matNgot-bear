@@ -16,14 +16,17 @@ class MomoService
     protected string $phone;
     protected string $accountName;
 
-    public function __construct()
-    {
-        $this->partnerCode = config('services.momo.partner_code', env('MOMO_PARTNER_CODE', 'MOMOBK01'));
-        $this->accessKey = config('services.momo.access_key', env('MOMO_ACCESS_KEY', ''));
-        $this->secretKey = config('services.momo.secret_key', env('MOMO_SECRET_KEY', ''));
-        $this->endpoint = config('services.momo.endpoint', env('MOMO_ENDPOINT', 'https://test-payment.momo.vn/v2/gateway/api/create'));
-        $this->phone = config('services.momo.phone', env('MOMO_PHONE', '0377466205'));
-        $this->accountName = config('services.momo.name', env('MOMO_NAME', 'NGUYỄN NGỌC ANH'));
+    public function __construct(
+        protected ?PaymentSettingService $settingService = null
+    ) {
+        $settings = $this->settingService ? $this->settingService->getSettings() : [];
+
+        $this->partnerCode = $settings['momo_partner_code'] ?? config('services.momo.partner_code', env('MOMO_PARTNER_CODE', 'MOMO'));
+        $this->accessKey = $settings['momo_access_key'] ?? config('services.momo.access_key', env('MOMO_ACCESS_KEY', 'F8BBA842ECF85'));
+        $this->secretKey = $settings['momo_secret_key'] ?? config('services.momo.secret_key', env('MOMO_SECRET_KEY', 'K951B6PE1waDMi640xX08PD3vg6EkVlz'));
+        $this->endpoint = $settings['momo_endpoint'] ?? config('services.momo.endpoint', env('MOMO_ENDPOINT', 'https://test-payment.momo.vn/v2/gateway/api/create'));
+        $this->phone = $settings['momo_phone'] ?? config('services.momo.phone', env('MOMO_PHONE', '0377466205'));
+        $this->accountName = $settings['momo_name'] ?? config('services.momo.name', env('MOMO_NAME', 'NGUYỄN NGỌC ANH'));
     }
 
     /**
@@ -35,6 +38,7 @@ class MomoService
             'momo_phone' => $this->phone,
             'momo_name' => $this->accountName,
             'partner_code' => $this->partnerCode,
+            'momo_endpoint' => $this->endpoint,
         ];
     }
 
