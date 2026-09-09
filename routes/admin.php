@@ -40,8 +40,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
     // 3.1 Quản lý thanh toán & Đối soát dòng tiền
     Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::get('/payments/export', [PaymentController::class, 'export'])->name('payments.export');
+    Route::get('/payments/settings', [PaymentController::class, 'settings'])->name('payments.settings');
+    Route::post('/payments/settings', [PaymentController::class, 'saveSettings'])->name('payments.saveSettings');
     Route::post('/payments/{payment}/verify-sepay', [PaymentController::class, 'verifySepay'])->name('payments.verifySepay');
     Route::patch('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])->name('payments.updateStatus');
+    Route::post('/payments/refund-requests/{refundRequest}/approve', [PaymentController::class, 'approveRefund'])->name('payments.approveRefund');
+    Route::post('/payments/refund-requests/{refundRequest}/reject', [PaymentController::class, 'rejectRefund'])->name('payments.rejectRefund');
+    Route::post('/payments/{payment}/cod-settled', [PaymentController::class, 'markCodSettled'])->name('payments.markCodSettled');
+    Route::post('/payments/bulk-cod-settled', [PaymentController::class, 'bulkMarkCodSettled'])->name('payments.bulkMarkCodSettled');
 
     // 4. Quản lý người dùng (Anh Vũ)
     Route::get('/users', [UserController::class, 'index'])->name('users.index');

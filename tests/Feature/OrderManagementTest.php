@@ -786,4 +786,27 @@ class OrderManagementTest extends TestCase
             app(OrderService::class)->updateStatus($order, $status, $this->admin->id, null);
         }
     }
+
+    public function test_staff_and_admin_can_view_order_invoice_and_back_button_does_not_403(): void
+    {
+        $order = $this->createOrder($this->customer);
+
+        // Staff views invoice
+        $staffResponse = $this->actingAs($this->staff)->get(route('customer.orders.invoice', $order));
+        $staffResponse->assertStatus(200);
+        $staffResponse->assertSee(route('staff.orders.show', $order));
+
+        // Admin views invoice
+        $adminResponse = $this->actingAs($this->admin)->get(route('customer.orders.invoice', $order));
+        $adminResponse->assertStatus(200);
+        $adminResponse->assertSee(route('admin.orders.show', $order));
+
+        // Staff hitting customer.orders.show is redirected to staff.orders.show
+        $this->actingAs($this->staff)->get(route('customer.orders.show', $order))
+            ->assertRedirect(route('staff.orders.show', $order));
+
+        // Admin hitting customer.orders.show is redirected to admin.orders.show
+        $this->actingAs($this->admin)->get(route('customer.orders.show', $order))
+            ->assertRedirect(route('admin.orders.show', $order));
+    }
 }

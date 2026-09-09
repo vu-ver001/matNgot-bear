@@ -53,11 +53,41 @@
             <div class="nav-container">
                 @php
                     $headerCategories = \App\Models\Category::all();
-                    $catClassic = $headerCategories->firstWhere('name', 'TEDDY CLASSIC');
-                    $catButter  = $headerCategories->firstWhere('name', 'BUTTER BEAR');
-                    $catMrBean  = $headerCategories->firstWhere('name', 'TEDDY MR. BEAN');
-                    $catCouple  = $headerCategories->firstWhere('name', 'TEDDY COUPLE');
-                    $catPillow  = $headerCategories->firstWhere('name', 'GỐI BÔNG TEDDY');
+                    
+                    // Match thông minh theo tên, từ khóa hoặc fallback an toàn theo ID
+                    $catClassic = $headerCategories->first(function($c) {
+                        $n = mb_strtoupper($c->name);
+                        return str_contains($n, 'CLASSIC') || str_contains($n, 'TEDDY') || $c->id == 1;
+                    }) ?? $headerCategories->firstWhere('id', 1) ?? (object)['id' => 1, 'name' => 'TEDDY CLASSIC'];
+
+                    $catButter = $headerCategories->first(function($c) {
+                        $n = mb_strtoupper($c->name);
+                        return str_contains($n, 'BUTTER') || str_contains($n, 'HOẠT HÌNH') || $c->id == 2;
+                    }) ?? $headerCategories->firstWhere('id', 2) ?? (object)['id' => 2, 'name' => 'BUTTER BEAR'];
+
+                    $catMrBean = $headerCategories->first(function($c) {
+                        $n = mb_strtoupper($c->name);
+                        return str_contains($n, 'BEAN') || str_contains($n, 'MR');
+                    }) ?? $headerCategories->firstWhere('id', 6) ?? $headerCategories->firstWhere('id', 3) ?? (object)['id' => 3, 'name' => 'TEDDY MR. BEAN'];
+
+                    $catCouple = $headerCategories->first(function($c) {
+                        $n = mb_strtoupper($c->name);
+                        return str_contains($n, 'COUPLE') || str_contains($n, 'ĐÔI');
+                    }) ?? $headerCategories->firstWhere('id', 7) ?? $headerCategories->firstWhere('id', 4) ?? (object)['id' => 4, 'name' => 'TEDDY COUPLE'];
+
+                    $catPillow = $headerCategories->first(function($c) {
+                        $n = mb_strtoupper($c->name);
+                        return str_contains($n, 'GỐI') || str_contains($n, 'PILLOW');
+                    }) ?? $headerCategories->firstWhere('id', 8) ?? $headerCategories->firstWhere('id', 5) ?? $headerCategories->firstWhere('id', 3) ?? (object)['id' => 5, 'name' => 'GỐI BÔNG TEDDY'];
+
+                    $matchedIds = array_filter([
+                        $catClassic->id ?? null,
+                        $catButter->id ?? null,
+                        $catMrBean->id ?? null,
+                        $catCouple->id ?? null,
+                        $catPillow->id ?? null,
+                    ]);
+                    $extraCategories = $headerCategories->reject(fn($c) => in_array($c->id, $matchedIds));
                 @endphp
                 <ul class="nav-menu">
                     <!-- 1. TRANG CHỦ -->
@@ -68,7 +98,6 @@
                     </li>
 
                     <!-- 2. TEDDY CLASSIC (Mega Dropdown) -->
-                    @if($catClassic)
                     <li class="nav-item has-megamenu">
                         <a href="{{ route('products.index', ['category_id' => $catClassic->id]) }}" class="nav-link {{ request('category_id') == $catClassic->id ? 'active' : '' }}">
                             TEDDY CLASSIC <i class="fa-solid fa-chevron-down"></i>
@@ -110,10 +139,8 @@
                             </div>
                         </div>
                     </li>
-                    @endif
 
                     <!-- 3. BUTTER BEAR (Mega Dropdown) -->
-                    @if($catButter)
                     <li class="nav-item has-megamenu">
                         <a href="{{ route('products.index', ['category_id' => $catButter->id]) }}" class="nav-link {{ request('category_id') == $catButter->id ? 'active' : '' }}">
                             BUTTER BEAR <i class="fa-solid fa-chevron-down"></i>
@@ -155,10 +182,8 @@
                             </div>
                         </div>
                     </li>
-                    @endif
 
                     <!-- 4. TEDDY MR. BEAN (Mega Dropdown) -->
-                    @if($catMrBean)
                     <li class="nav-item has-megamenu">
                         <a href="{{ route('products.index', ['category_id' => $catMrBean->id]) }}" class="nav-link {{ request('category_id') == $catMrBean->id ? 'active' : '' }}">
                             TEDDY MR. BEAN <i class="fa-solid fa-chevron-down"></i>
@@ -200,10 +225,8 @@
                             </div>
                         </div>
                     </li>
-                    @endif
 
                     <!-- 5. TEDDY COUPLE (Dropdown) -->
-                    @if($catCouple)
                     <li class="nav-item has-dropdown">
                         <a href="{{ route('products.index', ['category_id' => $catCouple->id]) }}" class="nav-link {{ request('category_id') == $catCouple->id ? 'active' : '' }}">
                             TEDDY COUPLE <i class="fa-solid fa-chevron-down"></i>
@@ -220,10 +243,8 @@
                             </a>
                         </div>
                     </li>
-                    @endif
 
                     <!-- 6. GỐI BÔNG TEDDY (Mega Dropdown) -->
-                    @if($catPillow)
                     <li class="nav-item has-megamenu">
                         <a href="{{ route('products.index', ['category_id' => $catPillow->id]) }}" class="nav-link {{ request('category_id') == $catPillow->id ? 'active' : '' }}">
                             GỐI BÔNG TEDDY <i class="fa-solid fa-chevron-down"></i>
@@ -263,6 +284,21 @@
                                     </ul>
                                 </div>
                             </div>
+                        </div>
+                    </li>
+
+                    {{-- Danh mục khác nếu có --}}
+                    @if(isset($extraCategories) && $extraCategories->isNotEmpty())
+                    <li class="nav-item has-dropdown">
+                        <a href="javascript:void(0)" class="nav-link">
+                            DANH MỤC KHÁC <i class="fa-solid fa-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu">
+                            @foreach($extraCategories as $extraCat)
+                                <a href="{{ route('products.index', ['category_id' => $extraCat->id]) }}" class="dropdown-item">
+                                    <i class="fa-solid fa-paw" style="color: var(--honey-dark); margin-right: 8px;"></i> {{ $extraCat->name }}
+                                </a>
+                            @endforeach
                         </div>
                     </li>
                     @endif

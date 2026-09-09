@@ -91,9 +91,20 @@
 </head>
 <body class="py-6 sm:py-10 px-4">
 
+    @php
+        $backUrl = route('customer.orders.show', $order);
+        if (auth()->check()) {
+            if (auth()->user()->role === 'ADMIN') {
+                $backUrl = route('admin.orders.show', $order);
+            } elseif (auth()->user()->role === 'STAFF') {
+                $backUrl = route('staff.orders.show', $order);
+            }
+        }
+    @endphp
+
     <!-- Top Action Toolbar (Hidden when printing) -->
     <div class="max-w-3xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 no-print">
-        <a href="{{ route('customer.orders.show', $order) }}" 
+        <a href="{{ $backUrl }}" 
            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-amber-50 text-[#8C4A19] font-bold text-sm border border-[#E8D9C8] shadow-xs transition">
             <i class="fa-solid fa-arrow-left"></i>
             <span>Quay lại chi tiết đơn hàng</span>

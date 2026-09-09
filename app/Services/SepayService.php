@@ -14,10 +14,13 @@ class SepayService
     protected string $accountNumber;
     protected string $apiEndpoint;
 
-    public function __construct()
+    public function __construct(?PaymentSettingService $settingService = null)
     {
-        $this->apiKey = config('services.sepay.api_key', env('SEPAY_API_KEY', ''));
-        $this->accountNumber = config('services.vietqr.account_number', env('VIETQR_ACCOUNT_NUMBER', '0377466205'));
+        $settingService = $settingService ?? app(PaymentSettingService::class);
+        $settings = $settingService->getSettings();
+
+        $this->apiKey = $settings['sepay_api_key'];
+        $this->accountNumber = $settings['vietqr_account_number'];
         $this->apiEndpoint = 'https://my.sepay.vn/userapi/transactions/list';
     }
 
