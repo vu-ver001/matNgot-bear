@@ -533,6 +533,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (result.success && result.data) {
+                // Nếu là tin nhắn đầu tiên của phiên hỗ trợ mới, chuyển hướng về case_id để cập nhật cuộc trò chuyện vào danh sách bên trái
+                if (result.data.is_first_message && result.data.case_id) {
+                    const targetUrl = new URL(window.location.origin + window.location.pathname);
+                    targetUrl.searchParams.set('tab', 'in_progress');
+                    targetUrl.searchParams.set('case_id', result.data.case_id);
+                    window.location.href = targetUrl.toString();
+                    return;
+                }
+
                 // Nếu ca trước đó đã kết thúc, đang chờ xử lý, hoặc do staff khác xử lý (Admin nhắn xen vào tiếp quản), tự động reload để đồng bộ
                 const isClosedNotice = supportWrapper.querySelector('.is-closed-notice');
                 const isWaitingNotice = supportWrapper.querySelector('.is-waiting-notice');
@@ -582,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSendSuggestedOrder?.addEventListener('click', async () => {
             if (!chatForm) return;
 
+            const orderId = btnSendSuggestedOrder.dataset.orderId || null;
             const orderCode = btnSendSuggestedOrder.dataset.orderCode || '';
             const orderTotal = btnSendSuggestedOrder.dataset.orderTotal || '';
             const orderStatus = btnSendSuggestedOrder.dataset.orderStatus || '';
@@ -600,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                     },
-                    body: JSON.stringify({ content }),
+                    body: JSON.stringify({ content, order_id: orderId }),
                 });
 
                 const result = await res.json();
@@ -614,6 +624,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (result.success && result.data) {
                     cleanOrderIdFromUrl();
+
+                    // Nếu là tin nhắn đầu tiên của phiên hỗ trợ mới, chuyển hướng về case_id để cập nhật cuộc trò chuyện vào danh sách bên trái
+                    if (result.data.is_first_message && result.data.case_id) {
+                        const targetUrl = new URL(window.location.origin + window.location.pathname);
+                        targetUrl.searchParams.set('tab', 'in_progress');
+                        targetUrl.searchParams.set('case_id', result.data.case_id);
+                        window.location.href = targetUrl.toString();
+                        return;
+                    }
+
+                    // Cập nhật "Mã đơn liên quan" ở Card 2
+                    if (result.data.order_code) {
+                        const relatedOrderVal = supportWrapper.querySelector('[data-related-order-code]');
+                        if (relatedOrderVal) {
+                            relatedOrderVal.textContent = '#' + result.data.order_code;
+                            relatedOrderVal.setAttribute('data-tooltip', '#' + result.data.order_code);
+                        }
+
+                        // Cập nhật badge "Đơn liên quan" ở Card 3
+                        const allOrderCards = supportWrapper.querySelectorAll('[data-order-card-code]');
+                        allOrderCards.forEach(card => {
+                            card.classList.remove('is-current');
+                            const oldTag = card.querySelector('.staff-support-order-item-tag');
+                            if (oldTag) oldTag.remove();
+
+                            if (card.dataset.orderCardCode === result.data.order_code) {
+                                card.classList.add('is-current');
+                                const header = card.querySelector('.staff-support-order-item-header');
+                                if (header && !header.querySelector('.staff-support-order-item-tag')) {
+                                    const tag = document.createElement('span');
+                                    tag.className = 'staff-support-order-item-tag';
+                                    tag.setAttribute('data-tooltip', 'Đơn hàng liên quan đến cuộc hỗ trợ này');
+                                    tag.textContent = 'Đơn liên quan';
+                                    header.appendChild(tag);
+                                }
+                            }
+                        });
+
+                        // Cập nhật tag đơn liên quan trên danh sách case bên trái (nếu có item)
+                        const currentCaseItem = supportWrapper.querySelector('.staff-support-case-item.is-active');
+                        if (currentCaseItem) {
+                            let orderTag = currentCaseItem.querySelector('.staff-support-case-order');
+                            if (!orderTag) {
+                                let bottomWrap = currentCaseItem.querySelector('.staff-support-case-bottom');
+                                if (!bottomWrap) {
+                                    bottomWrap = document.createElement('div');
+                                    bottomWrap.className = 'staff-support-case-bottom';
+                                    currentCaseItem.querySelector('.staff-support-case-info')?.appendChild(bottomWrap);
+                                }
+                                orderTag = document.createElement('span');
+                                orderTag.className = 'staff-support-case-order';
+                                bottomWrap.appendChild(orderTag);
+                            }
+                            orderTag.textContent = '#' + result.data.order_code;
+                            orderTag.setAttribute('data-tooltip', 'Đơn hàng #' + result.data.order_code);
+                        }
+                    }
 
                     const newMsg = result.data;
                     lastMessageId = Math.max(lastMessageId, newMsg.id);
@@ -974,6 +1041,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 '.staff-customer-profile-name, ' +
                 '.staff-customer-detail-row span, ' +
                 '.staff-support-case-meta-val, ' +
+                '.staff-support-order-item-code, ' +
+                '.staff-support-order-item-btn, ' +
+                '.staff-support-order-item-tag, ' +
                 '[data-tooltip]'
             )) {
                 const isClipped = (el.offsetWidth < el.scrollWidth) || (el.offsetHeight < el.scrollHeight);

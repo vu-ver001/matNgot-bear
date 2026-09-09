@@ -1320,6 +1320,194 @@
 }
 
 /* CARD THÔNG TIN ĐƠN HÀNG */
+.staff-support-order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    padding-right: 2px;
+}
+
+/* Khi có từ 5 đơn trở lên: Cố định độ cao tối đa (vừa 4 đơn) và hiển thị thanh cuộn rõ ràng */
+.staff-support-order-list.has-scroll,
+.staff-support-order-list:has(> :nth-child(5)) {
+    max-height: 282px;
+    overflow-y: scroll;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: #c99a75 #f7efe8;
+}
+
+.staff-support-order-list.has-scroll::-webkit-scrollbar,
+.staff-support-order-list:has(> :nth-child(5))::-webkit-scrollbar {
+    width: 6px;
+    display: block;
+}
+
+.staff-support-order-list.has-scroll::-webkit-scrollbar-track,
+.staff-support-order-list:has(> :nth-child(5))::-webkit-scrollbar-track {
+    background: #f7efe8;
+    border-radius: 999px;
+}
+
+.staff-support-order-list.has-scroll::-webkit-scrollbar-thumb,
+.staff-support-order-list:has(> :nth-child(5))::-webkit-scrollbar-thumb {
+    background: #c99a75;
+    border-radius: 999px;
+    border: 1px solid #f7efe8;
+}
+
+.staff-support-order-list.has-scroll::-webkit-scrollbar-thumb:hover,
+.staff-support-order-list:has(> :nth-child(5))::-webkit-scrollbar-thumb:hover {
+    background: #843c16;
+}
+
+.staff-support-order-item-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fdf5ef;
+    color: #843c16;
+    border: 1px solid #ebd9cb;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.staff-support-order-item-btn:hover {
+    background: #f8ece2;
+    border-color: #d8beaa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(132, 60, 22, 0.08);
+}
+
+.staff-support-order-item-btn.is-current {
+    background: #fff9f5;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 1px #f59e0b;
+}
+
+.staff-support-order-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.staff-support-order-item-code {
+    font-size: 12px;
+    font-weight: 700;
+    color: #78350f;
+    letter-spacing: 0.2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.staff-support-order-item-btn:hover .staff-support-order-item-code {
+    color: #b45309;
+}
+
+.staff-support-order-item-tag {
+    font-size: 9.5px;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 1px 6px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+
+.staff-support-order-item-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+}
+
+.staff-support-order-item-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.staff-support-order-item-status.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.staff-support-order-item-status.status-confirmed,
+.staff-support-order-item-status.status-processing {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.staff-support-order-item-status.status-shipping {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.staff-support-order-item-status.status-completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.staff-support-order-item-status.status-cancelled,
+.staff-support-order-item-status.status-refunded {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.staff-support-order-item-price-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.staff-support-order-item-price {
+    font-weight: 700;
+    color: #843c16;
+    font-size: 11.5px;
+}
+
+.staff-support-order-item-icon {
+    font-size: 10px;
+    color: #a87453;
+    transition: transform 0.15s ease;
+}
+
+.staff-support-order-item-btn:hover .staff-support-order-item-icon {
+    transform: translate(1px, -1px);
+    color: #843c16;
+}
+
+.staff-support-order-empty {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #fdfaf7;
+    border: 1px dashed #ede1d7;
+    color: #9c7155;
+    font-size: 12px;
+    text-align: center;
+}
+
 .staff-support-order-detail-btn {
     display: inline-flex;
     align-items: center;

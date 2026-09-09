@@ -118,7 +118,14 @@ class OrderManagementTest extends TestCase
             ->assertDontSee(route('customer.orders.update_shipping_address', $order), false);
         $this->actingAs($this->staff)->get(route('staff.orders.show', $order))
             ->assertOk()
+            ->assertSee('Nhắn tin cho khách')
+            ->assertSee(e(route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])), false)
             ->assertDontSee(route('customer.orders.complete', $order), false);
+
+        $this->actingAs($this->admin)->get(route('admin.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Nhắn tin cho khách')
+            ->assertSee(e(route('admin.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])), false);
     }
 
     public function test_shared_order_list_preserves_customer_scope_and_staff_filters(): void
@@ -785,5 +792,28 @@ class OrderManagementTest extends TestCase
         foreach (['CONFIRMED', 'PREPARING', 'SHIPPING', 'COMPLETED'] as $status) {
             app(OrderService::class)->updateStatus($order, $status, $this->admin->id, null);
         }
+    }
+
+    public function test_staff_and_admin_can_view_order_invoice_and_back_button_does_not_403(): void
+    {
+        $order = $this->createOrder($this->customer);
+
+        // Staff views invoice
+        $staffResponse = $this->actingAs($this->staff)->get(route('customer.orders.invoice', $order));
+        $staffResponse->assertStatus(200);
+        $staffResponse->assertSee(route('staff.orders.show', $order));
+
+        // Admin views invoice
+        $adminResponse = $this->actingAs($this->admin)->get(route('customer.orders.invoice', $order));
+        $adminResponse->assertStatus(200);
+        $adminResponse->assertSee(route('admin.orders.show', $order));
+
+        // Staff hitting customer.orders.show is redirected to staff.orders.show
+        $this->actingAs($this->staff)->get(route('customer.orders.show', $order))
+            ->assertRedirect(route('staff.orders.show', $order));
+
+        // Admin hitting customer.orders.show is redirected to admin.orders.show
+        $this->actingAs($this->admin)->get(route('customer.orders.show', $order))
+            ->assertRedirect(route('admin.orders.show', $order));
     }
 }

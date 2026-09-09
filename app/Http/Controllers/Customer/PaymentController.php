@@ -128,15 +128,14 @@ class PaymentController extends Controller
             // Update atomically if not already paid
             if ($order->payment_status !== 'PAID') {
                 DB::transaction(function () use ($order, $transactionNo, $inputData) {
-                    $payment = Payment::firstOrCreate(
-                        ['order_id' => $order->id],
-                        [
+                    $payment = Payment::where('order_id', $order->id)->latest('id')->first()
+                        ?? Payment::create([
+                            'order_id' => $order->id,
                             'method' => 'CARD',
                             'amount' => $order->total_amount,
                             'status' => 'PENDING',
                             'transaction_ref' => $transactionNo,
-                        ]
-                    );
+                        ]);
 
                     $payment->update([
                         'status' => 'PAID',
@@ -144,6 +143,12 @@ class PaymentController extends Controller
                         'transaction_ref' => $transactionNo,
                         'gateway_response' => json_encode($inputData),
                     ]);
+
+                    // Dọn dẹp các bản ghi PENDING thừa khác của đơn này (nếu có từ các lần click trước)
+                    Payment::where('order_id', $order->id)
+                        ->where('id', '!=', $payment->id)
+                        ->where('status', 'PENDING')
+                        ->delete();
 
                     $order->update([
                         'payment_status' => 'PAID',
@@ -479,14 +484,27 @@ class PaymentController extends Controller
                 ->with('success', 'Đã chuyển phương thức thanh toán sang: Thanh toán khi nhận hàng (COD)!');
         }
 
-        // Record a new payment attempt
-        Payment::create([
-            'order_id' => $order->id,
-            'method' => $method,
-            'amount' => $order->total_amount,
-            'status' => 'PENDING',
-            'transaction_ref' => 'RETRY_' . time() . '_' . $order->id,
-        ]);
+        // Update or record payment attempt for this order
+        $pendingPayment = Payment::where('order_id', $order->id)
+            ->where('status', 'PENDING')
+            ->latest('id')
+            ->first();
+
+        if ($pendingPayment) {
+            $pendingPayment->update([
+                'method' => $method,
+                'amount' => $order->total_amount,
+                'transaction_ref' => 'RETRY_' . time() . '_' . $order->id,
+            ]);
+        } else {
+            Payment::create([
+                'order_id' => $order->id,
+                'method' => $method,
+                'amount' => $order->total_amount,
+                'status' => 'PENDING',
+                'transaction_ref' => 'RETRY_' . time() . '_' . $order->id,
+            ]);
+        }
 
         if ($method === 'CARD') {
             return $this->redirectToVnpay($order);

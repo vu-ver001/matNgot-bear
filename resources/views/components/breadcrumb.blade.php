@@ -1,9 +1,9 @@
 @props([
     'items' => [],
-    'separator' => '›'
+    'separator' => '>'
 ])
 
-<nav aria-label="Breadcrumb" {{ $attributes->merge(['class' => 'flex items-center gap-2.5 text-sm font-semibold text-[#786B61]']) }}>
+<nav aria-label="Breadcrumb" {{ $attributes->merge(['class' => 'flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#786B61]']) }}>
     @if(empty($items))
         {{ $slot }}
     @else
@@ -18,12 +18,12 @@
                 <a href="{{ $url }}" class="text-[#786B61] hover:text-[#2C1408] transition">
                     {{ $label }}
                 </a>
-                <span class="text-[#D1C4B5] select-none text-xs font-bold">{{ $separator }}</span>
+                <span class="text-[#A89889] select-none text-[11px] font-bold mx-0.5">{{ $separator }}</span>
             @elseif(!$isLast)
                 <span class="text-[#786B61]">{{ $label }}</span>
-                <span class="text-[#D1C4B5] select-none text-xs font-bold">{{ $separator }}</span>
+                <span class="text-[#A89889] select-none text-[11px] font-bold mx-0.5">{{ $separator }}</span>
             @else
-                <span class="text-[#E08A1E] font-bold truncate" aria-current="page">{{ $label }}</span>
+                <span class="text-[#2C1408] font-bold truncate" aria-current="page">{{ $label }}</span>
             @endif
         @endforeach
     @endif

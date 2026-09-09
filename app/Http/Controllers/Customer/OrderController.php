@@ -80,6 +80,15 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        if (auth()->check()) {
+            if (auth()->user()->role === 'ADMIN') {
+                return redirect()->route('admin.orders.show', $order);
+            }
+            if (auth()->user()->role === 'STAFF') {
+                return redirect()->route('staff.orders.show', $order);
+            }
+        }
+
         if ($order->customer_id !== auth()->id()) {
             abort(403);
         }

@@ -81,13 +81,13 @@ class CheckoutController extends Controller
             return $price * $item->quantity;
         });
 
-        // Fetch previous order (if any) or user profile to remember customer shipping details
+        // Ưu tiên thông tin từ profile người dùng trong bảng users, nếu trống mới fallback sang đơn gần nhất
         $latestOrder = \App\Models\Order::where('customer_id', $userId)->latest()->first();
 
-        $savedRecipientName = $latestOrder->recipient_name ?? $user->full_name ?? '';
-        $savedRecipientPhone = $latestOrder->recipient_phone ?? $user->phone ?? '';
-        $savedRecipientEmail = $latestOrder->recipient_email ?? $user->email ?? '';
-        $savedRecipientAddress = $this->cleanAddress($latestOrder->recipient_address ?? $user->address ?? '');
+        $savedRecipientName = $user->full_name ?: ($latestOrder->recipient_name ?? '');
+        $savedRecipientPhone = $user->phone ?: ($latestOrder->recipient_phone ?? '');
+        $savedRecipientEmail = $user->email ?: ($latestOrder->recipient_email ?? '');
+        $savedRecipientAddress = $this->cleanAddress($user->address ?: ($latestOrder->recipient_address ?? ''));
 
         // Intelligently parse province, ward, and street from saved user profile or previous order address
         $savedProvince = $user->province ?: 'Hà Nội';
@@ -422,32 +422,6 @@ class CheckoutController extends Controller
             ]);
 
             $order = $this->orderService->createOrder($data, $cartItems->all());
-
-            // Remember and sync recipient information into Customer profile for future checkouts
-            $currentUser = auth()->user();
-            if ($currentUser) {
-                $rawDetail = $request->input('address_detail') ?: $currentUser->address_detail;
-                $p = $request->input('province') ?: $currentUser->province;
-                $w = $request->input('ward') ?: $currentUser->ward;
-                if ($rawDetail) {
-                    if ($p) {
-                        $rawDetail = preg_replace('/,?\s*' . preg_quote($p, '/') . '$/iu', '', $rawDetail);
-                    }
-                    if ($w) {
-                        $rawDetail = preg_replace('/,?\s*' . preg_quote($w, '/') . '$/iu', '', $rawDetail);
-                    }
-                    $rawDetail = trim($rawDetail, ", \t\n\r\0\x0B");
-                }
-
-                $currentUser->update([
-                    'full_name' => $validated['recipient_name'] ?: $currentUser->full_name,
-                    'phone' => $validated['recipient_phone'] ?: $currentUser->phone,
-                    'address' => $cleanedAddress ?: $currentUser->address,
-                    'province' => $p,
-                    'ward' => $w,
-                    'address_detail' => $rawDetail,
-                ]);
-            }
 
             // Create initial payment tracking
             Payment::create([
