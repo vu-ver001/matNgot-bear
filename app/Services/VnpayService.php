@@ -15,7 +15,7 @@ class VnpayService
     {
         // Standard VNPAY Sandbox test credentials for development/testing
         $this->tmnCode = config('services.vnpay.tmn_code', env('VNPAY_TMN_CODE', 'DKEKANL1'));
-        $this->hashSecret = config('services.vnpay.hash_secret', env('VNPAY_HASH_SECRET', 'ODQMSSMZLVNQZMMITMJHFEUUQZWQYYEW'));
+        $this->hashSecret = config('services.vnpay.hash_secret', env('VNPAY_HASH_SECRET', 'A36K9YROGJFCDMLD8MKRXUE2Q4AKM6TV'));
         $this->vnpUrl = config('services.vnpay.url', env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'));
         $this->merchantName = config('services.vnpay.merchant_name', env('VNPAY_MERCHANT_NAME', 'MẬT NGỌT BEAR'));
     }

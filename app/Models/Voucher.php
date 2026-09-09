@@ -48,11 +48,15 @@ class Voucher extends Model
     }
 
     /**
-     * Đếm số lần khách hàng này đã áp dụng voucher (kể cả đơn đã hủy).
+     * Đếm số lần khách hàng này đã áp dụng voucher (không tính các đơn đã hủy).
      */
     public function countUsedByCustomer(int $userId): int
     {
         return Order::where('customer_id', $userId)
+            ->where(function ($q) {
+                $q->whereNull('order_status')
+                  ->orWhere('order_status', '!=', 'CANCELLED');
+            })
             ->where(function ($query) {
                 $query->where('voucher_id', $this->id)
                       ->orWhere('shipping_voucher_id', $this->id);
