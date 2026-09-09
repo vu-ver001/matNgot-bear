@@ -34,4 +34,16 @@ class Conversation extends Model
     {
         return $this->hasOne(Message::class)->latestOfMany();
     }
+
+    public function supportCases(): HasMany
+    {
+        return $this->hasMany(SupportCase::class);
+    }
+
+    public function activeCase(): HasOne
+    {
+        return $this->hasOne(SupportCase::class)
+            ->whereIn('status', [SupportCase::STATUS_WAITING, SupportCase::STATUS_IN_PROGRESS])
+            ->latestOfMany('id');
+    }
 }

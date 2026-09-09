@@ -39,6 +39,18 @@
                             <i class="fa-solid fa-pen-to-square"></i>
                             <span>Đổi địa chỉ</span>
                         </button>
+                    @elseif ($isStaff && $order->customer_id)
+                        @php
+                            $supportRoute = str_starts_with($routePrefix ?? '', 'admin.')
+                                ? route('admin.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])
+                                : route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]);
+                        @endphp
+                        <a href="{{ $supportRoute }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer"
+                           title="Mở cuộc trò chuyện hỗ trợ khách hàng cho đơn này">
+                            <i class="fa-solid fa-comments"></i>
+                            <span>Nhắn tin cho khách</span>
+                        </a>
                     @endif
                 </div>
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
