@@ -61,6 +61,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('/orders/{order}/request-cancel', [OrderController::class, 'requestCancel'])->name('orders.request_cancel');
         Route::post('/orders/{order}/withdraw-cancel', [OrderController::class, 'withdrawCancel'])->name('orders.withdraw_cancel');
         Route::post('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
+        Route::post('/orders/{order}/confirm-received', [OrderController::class, 'confirmReceived'])->name('orders.confirm_received');
+        Route::post('/orders/{order}/request-return', [OrderController::class, 'requestReturn'])->name('orders.request_return');
         Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
     });
 

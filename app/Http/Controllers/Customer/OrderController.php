@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\OrderStatusHistory;
 use App\Models\Product;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ class OrderController extends Controller
         if (auth()->check() && auth()->user()->role === 'ADMIN') {
             return redirect()->route('admin.orders.index');
         }
+
+        $this->orderService->cancelExpiredUnpaidOrders();
 
         $query = Order::where('customer_id', auth()->id())->with(['latestPayment', 'details', 'reviews']);
 
@@ -75,7 +78,11 @@ class OrderController extends Controller
             ]);
         }
 
-        return view('customer.orders.index', compact('orders', 'stats'));
+        return response()
+            ->view('customer.orders.index', compact('orders', 'stats'))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 
     public function show(Order $order)
@@ -93,9 +100,16 @@ class OrderController extends Controller
             abort(403);
         }
 
+        $this->orderService->checkAndCancelIfExpired($order);
+        $order->refresh();
+
         $order->load(['details.product.images', 'payments', 'statusHistories', 'voucher', 'reviews']);
 
-        return view('customer.orders.show', compact('order'));
+        return response()
+            ->view('customer.orders.show', compact('order'))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 
     /**
@@ -230,30 +244,117 @@ class OrderController extends Controller
     }
 
     /**
-     * Customer confirms they have received the package and completed the order.
-     * Completes a shipped order and confirms pending COD payments.
+     * Customer confirms they have received the package.
+     * Can be called when order is SHIPPING or COMPLETED (waiting confirmation).
      */
-    public function complete(Request $request, Order $order)
+    public function confirmReceived(Request $request, Order $order)
     {
         if ($order->customer_id !== auth()->id()) {
             abort(403);
         }
 
-        if ($order->order_status !== 'SHIPPING') {
-            return back()->with('error', 'Đơn hàng chưa ở trạng thái đang giao hàng để xác nhận hoàn tất.');
+        // Đơn hàng đã được khách xác nhận rồi
+        if ($order->customer_confirmed_at !== null) {
+            return back()->with('error', 'Đơn hàng này đã được bạn xác nhận đã nhận hàng trước đó.');
+        }
+
+        // Chỉ xác nhận khi đơn đang giao hoặc nhân viên đã cập nhật giao thành công
+        if (! in_array($order->order_status, ['SHIPPING', 'COMPLETED'], true)) {
+            return back()->with('error', 'Đơn hàng chưa ở trạng thái giao hàng để xác nhận nhận hàng.');
         }
 
         try {
-            $this->orderService->updateStatus(
-                $order, 'COMPLETED', auth()->id(),
-                'Khách hàng đã nhận hàng và xác nhận hoàn tất đơn hàng.'
-            );
+            if ($order->order_status === 'SHIPPING') {
+                $this->orderService->updateStatus(
+                    $order,
+                    'COMPLETED',
+                    auth()->id(),
+                    'Khách hàng đã nhận hàng và xác nhận hoàn tất đơn hàng.'
+                );
+            }
+
+            $order->update([
+                'customer_confirmed_at' => now(),
+            ]);
+
+            // Ghi nhận lịch sử nếu đơn vốn đã ở COMPLETED do shop cập nhật trước
+            if ($order->order_status === 'COMPLETED') {
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'from_status' => 'COMPLETED',
+                    'to_status' => 'COMPLETED',
+                    'changed_by' => auth()->id(),
+                    'note' => 'Khách hàng đã xác nhận đã nhận được hàng.',
+                    'changed_at' => now(),
+                ]);
+            }
 
             return redirect()->route('customer.orders.review', $order->id)
                 ->with('success', '🎉 Bạn đã xác nhận đã nhận hàng thành công! Hãy gửi đánh giá để chia sẻ trải nghiệm về sản phẩm nhé.');
         } catch (\Exception $e) {
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Alias for backward compatibility with route('customer.orders.complete')
+     */
+    public function complete(Request $request, Order $order)
+    {
+        return $this->confirmReceived($request, $order);
+    }
+
+    /**
+     * Khách hàng gửi yêu cầu Trả hàng / Hoàn tiền
+     */
+    public function requestReturn(Request $request, Order $order)
+    {
+        if ($order->customer_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($order->order_status !== 'COMPLETED' || $order->isCustomerConfirmed()) {
+            return back()->with('error', 'Đơn hàng không ở trạng thái hợp lệ để yêu cầu Trả hàng / Hoàn tiền.');
+        }
+
+        if ($order->hasPendingReturnRequest()) {
+            return back()->with('error', 'Bạn đã gửi yêu cầu Trả hàng / Hoàn tiền cho đơn hàng này rồi, vui lòng chờ shop phản hồi.');
+        }
+
+        $validated = $request->validate([
+            'return_reason' => 'required|string|max:500',
+            'return_note' => 'nullable|string|max:1000',
+            'refund_bank_name' => 'nullable|string|max:100',
+            'refund_bank_account' => 'nullable|string|max:50',
+            'refund_account_holder' => 'nullable|string|max:100',
+        ], [
+            'return_reason.required' => 'Vui lòng chọn hoặc nhập lý do yêu cầu trả hàng.',
+        ]);
+
+        $fullReason = $validated['return_reason'];
+        if (! empty($validated['return_note'])) {
+            $fullReason .= ' - ' . $validated['return_note'];
+        }
+
+        $order->update([
+            'return_request_status' => 'PENDING',
+            'return_request_reason' => $fullReason,
+            'return_requested_at' => now(),
+            'refund_bank_name' => $validated['refund_bank_name'] ?? $order->refund_bank_name,
+            'refund_bank_account' => $validated['refund_bank_account'] ?? $order->refund_bank_account,
+            'refund_account_holder' => $validated['refund_account_holder'] ?? $order->refund_account_holder,
+        ]);
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'from_status' => $order->order_status,
+            'to_status' => $order->order_status,
+            'changed_by' => auth()->id(),
+            'note' => 'Khách hàng gửi yêu cầu Trả hàng / Hoàn tiền: ' . $fullReason,
+            'changed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Yêu cầu Trả hàng / Hoàn tiền của bạn đã được gửi thành công. Shop sẽ liên hệ hỗ trợ bạn sớm nhất!');
     }
 
     /**

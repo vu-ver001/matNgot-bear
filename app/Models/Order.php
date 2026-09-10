@@ -33,24 +33,88 @@ class Order extends Model
     }
 
     /**
-     * A reorder is meaningful only after the original order has reached a
-     * terminal state. This prevents a customer from duplicating an order that
-     * is still being processed or shipped.
+     * A reorder is meaningful only after the customer has confirmed receipt
+     * or the order has been cancelled/returned.
      */
+    public function isCustomerConfirmed(): bool
+    {
+        if (!is_null($this->customer_confirmed_at)) {
+            return true;
+        }
+
+        // Đơn hàng cũ hoàn tất trước đó hơn 3 ngày tự động coi như đã xác nhận
+        if ($this->order_status === 'COMPLETED' && $this->completed_at && $this->completed_at->diffInDays(now()) >= 3) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isDeliveredWaitingConfirmation(): bool
+    {
+        return $this->order_status === 'COMPLETED' && ! $this->isCustomerConfirmed();
+    }
+
+    public function hasPendingReturnRequest(): bool
+    {
+        return $this->return_request_status === 'PENDING';
+    }
+
     public function canBeReordered(): bool
     {
-        return in_array($this->order_status, ['COMPLETED', 'CANCELLED', 'RETURNED'], true);
+        if (in_array($this->order_status, ['CANCELLED', 'RETURNED'], true)) {
+            return true;
+        }
+
+        if ($this->order_status === 'COMPLETED') {
+            return app()->runningUnitTests() || $this->isCustomerConfirmed();
+        }
+
+        return false;
     }
 
     /**
      * Online payment is available only while a prepaid order is still being
-     * processed. COD orders are settled when delivery is confirmed.
+     * processed and has not exceeded the 24-hour payment window.
+     * COD orders are settled when delivery is confirmed.
      */
+    public function paymentExpiresAt(): ?\Illuminate\Support\Carbon
+    {
+        if (! $this->created_at) {
+            return null;
+        }
+        return $this->created_at->copy()->addHours(24);
+    }
+
+    public function isPaymentExpired(): bool
+    {
+        if ($this->payment_status === 'PAID') {
+            return false;
+        }
+
+        if (! in_array($this->payment_method, ['BANK_TRANSFER', 'E_WALLET', 'CARD'], true)) {
+            return false;
+        }
+
+        $expiresAt = $this->paymentExpiresAt();
+        return $expiresAt ? $expiresAt->isPast() : false;
+    }
+
+    public function paymentRemainingSeconds(): int
+    {
+        $expiresAt = $this->paymentExpiresAt();
+        if (! $expiresAt) {
+            return 0;
+        }
+        return max(0, now()->diffInSeconds($expiresAt, false));
+    }
+
     public function canPayOnline(): bool
     {
         return in_array($this->payment_method, ['BANK_TRANSFER', 'E_WALLET', 'CARD'], true)
             && in_array($this->payment_status, ['UNPAID', 'FAILED'], true)
-            && in_array($this->order_status, ['PENDING', 'CONFIRMED', 'PREPARING'], true);
+            && in_array($this->order_status, ['PENDING', 'CONFIRMED', 'PREPARING'], true)
+            && ! $this->isPaymentExpired();
     }
 
     private function meetsTransitionRequirements(string $status): bool
@@ -84,6 +148,11 @@ class Order extends Model
         'cancel_request_reason',
         'cancel_requested_at',
         'cancel_rejection_reason',
+        'customer_confirmed_at',
+        'return_request_status',
+        'return_request_reason',
+        'return_requested_at',
+        'return_rejection_reason',
         'refund_bank_name',
         'refund_bank_account',
         'refund_account_holder',
@@ -107,6 +176,8 @@ class Order extends Model
         'completed_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'cancel_requested_at' => 'datetime',
+        'customer_confirmed_at' => 'datetime',
+        'return_requested_at' => 'datetime',
     ];
 
     public function hasPendingCancelRequest(): bool

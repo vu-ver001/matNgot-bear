@@ -118,12 +118,9 @@ class Voucher extends Model
         $limitPerUser = max(1, (int) ($this->usage_limit_per_user ?? 1));
         $timesUsed = $this->countUsedByCustomer($userId);
         if ($timesUsed >= $limitPerUser) {
-            $msg = $limitPerUser === 1
-                ? "Bạn đã từng áp dụng mã [{$this->code}] này rồi. Mỗi khách hàng chỉ được sử dụng mã 1 lần duy nhất."
-                : "Bạn đã sử dụng hết {$limitPerUser} lượt áp dụng cho phép của mã [{$this->code}].";
             return [
                 'valid' => false,
-                'message' => $msg,
+                'message' => 'Bạn đã hết lượt dùng',
             ];
         }
 
