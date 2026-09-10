@@ -90,7 +90,7 @@
     </div>
 
     <!-- 4. CATALOG 2-COLUMN LAYOUT -->
-    <div class="catalog-layout">
+    <div class="catalog-layout" id="catalog-layout">
         
         <!-- LEFT FILTER SIDEBAR -->
         <aside class="filter-sidebar">
@@ -112,14 +112,14 @@
                 <div class="filter-option-list">
                     <label class="filter-checkbox-item">
                         <span>
-                            <input type="radio" name="cat_filter" value="" {{ !request('category_id') ? 'checked' : '' }} onchange="applyFilters()">
+                            <input type="radio" name="cat_filter" value="" {{ !request('category_id') ? 'checked' : '' }} onchange="onCategoryFilterChange(this)">
                             Tất cả danh mục
                         </span>
                     </label>
                     @foreach($categories as $cat)
                         <label class="filter-checkbox-item">
                             <span>
-                                <input type="radio" name="cat_filter" value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'checked' : '' }} onchange="applyFilters()">
+                                <input type="radio" name="cat_filter" value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'checked' : '' }} onchange="onCategoryFilterChange(this)">
                                 {{ $cat->name }}
                             </span>
                             <span class="filter-count">{{ $cat->products_count ?? 0 }}</span>
@@ -134,14 +134,18 @@
                     <span><i class="fa-solid fa-tag" style="color: var(--primary);"></i> Khoảng Giá (VNĐ)</span>
                 </div>
                 <div class="price-range-inputs">
-                    <input type="number" id="filter-min-price" class="price-input" placeholder="Từ (đ)" value="{{ request('min_price') }}">
-                    <input type="number" id="filter-max-price" class="price-input" placeholder="Đến (đ)" value="{{ request('max_price') }}">
+                    <input type="text" inputmode="numeric" id="filter-min-price" class="price-input" placeholder="Từ (đ)" value="{{ request('min_price') ? number_format((float)request('min_price'), 0, ',', '.') : '' }}" onblur="formatShopPrice(this)" onkeydown="if(event.key==='Enter'){formatShopPrice(this);applyFilters();}">
+                    <span class="price-range-separator">-</span>
+                    <input type="text" inputmode="numeric" id="filter-max-price" class="price-input" placeholder="Đến (đ)" value="{{ request('max_price') ? number_format((float)request('max_price'), 0, ',', '.') : '' }}" onblur="formatShopPrice(this)" onkeydown="if(event.key==='Enter'){formatShopPrice(this);applyFilters();}">
+                    <button type="button" class="btn-clear-trash" id="btn-clear-price" onclick="clearPriceFilter()" title="Xoá khoảng giá">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
                 </div>
                 <div class="price-preset-chips" style="margin-bottom: 10px;">
-                    <span class="preset-chip" onclick="setPricePreset(0, 200000)">&lt; 200k</span>
-                    <span class="preset-chip" onclick="setPricePreset(200000, 500000)">200k - 500k</span>
-                    <span class="preset-chip" onclick="setPricePreset(500000, 1000000)">500k - 1tr</span>
-                    <span class="preset-chip" onclick="setPricePreset(1000000, 3000000)">&gt; 1tr</span>
+                    <span class="preset-chip price-chip" onclick="setPricePreset(0, 200000, this)">&lt; 200k</span>
+                    <span class="preset-chip price-chip" onclick="setPricePreset(200000, 500000, this)">200k - 500k</span>
+                    <span class="preset-chip price-chip" onclick="setPricePreset(500000, 1000000, this)">500k - 1tr</span>
+                    <span class="preset-chip price-chip" onclick="setPricePreset(1000000, 3000000, this)">&gt; 1tr</span>
                 </div>
                 <button type="button" class="btn-honey-main" style="width: 100%; padding: 8px 14px; font-size: 12px; justify-content: center;" onclick="applyFilters()">
                     <i class="fa-solid fa-magnifying-glass"></i> Áp Dụng Giá
@@ -153,17 +157,30 @@
                 <div class="filter-group-title">
                     <span><i class="fa-solid fa-ruler" style="color: var(--primary);"></i> Kích Thước (Size)</span>
                 </div>
-                <div class="chip-cloud" id="size-chips-cloud">
-                    <span class="select-chip {{ request('size') == '30cm' ? 'active' : '' }}" onclick="selectSizeFilter('30cm')">30cm</span>
-                    <span class="select-chip {{ request('size') == '35cm' ? 'active' : '' }}" onclick="selectSizeFilter('35cm')">35cm</span>
-                    <span class="select-chip {{ request('size') == '40cm' ? 'active' : '' }}" onclick="selectSizeFilter('40cm')">40cm</span>
-                    <span class="select-chip {{ request('size') == '45cm' ? 'active' : '' }}" onclick="selectSizeFilter('45cm')">45cm</span>
-                    <span class="select-chip {{ request('size') == '50cm' ? 'active' : '' }}" onclick="selectSizeFilter('50cm')">50cm</span>
-                    <span class="select-chip {{ request('size') == '60cm' ? 'active' : '' }}" onclick="selectSizeFilter('60cm')">60cm</span>
-                    <span class="select-chip {{ request('size') == '1m2' ? 'active' : '' }}" onclick="selectSizeFilter('1m2')">1m2</span>
-                    <span class="select-chip {{ request('size') == '1m6' ? 'active' : '' }}" onclick="selectSizeFilter('1m6')">1m6</span>
-                    <span class="select-chip {{ request('size') == '1m8' ? 'active' : '' }}" onclick="selectSizeFilter('1m8')">1m8 - 2m</span>
+                <!-- Dòng 1: Ô nhập kích thước + chữ cm + icon thùng rác -->
+                <div class="size-input-row">
+                    <div class="size-input-wrapper">
+                        <input type="text" id="filter-custom-size" class="price-input" placeholder="Nhập kích thước..." value="{{ request('size') }}" onkeydown="if(event.key==='Enter'){applyCustomSizeFilter();}">
+                        <span class="size-unit-tag">cm</span>
+                    </div>
+                    <button type="button" class="btn-clear-trash" id="btn-clear-size" onclick="clearSizeFilter()" title="Xoá kích thước">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
                 </div>
+                <!-- Dòng 2: Khung 25cm-40cm; 45cm-60cm -->
+                <div class="size-preset-row">
+                    <span class="preset-chip size-range-chip" data-range="25-40" onclick="setSizeRangePreset(25, 40, this)">25cm - 40cm</span>
+                    <span class="preset-chip size-range-chip" data-range="45-60" onclick="setSizeRangePreset(45, 60, this)">45cm - 60cm</span>
+                </div>
+                <!-- Dòng 3: Khung 60cm-1m2; 1m2-1m8 -->
+                <div class="size-preset-row" style="margin-bottom: 10px;">
+                    <span class="preset-chip size-range-chip" data-range="60-120" onclick="setSizeRangePreset(60, 120, this)">60cm - 1m2</span>
+                    <span class="preset-chip size-range-chip" data-range="120-180" onclick="setSizeRangePreset(120, 180, this)">1m2 - 1m8</span>
+                </div>
+                <!-- Dưới cùng: Nút áp dụng giống mục khoảng giá -->
+                <button type="button" class="btn-honey-main" style="width: 100%; padding: 8px 14px; font-size: 12px; justify-content: center;" onclick="applyCustomSizeFilter()">
+                    <i class="fa-solid fa-ruler-combined"></i> Áp Dụng Kích Thước
+                </button>
             </div>
 
             <!-- Filter 4: In Stock -->
@@ -231,12 +248,19 @@
 
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <label for="catalog-sort-select" style="font-size: 13px; font-weight: 700; color: var(--text-muted);">Sắp xếp theo:</label>
-                    <select id="catalog-sort-select" class="select-sort-control" onchange="applyFilters()">
-                        <option value="latest" {{ request('sort') == 'latest' || !request('sort') ? 'selected' : '' }}>Mới nhất</option>
-                        <option value="best_seller" {{ request('sort') == 'best_seller' ? 'selected' : '' }}>Bán chạy nhất</option>
-                        <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
-                        <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
-                    </select>
+                    <div class="select-sort-wrapper">
+                        <select id="catalog-sort-select" class="select-sort-control" onchange="applyFilters()">
+                            @php
+                                $defaultSort = request('category_id') ? 'best_seller' : 'latest';
+                                $currentSort = request('sort', $defaultSort);
+                            @endphp
+                            <option value="best_seller" {{ $currentSort == 'best_seller' ? 'selected' : '' }}>Bán chạy nhất</option>
+                            <option value="latest" {{ $currentSort == 'latest' ? 'selected' : '' }}>Mới nhất</option>
+                            <option value="price_asc" {{ $currentSort == 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
+                            <option value="price_desc" {{ $currentSort == 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-sort-icon"></i>
+                    </div>
                 </div>
             </div>
 
@@ -258,12 +282,33 @@
 
 @section('scripts')
 <script>
-    let selectedSize = "{{ request('size') }}";
-    let selectedColor = "{{ request('color') }}";
-    let currentPage = 1;
+    function scrollToCatalogSection(smooth = true) {
+        const target = document.getElementById('catalog-layout');
+        if (!target) return;
+        const header = document.querySelector('header.site-header');
+        const headerHeight = header ? header.getBoundingClientRect().height : 125;
+        const targetY = target.getBoundingClientRect().top + window.pageYOffset - headerHeight - 15;
+        window.scrollTo({
+            top: Math.max(0, targetY),
+            behavior: smooth ? 'smooth' : 'auto'
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         loadCatalogProducts();
+
+        // Tự động lướt xuống danh sách sản phẩm khi có hash hoặc tham số lọc
+        if (window.location.hash === '#catalog-layout' || window.location.hash.includes('catalog') || window.location.search.includes('category_id') || window.location.search.includes('scroll=')) {
+            setTimeout(() => {
+                scrollToCatalogSection(true);
+            }, 150);
+        }
+    });
+
+    window.addEventListener('hashchange', () => {
+        if (window.location.hash === '#catalog-layout' || window.location.hash.includes('catalog')) {
+            scrollToCatalogSection(true);
+        }
     });
 
     function toggleCatIntro() {
@@ -281,28 +326,80 @@
         }
     }
 
-    function setPricePreset(min, max) {
-        document.getElementById('filter-min-price').value = min;
-        document.getElementById('filter-max-price').value = max;
+    let selectedSize = "{{ request('size') }}";
+    let selectedSizeRange = "{{ request('size_range') }}";
+    let selectedColor = "{{ request('color') }}";
+    let currentPage = 1;
+
+    function formatShopPrice(input) {
+        if (!input || !input.value.trim()) return;
+        const digits = String(input.value).replace(/\D/g, '');
+        input.value = digits ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+    }
+
+    function parseShopPrice(val) {
+        if (!val) return '';
+        const digits = String(val).replace(/\D/g, '');
+        return digits || '';
+    }
+
+    function setPricePreset(min, max, el) {
+        const minDigits = String(min).replace(/\D/g, '');
+        const maxDigits = String(max).replace(/\D/g, '');
+        document.getElementById('filter-min-price').value = minDigits ? minDigits.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+        document.getElementById('filter-max-price').value = maxDigits ? maxDigits.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+        
+        // Cập nhật trạng thái active cho chip giá
+        document.querySelectorAll('.price-chip').forEach(c => c.classList.remove('active'));
+        if (el) el.classList.add('active');
+
         applyFilters();
     }
 
-    function selectSizeFilter(size) {
-        selectedSize = (selectedSize === size) ? '' : size;
-        updateChipClasses('size-chips-cloud', selectedSize);
+    function clearPriceFilter() {
+        const minInput = document.getElementById('filter-min-price');
+        const maxInput = document.getElementById('filter-max-price');
+        if (minInput) minInput.value = '';
+        if (maxInput) maxInput.value = '';
+        document.querySelectorAll('.price-chip').forEach(c => c.classList.remove('active'));
         applyFilters();
     }
 
-    function updateChipClasses(containerId, activeVal) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        container.querySelectorAll('.select-chip').forEach(chip => {
-            if (chip.innerText.trim().includes(activeVal) && activeVal !== '') {
-                chip.classList.add('active');
-            } else {
-                chip.classList.remove('active');
-            }
-        });
+    function setSizeRangePreset(min, max, el) {
+        const rangeVal = `${min}-${max}`;
+        if (selectedSizeRange === rangeVal) {
+            // Click lại chính nó thì bỏ chọn
+            selectedSizeRange = '';
+            el.classList.remove('active');
+        } else {
+            selectedSizeRange = rangeVal;
+            document.querySelectorAll('.size-range-chip').forEach(c => c.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            // Xóa ô nhập tay khi chọn khung định sẵn
+            const customInput = document.getElementById('filter-custom-size');
+            if (customInput) customInput.value = '';
+            selectedSize = '';
+        }
+        applyFilters();
+    }
+
+    function applyCustomSizeFilter() {
+        const customInput = document.getElementById('filter-custom-size');
+        const val = customInput ? customInput.value.trim() : '';
+        selectedSize = val;
+        selectedSizeRange = '';
+        document.querySelectorAll('.size-range-chip').forEach(c => c.classList.remove('active'));
+        applyFilters();
+    }
+
+    function clearSizeFilter() {
+        const customInput = document.getElementById('filter-custom-size');
+        if (customInput) customInput.value = '';
+        selectedSize = '';
+        selectedSizeRange = '';
+        document.querySelectorAll('.size-range-chip').forEach(c => c.classList.remove('active'));
+        applyFilters();
     }
 
     function resetAllFilters() {
@@ -314,13 +411,28 @@
         document.querySelectorAll('input[name="cat_filter"]').forEach(r => r.checked = (r.value === ''));
         document.getElementById('filter-min-price').value = '';
         document.getElementById('filter-max-price').value = '';
-        document.getElementById('filter-in-stock').checked = false;
+        document.querySelectorAll('.price-chip').forEach(c => c.classList.remove('active'));
+        
+        const customInput = document.getElementById('filter-custom-size');
+        if (customInput) customInput.value = '';
         selectedSize = '';
+        selectedSizeRange = '';
+        document.querySelectorAll('.size-range-chip').forEach(c => c.classList.remove('active'));
+
+        document.getElementById('filter-in-stock').checked = false;
         selectedColor = '';
-        updateChipClasses('size-chips-cloud', '');
         document.getElementById('catalog-sort-select').value = 'latest';
         currentPage = 1;
         loadCatalogProducts();
+    }
+
+    function onCategoryFilterChange(radio) {
+        // Tự động chuyển sắp xếp sang "Bán chạy nhất" khi click vào bất kỳ danh mục nào
+        const sortSelect = document.getElementById('catalog-sort-select');
+        if (sortSelect) {
+            sortSelect.value = 'best_seller';
+        }
+        applyFilters(1);
     }
 
     function applyFilters(page = 1) {
@@ -342,8 +454,8 @@
 
         const selectedCat = document.querySelector('input[name="cat_filter"]:checked');
         const categoryId = selectedCat ? selectedCat.value : '';
-        const minPrice = document.getElementById('filter-min-price').value;
-        const maxPrice = document.getElementById('filter-max-price').value;
+        const minPrice = parseShopPrice(document.getElementById('filter-min-price').value);
+        const maxPrice = parseShopPrice(document.getElementById('filter-max-price').value);
         const inStock = document.getElementById('filter-in-stock').checked;
         const sort = document.getElementById('catalog-sort-select').value;
         const urlParams = new URLSearchParams(window.location.search);
@@ -362,6 +474,7 @@
         if (minPrice) params.append('min_price', minPrice);
         if (maxPrice) params.append('max_price', maxPrice);
         if (selectedSize) params.append('size', selectedSize);
+        if (selectedSizeRange) params.append('size_range', selectedSizeRange);
         if (inStock) params.append('in_stock', '1');
 
         try {
@@ -454,12 +567,17 @@
                                     }
                                 </div>
                                 <div class="product-card-footer">
-                                    <span><i class="fa-solid fa-ruler" style="color: var(--text-light);"></i> ${p.size || 'Size chuẩn'}</span>
+                                    <div class="product-card-meta">
+                                        <span class="rating-badge-pill" title="Đánh giá ${(parseFloat(p.avg_rating) || 5.0).toFixed(1)} sao">
+                                            <i class="fa-solid fa-star"></i> ${(parseFloat(p.avg_rating) || 5.0).toFixed(1)}
+                                        </span>
+                                        <span class="sold-count-text">Đã bán ${p.sold_count || 0}</span>
+                                    </div>
                                     ${(p.stock_quantity > 0)
                                         ? `<button type="button" class="btn-add-cart-quick" onclick="addToCart(${p.id}, '${nameEscaped}')" title="Thêm vào giỏ hàng">
                                             <i class="fa-solid fa-plus"></i>
                                            </button>`
-                                        : `<button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để Thêm vào giỏ'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
+                                        : `<button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
                                             <i class="fa-solid fa-ban"></i>
                                            </button>`
                                     }
@@ -473,6 +591,9 @@
             try {
                 if (typeof updateWishlistBadge === 'function') {
                     updateWishlistBadge();
+                }
+                if (typeof syncAllHeartIcons === 'function') {
+                    syncAllHeartIcons();
                 }
             } catch(e) {
                 console.warn('Wishlist sync skipped:', e);

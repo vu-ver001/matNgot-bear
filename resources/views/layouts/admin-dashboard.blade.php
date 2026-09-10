@@ -45,6 +45,9 @@
             <button type="button" class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Thu gọn menu" id="sidebarCollapseBtn">
                 <i class="fa-solid fa-chevron-left" id="sidebarToggleIcon"></i>
             </button>
+            <button type="button" class="sidebar-mobile-close-btn" onclick="closeMobileSidebar()" title="Đóng menu" id="sidebarMobileCloseBtn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
         <nav class="sidebar-nav">
@@ -166,6 +169,22 @@
 
     <!-- ====== MAIN CONTENT ====== -->
     <div class="admin-main" id="adminMain">
+        <!-- Thanh Header Mobile xuất hiện khi thu nhỏ màn hình có nút 3 gạch ở góc trên bên trái -->
+        <header class="admin-mobile-topbar" id="adminMobileTopbar">
+            <button type="button" class="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Mở thanh menu" id="mobileMenuBtn" aria-label="Mở menu quản trị">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="mobile-topbar-brand">
+                <a href="{{ route('admin.dashboard') }}" class="mobile-brand-title">Mật Ngọt Bear</a>
+                <span class="mobile-brand-badge">Admin</span>
+            </div>
+            <div class="mobile-topbar-actions">
+                <a href="{{ route('home') }}" class="mobile-btn-store" title="Xem cửa hàng" target="_blank">
+                    <i class="fa-solid fa-store"></i>
+                </a>
+            </div>
+        </header>
+
         <script>
             (function() {
                 if (localStorage.getItem('mn_admin_sidebar_collapsed') === '1') {
@@ -177,6 +196,9 @@
             @yield('content')
         </div>
     </div>
+
+    <!-- Backdrop mờ khi mở menu trên mobile/màn hình nhỏ -->
+    <div class="mobile-sidebar-backdrop" id="mobileSidebarBackdrop" onclick="closeMobileSidebar()"></div>
 
     <!-- Script Điều Khiển Đóng / Mở Menu & Popup Card Người Dùng -->
     <script>
@@ -234,10 +256,53 @@
             localStorage.setItem('mn_admin_sidebar_collapsed', '1');
         }
 
+        // ====== ĐIỀU KHIỂN MENU KHI THU NHỎ MÀN HÌNH (RESPONSIVE / MOBILE) ======
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            if (sidebar?.classList.contains('mobile-open')) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        }
+
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('mobileSidebarBackdrop');
+            sidebar?.classList.add('mobile-open');
+            backdrop?.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('mobileSidebarBackdrop');
+            sidebar?.classList.remove('mobile-open');
+            backdrop?.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Tự động đóng menu mobile khi phóng to màn hình trở lại (> 992px)
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                closeMobileSidebar();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             if (localStorage.getItem('mn_admin_sidebar_collapsed') === '1') {
                 updateCollapseIcon(true);
             }
+
+            // Tự động đóng sidebar mobile khi bấm vào link chuyển trang
+            const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
+            navLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        closeMobileSidebar();
+                    }
+                });
+            });
         });
     </script>
     @yield('scripts')

@@ -10,42 +10,37 @@
                 <span style="font-size: 20px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.5px;">Mật Ngọt Bear</span>
             </div>
             <p>Thương hiệu gấu bông cao cấp hàng đầu Việt Nam. Chúng mình mang đến những người bạn nhồi bông mềm mại, êm ái, an toàn 100% cho làn da và chất lượng thêu tỉ mỉ chuẩn từng đường kim mũi chỉ.</p>
-            <p><i class="fa-solid fa-location-dot" style="color: var(--honey-gold); margin-right: 8px;"></i> Showroom: 123 Đường Cầu Giấy, Quận Cầu Giấy, Hà Nội</p>
-            <p><i class="fa-solid fa-phone" style="color: var(--honey-gold); margin-right: 8px;"></i> Hotline tư vấn & đặt hàng: <strong>097.989.6616</strong></p>
+            <p><i class="fa-solid fa-location-dot" style="color: var(--honey-gold); margin-right: 8px;"></i> Showroom: Số 41A đường Phú Diễn, P. Phú Diễn, TP. Hà Nội</p>
+            <p><i class="fa-solid fa-phone" style="color: var(--honey-gold); margin-right: 8px;"></i> Hotline tư vấn & đặt hàng: <strong>037.746.6205</strong></p>
         </div>
 
-        <!-- Col 2: Categories -->
-        <div class="footer-col">
-            <h4>BỘ SƯU TẬP TEDDY</h4>
-            <ul class="footer-links" id="footer-categories-list">
-                <li><a href="{{ route('products.index', ['category_id' => 1]) }}"><i class="fa-solid fa-angle-right"></i> Teddy Classic Cổ Điển</a></li>
-                <li><a href="{{ route('products.index', ['category_id' => 2]) }}"><i class="fa-solid fa-angle-right"></i> Butter Bear Siêu Hot</a></li>
-                <li><a href="{{ route('products.index', ['category_id' => 3]) }}"><i class="fa-solid fa-angle-right"></i> Teddy Mr. Bean Vintage</a></li>
-                <li><a href="{{ route('products.index', ['category_id' => 4]) }}"><i class="fa-solid fa-angle-right"></i> Teddy Couple Đôi Bạn</a></li>
-                <li><a href="{{ route('products.index', ['category_id' => 5]) }}"><i class="fa-solid fa-angle-right"></i> Gối Bông Teddy Đa Năng</a></li>
-            </ul>
-        </div>
-
-        <!-- Col 3: Customer Service (Chờ đường dẫn của bạn nhóm) -->
+        <!-- Col 2: Customer Service (Không click được) -->
         <div class="footer-col">
             <h4>CHÍNH SÁCH BÁN HÀNG</h4>
-            <ul class="footer-links">
-                <li><a href="#"><i class="fa-solid fa-angle-right"></i> Đổi Trả Trong 7 Ngày</a></li>
-                <li><a href="#"><i class="fa-solid fa-angle-right"></i> Giao Hàng Toàn Quốc 30k</a></li>
-                <li><a href="#"><i class="fa-solid fa-angle-right"></i> Bảo Hành Đường May Trọn Đời</a></li>
-                <li><a href="#"><i class="fa-solid fa-angle-right"></i> Gói Quà & Tặng Thiệp Xinh</a></li>
+            <ul class="footer-links" style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 12px; color: #D7CCC8; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: default;">
+                    <i class="fa-solid fa-angle-right" style="color: var(--honey-gold, #E59819);"></i>
+                    <span>Đổi Trả Trong 7 Ngày</span>
+                </li>
+                <li style="margin-bottom: 12px; color: #D7CCC8; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: default;">
+                    <i class="fa-solid fa-angle-right" style="color: var(--honey-gold, #E59819);"></i>
+                    <span>Giao Hàng Toàn Quốc 30k</span>
+                </li>
+                <li style="margin-bottom: 12px; color: #D7CCC8; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: default;">
+                    <i class="fa-solid fa-angle-right" style="color: var(--honey-gold, #E59819);"></i>
+                    <span>Bảo Hành Đường May Trọn Đời</span>
+                </li>
+                <li style="margin-bottom: 12px; color: #D7CCC8; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: default;">
+                    <i class="fa-solid fa-angle-right" style="color: var(--honey-gold, #E59819);"></i>
+                    <span>Gói Quà & Tặng Thiệp Xinh</span>
+                </li>
             </ul>
         </div>
 
-        <!-- Col 4: Fanpage & Admin portal -->
+        <!-- Col 3: Fanpage info (Đã bỏ 3 icon) -->
         <div class="footer-col">
             <h4>KẾT NỐI VỚI CHÚNG MÌNH</h4>
-            <p>Theo dõi fanpage Mật Ngọt Bear để nhận voucher giảm giá 15% cho đơn hàng đầu tiên!</p>
-            <div style="display: flex; gap: 10px;">
-                <a href="https://facebook.com" target="_blank" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i class="fa-brands fa-facebook-f"></i></a>
-                <a href="https://tiktok.com" target="_blank" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i class="fa-brands fa-tiktok"></i></a>
-                <a href="https://instagram.com" target="_blank" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #FFFFFF;"><i class="fa-brands fa-instagram"></i></a>
-            </div>
+            <p>Kết nối cùng Mật Ngọt Bear để nhận voucher giảm giá cho đơn hàng bạn nhé!</p>
         </div>
     </div>
 

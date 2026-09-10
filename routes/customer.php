@@ -14,6 +14,16 @@ Route::prefix('customer')->name('customer.')->group(function () {
         // Dashboard / Account Redirect
         Route::get('/dashboard', fn() => redirect()->route('profile.edit'))->name('dashboard');
 
+        // Wishlist Database Toggle (Ăn liền trực tiếp với CSDL)
+        Route::post('/wishlist/toggle', [\App\Http\Controllers\Customer\WishlistController::class, 'toggle'])->name('wishlist.toggle');
+        Route::get('/wishlist/user-ids', [\App\Http\Controllers\Customer\WishlistController::class, 'userWishlistIds'])->name('wishlist.user_ids');
+
+        // 2. Checkout routes
+        Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+        Route::get('/checkout-index', [CheckoutController::class, 'index'])->name('checkout.index');
+        Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+        Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+        Route::match(['GET', 'POST'], '/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculate_shipping');
         // 0. Kho Voucher & Khuyến Mãi (Khách hàng & Nhân viên tư vấn xem được, Admin bị chặn 403)
         Route::get('/vouchers', [CustomerVoucherController::class, 'index'])
             ->middleware(['role:CUSTOMER,STAFF'])

@@ -21,8 +21,6 @@ class Product extends Model
         'description',
         'price',
         'sale_price',
-        'sale_start_at',
-        'sale_end_at',
         'size',
         'color',
         'material',
@@ -34,8 +32,6 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'sale_price' => 'decimal:2',
-        'sale_start_at' => 'datetime',
-        'sale_end_at' => 'datetime',
         'stock_quantity' => 'integer',
         'sold_count' => 'integer',
     ];
@@ -43,7 +39,79 @@ class Product extends Model
     protected $appends = [
         'is_on_sale',
         'effective_price',
+        'avg_rating',
+        'available_sizes',
+        'available_colors',
     ];
+
+    /**
+     * Điểm đánh giá trung bình của sản phẩm (mặc định 5.0 nếu chưa có đánh giá).
+     */
+    public function getAvgRatingAttribute(): float
+    {
+        if (isset($this->attributes['avg_rating']) && $this->attributes['avg_rating'] !== null) {
+            return round((float) $this->attributes['avg_rating'], 1);
+        }
+        $avg = $this->reviews()->where('is_hidden', false)->avg('rating');
+        return $avg ? round((float) $avg, 1) : 5.0;
+    }
+
+    public function getAvailableSizesAttribute(): array
+    {
+        $variantSizes = $this->variants()
+            ->whereNotNull('size')
+            ->where('size', '!=', '')
+            ->where('status', 'ACTIVE')
+            ->pluck('size')
+            ->toArray();
+
+        if (!empty($variantSizes)) {
+            return array_values(array_unique($variantSizes));
+        }
+
+        $sizes = static::where('category_id', $this->category_id)
+            ->whereNotNull('size')
+            ->where('size', '!=', '')
+            ->distinct()
+            ->pluck('size')
+            ->toArray();
+
+        if ($this->size && !in_array($this->size, $sizes)) {
+            array_unshift($sizes, $this->size);
+        }
+
+        return !empty($sizes) ? array_values(array_unique($sizes)) : [$this->size ?: 'Size chuẩn'];
+    }
+
+    /**
+     * Danh sách màu sắc có sẵn của dòng sản phẩm từ cơ sở dữ liệu.
+     */
+    public function getAvailableColorsAttribute(): array
+    {
+        $variantColors = $this->variants()
+            ->whereNotNull('color')
+            ->where('color', '!=', '')
+            ->where('status', 'ACTIVE')
+            ->pluck('color')
+            ->toArray();
+
+        if (!empty($variantColors)) {
+            return array_values(array_unique($variantColors));
+        }
+
+        $colors = static::where('category_id', $this->category_id)
+            ->whereNotNull('color')
+            ->where('color', '!=', '')
+            ->distinct()
+            ->pluck('color')
+            ->toArray();
+
+        if ($this->color && !in_array($this->color, $colors)) {
+            array_unshift($colors, $this->color);
+        }
+
+        return !empty($colors) ? array_values(array_unique($colors)) : [$this->color ?: 'Màu tự nhiên'];
+    }
 
     /**
      * Kiểm tra xem sản phẩm có đang trong thời gian khuyến mãi hợp lệ hay không.
@@ -51,17 +119,13 @@ class Product extends Model
      */
     public function getIsOnSaleAttribute(): bool
     {
+        // Nếu sản phẩm có biến thể, kiểm tra theo biến thể mặc định (hoặc bất kỳ biến thể nào đang sale)
+        if ($this->relationLoaded('variants') && $this->variants->isNotEmpty()) {
+            $defaultVar = $this->variants->firstWhere('is_default', true) ?? $this->variants->first();
+            return $defaultVar ? $defaultVar->is_on_sale : false;
+        }
+
         if (empty($this->sale_price) || $this->sale_price >= $this->price) {
-            return false;
-        }
-
-        $now = now();
-
-        if ($this->sale_start_at && $now->lt($this->sale_start_at)) {
-            return false;
-        }
-
-        if ($this->sale_end_at && $now->gt($this->sale_end_at)) {
             return false;
         }
 
@@ -85,6 +149,11 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 
     public function cartItems(): HasMany
