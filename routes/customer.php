@@ -20,6 +20,10 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
         Route::delete('/cart-clear', [CartController::class, 'clear'])->name('cart.clear');
 
+        // Wishlist Database Toggle (Ăn liền trực tiếp với CSDL)
+        Route::post('/wishlist/toggle', [\App\Http\Controllers\Customer\WishlistController::class, 'toggle'])->name('wishlist.toggle');
+        Route::get('/wishlist/user-ids', [\App\Http\Controllers\Customer\WishlistController::class, 'userWishlistIds'])->name('wishlist.user_ids');
+
         // 2. Checkout routes
         Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
         Route::get('/checkout-index', [CheckoutController::class, 'index'])->name('checkout.index');

@@ -22,10 +22,14 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\View::composer('*', function ($view) {
             if (auth()->check()) {
                 $realCartCount = \App\Models\CartItem::where('user_id', auth()->id())->count();
+                $realWishlistCount = \App\Models\WishlistItem::where('user_id', auth()->id())->count();
             } else {
-                $realCartCount = count(session()->get('guest_cart', []));
+                $guestCart = session()->get('guest_cart', []);
+                $realCartCount = count($guestCart);
+                $realWishlistCount = 0;
             }
-            $view->with('realCartCount', $realCartCount);
+            $view->with('realCartCount', (int) $realCartCount);
+            $view->with('realWishlistCount', (int) $realWishlistCount);
         });
     }
 }

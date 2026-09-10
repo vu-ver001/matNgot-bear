@@ -73,6 +73,7 @@ class ProductController extends Controller
             ->with([
                 'category',
                 'images' => fn($q) => $q->orderBy('sort_order', 'asc'),
+                'variants' => fn($q) => $q->where('status', 'ACTIVE')->orderBy('price', 'asc'),
                 'reviews' => fn($q) => $q->where('is_hidden', false)->with('user:id,full_name,email')->latest(),
             ])
             ->withAvg(['reviews as avg_rating' => fn($q) => $q->where('is_hidden', false)], 'rating')

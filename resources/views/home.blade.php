@@ -75,7 +75,7 @@
                                     <i class="fa-solid fa-bag-shopping"></i> KHÁM PHÁ CỬA HÀNG
                                 </a>
                                 <a href="{{ route('products.index', ['sort' => 'best_seller']) }}" class="btn-hero-secondary">
-                                    <i class="fa-solid fa-circle-play"></i> MẪU BÁN CHẠY NHẤT
+                                    <i class="fa-solid fa-circle-play"></i> BÁN CHẠY NHẤT
                                 </a>
                             </div>
                             <div class="hero-bottom-doodle">
@@ -237,11 +237,9 @@
                             </div>
                             <div class="hero-btn-actions">
                                 <a href="{{ route('products.index', ['search' => 'Couple']) }}" class="btn-hero-primary">
-                                    <i class="fa-solid fa-bag-shopping"></i> CHỌN QUÀ CHO NGƯỜI ẤY
+                                    <i class="fa-solid fa-bag-shopping"></i> CHỌN QUÀ TẶNG
                                 </a>
-                                <a href="{{ route('products.index') }}" class="btn-hero-secondary">
-                                    <i class="fa-solid fa-circle-play"></i> BỘ SƯU TẬP QUÀ TẶNG
-                                </a>
+                               
                             </div>
                             <div class="hero-bottom-doodle">
                                 <span class="doodle-bear">💕</span>
@@ -441,14 +439,14 @@
                 </h2>
                 <p style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">Khám phá các bộ sưu tập gấu bông theo kích thước và xu hướng hot</p>
             </div>
-            <a href="{{ route('products.index') }}" class="section-view-all">
+            <a href="{{ route('products.index') }}#catalog-layout" class="section-view-all">
                 Xem tất cả <i class="fa-solid fa-arrow-right"></i>
             </a>
         </div>
 
         <div class="home-categories-grid">
             @foreach($categories->take(4) as $category)
-                <a href="{{ route('products.index', ['category_id' => $category->id]) }}" class="home-cat-card">
+                <a href="{{ route('products.index', ['category_id' => $category->id]) }}#catalog-layout" class="home-cat-card">
                     <div class="home-cat-icon">
                         <i class="fa-solid fa-paw"></i>
                     </div>
@@ -512,13 +510,18 @@
                                 @endif
                             </div>
                             <div class="product-card-footer">
-                                <span><i class="fa-solid fa-bag-shopping" style="color: var(--honey-dark);"></i> Đã bán {{ $product->sold_count ?? 0 }}</span>
+                                <div class="product-card-meta">
+                                    <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating ?: 5.0, 1) }} sao">
+                                        <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating ?: 5.0, 1) }}
+                                    </span>
+                                    <span class="sold-count-text">Đã bán {{ $product->sold_count ?? 0 }}</span>
+                                </div>
                                 @if($product->stock_quantity > 0)
                                     <button type="button" class="btn-add-cart-quick" onclick="addToCart({{ $product->id }}, '{{ addslashes($product->name) }}')" title="Thêm vào giỏ">
                                         <i class="fa-solid fa-plus"></i>
                                     </button>
                                 @else
-                                    <button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để Thêm vào giỏ'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
+                                    <button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
                                         <i class="fa-solid fa-ban"></i>
                                     </button>
                                 @endif
@@ -567,11 +570,12 @@
                     $primaryImg = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
                     $hasSale = $product->is_on_sale;
+                    $discountPct = ($hasSale && $product->price > 0 && $product->sale_price < $product->price) ? round((($product->price - $product->sale_price) / $product->price) * 100) : 0;
                 @endphp
                 <div class="product-card">
                     <div class="product-card-img-wrap">
-                        @if($hasSale)
-                            <span class="card-badge-sale">Sale</span>
+                        @if($hasSale && $discountPct > 0)
+                            <span class="card-badge-sale">-{{ $discountPct }}%</span>
                         @endif
                         <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $product->price }}, sale_price: {{ $product->sale_price ?? 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
                             <i class="fa-regular fa-heart"></i>
@@ -597,13 +601,18 @@
                                 @endif
                             </div>
                             <div class="product-card-footer">
-                                <span><i class="fa-solid fa-ruler" style="color: var(--text-light);"></i> {{ $product->size ?? 'Nhiều size' }}</span>
+                                <div class="product-card-meta">
+                                    <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating ?: 5.0, 1) }} sao">
+                                        <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating ?: 5.0, 1) }}
+                                    </span>
+                                    <span class="sold-count-text">Đã bán {{ $product->sold_count ?? 0 }}</span>
+                                </div>
                                 @if($product->stock_quantity > 0)
                                     <button type="button" class="btn-add-cart-quick" onclick="addToCart({{ $product->id }}, '{{ addslashes($product->name) }}')" title="Thêm vào giỏ">
                                         <i class="fa-solid fa-plus"></i>
                                     </button>
                                 @else
-                                    <button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để Thêm vào giỏ'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
+                                    <button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
                                         <i class="fa-solid fa-ban"></i>
                                     </button>
                                 @endif

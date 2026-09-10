@@ -128,7 +128,7 @@ class CartController extends Controller
         );
 
         $cartItem->touch();
-        $cartCount = CartItem::where('user_id', $userId)->count();
+        $cartCount = (int) CartItem::where('user_id', $userId)->count();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -230,7 +230,7 @@ class CartController extends Controller
     public function count(Request $request): JsonResponse
     {
         $userId = auth()->id();
-        $cartCount = $userId ? CartItem::where('user_id', $userId)->count() : 0;
+        $cartCount = $userId ? (int) CartItem::where('user_id', $userId)->count() : 0;
 
         return response()->json([
             'success' => true,
