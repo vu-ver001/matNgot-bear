@@ -22,7 +22,8 @@ class PaymentController extends Controller
         protected MomoService $momoService,
         protected VnpayService $vnpayService,
         protected VietQrService $vietQrService,
-        protected SepayService $sepayService
+        protected SepayService $sepayService,
+        protected \App\Services\OrderService $orderService
     ) {}
 
     /**
@@ -30,6 +31,11 @@ class PaymentController extends Controller
      */
     public function showQR(Order $order): View|RedirectResponse
     {
+        if ($this->orderService->checkAndCancelIfExpired($order) || ! $order->canPayOnline()) {
+            return redirect()->route('customer.orders.show', $order->id)
+                ->with('error', "Đơn hàng #{$order->order_code} đã quá thời hạn thanh toán 24 giờ và đã tự động bị hủy.");
+        }
+
         $order->load(['details.product', 'payments']);
 
         $paymentConfig = array_merge(
@@ -56,6 +62,11 @@ class PaymentController extends Controller
      */
     public function redirectToVnpay(Order $order): RedirectResponse
     {
+        if ($this->orderService->checkAndCancelIfExpired($order) || ! $order->canPayOnline()) {
+            return redirect()->route('customer.orders.show', $order->id)
+                ->with('error', "Đơn hàng #{$order->order_code} đã quá thời hạn thanh toán 24 giờ và đã tự động bị hủy.");
+        }
+
         $returnUrl = route('payment.vnpay.return');
         $paymentUrl = $this->vnpayService->createPaymentUrl($order, $returnUrl, request()->ip() ?? '127.0.0.1');
 
@@ -72,6 +83,11 @@ class PaymentController extends Controller
      */
     public function redirectToMomo(Order $order): RedirectResponse
     {
+        if ($this->orderService->checkAndCancelIfExpired($order) || ! $order->canPayOnline()) {
+            return redirect()->route('customer.orders.show', $order->id)
+                ->with('error', "Đơn hàng #{$order->order_code} đã quá thời hạn thanh toán 24 giờ và đã tự động bị hủy.");
+        }
+
         $returnUrl = route('payment.momo.return');
         $ipnUrl = route('payment.momo.ipn');
         $momoRes = $this->momoService->createGatewayPayment($order, $returnUrl, $ipnUrl);
@@ -454,6 +470,11 @@ class PaymentController extends Controller
     {
         if ($order->customer_id !== auth()->id() && auth()->user()?->role !== 'ADMIN') {
             abort(403, 'Bạn không có quyền thao tác trên đơn hàng này.');
+        }
+
+        if ($this->orderService->checkAndCancelIfExpired($order) || ! $order->canPayOnline()) {
+            return redirect()->route('customer.orders.show', $order->id)
+                ->with('error', "Đơn hàng #{$order->order_code} đã quá thời hạn thanh toán 24 giờ và đã tự động bị hủy.");
         }
 
         // Nếu đơn hàng là thu COD thì không cho phép thanh toán kiểu đổi phương thức khác nữa mà sẽ là thu COD

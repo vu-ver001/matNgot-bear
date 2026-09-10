@@ -190,6 +190,58 @@ class OrderService
     }
 
     /**
+     * Tự động kiểm tra và hủy đơn hàng nếu đơn quá hạn thanh toán 24 giờ.
+     * Trả về true nếu đơn vừa được tự động hủy.
+     */
+    public function checkAndCancelIfExpired(Order $order): bool
+    {
+        if ($order->order_status === 'CANCELLED') {
+            return false;
+        }
+
+        if ($order->isPaymentExpired() && $order->order_status === 'PENDING') {
+            $this->cancelOrder(
+                $order,
+                null,
+                'Hệ thống tự động hủy do quá thời hạn thanh toán 24 giờ'
+            );
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Quét và tự động hủy tất cả các đơn hàng online chưa thanh toán quá 24h.
+     * Trả về số lượng đơn đã hủy.
+     */
+    public function cancelExpiredUnpaidOrders(): int
+    {
+        $expiredOrders = Order::query()
+            ->where('order_status', 'PENDING')
+            ->whereIn('payment_status', ['UNPAID', 'FAILED'])
+            ->whereIn('payment_method', ['BANK_TRANSFER', 'CARD', 'E_WALLET'])
+            ->where('created_at', '<=', now()->subHours(24))
+            ->get();
+
+        $count = 0;
+        foreach ($expiredOrders as $order) {
+            try {
+                $this->cancelOrder(
+                    $order,
+                    null,
+                    'Hệ thống tự động hủy do quá thời hạn thanh toán 24 giờ'
+                );
+                $count++;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Lỗi khi tự động hủy đơn hàng #{$order->order_code}: " . $e->getMessage());
+            }
+        }
+
+        return $count;
+    }
+
+    /**
      * Nhân viên xác nhận đã chuyển tiền hoàn lại cho khách hàng
      */
     public function confirmRefundOrder(Order $order, int $adminId, ?string $refundNote = null): Order

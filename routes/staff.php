@@ -42,7 +42,6 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->grou
 
     // Các trang mục phụ & placeholder
     Route::get('/order-status', fn() => view('staff.placeholder', ['currentPage' => 'order-status']))->name('order-status.index');
-    Route::get('/payments', fn() => view('staff.placeholder', ['currentPage' => 'payments']))->name('payments.index');
     // Hỗ trợ khách hàng (Kim Tuyến)
     Route::prefix('support')->name('support.')->group(function () {
         Route::get('/', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'index'])->name('index');

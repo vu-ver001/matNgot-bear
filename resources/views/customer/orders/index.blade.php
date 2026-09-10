@@ -67,7 +67,7 @@
                             @endphp
 
                             <!-- Order Card Item -->
-                            <div class="order-card-ecommerce" x-data="{ showAllProducts: false, showNotReceived: false, openChangePayment: false }">
+                            <div class="order-card-ecommerce" x-data="{ showAllProducts: false, showNotReceived: false, openChangePayment: false, openReturnModal: false }">
                                 <!-- 1. Card Header: Store identity & Order Status -->
                                 <div class="order-card-header flex flex-col md:flex-row md:items-center justify-between gap-3">
                                     <div class="flex flex-wrap items-center gap-2.5">
@@ -97,7 +97,7 @@
 
                                         <span class="text-stone-300 hidden md:inline">|</span>
 
-                                        <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" />
+                                        <x-order-status-badge :order="$order" />
                                         <x-payment-status-badge :status="$order->payment_status" />
                                     </div>
                                 </div>
@@ -162,6 +162,9 @@
                                 <div class="bg-[#FDFBF7] px-5 py-3.5 border-t border-b border-[#F0E6DA] flex items-center justify-between gap-3 text-xs text-[#795548]">
                                     <div class="flex items-center gap-2">
                                         <span>Ngày đặt: <strong class="text-[#4E342E] font-medium">{{ $order->created_at->format('d/m/Y H:i') }}</strong></span>
+                                        @if($hasUnpaidOnline && $order->paymentExpiresAt())
+                                            <span class="text-amber-700 font-medium hidden sm:inline">· Hạn thanh toán: <strong>{{ $order->paymentExpiresAt()->format('H:i - d/m') }}</strong></span>
+                                        @endif
                                     </div>
 
                                     <div class="text-right">
@@ -193,7 +196,46 @@
                                             <i class="fa-regular fa-eye"></i> Xem chi tiết
                                         </a>
 
-                                        <!-- Mua lại (buyAgain) -->
+                                        <!-- 1. Xác nhận đã nhận được hàng (Khi đang giao hoặc shop đã báo giao xong nhưng khách chưa xác nhận) -->
+                                        @if($card['actions']['confirmReceived'])
+                                            <form action="{{ route('customer.orders.confirm_received', $order->id) }}" 
+                                                  method="POST" 
+                                                  class="inline">
+                                                @csrf
+                                                <button type="submit" class="btn-card-action bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white! cursor-pointer shadow-xs">
+                                                    <i class="fa-solid fa-circle-check"></i> Đã nhận được hàng
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        <!-- 2. Yêu cầu Trả hàng / Hoàn tiền -->
+                                        @if($card['actions']['requestReturn'])
+                                            <button type="button" 
+                                                    @click="openReturnModal = true" 
+                                                    class="btn-card-action text-rose-700! hover:bg-rose-50 border border-rose-200 cursor-pointer">
+                                                <i class="fa-solid fa-arrow-rotate-left"></i> Trả hàng / Hoàn tiền
+                                            </button>
+                                            @include('customer.orders.partials.return-request-modal', ['order' => $order])
+                                        @endif
+
+                                        <!-- 3. Đang chờ shop duyệt trả hàng -->
+                                        @if($card['actions']['hasPendingReturn'])
+                                            <span class="btn-card-action text-amber-800! bg-amber-50 border border-amber-300 cursor-default">
+                                                <i class="fa-solid fa-hourglass-half text-amber-600"></i> Chờ duyệt trả hàng
+                                            </span>
+                                        @endif
+
+                                        <!-- 4. Đánh giá (CHỈ hiện khi đã xác nhận nhận hàng và có sản phẩm chưa đánh giá) -->
+                                        @if($card['actions']['review'])
+                                            <a href="{{ route('customer.orders.review', $order) }}" 
+                                               data-open-order-review-modal
+                                               data-order-id="{{ $order->id }}"
+                                               class="btn-card-action btn-card-primary cursor-pointer">
+                                                <i class="fa-solid fa-star text-amber-200"></i> Đánh giá
+                                            </a>
+                                        @endif
+
+                                        <!-- 5. Mua lại (CHỈ hiện khi đã xác nhận nhận hàng, hoặc đơn đã hủy / đã trả hàng) -->
                                         @if($card['actions']['buyAgain'])
                                             <form action="{{ route('customer.orders.reorder', $order->id) }}" method="POST" class="inline">
                                                 @csrf
@@ -210,15 +252,7 @@
                                             <i class="fa-regular fa-comment-dots text-amber-700"></i> Chat với Shop
                                         </a>
 
-                                        <!-- Đánh giá -->
-                                        @if($card['actions']['review'])
-                                            <a href="{{ route('customer.orders.review', $order) }}" 
-                                               class="btn-card-action btn-card-primary">
-                                                <i class="fa-solid fa-star text-amber-200"></i> Đánh giá
-                                            </a>
-                                        @endif
-
-                                        <!-- Thanh toán online nếu chưa thanh toán -->
+                                        <!-- 7. Thanh toán online nếu chưa thanh toán -->
                                         @if($hasUnpaidOnline)
                                             <button type="button" @click="openChangePayment = true"
                                                     class="btn-card-action bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white! cursor-pointer">
@@ -227,25 +261,13 @@
                                             @include('customer.orders.partials.payment-method-modal', ['modalState' => 'openChangePayment'])
                                         @endif
 
-                                        <!-- Xác nhận đã nhận hàng nếu đang SHIPPING -->
-                                        @if($order->order_status === 'SHIPPING')
-                                            <form action="{{ route('customer.orders.complete', $order->id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Bạn đã nhận được kiện hàng và muốn xác nhận hoàn tất đơn hàng #{{ $order->order_code }}?')">
-                                                @csrf
-                                                <button type="submit" class="btn-card-action bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white!">
-                                                    <i class="fa-solid fa-circle-check"></i> Đã nhận được hàng
-                                                </button>
-                                            </form>
-                                        @endif
-
-                                        <!-- Hủy đơn nếu đang PENDING -->
+                                        <!-- 8. Hủy đơn nếu đang PENDING -->
                                         @if($order->order_status === 'PENDING')
                                             <form action="{{ route('customer.orders.cancel', $order->id) }}" 
                                                   method="POST" 
                                                   onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng #{{ $order->order_code }}?')">
                                                 @csrf
-                                                <button type="submit" class="btn-card-action text-rose-700! hover:bg-rose-50 border border-rose-200">
+                                                <button type="submit" class="btn-card-action text-rose-700! hover:bg-rose-50 border border-rose-200 cursor-pointer">
                                                     <i class="fa-solid fa-xmark"></i> Hủy đơn
                                                 </button>
                                             </form>
