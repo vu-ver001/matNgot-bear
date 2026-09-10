@@ -28,8 +28,13 @@ class AppServiceProvider extends ServiceProvider
                 $realCartCount = count($guestCart);
                 $realWishlistCount = 0;
             }
-            $view->with('realCartCount', (int) $realCartCount);
             $view->with('realWishlistCount', (int) $realWishlistCount);
+            $view->with('realCartCount', $realCartCount);
+
+            $availableVoucherCount = \App\Models\Voucher::where('status', 'ACTIVE')
+                ->where('end_date', '>=', now())
+                ->count();
+            $view->with('availableVoucherCount', $availableVoucherCount);
         });
     }
 }

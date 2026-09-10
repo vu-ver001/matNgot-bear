@@ -8,13 +8,13 @@
             'items' => [
                 ['label' => 'Đơn hàng của tôi', 'route' => 'customer.orders.index', 'active' => ['customer.orders.*'], 'icon' => 'package'],
                 ['label' => 'Danh sách yêu thích', 'route' => 'customer.wishlist.index', 'active' => ['customer.wishlist.*'], 'icon' => 'heart'],
-                ['label' => 'Đánh giá của tôi', 'route' => null, 'active' => [], 'icon' => 'star'],
+                ['label' => 'Đánh giá của tôi', 'route' => 'customer.reviews.index', 'active' => ['customer.reviews.*'], 'icon' => 'star'],
             ],
         ],
         [
             'label' => 'Hỗ trợ',
             'items' => [
-                ['label' => 'Tin nhắn / Hỗ trợ', 'route' => null, 'active' => [], 'icon' => 'message'],
+                ['label' => 'Tin nhắn / Hỗ trợ', 'route' => 'customer.messages.index', 'active' => ['customer.messages.*', 'account.messages*'], 'icon' => 'message'],
             ],
         ],
     ];
@@ -27,10 +27,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ $title }} - {{ config('app.name', 'Mật Ngọt Bear') }}</title>
+        <title>{{ $title ?? 'Tài khoản' }} - {{ config('app.name', 'Mật Ngọt Bear') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=montserrat:400,500,600,700&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @if (request()->routeIs('customer.orders.*'))
             <link rel="stylesheet" href="{{ asset('css/order-components.css') }}">
@@ -188,11 +191,15 @@
                             <span>Hồ sơ</span>
                         </a>
 
-                        <span class="customer-account-nav-item is-disabled" title="Chức năng chưa kết nối">
+                        <a
+                            href="{{ route('account.password.edit') }}"
+                            @class(['customer-account-nav-item', 'is-active' => request()->routeIs('account.password.*')])
+                            @if (request()->routeIs('account.password.*')) aria-current="page" @endif
+                            title="Đổi mật khẩu"
+                        >
                             @include('customer.partials.account-icon', ['name' => 'lock'])
                             <span>Đổi mật khẩu</span>
-                            <small>Chưa kết nối</small>
-                        </span>
+                        </a>
 
                         <div class="customer-account-menu-divider"></div>
 
@@ -227,12 +234,33 @@
                     @include('customer.partials.account-icon', ['name' => 'menu'])
                 </button>
 
-                <main @class(['customer-account-page', 'is-flush-page' => $flush, 'orders-page' => request()->routeIs('customer.orders.*')])>
-                    <div @class(['customer-account-content', 'is-flush' => $flush])>
-                        {{ $slot }}
+                <main @class(['customer-account-page', 'is-flush-page' => ($flush ?? false), 'orders-page' => request()->routeIs('customer.orders.*')])>
+                    <div @class(['customer-account-content', 'is-flush' => ($flush ?? false)])>
+                        {!! $slot ?? $__env->yieldContent('content') !!}
                     </div>
                 </main>
             </div>
         </div>
+
+        @include('ReviewKT.partials.review-modal')
+
+        {{-- Tự động cập nhật dữ liệu mới nhất khi bấm nút Back (Quay lại) trên trình duyệt Chrome/Safari --}}
+        <script>
+            window.addEventListener('pageshow', function (event) {
+                var isBack = event.persisted;
+                if (!isBack && window.performance && window.performance.navigation) {
+                    isBack = window.performance.navigation.type === 2;
+                }
+                if (!isBack && window.performance && window.performance.getEntriesByType) {
+                    var entries = window.performance.getEntriesByType('navigation');
+                    if (entries.length > 0 && entries[0].type === 'back_forward') {
+                        isBack = true;
+                    }
+                }
+                if (isBack) {
+                    window.location.reload();
+                }
+            });
+        </script>
     </body>
 </html>

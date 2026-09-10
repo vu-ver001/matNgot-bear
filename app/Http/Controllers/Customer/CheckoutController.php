@@ -81,20 +81,20 @@ class CheckoutController extends Controller
             return $price * $item->quantity;
         });
 
-        // Fetch previous order (if any) or user profile to remember customer shipping details
+        // Ưu tiên thông tin từ profile người dùng trong bảng users, nếu trống mới fallback sang đơn gần nhất
         $latestOrder = \App\Models\Order::where('customer_id', $userId)->latest()->first();
 
-        $savedRecipientName = $latestOrder->recipient_name ?? $user->full_name ?? '';
-        $savedRecipientPhone = $latestOrder->recipient_phone ?? $user->phone ?? '';
-        $savedRecipientEmail = $latestOrder->recipient_email ?? $user->email ?? '';
-        $savedRecipientAddress = $this->cleanAddress($latestOrder->recipient_address ?? $user->address ?? '');
+        $savedRecipientName = $user->full_name ?: ($latestOrder->recipient_name ?? '');
+        $savedRecipientPhone = $user->phone ?: ($latestOrder->recipient_phone ?? '');
+        $savedRecipientEmail = $user->email ?: ($latestOrder->recipient_email ?? '');
+        $savedRecipientAddress = $this->cleanAddress($user->address ?: ($latestOrder->recipient_address ?? ''));
 
-        // Intelligently parse province, ward, and street from saved address
-        $savedProvince = 'Hà Nội';
-        $savedWard = '';
-        $savedStreet = $savedRecipientAddress;
+        // Intelligently parse province, ward, and street from saved user profile or previous order address
+        $savedProvince = $user->province ?: 'Hà Nội';
+        $savedWard = $user->ward ?: '';
+        $savedStreet = $user->address_detail ?: '';
 
-        if (!empty($savedRecipientAddress)) {
+        if (empty($savedWard) && !empty($savedRecipientAddress)) {
             $parts = array_map('trim', explode(',', $savedRecipientAddress));
             if (count($parts) >= 3) {
                 // e.g. "Thôn Đại Đồng, Xã Thiên Lộc, Hà Nội"
@@ -106,23 +106,44 @@ class CheckoutController extends Controller
                 $savedProvince = end($parts);
                 $savedStreet = $parts[0];
             }
+        }
 
-            // Normalise ward string if it contains extra notes
-            if (str_contains($savedWard, '–') || str_contains($savedWard, '-')) {
-                $subWards = preg_split('/[–\-]/u', $savedWard);
-                if (!empty($subWards[0])) {
-                    $savedWard = trim($subWards[0]);
-                }
-            }
+        if (empty($savedStreet) && !empty($savedRecipientAddress)) {
+            $savedStreet = $savedRecipientAddress;
+        }
 
-            // Clean street address so it only keeps house/street/village, not duplicated ward/province
-            if (!empty($savedWard)) {
-                $savedStreet = preg_replace('/,?\s*' . preg_quote($savedWard, '/') . '/iu', '', $savedStreet);
+        // Normalise ward string if it contains extra notes
+        if (str_contains($savedWard, '–') || str_contains($savedWard, '-')) {
+            $subWards = preg_split('/[–\-]/u', $savedWard);
+            if (!empty($subWards[0])) {
+                $savedWard = trim($subWards[0]);
             }
+        }
+
+        // Clean street address so it only keeps house/street/village, stripping ward and province
+        if (!empty($savedStreet)) {
             if (!empty($savedProvince)) {
-                $savedStreet = preg_replace('/,?\s*' . preg_quote($savedProvince, '/') . '/iu', '', $savedStreet);
+                $savedStreet = preg_replace('/,?\s*' . preg_quote($savedProvince, '/') . '$/iu', '', $savedStreet);
             }
-            $savedStreet = trim($savedStreet ?? '', ', ');
+            if (!empty($savedWard)) {
+                $savedStreet = preg_replace('/,?\s*' . preg_quote($savedWard, '/') . '$/iu', '', $savedStreet);
+            }
+            // Strip any remaining trailing comma-separated parts that match ward/province keywords
+            $parts = array_map('trim', explode(',', $savedStreet));
+            if (count($parts) >= 2) {
+                $last = end($parts);
+                if (mb_stripos($last, 'Hà Nội') !== false || mb_stripos($last, 'Hồ Chí Minh') !== false || (!empty($savedProvince) && mb_stripos($last, $savedProvince) !== false)) {
+                    array_pop($parts);
+                }
+                if (!empty($parts)) {
+                    $secondLast = end($parts);
+                    if (mb_stripos($secondLast, 'Phường') !== false || mb_stripos($secondLast, 'Xã') !== false || mb_stripos($secondLast, 'Thị trấn') !== false || (!empty($savedWard) && mb_stripos($secondLast, $savedWard) !== false)) {
+                        array_pop($parts);
+                    }
+                }
+                $savedStreet = implode(', ', $parts);
+            }
+            $savedStreet = trim($savedStreet ?? '', ", \t\n\r\0\x0B");
         }
 
         $savedProfile = [
@@ -131,7 +152,7 @@ class CheckoutController extends Controller
             'recipient_email' => $savedRecipientEmail,
             'province' => $savedProvince,
             'ward' => $savedWard,
-            'street' => $savedStreet ?: $savedRecipientAddress,
+            'street' => $savedStreet,
             'full_address' => $savedRecipientAddress,
         ];
 
@@ -154,37 +175,110 @@ class CheckoutController extends Controller
             })
             ->get(['voucher_id', 'shipping_voucher_id']);
 
-        $usedVoucherIds = $usedOrders
+        // Count how many times each voucher has been used by this customer
+        $voucherUsageCounts = $usedOrders
             ->flatMap(fn($order) => array_filter([$order->voucher_id, $order->shipping_voucher_id]))
-            ->unique()
-            ->values()
-            ->toArray();
+            ->countBy();
 
-        $usedVoucherCodes = Voucher::withTrashed()->whereIn('id', $usedVoucherIds)->pluck('code')->toArray();
+        // Only block vouchers where customer has reached their individual limit
+        $blockedVoucherIds = [];
+        if ($voucherUsageCounts->isNotEmpty()) {
+            $relevantVouchers = Voucher::withTrashed()->whereIn('id', $voucherUsageCounts->keys())->get(['id', 'usage_limit_per_user', 'code']);
+            foreach ($relevantVouchers as $v) {
+                $limit = max(1, (int) ($v->usage_limit_per_user ?? 1));
+                if (($voucherUsageCounts[$v->id] ?? 0) >= $limit) {
+                    $blockedVoucherIds[] = $v->id;
+                }
+            }
+        }
 
-        // 2. Fetch active vouchers that this user has NOT used and haven't exceeded usage limits
+        $usedVoucherCodes = Voucher::withTrashed()->whereIn('id', $blockedVoucherIds)->pluck('code')->toArray();
+
+        // 2. Fetch all active vouchers and enrich with usage counts & cart applicability
         $voucherFields = [
             'id', 'code', 'voucher_type', 'discount_type', 'discount_value',
             'min_order_value', 'max_discount_value', 'start_date', 'end_date',
-            'usage_limit', 'used_count', 'status'
+            'usage_limit', 'usage_limit_per_user', 'used_count', 'status', 'apply_scope'
         ];
 
         $now = now();
-        $voucherBaseQuery = Voucher::where('status', 'ACTIVE')
+        $rawVouchers = Voucher::where('status', 'ACTIVE')
             ->where('end_date', '>=', $now)
-            ->where(function ($q) {
-                $q->whereNull('usage_limit')
-                  ->orWhere('usage_limit', '<=', 0)
-                  ->orWhereRaw('used_count < usage_limit');
-            });
+            ->with(['categories:id,name', 'products:id,name'])
+            ->select($voucherFields)
+            ->orderBy('id', 'desc')
+            ->get();
 
-        if (!empty($usedVoucherIds)) {
-            $voucherBaseQuery->whereNotIn('id', $usedVoucherIds);
-        }
+        $allVouchers = $rawVouchers->map(function ($v) use ($voucherUsageCounts, $userId, $subtotal, $shippingFee, $cartItems) {
+            $userUsed = (int) ($voucherUsageCounts[$v->id] ?? 0);
+            $userLimit = max(1, (int) ($v->usage_limit_per_user ?? 1));
+            $userRemaining = max(0, $userLimit - $userUsed);
 
-        $orderVouchers = (clone $voucherBaseQuery)->where('voucher_type', 'ORDER')->select($voucherFields)->get();
-        $shippingVouchers = (clone $voucherBaseQuery)->where('voucher_type', 'SHIPPING')->select($voucherFields)->get();
-        $allVouchers = (clone $voucherBaseQuery)->select($voucherFields)->get();
+            $globalLimit = (int) ($v->usage_limit ?? 0);
+            $globalUsed = (int) ($v->used_count ?? 0);
+            $globalRemaining = $globalLimit > 0 ? max(0, $globalLimit - $globalUsed) : null;
+
+            $isUserExhausted = $userUsed >= $userLimit;
+            $isGlobalExhausted = $globalLimit > 0 && $globalUsed >= $globalLimit;
+            $isExhausted = $isUserExhausted || $isGlobalExhausted;
+
+            // Validate against the current cart items & current customer
+            $validation = $v->validateForCustomer($userId, (float) $subtotal, (float) $shippingFee, $cartItems->all());
+            $isApplicable = (bool) ($validation['valid'] ?? false);
+            $inapplicableReason = ! $isApplicable ? ($validation['message'] ?? 'Không đủ điều kiện áp dụng') : null;
+            $eligibleSubtotal = (float) ($validation['eligible_subtotal'] ?? $subtotal);
+            $expectedDiscount = (float) ($validation['discount_amount'] ?? 0);
+
+            // Scope description badge text
+            $scopeText = 'Toàn bộ sản phẩm';
+            if ($v->apply_scope === 'CATEGORY') {
+                $categoryNames = $v->categories->pluck('name')->join(', ');
+                $scopeText = ! empty($categoryNames) ? "Danh mục: {$categoryNames}" : 'Theo danh mục';
+            } elseif ($v->apply_scope === 'PRODUCT') {
+                $scopeText = 'Sản phẩm chỉ định';
+            }
+
+            $v->user_used_count = $userUsed;
+            $v->user_limit = $userLimit;
+            $v->user_remaining = $userRemaining;
+            $v->global_limit = $globalLimit;
+            $v->global_remaining = $globalRemaining;
+            $v->is_exhausted = $isExhausted;
+            $v->is_user_exhausted = $isUserExhausted;
+            $v->is_global_exhausted = $isGlobalExhausted;
+
+            $v->is_applicable = $isApplicable;
+            $v->inapplicable_reason = $inapplicableReason;
+            $v->eligible_subtotal = $eligibleSubtotal;
+            $v->expected_discount = $expectedDiscount;
+            $v->scope_text = $scopeText;
+
+            return $v;
+        });
+
+        // Sắp xếp: Ưu tiên voucher khả dụng lên trên, không áp dụng được đẩy xuống dưới
+        $voucherSorter = function ($a, $b) {
+            // 1. Khả dụng lên đầu, không khả dụng xuống dưới
+            if ($a->is_applicable !== $b->is_applicable) {
+                return $a->is_applicable ? -1 : 1;
+            }
+            // 2. Không bị hết lượt ưu tiên trước
+            $aExhausted = $a->is_exhausted ? 1 : 0;
+            $bExhausted = $b->is_exhausted ? 1 : 0;
+            if ($aExhausted !== $bExhausted) {
+                return $aExhausted - $bExhausted;
+            }
+            // 3. Số tiền dự kiến giảm nhiều hơn lên trước
+            if ($a->expected_discount != $b->expected_discount) {
+                return $b->expected_discount <=> $a->expected_discount;
+            }
+            // 4. Giá trị giảm cao hơn lên trước
+            return $b->discount_value <=> $a->discount_value;
+        };
+
+        $orderVouchers = $allVouchers->where('voucher_type', 'ORDER')->sort($voucherSorter)->values();
+        $shippingVouchers = $allVouchers->where('voucher_type', 'SHIPPING')->sort($voucherSorter)->values();
+        $allVouchers = $allVouchers->sort($voucherSorter)->values();
 
         $googleMapsApiKey = config('services.google_maps.api_key', '');
 
@@ -268,23 +362,34 @@ class CheckoutController extends Controller
 
         $userId = auth()->id();
 
-        // Check if customer already used any of the applied vouchers
-        $usedVoucherIds = \App\Models\Order::where('customer_id', $userId)
+        // Check customer usage limit and global usage limit for applied vouchers
+        $usedOrders = \App\Models\Order::where('customer_id', $userId)
             ->where(function ($q) {
                 $q->whereNull('order_status')
                   ->orWhere('order_status', '!=', 'CANCELLED');
             })
-            ->get(['voucher_id', 'shipping_voucher_id'])
-            ->flatMap(fn($order) => array_filter([$order->voucher_id, $order->shipping_voucher_id]))
-            ->unique()
-            ->values()
-            ->toArray();
+            ->get(['voucher_id', 'shipping_voucher_id']);
 
-        if (!empty($validated['voucher_id']) && in_array((int) $validated['voucher_id'], $usedVoucherIds)) {
-            return back()->withInput()->with('error', 'Mã giảm giá này bạn đã sử dụng trên đơn hàng trước đó rồi.');
-        }
-        if (!empty($validated['shipping_voucher_id']) && in_array((int) $validated['shipping_voucher_id'], $usedVoucherIds)) {
-            return back()->withInput()->with('error', 'Voucher vận chuyển này bạn đã sử dụng trên đơn hàng trước đó rồi.');
+        $userUsageCounts = $usedOrders
+            ->flatMap(fn($order) => array_filter([$order->voucher_id, $order->shipping_voucher_id]))
+            ->countBy();
+
+        foreach (['voucher_id' => 'Mã giảm giá', 'shipping_voucher_id' => 'Voucher vận chuyển'] as $field => $label) {
+            if (!empty($validated[$field])) {
+                $voucher = Voucher::find($validated[$field]);
+                if ($voucher) {
+                    $globalLimit = (int) ($voucher->usage_limit ?? 0);
+                    if ($globalLimit > 0 && ($voucher->used_count ?? 0) >= $globalLimit) {
+                        return back()->withInput()->with('error', "{$label} [{$voucher->code}] đã hết lượt sử dụng trên toàn hệ thống.");
+                    }
+
+                    $perUserLimit = max(1, (int) ($voucher->usage_limit_per_user ?? 1));
+                    $userUsed = (int) ($userUsageCounts[$voucher->id] ?? 0);
+                    if ($userUsed >= $perUserLimit) {
+                        return back()->withInput()->with('error', "Bạn đã sử dụng hết {$perUserLimit} lượt cho phép đối với {$label} [{$voucher->code}].");
+                    }
+                }
+            }
         }
 
         $cartItems = CartItem::where('user_id', $userId)
@@ -317,16 +422,6 @@ class CheckoutController extends Controller
             ]);
 
             $order = $this->orderService->createOrder($data, $cartItems->all());
-
-            // Remember and sync recipient information into Customer profile for future checkouts
-            $currentUser = auth()->user();
-            if ($currentUser) {
-                $currentUser->update([
-                    'full_name' => $validated['recipient_name'] ?: $currentUser->full_name,
-                    'phone' => $validated['recipient_phone'] ?: $currentUser->phone,
-                    'address' => $cleanedAddress ?: $currentUser->address,
-                ]);
-            }
 
             // Create initial payment tracking
             Payment::create([

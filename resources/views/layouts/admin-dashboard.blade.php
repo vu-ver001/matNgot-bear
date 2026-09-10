@@ -100,6 +100,10 @@
                 <i class="fa-solid fa-chart-line"></i>
                 <span class="sidebar-link-text">Báo cáo Doanh thu</span>
             </a>
+            <a href="{{ route('admin.support.index') }}" class="sidebar-link {{ request()->routeIs('admin.support*') || ($currentPage ?? '') === 'support' ? 'active' : '' }}" data-title="Hỗ trợ khách hàng">
+                <i class="fa-solid fa-comments"></i>
+                <span class="sidebar-link-text">Hỗ trợ khách hàng</span>
+            </a>
         </nav>
 
         <!-- Sidebar Footer & Popup Người Dùng (Theo chuẩn Ảnh 1 & 2) -->
@@ -188,7 +192,7 @@
                 }
             })();
         </script>
-        <div class="admin-content">
+        <div class="admin-content {{ $contentClass ?? '' }}">
             @yield('content')
         </div>
     </div>

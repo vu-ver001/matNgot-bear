@@ -9,8 +9,12 @@ import { vouchersList } from './admin/vouchers/index.js';
 import { cartComponent } from './customer/cart.js';
 
 import './auth/index.js';
+import './PasswordKT/index.js';
 import './ProfileKT/index.js';
 import './wishlistKT/index.js';
+import './ReviewKT/index.js';
+import './ChatKT/customer-chat.js';
+import './ChatKT/staff-chat.js';
 
 flatpickr.localize(Vietnamese);
 

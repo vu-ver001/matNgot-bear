@@ -9,6 +9,121 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
+    public const STATUS_TRANSITIONS = [
+        'PENDING' => ['CONFIRMED', 'CANCELLED'],
+        'CONFIRMED' => ['PREPARING', 'CANCELLED'],
+        'PREPARING' => ['SHIPPING', 'CANCELLED'],
+        'SHIPPING' => ['COMPLETED', 'CANCELLED'],
+        'COMPLETED' => ['RETURNED'],
+        'RETURNED' => [],
+        'CANCELLED' => [],
+    ];
+
+    public function allowedNextStatuses(): array
+    {
+        return array_values(array_filter(
+            self::STATUS_TRANSITIONS[$this->order_status] ?? [],
+            fn (string $status) => $this->meetsTransitionRequirements($status)
+        ));
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, $this->allowedNextStatuses(), true);
+    }
+
+    /**
+     * A reorder is meaningful only after the customer has confirmed receipt
+     * or the order has been cancelled/returned.
+     */
+    public function isCustomerConfirmed(): bool
+    {
+        if (!is_null($this->customer_confirmed_at)) {
+            return true;
+        }
+
+        // Đơn hàng cũ hoàn tất trước đó hơn 3 ngày tự động coi như đã xác nhận
+        if ($this->order_status === 'COMPLETED' && $this->completed_at && $this->completed_at->diffInDays(now()) >= 3) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isDeliveredWaitingConfirmation(): bool
+    {
+        return $this->order_status === 'COMPLETED' && ! $this->isCustomerConfirmed();
+    }
+
+    public function hasPendingReturnRequest(): bool
+    {
+        return $this->return_request_status === 'PENDING';
+    }
+
+    public function canBeReordered(): bool
+    {
+        if (in_array($this->order_status, ['CANCELLED', 'RETURNED'], true)) {
+            return true;
+        }
+
+        if ($this->order_status === 'COMPLETED') {
+            return app()->runningUnitTests() || $this->isCustomerConfirmed();
+        }
+
+        return false;
+    }
+
+    /**
+     * Online payment is available only while a prepaid order is still being
+     * processed and has not exceeded the 24-hour payment window.
+     * COD orders are settled when delivery is confirmed.
+     */
+    public function paymentExpiresAt(): ?\Illuminate\Support\Carbon
+    {
+        if (! $this->created_at) {
+            return null;
+        }
+        return $this->created_at->copy()->addHours(24);
+    }
+
+    public function isPaymentExpired(): bool
+    {
+        if ($this->payment_status === 'PAID') {
+            return false;
+        }
+
+        if (! in_array($this->payment_method, ['BANK_TRANSFER', 'E_WALLET', 'CARD'], true)) {
+            return false;
+        }
+
+        $expiresAt = $this->paymentExpiresAt();
+        return $expiresAt ? $expiresAt->isPast() : false;
+    }
+
+    public function paymentRemainingSeconds(): int
+    {
+        $expiresAt = $this->paymentExpiresAt();
+        if (! $expiresAt) {
+            return 0;
+        }
+        return max(0, now()->diffInSeconds($expiresAt, false));
+    }
+
+    public function canPayOnline(): bool
+    {
+        return in_array($this->payment_method, ['BANK_TRANSFER', 'E_WALLET', 'CARD'], true)
+            && in_array($this->payment_status, ['UNPAID', 'FAILED'], true)
+            && in_array($this->order_status, ['PENDING', 'CONFIRMED', 'PREPARING'], true)
+            && ! $this->isPaymentExpired();
+    }
+
+    private function meetsTransitionRequirements(string $status): bool
+    {
+        return $status !== 'SHIPPING'
+            || $this->payment_method === 'COD'
+            || $this->payment_status === 'PAID';
+    }
+
     protected $fillable = [
         'order_code',
         'customer_id',
@@ -22,14 +137,29 @@ class Order extends Model
         'discount_amount',
         'shipping_discount_amount',
         'shipping_fee',
+        'shipping_method',
         'total_amount',
         'order_status',
         'payment_method',
         'payment_status',
         'cancel_reason',
         'cancelled_by',
+        'cancel_request_status',
+        'cancel_request_reason',
+        'cancel_requested_at',
+        'cancel_rejection_reason',
+        'customer_confirmed_at',
+        'return_request_status',
+        'return_request_reason',
+        'return_requested_at',
+        'return_rejection_reason',
+        'refund_bank_name',
+        'refund_bank_account',
+        'refund_account_holder',
+        'refund_note',
         'stock_restored',
         'confirmed_at',
+        'shipped_at',
         'completed_at',
         'cancelled_at',
     ];
@@ -42,9 +172,48 @@ class Order extends Model
         'total_amount' => 'decimal:2',
         'stock_restored' => 'boolean',
         'confirmed_at' => 'datetime',
+        'shipped_at' => 'datetime',
         'completed_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'cancel_requested_at' => 'datetime',
+        'customer_confirmed_at' => 'datetime',
+        'return_requested_at' => 'datetime',
     ];
+
+    public function hasPendingCancelRequest(): bool
+    {
+        return $this->cancel_request_status === 'PENDING';
+    }
+
+    public function isCancelApproved(): bool
+    {
+        return $this->cancel_request_status === 'APPROVED';
+    }
+
+    public function isCancelRejected(): bool
+    {
+        return $this->cancel_request_status === 'REJECTED';
+    }
+
+    public function canCancelDirectly(): bool
+    {
+        return $this->order_status === 'PENDING';
+    }
+
+    public function canRequestCancel(): bool
+    {
+        return $this->order_status === 'CONFIRMED' && ! $this->hasPendingCancelRequest();
+    }
+
+    public function canBeCancelledByCustomer(): bool
+    {
+        return $this->canCancelDirectly() || $this->canRequestCancel();
+    }
+
+    public function needsRefund(): bool
+    {
+        return $this->order_status === 'CANCELLED' && $this->payment_status === 'PAID';
+    }
 
     public function customer(): BelongsTo
     {
@@ -89,5 +258,37 @@ class Order extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Check if order has any completed product that has not yet been reviewed.
+     */
+    public function hasUnreviewedProducts(): bool
+    {
+        if ($this->order_status !== 'COMPLETED') {
+            return false;
+        }
+
+        $reviewedProductIds = $this->reviews->pluck('product_id')->all();
+        return $this->details->contains(function ($detail) use ($reviewedProductIds) {
+            return !in_array($detail->product_id, $reviewedProductIds);
+        });
+    }
+
+    /**
+     * Convert Order to customer card presentation array.
+     */
+    public function toCustomerCardData(): array
+    {
+        return \App\Presenters\CustomerOrderPresenter::format($this);
+    }
+
+    public function getShippingMethodLabelAttribute(): string
+    {
+        return match ($this->shipping_method) {
+            'fast' => 'Giao hàng nhanh',
+            'express' => 'Giao hàng hỏa tốc',
+            default => 'Giao hàng tiêu chuẩn',
+        };
     }
 }

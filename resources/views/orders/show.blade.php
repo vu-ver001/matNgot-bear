@@ -39,6 +39,18 @@
                             <i class="fa-solid fa-pen-to-square"></i>
                             <span>Đổi địa chỉ</span>
                         </button>
+                    @elseif ($isStaff && $order->customer_id)
+                        @php
+                            $supportRoute = str_starts_with($routePrefix ?? '', 'admin.')
+                                ? route('admin.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])
+                                : route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]);
+                        @endphp
+                        <a href="{{ $supportRoute }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer"
+                           title="Mở cuộc trò chuyện hỗ trợ khách hàng cho đơn này">
+                            <i class="fa-solid fa-comments"></i>
+                            <span>Nhắn tin cho khách</span>
+                        </a>
                     @endif
                 </div>
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -46,7 +58,7 @@
                         <dt class="text-[#795548]">Người nhận</dt>
                         <dd class="font-medium text-[#4E342E]">{{ $order->recipient_name }}</dd>
                         @if ($isStaff && $order->customer)
-                            <dd class="text-xs text-[#795548] mt-1">Tài khoản: {{ $order->customer->full_name }} ({{ $order->customer->email }})</dd>
+                            <dd class="text-xs text-[#795548] mt-1">Tài khoản: {{ $order->customer->full_name }}</dd>
                         @endif
                     </div>
                     <div>
@@ -57,6 +69,16 @@
                         <dt class="text-[#795548]">Địa chỉ</dt>
                         <dd class="font-medium text-[#4E342E]">{{ $order->recipient_address }}</dd>
                     </div>
+                    <div>
+                        <dt class="text-[#795548]">Hình thức giao hàng</dt>
+                        <dd class="font-medium text-[#4E342E]">{{ $order->shipping_method_label }}</dd>
+                    </div>
+                    @if ($order->shipped_at)
+                        <div>
+                            <dt class="text-[#795548]">Bắt đầu giao</dt>
+                            <dd class="font-medium text-[#4E342E]">{{ $order->shipped_at->format('d/m/Y H:i') }}</dd>
+                        </div>
+                    @endif
                     @if ($order->note)
                         <div class="sm:col-span-2">
                             <dt class="text-[#795548]">Ghi chú</dt>
@@ -86,12 +108,31 @@
                         </thead>
                         <tbody>
                             @foreach ($order->details as $detail)
+                                @php
+                                    $rawImg = $detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                        ?? $detail->product?->images?->first()?->image_url;
+                                    $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+                                @endphp
                                 <tr>
                                     <td class="px-4 py-4 text-sm font-medium text-[#4E342E]">
-                                        {{ $detail->product_name }}
-                                        @if ($isStaff && $detail->product)
-                                            <div class="text-xs text-[#795548]">Mã SP: #{{ $detail->product_id }}</div>
-                                        @endif
+                                        <div class="flex items-center gap-3">
+                                            @if ($primaryImg)
+                                                <img src="{{ $primaryImg }}"
+                                                     alt="{{ $detail->product_name }}"
+                                                     class="w-12 h-12 object-cover rounded-xl border border-amber-200/70 bg-white shrink-0 shadow-2xs"
+                                                     onerror="this.src='https://placehold.co/100x100/f5e6ca/7c4a2d?text=Bear'">
+                                            @else
+                                                <div class="w-12 h-12 rounded-xl border border-amber-200/70 bg-amber-100/70 text-amber-800 font-bold flex items-center justify-center shrink-0 text-xl shadow-2xs">
+                                                    🧸
+                                                </div>
+                                            @endif
+                                            <div class="min-w-0">
+                                                <div class="font-bold text-[#4E342E] leading-snug">{{ $detail->product_name }}</div>
+                                                @if ($isStaff && $detail->product)
+                                                    <div class="text-xs text-[#795548]">Mã SP: #{{ $detail->product_id }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-4 text-sm text-[#795548] text-right">{{ number_format($detail->product_price, 0, ',', '.') }} đ</td>
                                     <td class="px-4 py-4 text-sm text-[#795548] text-right">{{ $detail->quantity }}</td>
@@ -117,6 +158,12 @@
                         <dt class="text-[#795548]">Phí vận chuyển</dt>
                         <dd class="font-medium text-[#4E342E]">{{ number_format($order->shipping_fee, 0, ',', '.') }} đ</dd>
                     </div>
+                    @if ($order->shipping_discount_amount > 0)
+                        <div class="flex justify-between">
+                            <dt class="text-[#795548]">Giảm phí vận chuyển {{ $order->shippingVoucher?->code ? "({$order->shippingVoucher->code})" : '' }}</dt>
+                            <dd class="font-medium text-emerald-600">-{{ number_format($order->shipping_discount_amount, 0, ',', '.') }} đ</dd>
+                        </div>
+                    @endif
                     <div class="flex justify-between text-base pt-2 border-t border-amber-100">
                         <dt class="font-semibold text-[#4E342E]">Tổng cộng</dt>
                         <dd class="font-bold text-amber-600">{{ number_format($order->total_amount, 0, ',', '.') }} đ</dd>
@@ -147,7 +194,7 @@
                     </div>
                 </div>
 
-                @if(! $isStaff && $order->payment_status === 'UNPAID' && $order->order_status !== 'CANCELLED')
+                @if(! $isStaff && $order->canPayOnline())
                     <div class="mt-4 pt-4 border-t border-amber-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                         <span class="text-xs text-amber-800 font-semibold flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
@@ -180,8 +227,8 @@
                 <ol class="relative border-l border-amber-200 ml-3 space-y-6">
                     @forelse ($order->statusHistories->sortBy('changed_at') as $history)
                         <li class="ml-6">
-                            <span class="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white {{ $loop->first ? 'bg-amber-500' : 'bg-amber-100' }}"></span>
-                            <p class="text-sm font-medium text-[#4E342E]">
+                            <span class="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white {{ $loop->last ? 'bg-amber-500' : 'bg-amber-100' }}"></span>
+                            <p class="text-sm {{ $loop->last ? 'font-bold text-[#2C1408]' : 'font-medium text-[#795548]' }}">
                                 {{ $history->to_status ? match ($history->to_status) {
                                     'PENDING' => 'Đơn hàng được tạo',
                                     'CONFIRMED' => 'Đã xác nhận đơn hàng',

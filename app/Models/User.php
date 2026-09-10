@@ -37,6 +37,10 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'last_login_at',
         'address',
         'avatar',
+        'province',
+        'district',
+        'ward',
+        'address_detail',
     ];
 
     protected $hidden = [
@@ -61,7 +65,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function getAvatarUrlAttribute(): ?string
     {
         return $this->avatar
-            ? Storage::disk('public')->url($this->avatar)
+            ? asset('storage/' . $this->avatar)
             : null;
     }
 

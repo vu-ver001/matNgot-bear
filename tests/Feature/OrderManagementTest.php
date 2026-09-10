@@ -118,7 +118,14 @@ class OrderManagementTest extends TestCase
             ->assertDontSee(route('customer.orders.update_shipping_address', $order), false);
         $this->actingAs($this->staff)->get(route('staff.orders.show', $order))
             ->assertOk()
+            ->assertSee('Nhắn tin cho khách')
+            ->assertSee(e(route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])), false)
             ->assertDontSee(route('customer.orders.complete', $order), false);
+
+        $this->actingAs($this->admin)->get(route('admin.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Nhắn tin cho khách')
+            ->assertSee(e(route('admin.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])), false);
     }
 
     public function test_shared_order_list_preserves_customer_scope_and_staff_filters(): void
@@ -147,6 +154,83 @@ class OrderManagementTest extends TestCase
         ]));
         $this->get(route('staff.orders.index', ['search' => 'NO-MATCH']))
             ->assertOk()->assertSee('Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.');
+    }
+
+    public function test_admin_can_filter_orders_by_customer_and_keep_the_filter(): void
+    {
+        $mine = $this->createOrder($this->customer);
+        $mine->update(['order_status' => 'COMPLETED', 'payment_status' => 'PAID']);
+        $expectedTotalSpent = (float) $mine->total_amount;
+
+        $otherCustomer = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+        $other = $this->createOrder($otherCustomer);
+        $other->update(['order_status' => 'COMPLETED', 'payment_status' => 'PAID']);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.orders.index', [
+            'customer_id' => $this->customer->id,
+            'order_status' => 'COMPLETED',
+            'payment_status' => 'PAID',
+        ]));
+
+        $response->assertOk()
+            ->assertSee($mine->order_code)
+            ->assertDontSee($other->order_code)
+            ->assertSee('Đang xem đơn hàng của')
+            ->assertSee($this->customer->full_name)
+            ->assertSee('Tổng chi tiêu: '.number_format($expectedTotalSpent, 0, ',', '.').' đ')
+            ->assertSee('name="customer_id" value="'.$this->customer->id.'"', false)
+            ->assertSee(route('admin.orders.index', [
+                'customer_id' => $this->customer->id,
+                'payment_status' => 'PAID',
+                'order_status' => 'SHIPPING',
+            ]))
+            ->assertSee(route('admin.orders.index', [
+                'order_status' => 'COMPLETED',
+                'customer_id' => $this->customer->id,
+            ]));
+
+        $response->assertViewHas('selectedCustomer', fn ($customer) => $customer?->is($this->customer)
+            && (float) $customer->total_spent === $expectedTotalSpent);
+        $response->assertViewHas('orders', fn ($orders) => $orders->total() === 1
+            && $orders->every(fn ($order) => $order->customer_id === $this->customer->id));
+        $response->assertViewHas('stats', fn ($stats) => $stats['total'] === 1
+            && $stats['completed'] === 1);
+    }
+
+    public function test_admin_customer_filter_rejects_non_customer_accounts(): void
+    {
+        $this->createOrder($this->customer);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.orders.index', [
+            'customer_id' => $this->staff->id,
+        ]));
+
+        $response->assertOk()
+            ->assertSee('Không tìm thấy tài khoản khách hàng phù hợp.')
+            ->assertViewHas('selectedCustomer', fn ($customer) => $customer === null)
+            ->assertViewHas('orders', fn ($orders) => $orders->total() === 0)
+            ->assertViewHas('stats', fn ($stats) => $stats['total'] === 0);
+    }
+
+    public function test_admin_order_pagination_keeps_customer_filter(): void
+    {
+        $this->product->update(['stock_quantity' => 100]);
+
+        for ($index = 0; $index < 16; $index++) {
+            $this->createOrder($this->customer);
+        }
+
+        $response = $this->actingAs($this->admin)->get(route('admin.orders.index', [
+            'customer_id' => $this->customer->id,
+            'per_page' => 15,
+        ]));
+
+        $response->assertOk()
+            ->assertSee(route('admin.orders.index', [
+                'customer_id' => $this->customer->id,
+                'per_page' => 15,
+                'page' => 2,
+            ]));
     }
 
     public function test_staff_can_update_order_status_and_payment(): void
@@ -219,11 +303,8 @@ class OrderManagementTest extends TestCase
 
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => 'COMPLETED']);
         $this->assertDatabaseHas('products', ['id' => $this->product->id, 'sold_count' => 2]);
-
-        $this->patch('/staff/payments/'.$payment->id.'/status', ['status' => 'REFUNDED'])
-            ->assertSessionHas('error');
-
-        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'PENDING']);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'PAID']);
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'PAID']);
     }
 
     public function test_completed_order_can_be_returned_and_refunded(): void
@@ -237,9 +318,6 @@ class OrderManagementTest extends TestCase
             $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => $status])
                 ->assertRedirect();
         }
-
-        $this->patch('/staff/payments/'.$payment->id.'/status', ['status' => 'PAID'])
-            ->assertRedirect();
 
         $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'RETURNED'])
             ->assertRedirect();
@@ -325,6 +403,48 @@ class OrderManagementTest extends TestCase
         $this->get('/customer/orders/'.$order->id)->assertForbidden();
     }
 
+    public function test_customer_can_only_reorder_a_terminal_order(): void
+    {
+        $order = $this->createOrder($this->customer);
+
+        $this->actingAs($this->customer)
+            ->post(route('customer.orders.reorder', $order))
+            ->assertSessionHas('error');
+        $this->assertDatabaseMissing('cart_items', [
+            'user_id' => $this->customer->id,
+            'product_id' => $this->product->id,
+        ]);
+
+        $order->update(['order_status' => 'COMPLETED']);
+        $this->post(route('customer.orders.reorder', $order))->assertRedirect(route('customer.cart'));
+        $this->assertDatabaseHas('cart_items', [
+            'user_id' => $this->customer->id,
+            'product_id' => $this->product->id,
+            'quantity' => 2,
+        ]);
+    }
+
+    public function test_customer_payment_action_is_limited_to_an_active_prepaid_order(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $order->update([
+            'payment_method' => 'BANK_TRANSFER',
+            'payment_status' => 'UNPAID',
+        ]);
+
+        $this->assertTrue($order->fresh()->canPayOnline());
+
+        $order->update(['order_status' => 'COMPLETED']);
+        $this->assertFalse($order->fresh()->canPayOnline());
+
+        $order->update([
+            'order_status' => 'SHIPPING',
+            'payment_method' => 'COD',
+            'payment_status' => 'UNPAID',
+        ]);
+        $this->assertFalse($order->fresh()->canPayOnline());
+    }
+
     public function test_admin_can_block_user_and_toggle_review(): void
     {
         $order = $this->createOrder($this->customer);
@@ -407,6 +527,242 @@ class OrderManagementTest extends TestCase
         $this->assertStringContainsString($order->order_code, $response->streamedContent());
     }
 
+    public function test_stale_order_cannot_complete_or_restore_stock_twice(): void
+    {
+        $service = app(OrderService::class);
+        $order = $this->createOrder($this->customer);
+        $order->update(['order_status' => 'SHIPPING']);
+        $stale = $order->fresh();
+        $service->updateStatus($order, 'COMPLETED', $this->staff->id);
+        try {
+            $service->updateStatus($stale, 'COMPLETED', $this->staff->id);
+            $this->fail('Duplicate completion was accepted.');
+        } catch (\Exception $e) {
+            $this->assertSame('Đơn hàng đã ở trạng thái này rồi.', $e->getMessage());
+        }
+        $this->assertSame(2, $this->product->fresh()->sold_count);
+        $this->assertSame(1, $order->statusHistories()->where('to_status', 'COMPLETED')->count());
+
+        $cancelled = $this->createOrder($this->customer);
+        $stale = $cancelled->fresh();
+        $service->cancelOrder($cancelled, $this->customer->id, 'Hủy');
+        try {
+            $service->cancelOrder($stale, $this->customer->id, 'Hủy');
+            $this->fail('Duplicate cancellation was accepted.');
+        } catch (\Exception $e) {
+            $this->assertSame('Bạn chỉ có thể hủy đơn hàng đang chờ xác nhận.', $e->getMessage());
+        }
+        $this->assertSame(8, $this->product->fresh()->stock_quantity);
+        $this->assertSame(1, $cancelled->statusHistories()->where('to_status', 'CANCELLED')->count());
+    }
+
+    public function test_bulk_shipping_obeys_single_order_transitions(): void
+    {
+        $pending = $this->createOrder($this->customer);
+        $ready = $this->createOrder($this->customer);
+        $ready->update(['order_status' => 'PREPARING']);
+        foreach ([$this->admin, $this->staff] as $user) {
+            $ready->refresh()->update(['order_status' => 'PREPARING']);
+            $prefix = strtolower($user->role);
+            $this->actingAs($user)->post('/'.$prefix.'/orders/bulk-update-status', [
+                'order_ids' => [$pending->id, $ready->id], 'target_status' => 'SHIPPING',
+            ])->assertSessionHas('success');
+            $this->assertSame('PENDING', $pending->fresh()->order_status);
+            $this->assertSame('SHIPPING', $ready->fresh()->order_status);
+        }
+    }
+
+    public function test_confirmed_order_must_be_prepared_before_shipping(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $service = app(OrderService::class);
+        $service->updateStatus($order, 'CONFIRMED', $this->staff->id);
+
+        try {
+            $service->updateStatus($order, 'SHIPPING', $this->staff->id);
+            $this->fail('A confirmed order skipped the preparing state.');
+        } catch (\Exception $e) {
+            $this->assertStringContainsString('Không thể chuyển đơn hàng', $e->getMessage());
+        }
+
+        $this->assertSame('CONFIRMED', $order->fresh()->order_status);
+    }
+
+    public function test_prepaid_order_must_be_paid_before_shipping(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $order->update([
+            'order_status' => 'PREPARING',
+            'payment_method' => 'BANK_TRANSFER',
+            'payment_status' => 'UNPAID',
+        ]);
+
+        $this->actingAs($this->staff)
+            ->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'SHIPPING'])
+            ->assertSessionHas('error', 'Đơn thanh toán trước phải được xác nhận đã thanh toán trước khi giao hàng.');
+        $this->assertSame('PREPARING', $order->fresh()->order_status);
+
+        $order->update(['payment_status' => 'PAID']);
+        $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'SHIPPING'])
+            ->assertSessionHas('success');
+        $this->assertSame('SHIPPING', $order->fresh()->order_status);
+    }
+
+    public function test_admin_and_staff_cards_only_show_shipping_controls_when_eligible(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $order->update([
+            'order_status' => 'PREPARING',
+            'payment_method' => 'BANK_TRANSFER',
+            'payment_status' => 'UNPAID',
+        ]);
+        $order->load('details.product.images');
+
+        foreach ([['admin.orders', false], ['staff.orders', true]] as [$routePrefix, $isStaff]) {
+            $html = view('orders.partials.staff-order-card', compact('order', 'routePrefix', 'isStaff'))->render();
+            $this->assertStringNotContainsString('title="Chọn đơn để giao hàng"', $html);
+            $this->assertStringNotContainsString('> Bắt đầu giao hàng', $html);
+            $this->assertStringContainsString('Chờ thanh toán', $html);
+        }
+
+        $order->update(['payment_status' => 'PAID']);
+        foreach ([['admin.orders', false], ['staff.orders', true]] as [$routePrefix, $isStaff]) {
+            $html = view('orders.partials.staff-order-card', compact('order', 'routePrefix', 'isStaff'))->render();
+            $this->assertStringContainsString('title="Chọn đơn để giao hàng"', $html);
+            $this->assertStringContainsString('> Bắt đầu giao hàng', $html);
+        }
+
+        $order->update(['order_status' => 'CONFIRMED']);
+        $html = view('orders.partials.staff-order-card', [
+            'order' => $order, 'routePrefix' => 'staff.orders', 'isStaff' => true,
+        ])->render();
+        $this->assertStringContainsString('Chuẩn bị hàng', $html);
+        $this->assertStringNotContainsString('> Bắt đầu giao hàng', $html);
+    }
+
+    public function test_manual_shipping_method_and_start_time_are_recorded(): void
+    {
+        $order = app(OrderService::class)->createOrder([
+            'customer_id' => $this->customer->id,
+            'recipient_name' => $this->customer->full_name,
+            'recipient_phone' => '0980000000',
+            'recipient_address' => 'Hà Nội',
+            'payment_method' => 'COD',
+            'shipping_method' => 'express',
+        ], [(object) [
+            'product_id' => $this->product->id,
+            'quantity' => 2,
+        ]]);
+
+        $this->assertSame('express', $order->shipping_method);
+        $this->assertSame('Giao hàng hỏa tốc', $order->shipping_method_label);
+
+        $this->actingAs($this->staff);
+        foreach (['CONFIRMED', 'PREPARING', 'SHIPPING'] as $status) {
+            $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => $status])
+                ->assertRedirect();
+        }
+
+        $order->refresh();
+        $this->assertNotNull($order->shipped_at);
+        $this->assertDatabaseHas('order_status_histories', [
+            'order_id' => $order->id,
+            'to_status' => 'SHIPPING',
+            'note' => 'Shop bắt đầu giao hàng thủ công.',
+        ]);
+    }
+
+    public function test_shipping_order_can_only_be_cancelled_after_stock_returns(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $service = app(OrderService::class);
+        foreach (['CONFIRMED', 'PREPARING', 'SHIPPING'] as $status) {
+            $service->updateStatus($order, $status, $this->staff->id);
+        }
+
+        $this->actingAs($this->staff)
+            ->patch('/staff/orders/'.$order->id.'/status', [
+                'order_status' => 'CANCELLED',
+                'cancel_reason' => 'Khách không nhận hàng',
+            ])
+            ->assertSessionHas('error', 'Chỉ được hủy đơn đang giao sau khi xác nhận hàng đã quay lại kho.');
+
+        $this->assertSame('SHIPPING', $order->fresh()->order_status);
+        $this->assertSame(8, $this->product->fresh()->stock_quantity);
+
+        $this->patch('/staff/orders/'.$order->id.'/status', [
+            'order_status' => 'CANCELLED',
+            'cancel_reason' => 'Khách không nhận hàng',
+            'stock_returned' => true,
+        ])->assertSessionHas('success');
+
+        $this->assertSame('CANCELLED', $order->fresh()->order_status);
+        $this->assertSame(10, $this->product->fresh()->stock_quantity);
+    }
+
+    public function test_customer_receipt_requires_shipping_and_does_not_confirm_bank_transfer(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $order->update(['payment_method' => 'BANK_TRANSFER']);
+        $payment = app(OrderService::class)->createPayment($order, ['method' => 'BANK_TRANSFER']);
+        $this->actingAs($this->customer);
+        foreach (['PENDING', 'CONFIRMED', 'PREPARING'] as $status) {
+            $order->update(['order_status' => $status]);
+            $this->post(route('customer.orders.complete', $order))->assertSessionHas('error');
+            $this->assertSame($status, $order->fresh()->order_status);
+        }
+        $order->update(['order_status' => 'SHIPPING']);
+        $this->post(route('customer.orders.complete', $order))->assertSessionHas('success');
+        $this->assertSame('COMPLETED', $order->fresh()->order_status);
+        $this->assertSame('UNPAID', $order->fresh()->payment_status);
+        $this->assertSame('PENDING', $payment->fresh()->status);
+        $this->post(route('customer.orders.complete', $order))->assertSessionHas('error');
+        $this->assertSame(2, $this->product->fresh()->sold_count);
+    }
+
+    public function test_status_forms_only_offer_allowed_transitions(): void
+    {
+        $order = $this->createOrder($this->customer);
+        foreach ([$this->admin, $this->staff] as $user) {
+            $response = $this->actingAs($user)->get('/'.strtolower($user->role).'/orders/'.$order->id)->assertOk();
+            preg_match('/<select name="order_status".*?<\/select>/s', $response->getContent(), $matches);
+            $this->assertNotEmpty($matches);
+            $this->assertStringContainsString('value="CONFIRMED"', $matches[0]);
+            $this->assertStringContainsString('value="CANCELLED"', $matches[0]);
+            $this->assertStringNotContainsString('value="COMPLETED"', $matches[0]);
+            $this->assertStringNotContainsString('value="PENDING"', $matches[0]);
+        }
+    }
+
+    public function test_customer_receipt_confirms_cod_payment_once(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $payment = $this->createPayment($order);
+        $order->update(['order_status' => 'SHIPPING']);
+        $this->actingAs($this->customer)
+            ->post(route('customer.orders.complete', $order))->assertSessionHas('success');
+        $this->assertSame('PAID', $order->fresh()->payment_status);
+        $this->assertSame('PAID', $payment->fresh()->status);
+        $this->assertSame(1, $order->payments()->count());
+        $this->post(route('customer.orders.complete', $order))->assertSessionHas('error');
+        $this->assertSame(2, $this->product->fresh()->sold_count);
+    }
+
+    public function test_customer_cancellation_rechecks_persisted_status(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $stale = $order->fresh();
+        app(OrderService::class)->updateStatus($order, 'CONFIRMED', $this->staff->id);
+        try {
+            app(OrderService::class)->cancelOrder($stale, $this->customer->id, 'Hủy');
+            $this->fail('A confirmed order was cancelled by the customer.');
+        } catch (\Exception $e) {
+            $this->assertSame('Bạn chỉ có thể hủy đơn hàng đang chờ xác nhận.', $e->getMessage());
+        }
+        $this->assertSame('CONFIRMED', $order->fresh()->order_status);
+        $this->assertSame(8, $this->product->fresh()->stock_quantity);
+    }
+
     private function createOrder(User $customer): Order
     {
         return app(OrderService::class)->createOrder([
@@ -431,12 +787,33 @@ class OrderManagementTest extends TestCase
 
     private function advanceOrderToCompleted(Order $order): void
     {
-        $payment = $this->createPayment($order);
+        $this->createPayment($order);
 
         foreach (['CONFIRMED', 'PREPARING', 'SHIPPING', 'COMPLETED'] as $status) {
             app(OrderService::class)->updateStatus($order, $status, $this->admin->id, null);
         }
+    }
 
-        app(OrderService::class)->confirmPayment($payment, $this->admin->id);
+    public function test_staff_and_admin_can_view_order_invoice_and_back_button_does_not_403(): void
+    {
+        $order = $this->createOrder($this->customer);
+
+        // Staff views invoice
+        $staffResponse = $this->actingAs($this->staff)->get(route('customer.orders.invoice', $order));
+        $staffResponse->assertStatus(200);
+        $staffResponse->assertSee(route('staff.orders.show', $order));
+
+        // Admin views invoice
+        $adminResponse = $this->actingAs($this->admin)->get(route('customer.orders.invoice', $order));
+        $adminResponse->assertStatus(200);
+        $adminResponse->assertSee(route('admin.orders.show', $order));
+
+        // Staff hitting customer.orders.show is redirected to staff.orders.show
+        $this->actingAs($this->staff)->get(route('customer.orders.show', $order))
+            ->assertRedirect(route('staff.orders.show', $order));
+
+        // Admin hitting customer.orders.show is redirected to admin.orders.show
+        $this->actingAs($this->admin)->get(route('customer.orders.show', $order))
+            ->assertRedirect(route('admin.orders.show', $order));
     }
 }

@@ -120,12 +120,12 @@
                         <td class="font-bold text-[#4E342E]">{{ $order->order_code }}</td>
                         <td>
                             <div class="font-semibold text-[#4E342E]">{{ $order->customer?->full_name ?? 'Khách vãng lai' }}</div>
-                            <div class="text-xs text-[#8E8076]">{{ $order->shipping_phone }}</div>
+                            <div class="text-xs text-[#8E8076]">{{ $order->recipient_phone ?? $order->shipping_phone }}</div>
                         </td>
                         <td class="text-right font-bold text-amber-700">
                             {{ number_format($order->total_amount, 0, ',', '.') }} đ
                         </td>
-                        <td><x-order-status-badge :status="$order->order_status" /></td>
+                        <td><x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" /></td>
                         <td><x-payment-status-badge :status="$order->payment_status" /></td>
                         <td class="text-[#795548] text-xs">{{ $order->created_at->format('d/m/Y H:i') }}</td>
                         <td class="text-right">

@@ -114,8 +114,8 @@ class PasswordResetTest extends TestCase
 
         $this->from(route('password.request'))->post(route('password.store'), [
             'email' => $user->email,
-            'password' => 'NewPassword123',
-            'password_confirmation' => 'NewPassword123',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors('email');
     }
@@ -135,15 +135,52 @@ class PasswordResetTest extends TestCase
 
         $this->post(route('password.store'), [
             'email' => $user->email,
-            'password' => 'NewPassword123',
-            'password_confirmation' => 'NewPassword123',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ])->assertSessionHasNoErrors()
             ->assertSessionHas('status', 'Mật khẩu của bạn đã được đặt lại thành công.')
             ->assertSessionMissing('password_reset.verified_email')
             ->assertRedirect(route('login'));
 
-        $this->assertTrue(Hash::check('NewPassword123', $user->fresh()->password));
+        $this->assertTrue(Hash::check('NewPassword123!', $user->fresh()->password));
         $this->assertDatabaseMissing('password_reset_codes', ['email' => $user->email]);
+    }
+
+    public function test_password_reset_must_satisfy_all_security_standards(): void
+    {
+        $user = User::factory()->create(['email' => 'bear@example.com']);
+
+        // 1. Thiếu ký tự đặc biệt
+        $this->withSession(['password_reset.verified_email' => $user->email])
+            ->post(route('password.store'), [
+                'email' => $user->email,
+                'password' => 'Password123',
+                'password_confirmation' => 'Password123',
+            ])->assertSessionHasErrors(['password' => 'Mật khẩu phải bao gồm ký tự đặc biệt (!@#$%^&*).']);
+
+        // 2. Thiếu chữ hoa
+        $this->withSession(['password_reset.verified_email' => $user->email])
+            ->post(route('password.store'), [
+                'email' => $user->email,
+                'password' => 'password123!',
+                'password_confirmation' => 'password123!',
+            ])->assertSessionHasErrors(['password' => 'Mật khẩu phải kết hợp chữ hoa và chữ thường.']);
+
+        // 3. Thiếu chữ số
+        $this->withSession(['password_reset.verified_email' => $user->email])
+            ->post(route('password.store'), [
+                'email' => $user->email,
+                'password' => 'Password!',
+                'password_confirmation' => 'Password!',
+            ])->assertSessionHasErrors(['password' => 'Mật khẩu phải bao gồm ít nhất một chữ số (0–9).']);
+
+        // 4. Dưới 8 ký tự
+        $this->withSession(['password_reset.verified_email' => $user->email])
+            ->post(route('password.store'), [
+                'email' => $user->email,
+                'password' => 'Pa1!',
+                'password_confirmation' => 'Pa1!',
+            ])->assertSessionHasErrors(['password' => 'Mật khẩu phải có ít nhất 8 ký tự.']);
     }
 
     public function test_password_reset_authorization_expires_after_ten_minutes(): void
@@ -160,14 +197,14 @@ class PasswordResetTest extends TestCase
 
         $this->from(route('password.request'))->post(route('password.store'), [
             'email' => $user->email,
-            'password' => 'NewPassword123',
-            'password_confirmation' => 'NewPassword123',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ])->assertRedirect(route('password.request'))
             ->assertSessionHasErrors([
                 'email' => 'Phiên đặt lại mật khẩu đã hết hạn. Vui lòng gửi mã OTP mới.',
             ]);
 
-        $this->assertFalse(Hash::check('NewPassword123', $user->fresh()->password));
+        $this->assertFalse(Hash::check('NewPassword123!', $user->fresh()->password));
         $this->assertDatabaseHas('password_reset_codes', ['email' => $user->email]);
     }
 

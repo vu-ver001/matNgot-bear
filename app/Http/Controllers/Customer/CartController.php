@@ -41,14 +41,16 @@ class CartController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'items' => $cartItems,
-            ]);
-        }
+        $suggestedProducts = $cartItems->isEmpty()
+            ? Product::where('status', 'ACTIVE')
+                ->with(['category', 'images' => function ($q) {
+                    $q->orderBy('is_primary', 'desc')->orderBy('sort_order', 'asc');
+                }])
+                ->take(4)
+                ->get()
+            : collect();
 
-        return view('customer.cart', compact('cartItems'));
+        return view('customer.cart', compact('cartItems', 'suggestedProducts'));
     }
 
     /**

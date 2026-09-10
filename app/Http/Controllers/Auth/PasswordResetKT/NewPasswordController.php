@@ -62,6 +62,11 @@ class NewPasswordController extends Controller
 
         $request->session()->forget('password_reset.verified_email');
 
+        if ($request->user()) {
+            return redirect()->route('account.password.edit')
+                ->with('status', 'password-reset');
+        }
+
         return redirect()->route('login')
             ->with('status', 'Mật khẩu của bạn đã được đặt lại thành công.');
     }

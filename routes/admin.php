@@ -30,10 +30,24 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
 
     // 3. Quản lý đơn hàng (Anh Vũ)
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders/bulk-update-status', [OrderController::class, 'bulkUpdateStatus'])->name('orders.bulkUpdateStatus');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::post('/orders/{order}/approve-cancel', [OrderController::class, 'approveCancel'])->name('orders.approve_cancel');
+    Route::post('/orders/{order}/reject-cancel', [OrderController::class, 'rejectCancel'])->name('orders.reject_cancel');
+    Route::post('/orders/{order}/confirm-refund', [OrderController::class, 'confirmRefund'])->name('orders.confirm_refund');
 
+    // 3.1 Quản lý thanh toán & Đối soát dòng tiền
+    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('/payments/export', [PaymentController::class, 'export'])->name('payments.export');
+    Route::get('/payments/settings', [PaymentController::class, 'settings'])->name('payments.settings');
+    Route::post('/payments/settings', [PaymentController::class, 'saveSettings'])->name('payments.saveSettings');
+    Route::post('/payments/{payment}/verify-sepay', [PaymentController::class, 'verifySepay'])->name('payments.verifySepay');
     Route::patch('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])->name('payments.updateStatus');
+    Route::post('/payments/refund-requests/{refundRequest}/approve', [PaymentController::class, 'approveRefund'])->name('payments.approveRefund');
+    Route::post('/payments/refund-requests/{refundRequest}/reject', [PaymentController::class, 'rejectRefund'])->name('payments.rejectRefund');
+    Route::post('/payments/{payment}/cod-settled', [PaymentController::class, 'markCodSettled'])->name('payments.markCodSettled');
+    Route::post('/payments/bulk-cod-settled', [PaymentController::class, 'bulkMarkCodSettled'])->name('payments.bulkMarkCodSettled');
 
     // 4. Quản lý người dùng (Anh Vũ)
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -62,10 +76,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
 
 
     // 9. Placeholder / Hỗ trợ
-    Route::get('/payments', fn() => view('admin.placeholder', ['currentPage' => 'payments']))->name('payments.index');
     Route::get('/customers', fn() => view('admin.placeholder', ['currentPage' => 'customers']))->name('customers.index');
     Route::get('/staff', fn() => view('admin.placeholder', ['currentPage' => 'staff']))->name('staff.index');
-    Route::get('/support', fn() => view('admin.placeholder', ['currentPage' => 'support']))->name('support.index');
+    
+    // Hỗ trợ khách hàng (Kim Tuyến - Admin xem toàn bộ và nhắn tin như nhân viên)
+    Route::prefix('support')->name('support.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'index'])->name('index');
+        Route::get('/{case}', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'show'])->name('show');
+        Route::post('/{case}/accept', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'accept'])->name('accept');
+        Route::post('/{case}/handover', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'handover'])->name('handover');
+        Route::post('/{case}/close', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'close'])->name('close');
+        Route::post('/{case}/reopen', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'reopen'])->name('reopen');
+        Route::post('/{case}/takeover', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'takeover'])->name('takeover');
+        Route::post('/{case}/revoke', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'revoke'])->name('revoke');
+        Route::post('/{case}/assign', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'assign'])->name('assign');
+        Route::post('/{case}/messages', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'sendMessage'])->name('messages.send');
+        Route::get('/{case}/poll', [\App\Http\Controllers\ChatKT\StaffChatController::class, 'poll'])->name('poll');
+    });
 
     Route::get('/page/{page}', function (string $page) {
         if ($page === 'vouchers') {
