@@ -59,12 +59,8 @@
             </div>
         </a>
 
-<<<<<<< HEAD
-        @if(!auth()->check() || !in_array(auth()->user()->role, ['ADMIN', 'STAFF']))
-=======
-        {{-- Tiện ích mua sắm khách hàng (Yêu thích, Giỏ hàng) - Chỉ hiển thị cho Khách hàng & Khách vãng lai, ẩn với Admin & Nhân viên --}}
+        <!-- {{-- Tiện ích mua sắm khách hàng (Yêu thích, Giỏ hàng) - Chỉ hiển thị cho Khách hàng & Khách vãng lai, ẩn với Admin & Nhân viên --}} -->
         @if(!auth()->check() || auth()->user()->role === 'CUSTOMER')
->>>>>>> 0fc8cd7ffcb51440e478d401b5665104cdff400b
             <!-- Wishlist (Yêu thích) -->
             @auth
                 <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
@@ -73,42 +69,6 @@
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
             @endguest
                 <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
-<<<<<<< HEAD
-                <span class="badge-count" id="wishlist-count" style="display: flex;">{{ (int) ($realWishlistCount ?? 0) }}</span>
-            </a>
-
-            <!-- Cart (Giỏ hàng) -->
-            @auth
-                <a href="{{ route('customer.cart') }}" class="utility-icon-btn" title="Giỏ hàng">
-                    <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
-                    <span class="badge-count" id="cart-count" style="display: flex;">{{ (int) ($realCartCount ?? 0) > 99 ? '99+' : (int) ($realCartCount ?? 0) }}</span>
-                </a>
-            @else
-                <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.cart') }}', 'Đăng nhập để xem giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để xem và quản lý giỏ hàng của bạn bạn nhé!'); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" title="Giỏ hàng (Đăng nhập để xem)">
-                    <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
-                    <span class="badge-count" id="cart-count" style="display: flex;">0</span>
-                </a>
-            @endauth
-
-            <!-- My Orders (Đơn hàng của tôi cạnh giỏ hàng) -->
-            @auth
-                <a href="{{ route('customer.orders.index') }}" class="utility-icon-btn" title="Đơn hàng của tôi">
-                    <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
-                    @php
-                        $pendingOrderCount = \App\Models\Order::where('customer_id', auth()->id())
-                            ->whereNotIn('order_status', ['CANCELLED', 'DELIVERED', 'COMPLETED'])
-                            ->count();
-                    @endphp
-                    @if($pendingOrderCount > 0)
-                        <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ $pendingOrderCount }}</span>
-                    @endif
-                </a>
-            @else
-                <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" title="Đơn hàng của tôi (Đăng nhập để xem)">
-                    <i class="fa-solid fa-clipboard-list" style="font-size: 16px; color: #8D6E63;"></i>
-                </a>
-            @endauth
-=======
                 <span class="badge-count" id="wishlist-count">0</span>
             </a>
 
@@ -124,7 +84,7 @@
             </a>
         @endif
 
-        {{-- Kho voucher: Hiển thị cho Khách hàng, Nhân viên tư vấn & Khách vãng lai, ẩn với Admin --}}
+        <!-- {{-- Kho voucher: Hiển thị cho Khách hàng, Nhân viên tư vấn & Khách vãng lai, ẩn với Admin --}} -->
         @if(!auth()->check() || in_array(auth()->user()->role, ['CUSTOMER', 'STAFF']))
             <!-- Vouchers (Kho voucher khuyến mãi) -->
             @auth
@@ -138,7 +98,6 @@
                     <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ (int) ($availableVoucherCount ?? 0) > 99 ? '99+' : (int) ($availableVoucherCount ?? 0) }}</span>
                 @endif
             </a>
->>>>>>> 0fc8cd7ffcb51440e478d401b5665104cdff400b
         @endif
 
         <!-- Nút Đăng nhập / Đăng xuất & Tài khoản -->
