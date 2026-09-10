@@ -10,6 +10,20 @@
 <div class="py-5 sm:py-7 bg-[#FAF6EE] min-h-[calc(100vh-140px)] pb-24 font-sans"
      x-data="{
          copiedCode: null,
+         detailModalOpen: false,
+         detailVoucher: null,
+         openDetailModal(voucher) {
+             this.detailVoucher = voucher;
+             this.detailModalOpen = true;
+             document.body.style.overflow = 'hidden';
+         },
+         closeDetailModal() {
+             this.detailModalOpen = false;
+             document.body.style.overflow = '';
+             setTimeout(() => {
+                 if (!this.detailModalOpen) this.detailVoucher = null;
+             }, 200);
+         },
          copyVoucher(code) {
              navigator.clipboard.writeText(code).then(() => {
                  this.copiedCode = code;
@@ -25,7 +39,31 @@
              });
          }
      }">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="max-w-6xl mx-auto">
+        {{-- Staff Special Consultation Banner --}}
+        @if(auth()->check() && auth()->user()->role === 'STAFF')
+            <div class="mb-4 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-300 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-[#E08A1E] text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+                        <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs sm:text-sm text-[#5D4037] flex items-center gap-1.5">
+                            <span>Chế độ Nhân viên tư vấn khách hàng</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E08A1E] text-white uppercase tracking-wider">STAFF</span>
+                        </div>
+                        <p class="text-[11.5px] text-[#7D6B5D] mt-0.5 leading-relaxed">
+                            Bấm nút <strong class="text-[#E08A1E] underline cursor-pointer">"Điều kiện"</strong> trên mỗi voucher để tra cứu chi tiết mức giảm, đơn tối thiểu, số lượt còn lại và danh mục/sản phẩm áp dụng để tư vấn cho khách.
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('staff.dashboard') }}" class="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100/60 border border-amber-200 text-[#7D6B5D] transition flex items-center gap-1 justify-center">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    <span>Về Dashboard Staff</span>
+                </a>
+            </div>
+        @endif
+
         {{-- Hero Banner Section with Image --}}
         <div class="relative rounded-2xl overflow-hidden mb-5 shadow-md border border-[#D4A373]/30 text-white p-5 sm:p-7 min-h-[190px] sm:min-h-[215px] flex items-center bg-[#A06E4A]">
             {{-- Background Banner Image: 100% continuous and seamless --}}
@@ -70,10 +108,10 @@
 
         {{-- Filter & Search Toolbar --}}
         <div class="voucher-toolbar">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div class="voucher-toolbar-inner">
                 
                 {{-- Status Tabs: Tất cả | Sắp diễn ra | Khả dụng | Đã sử dụng --}}
-                <div class="voucher-tabs-group">
+                <div class="voucher-tabs-group shrink-0">
                     {{-- Tab 1: Tất cả --}}
                     <a href="{{ route('customer.vouchers.index', array_merge(request()->query(), ['tab' => 'all'])) }}"
                        class="voucher-tab-link voucher-tab-all {{ $currentTab === 'all' ? 'is-active' : '' }}">
@@ -116,9 +154,9 @@
                 </div>
 
                 {{-- Type Filter & Cute Search Bar --}}
-                <div class="flex flex-wrap items-center gap-2.5">
+                <div class="voucher-right-controls flex items-center gap-2 sm:gap-2.5 shrink-0 flex-nowrap">
                     {{-- Type Filter (Tất cả / Đơn hàng / Vận chuyển) --}}
-                    <div class="voucher-type-switch">
+                    <div class="voucher-type-switch shrink-0">
                         <a href="{{ route('customer.vouchers.index', array_merge(request()->query(), ['type' => 'all'])) }}"
                            class="voucher-type-pill {{ $currentType === 'all' ? 'is-active' : '' }}">
                             Tất cả
@@ -134,7 +172,7 @@
                     </div>
 
                     {{-- Cute Search Bar with warm bear styling --}}
-                    <form action="{{ route('customer.vouchers.index') }}" method="GET" class="voucher-search-form">
+                    <form action="{{ route('customer.vouchers.index') }}" method="GET" class="voucher-search-form shrink-0">
                         <input type="hidden" name="tab" value="{{ $currentTab }}">
                         <input type="hidden" name="type" value="{{ $currentType }}">
                         
@@ -146,7 +184,8 @@
                                    name="search" 
                                    value="{{ $search }}"
                                    placeholder="Tìm mã voucher..." 
-                                   class="voucher-search-input"
+                                   class="voucher-search-input focus:outline-none! focus:ring-0! focus:border-transparent!"
+                                   style="outline: none !important; box-shadow: none !important; border: none !important;"
                                    autocomplete="off">
                             @if($search)
                                 <a href="{{ route('customer.vouchers.index', ['tab' => $currentTab, 'type' => $currentType]) }}"
@@ -236,6 +275,36 @@
                             $typeScope = 'Đơn hàng';
                             $primaryColor = '#E08A1E';
                         }
+
+                        $voucherDetailData = [
+                            'id' => $voucher->id,
+                            'code' => $voucher->code,
+                            'type' => $voucher->voucher_type,
+                            'type_label' => $isShipping ? 'Miễn phí vận chuyển (Freeship)' : 'Giảm giá đơn hàng',
+                            'discount_display' => $discountDisplay,
+                            'discount_subtext' => $discountSubtext,
+                            'min_order' => number_format($voucher->min_order_value ?? 0, 0, ',', '.') . 'đ',
+                            'max_discount' => ($isPercent && ($voucher->max_discount_value ?? 0) > 0) ? number_format($voucher->max_discount_value, 0, ',', '.') . 'đ' : null,
+                            'start_date' => $voucher->start_date->format('H:i d/m/Y'),
+                            'end_date' => $voucher->end_date->format('H:i d/m/Y'),
+                            'is_upcoming' => (bool) $voucher->is_upcoming,
+                            'is_expired' => (bool) $voucher->is_expired,
+                            'is_available' => (bool) $voucher->is_available,
+                            'is_depleted' => (bool) $voucher->is_depleted,
+                            'usage_limit' => $voucher->usage_limit,
+                            'used_count' => (int) $voucher->used_count,
+                            'remaining_count' => $voucher->usage_limit !== null ? max(0, $voucher->usage_limit - $voucher->used_count) : null,
+                            'limit_per_user' => (int) ($voucher->limit_per_user ?? 1),
+                            'apply_scope' => $voucher->apply_scope,
+                            'apply_scope_label' => match($voucher->apply_scope) {
+                                'CATEGORY' => 'Danh mục chỉ định',
+                                'PRODUCT' => 'Sản phẩm chỉ định',
+                                default => 'Toàn bộ sản phẩm'
+                            },
+                            'categories' => $voucher->categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values(),
+                            'products' => $voucher->products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'price' => number_format($p->price, 0, ',', '.') . 'đ'])->values(),
+                            'copy_url' => route('products.index', ['voucher' => $voucher->code]),
+                        ];
                     @endphp
 
                     <div class="voucher-ticket-card {{ $voucher->is_depleted || ($voucher->is_expired && !$voucher->is_upcoming) ? 'opacity-65 grayscale-[30%]' : '' }}">
@@ -412,18 +481,25 @@
                             {{-- 3. Footer Row: Timeline & Action Button --}}
                             <div class="pt-2 border-t border-[#F5E8D8] flex items-center justify-between gap-2 shrink-0" style="height: 32px;">
                                 
-                                {{-- Time Info --}}
-                                <div class="truncate">
-                                    @if($voucher->is_upcoming)
-                                        <div class="text-[10.5px] text-teal-700 flex items-center gap-1 truncate">
-                                            <span class="shrink-0">Mở từ:</span>
-                                            <span class="font-mono font-medium truncate">{{ $voucher->start_date->format('H:i d/m/Y') }}</span>
-                                        </div>
-                                    @else
-                                        <div class="text-[10.5px] text-[#8C7A6B] truncate">
-                                            Hạn dùng: <span class="font-medium text-[#2B1810] font-mono">{{ $voucher->end_date->format('d/m/Y H:i') }}</span>
-                                        </div>
-                                    @endif
+                                {{-- Time Info & Điều kiện button --}}
+                                <div class="flex items-center gap-1.5 truncate text-[10.5px]">
+                                    <div class="text-[#8C7A6B] truncate">
+                                        @if($voucher->is_upcoming)
+                                            <span class="text-teal-700">Mở: <strong class="font-mono font-medium">{{ $voucher->start_date->format('d/m/Y') }}</strong></span>
+                                        @else
+                                            <span>Hạn: <strong class="font-medium text-[#2B1810] font-mono">{{ $voucher->end_date->format('d/m/Y') }}</strong></span>
+                                        @endif
+                                    </div>
+
+                                    <span class="text-[#D4C5B9]">·</span>
+
+                                    <button type="button" 
+                                            @click="openDetailModal({{ json_encode($voucherDetailData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})"
+                                            class="font-bold text-[#E08A1E] hover:text-[#B36B15] hover:underline flex items-center gap-0.5 cursor-pointer transition shrink-0"
+                                            title="Bấm để xem chi tiết điều kiện sử dụng voucher">
+                                        <i class="fa-solid fa-circle-info text-[10px]"></i>
+                                        <span>Điều kiện</span>
+                                    </button>
                                 </div>
 
                                 {{-- Action CTA --}}
@@ -464,7 +540,233 @@
             </div>
         @endif
 
+    </div>
 
+    {{-- Voucher Condition Detail Modal (Hỗ trợ Khách hàng & Nhân viên tư vấn xem toàn bộ điều kiện) --}}
+    <div x-show="detailModalOpen"
+         x-cloak
+         class="fixed inset-0 z-[9999] overflow-y-auto"
+         aria-labelledby="voucher-condition-modal-title"
+         role="dialog"
+         aria-modal="true"
+         @keydown.escape.window="closeDetailModal()">
+        
+        {{-- Backdrop --}}
+        <div x-show="detailModalOpen"
+             x-transition:enter="ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+             @click="closeDetailModal()"></div>
+
+        {{-- Modal Dialog --}}
+        <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
+            <div x-show="detailModalOpen"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="relative transform overflow-hidden rounded-2xl sm:rounded-3xl bg-[#FFFDF9] text-left shadow-2xl transition-all w-full max-w-lg border border-[#EBDDCD]"
+                 @click.outside="closeDetailModal()">
+                
+                <template x-if="detailVoucher">
+                    <div class="p-5 sm:p-6 space-y-4">
+                        {{-- Modal Header --}}
+                        <div class="flex items-start justify-between pb-3 border-b border-[#F0E2D2]">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg shadow-sm"
+                                     :class="detailVoucher.type === 'SHIPPING' ? 'bg-[#0D9488]' : 'bg-[#E08A1E]'">
+                                    <i class="fa-solid" :class="detailVoucher.type === 'SHIPPING' ? 'fa-truck-fast' : 'fa-ticket'"></i>
+                                </div>
+                                <div>
+                                    <h3 id="voucher-condition-modal-title" class="text-base font-bold text-[#2B1810]">
+                                        Chi Tiết Điều Kiện Voucher
+                                    </h3>
+                                    <p class="text-xs text-[#7D6B5D]" x-text="detailVoucher.type_label"></p>
+                                </div>
+                            </div>
+                            <button type="button" @click="closeDetailModal()"
+                                    class="w-8 h-8 rounded-full bg-[#FAF4ED] text-[#7D6B5D] hover:text-[#2B1810] hover:bg-[#F0E2D2] flex items-center justify-center transition cursor-pointer">
+                                <i class="fa-solid fa-xmark text-sm"></i>
+                            </button>
+                        </div>
+
+                        {{-- Voucher Code & Discount Highlight Card --}}
+                        <div class="rounded-xl p-3.5 border flex items-center justify-between gap-3"
+                             :class="detailVoucher.type === 'SHIPPING' ? 'bg-teal-50/70 border-teal-200' : 'bg-amber-50/70 border-amber-200'">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-semibold"
+                                          :class="detailVoucher.type === 'SHIPPING' ? 'text-teal-800' : 'text-amber-900'">
+                                        Mã voucher:
+                                    </span>
+                                    <span class="font-mono font-black text-sm px-2 py-0.5 rounded bg-white border border-[#EBDDCD] text-[#2B1810]"
+                                          x-text="detailVoucher.code"></span>
+                                </div>
+                                <div class="mt-1 text-lg font-extrabold"
+                                     :class="detailVoucher.type === 'SHIPPING' ? 'text-teal-700' : 'text-[#E08A1E]'"
+                                     x-text="detailVoucher.discount_display + ' (' + detailVoucher.discount_subtext + ')'">
+                                </div>
+                            </div>
+                            <button type="button" 
+                                    @click="copyVoucher(detailVoucher.code)"
+                                    class="px-3 py-1.5 rounded-lg font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                                    :class="detailVoucher.type === 'SHIPPING' ? 'bg-teal-600 hover:bg-teal-700 text-white' : 'bg-[#E08A1E] hover:bg-[#C2751D] text-white'">
+                                <i class="fa-regular fa-copy"></i>
+                                <span x-text="copiedCode === detailVoucher.code ? 'Đã chép!' : 'Chép mã'"></span>
+                            </button>
+                        </div>
+
+                        {{-- Staff Special Consultation Guide Box --}}
+                        @if(auth()->check() && auth()->user()->role === 'STAFF')
+                            <div class="bg-gradient-to-r from-[#FFF9EE] to-[#FFF3DE] border border-[#F6D89B] rounded-xl p-3 text-xs text-[#7B4707] space-y-1 shadow-2xs">
+                                <div class="font-bold flex items-center gap-1.5 text-[#A55F08]">
+                                    <i class="fa-solid fa-lightbulb"></i>
+                                    <span>Gợi ý tư vấn cho Nhân viên:</span>
+                                </div>
+                                <p class="leading-relaxed">
+                                    Hướng dẫn khách mua đơn từ <strong class="text-[#2B1810]" x-text="detailVoucher.min_order"></strong>, nhập mã <strong class="font-mono text-[#E08A1E]" x-text="detailVoucher.code"></strong> ở bước thanh toán để được <strong class="text-[#2B1810]" x-text="detailVoucher.discount_display"></strong>.
+                                    <span x-show="detailVoucher.remaining_count !== null">
+                                        Hệ thống hiện còn <strong class="text-rose-600" x-text="detailVoucher.remaining_count"></strong> lượt sử dụng.
+                                    </span>
+                                </p>
+                            </div>
+                        @endif
+
+                        {{-- Detailed Conditions List --}}
+                        <div class="bg-white rounded-xl border border-[#F0E2D2] divide-y divide-[#F5E8D8] text-xs">
+                            {{-- Row: Đơn tối thiểu --}}
+                            <div class="flex items-center justify-between p-2.5">
+                                <span class="text-[#7D6B5D] flex items-center gap-1.5">
+                                    <i class="fa-solid fa-cart-shopping text-[#E08A1E] w-4"></i>
+                                    <span>Đơn tối thiểu:</span>
+                                </span>
+                                <span class="font-bold text-[#2B1810]" x-text="detailVoucher.min_order"></span>
+                            </div>
+
+                            {{-- Row: Mức giảm tối đa (nếu có) --}}
+                            <template x-if="detailVoucher.max_discount">
+                                <div class="flex items-center justify-between p-2.5">
+                                    <span class="text-[#7D6B5D] flex items-center gap-1.5">
+                                        <i class="fa-solid fa-arrow-down-wide-short text-[#E08A1E] w-4"></i>
+                                        <span>Mức giảm tối đa:</span>
+                                    </span>
+                                    <span class="font-bold text-[#2B1810]" x-text="detailVoucher.max_discount"></span>
+                                </div>
+                            </template>
+
+                            {{-- Row: Thời gian hiệu lực --}}
+                            <div class="flex items-center justify-between p-2.5">
+                                <span class="text-[#7D6B5D] flex items-center gap-1.5">
+                                    <i class="fa-regular fa-clock text-[#E08A1E] w-4"></i>
+                                    <span>Hiệu lực từ:</span>
+                                </span>
+                                <span class="font-mono font-medium text-[#2B1810]" x-text="detailVoucher.start_date + ' đến ' + detailVoucher.end_date"></span>
+                            </div>
+
+                            {{-- Row: Lượt dùng toàn hệ thống --}}
+                            <div class="flex items-center justify-between p-2.5">
+                                <span class="text-[#7D6B5D] flex items-center gap-1.5">
+                                    <i class="fa-solid fa-fire text-[#E08A1E] w-4"></i>
+                                    <span>Lượt dùng toàn shop:</span>
+                                </span>
+                                <span class="font-semibold text-[#2B1810]">
+                                    <span x-text="'Đã dùng ' + detailVoucher.used_count"></span>
+                                    <span x-show="detailVoucher.usage_limit" x-text="' / ' + detailVoucher.usage_limit + ' lượt'"></span>
+                                    <span x-show="!detailVoucher.usage_limit">(Không giới hạn)</span>
+                                </span>
+                            </div>
+
+                            {{-- Row: Giới hạn mỗi khách hàng --}}
+                            <div class="flex items-center justify-between p-2.5">
+                                <span class="text-[#7D6B5D] flex items-center gap-1.5">
+                                    <i class="fa-solid fa-user-tag text-[#E08A1E] w-4"></i>
+                                    <span>Lượt dùng mỗi khách:</span>
+                                </span>
+                                <span class="font-semibold text-[#2B1810]" x-text="detailVoucher.limit_per_user + ' lượt/khách hàng'"></span>
+                            </div>
+
+                            {{-- Row: Phạm vi áp dụng --}}
+                            <div class="p-2.5 space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[#7D6B5D] flex items-center gap-1.5">
+                                        <i class="fa-solid fa-boxes-stacked text-[#E08A1E] w-4"></i>
+                                        <span>Phạm vi áp dụng:</span>
+                                    </span>
+                                    <span class="font-bold text-[#2B1810]" x-text="detailVoucher.apply_scope_label"></span>
+                                </div>
+
+                                {{-- Categories list if apply_scope === 'CATEGORY' --}}
+                                <template x-if="detailVoucher.apply_scope === 'CATEGORY' && detailVoucher.categories && detailVoucher.categories.length > 0">
+                                    <div class="pt-1 flex flex-wrap gap-1.5 pl-5">
+                                        <template x-for="cat in detailVoucher.categories" :key="cat.id">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold">
+                                                <span>🧸</span>
+                                                <span x-text="cat.name"></span>
+                                            </span>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                {{-- Products list if apply_scope === 'PRODUCT' --}}
+                                <template x-if="detailVoucher.apply_scope === 'PRODUCT' && detailVoucher.products && detailVoucher.products.length > 0">
+                                    <div class="pt-1 space-y-1 pl-5 max-h-36 overflow-y-auto">
+                                        <template x-for="prod in detailVoucher.products" :key="prod.id">
+                                            <div class="flex items-center justify-between py-1 border-b border-[#F5E8D8]/50 text-[11.5px]">
+                                                <span class="text-[#2B1810] font-medium truncate" x-text="prod.name"></span>
+                                                <span class="text-[#E08A1E] font-mono font-bold shrink-0 ml-2" x-text="prod.price"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Row: Phương thức thanh toán --}}
+                            <div class="flex items-center justify-between p-2.5">
+                                <span class="text-[#7D6B5D] flex items-center gap-1.5">
+                                    <i class="fa-solid fa-credit-card text-[#E08A1E] w-4"></i>
+                                    <span>Thanh toán áp dụng:</span>
+                                </span>
+                                <span class="font-medium text-[#2B1810]">Mọi hình thức (COD, QR, Ví điện tử)</span>
+                            </div>
+                        </div>
+
+                        {{-- Notes --}}
+                        <div class="text-[11px] text-[#8C7A6B] bg-[#FAF6EE] p-3 rounded-xl border border-[#EBDDCD] leading-relaxed space-y-1">
+                            <div class="font-bold text-[#5D4037] flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation text-[10px] text-[#E08A1E]"></i>
+                                <span>Lưu ý khi sử dụng:</span>
+                            </div>
+                            <ul class="list-disc pl-4 space-y-0.5">
+                                <li>Mỗi đơn hàng được áp dụng đồng thời tối đa 01 Voucher Đơn hàng và 01 Voucher Vận chuyển.</li>
+                                <li>Voucher không có giá trị quy đổi thành tiền mặt hoặc chuyển nhượng.</li>
+                                <li>Nếu đơn hàng bị hủy hoặc hoàn trả hợp lệ, voucher sẽ tự động được hoàn lại nếu còn thời hạn.</li>
+                            </ul>
+                        </div>
+
+                        {{-- Modal Footer Actions --}}
+                        <div class="pt-2 flex items-center justify-end gap-2">
+                            <button type="button" @click="closeDetailModal()"
+                                    class="px-4 py-2 rounded-xl text-xs font-semibold text-[#7D6B5D] bg-white hover:bg-[#F2DECA] border border-[#EBDDCD] transition cursor-pointer">
+                                Đóng
+                            </button>
+                            <a :href="detailVoucher.copy_url"
+                               @click="copyVoucher(detailVoucher.code)"
+                               class="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                               :class="detailVoucher.type === 'SHIPPING' ? 'bg-[#0D9488] hover:bg-[#047857]' : 'bg-[#E08A1E] hover:bg-[#C2751D]'">
+                                <span>Áp dụng mua sắm</span>
+                                <span>→</span>
+                            </a>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

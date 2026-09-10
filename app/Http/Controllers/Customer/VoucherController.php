@@ -14,6 +14,10 @@ class VoucherController extends Controller
      */
     public function index(Request $request): View
     {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['CUSTOMER', 'STAFF'])) {
+            abort(403, 'Trang này chỉ dành cho Khách hàng và Nhân viên tư vấn.');
+        }
+
         $now = now();
         $userId = auth()->id();
 

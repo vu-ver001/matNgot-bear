@@ -69,7 +69,7 @@
         @if ($isStaffView)
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 whitespace-nowrap">
                 <i class="fa-solid fa-truck-ramp-box text-emerald-600 text-[10px]"></i>
-                Đã giao (Chờ khách nhận)
+                Đã giao
             </span>
         @else
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap shadow-2xs">
