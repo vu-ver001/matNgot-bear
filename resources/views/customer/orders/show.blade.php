@@ -2,8 +2,14 @@
     <div class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-                <div>
+                <div class="flex items-center gap-3 flex-wrap">
                     <h2 class="font-bold text-2xl text-[#2B1810] tracking-tight">Chi tiết đơn hàng <span class="text-[#E08A1E] font-mono">{{ $order->order_code }}</span></h2>
+                    <a href="{{ route('customer.messages.index') }}"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer shadow-2xs hover:scale-102"
+                       title="Chat với Shop">
+                        <i class="fa-regular fa-comment-dots text-sm"></i>
+                        <span>Chat với Shop</span>
+                    </a>
                 </div>
                 <div>
                     <a href="{{ route('customer.orders.index') }}" class="text-sm font-semibold text-[#8C4A19] hover:text-[#5C3219] flex items-center gap-1">
@@ -967,6 +973,11 @@
                             <span>🧸</span>
                             <span>Mật Ngọt Bear</span>
                         </h4>
+                        <a href="{{ route('customer.messages.index') }}"
+                           class="w-full bg-amber-50 hover:bg-amber-100 text-[#8C4A19] font-bold py-2.5 px-4 rounded-xl border border-amber-300 text-xs flex items-center justify-center gap-2 transition shadow-2xs">
+                            <i class="fa-regular fa-comment-dots text-sm text-[#E08A1E]"></i>
+                            <span>Chat với Shop</span>
+                        </a>
                         <a href="{{ route('customer.orders.invoice', $order) }}" target="_blank"
                            class="w-full bg-white hover:bg-amber-50 text-[#8C4A19] font-bold py-2.5 px-4 rounded-xl border border-amber-300 text-xs flex items-center justify-center gap-2 transition shadow-xs">
                             <i class="fa-solid fa-file-invoice text-sm text-[#E08A1E]"></i>

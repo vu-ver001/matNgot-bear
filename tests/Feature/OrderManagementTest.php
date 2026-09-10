@@ -118,7 +118,14 @@ class OrderManagementTest extends TestCase
             ->assertDontSee(route('customer.orders.update_shipping_address', $order), false);
         $this->actingAs($this->staff)->get(route('staff.orders.show', $order))
             ->assertOk()
+            ->assertSee('Nhắn tin cho khách')
+            ->assertSee(e(route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])), false)
             ->assertDontSee(route('customer.orders.complete', $order), false);
+
+        $this->actingAs($this->admin)->get(route('admin.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Nhắn tin cho khách')
+            ->assertSee(e(route('admin.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])), false);
     }
 
     public function test_shared_order_list_preserves_customer_scope_and_staff_filters(): void

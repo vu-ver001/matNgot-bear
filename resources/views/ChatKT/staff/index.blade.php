@@ -535,6 +535,7 @@
                                     type="button"
                                     class="staff-support-order-suggestion__btn-send"
                                     data-send-suggested-order
+                                    data-order-id="{{ $suggestedOrder->id }}"
                                     data-order-code="{{ $suggestedOrder->order_code }}"
                                     data-order-total="{{ number_format($suggestedOrder->total_amount, 0, ',', '.') }} đ"
                                     data-order-status="{{ $suggestedOrder->order_status }}"
@@ -714,7 +715,8 @@
             @if ($selectedCase)
                 @php
                     $cust = $selectedCase->customer;
-                    $ordersCount = $cust ? \App\Models\Order::where('customer_id', $cust->id)->count() : 0;
+                    $customerOrders = $customerOrders ?? ($cust ? \App\Models\Order::where('customer_id', $cust->id)->latest()->get() : collect());
+                    $ordersCount = $customerOrders->count();
                     $isLoyal = $ordersCount >= 3;
                 @endphp
 
@@ -774,8 +776,8 @@
                             <span class="staff-support-case-meta-val" data-tooltip="{{ $selectedCase->case_code }}">{{ $selectedCase->case_code }}</span>
                         </div>
                         <div class="staff-support-case-meta-row">
-                            <span class="staff-support-case-meta-label">Mã đơn liên quan:</span>
-                            <span class="staff-support-case-meta-val" data-tooltip="{{ $selectedCase->order ? '#' . $selectedCase->order->order_code : 'Không có' }}">
+                            <span class="staff-support-case-meta-label">Mã đơn:</span>
+                            <span class="staff-support-case-meta-val" data-related-order-code data-tooltip="{{ $selectedCase->order ? '#' . $selectedCase->order->order_code : 'Không có' }}">
                                 {{ $selectedCase->order ? '#' . $selectedCase->order->order_code : 'Không có' }}
                             </span>
                         </div>
@@ -796,23 +798,56 @@
                         </div>
                     </div>
 
-                    @if ($selectedCase->order)
-                        @php
-                            $orderRoute = str_starts_with($routePrefix, 'admin.')
-                                ? route('admin.orders.show', $selectedCase->order)
-                                : route('staff.orders.show', $selectedCase->order);
-                        @endphp
-                        <a href="{{ $orderRoute }}" class="staff-support-order-detail-btn" target="_blank">
-                            <span>Xem đơn #{{ $selectedCase->order->order_code }}</span>
-                            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
-                        </a>
-                    @endif
-                </div>
+                    @if ($customerOrders->isNotEmpty())
+                        <div class="staff-support-order-list {{ $ordersCount >= 5 ? 'has-scroll' : '' }}">
+                            @foreach ($customerOrders as $cOrder)
+                                @php
+                                    $orderRoute = str_starts_with($routePrefix, 'admin.')
+                                        ? route('admin.orders.show', $cOrder)
+                                        : route('staff.orders.show', $cOrder);
+                                    $isCurrentRelated = $selectedCase->order_id && (int) $selectedCase->order_id === (int) $cOrder->id;
 
-                {{-- CARD 4: TRANG TRÍ GẤU BÔNG MẬT NGỌT BEAR --}}
-                <div class="staff-support-bear-card">
-                    <img src="{{ asset('images/auth/bear-hero.png') }}" alt="Mật Ngọt Bear">
-                    <span>Vì mỗi khách hàng đều là một câu chuyện đáng yêu ♡</span>
+                                    $statusLabels = [
+                                        'PENDING' => 'Chờ xác nhận',
+                                        'CONFIRMED' => 'Đã xác nhận',
+                                        'PROCESSING' => 'Đang xử lý',
+                                        'SHIPPING' => 'Đang giao',
+                                        'COMPLETED' => 'Hoàn thành',
+                                        'CANCELLED' => 'Đã hủy',
+                                        'REFUNDED' => 'Hoàn tiền',
+                                    ];
+                                    $statusLabel = $statusLabels[$cOrder->order_status] ?? $cOrder->order_status;
+                                @endphp
+                                <a
+                                    href="{{ $orderRoute }}"
+                                    class="staff-support-order-item-btn {{ $isCurrentRelated ? 'is-current' : '' }}"
+                                    data-order-card-code="{{ $cOrder->order_code }}"
+                                    data-order-card-id="{{ $cOrder->id }}"
+                                    data-tooltip="Đơn hàng #{{ $cOrder->order_code }} • {{ $statusLabel }} • {{ number_format($cOrder->total_amount, 0, ',', '.') }} đ"
+                                    target="_blank"
+                                    title="Xem chi tiết đơn #{{ $cOrder->order_code }}"
+                                >
+                                    <div class="staff-support-order-item-header">
+                                        <span class="staff-support-order-item-code" data-tooltip="Mã đơn hàng: #{{ $cOrder->order_code }}">#{{ $cOrder->order_code }}</span>
+                                        @if ($isCurrentRelated)
+                                            <span class="staff-support-order-item-tag" data-tooltip="Đơn hàng liên quan đến cuộc hỗ trợ này">Đơn liên quan</span>
+                                        @endif
+                                    </div>
+                                    <div class="staff-support-order-item-footer">
+                                        <span class="staff-support-order-item-status status-{{ strtolower($cOrder->order_status) }}">{{ $statusLabel }}</span>
+                                        <div class="staff-support-order-item-price-wrap">
+                                            <span class="staff-support-order-item-price">{{ number_format($cOrder->total_amount, 0, ',', '.') }} đ</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square staff-support-order-item-icon"></i>
+                                        </div>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="staff-support-order-empty">
+                            <span>Khách hàng chưa có đơn hàng nào</span>
+                        </div>
+                    @endif
                 </div>
             @endif
         </div>
