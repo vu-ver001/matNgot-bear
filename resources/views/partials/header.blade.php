@@ -41,40 +41,46 @@
             </div>
         </a>
 
-        <!-- Wishlist (Yêu thích) -->
-        @auth
-            <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
-        @endauth
-        @guest
-            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
-        @endguest
-            <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
-            <span class="badge-count" id="wishlist-count">0</span>
-        </a>
+        {{-- Tiện ích mua sắm khách hàng (Yêu thích, Giỏ hàng) - Chỉ hiển thị cho Khách hàng & Khách vãng lai, ẩn với Admin & Nhân viên --}}
+        @if(!auth()->check() || auth()->user()->role === 'CUSTOMER')
+            <!-- Wishlist (Yêu thích) -->
+            @auth
+                <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+            @endauth
+            @guest
+                <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+            @endguest
+                <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
+                <span class="badge-count" id="wishlist-count">0</span>
+            </a>
 
-        <!-- Cart (Giỏ hàng) -->
-        @auth
-            <a href="{{ route('customer.cart') }}" class="utility-icon-btn {{ request()->routeIs('customer.cart*') ? 'active' : '' }}" title="Giỏ hàng">
-        @endauth
-        @guest
-            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.cart') }}', 'Đăng nhập xem Giỏ hàng', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem giỏ hàng và thanh toán nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.cart')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.cart*') ? 'active' : '' }}" title="Giỏ hàng">
-        @endguest
-            <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
-            <span class="badge-count" id="cart-count">{{ (int) ($realCartCount ?? 0) > 99 ? '99+' : (int) ($realCartCount ?? 0) }}</span>
-        </a>
+            <!-- Cart (Giỏ hàng) -->
+            @auth
+                <a href="{{ route('customer.cart') }}" class="utility-icon-btn {{ request()->routeIs('customer.cart*') ? 'active' : '' }}" title="Giỏ hàng">
+            @endauth
+            @guest
+                <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.cart') }}', 'Đăng nhập xem Giỏ hàng', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem giỏ hàng và thanh toán nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.cart')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.cart*') ? 'active' : '' }}" title="Giỏ hàng">
+            @endguest
+                <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
+                <span class="badge-count" id="cart-count">{{ (int) ($realCartCount ?? 0) > 99 ? '99+' : (int) ($realCartCount ?? 0) }}</span>
+            </a>
+        @endif
 
-        <!-- Vouchers (Kho voucher khuyến mãi) -->
-        @auth
-            <a href="{{ route('customer.vouchers.index') }}" class="utility-icon-btn {{ request()->routeIs('customer.vouchers.*') ? 'active' : '' }}" title="Kho voucher & khuyến mãi">
-        @endauth
-        @guest
-            <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.vouchers.index') }}', 'Đăng nhập xem Kho Voucher', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem toàn bộ voucher và nhận ưu đãi nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.vouchers.index')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.vouchers.*') ? 'active' : '' }}" title="Kho voucher & khuyến mãi">
-        @endguest
-            <i class="fa-solid fa-ticket" style="font-size: 16px; color: #E08A1E;"></i>
-            @if(($availableVoucherCount ?? 0) > 0)
-                <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ (int) ($availableVoucherCount ?? 0) > 99 ? '99+' : (int) ($availableVoucherCount ?? 0) }}</span>
-            @endif
-        </a>
+        {{-- Kho voucher: Hiển thị cho Khách hàng, Nhân viên tư vấn & Khách vãng lai, ẩn với Admin --}}
+        @if(!auth()->check() || in_array(auth()->user()->role, ['CUSTOMER', 'STAFF']))
+            <!-- Vouchers (Kho voucher khuyến mãi) -->
+            @auth
+                <a href="{{ route('customer.vouchers.index') }}" class="utility-icon-btn {{ request()->routeIs('customer.vouchers.*') ? 'active' : '' }}" title="Kho voucher & khuyến mãi">
+            @endauth
+            @guest
+                <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.vouchers.index') }}', 'Đăng nhập xem Kho Voucher', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem toàn bộ voucher và nhận ưu đãi nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.vouchers.index')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.vouchers.*') ? 'active' : '' }}" title="Kho voucher & khuyến mãi">
+            @endguest
+                <i class="fa-solid fa-ticket" style="font-size: 16px; color: #E08A1E;"></i>
+                @if(($availableVoucherCount ?? 0) > 0)
+                    <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ (int) ($availableVoucherCount ?? 0) > 99 ? '99+' : (int) ($availableVoucherCount ?? 0) }}</span>
+                @endif
+            </a>
+        @endif
 
         <!-- Nút Đăng nhập / Đăng xuất & Tài khoản -->
         <div style="position: relative;">

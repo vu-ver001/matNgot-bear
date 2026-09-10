@@ -14,34 +14,43 @@ Route::prefix('customer')->name('customer.')->group(function () {
         // Dashboard / Account Redirect
         Route::get('/dashboard', fn() => redirect()->route('profile.edit'))->name('dashboard');
 
-        // 0. Kho Voucher & Khuyến Mãi
-        Route::get('/vouchers', [CustomerVoucherController::class, 'index'])->name('vouchers.index');
+        // 0. Kho Voucher & Khuyến Mãi (Khách hàng & Nhân viên tư vấn xem được, Admin bị chặn 403)
+        Route::get('/vouchers', [CustomerVoucherController::class, 'index'])
+            ->middleware(['role:CUSTOMER,STAFF'])
+            ->name('vouchers.index');
 
-        // 1. Cart routes (Chuẩn hóa /customer/cart)
-        Route::get('/cart', [CartController::class, 'index'])->name('cart');
-        Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
-        Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
-        Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
-        Route::post('/cart/log-uncheck', [CartController::class, 'logUncheck'])->name('cart.log_uncheck');
-        Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
-        Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
-        Route::delete('/cart-clear', [CartController::class, 'clear'])->name('cart.clear');
+        // ==========================================
+        // CÁC CHỨC NĂNG DÀNH RIÊNG CHO KHÁCH HÀNG (role: CUSTOMER)
+        // Nhân viên (STAFF) và Quản trị viên (ADMIN) bị chặn 403 ở tầng Backend Routing
+        // ==========================================
+        Route::middleware(['role:CUSTOMER'])->group(function () {
 
-        // 2. Checkout routes
-        Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-        Route::get('/checkout-index', [CheckoutController::class, 'index'])->name('checkout.index');
-        Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
-        Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
-        Route::match(['GET', 'POST'], '/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculate_shipping');
+            // 1. Cart routes (Chuẩn hóa /customer/cart)
+            Route::get('/cart', [CartController::class, 'index'])->name('cart');
+            Route::get('/cart-index', [CartController::class, 'index'])->name('cart.index');
+            Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
+            Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
+            Route::post('/cart/log-uncheck', [CartController::class, 'logUncheck'])->name('cart.log_uncheck');
+            Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
+            Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
+            Route::delete('/cart-clear', [CartController::class, 'clear'])->name('cart.clear');
 
-        // 3. Payment Gateway / QR routes
-        Route::get('/payment/qr/{order}', [PaymentController::class, 'showQR'])->name('payment.qr');
-        Route::get('/payment/status/{order}', [PaymentController::class, 'checkStatus'])->name('payment.status');
-        Route::post('/payment/simulate/{order}', [PaymentController::class, 'simulatePayment'])->name('payment.simulate');
-        Route::get('/payment/vnpay/redirect/{order}', [PaymentController::class, 'redirectToVnpay'])->name('payment.vnpay.redirect');
-        Route::get('/payment/momo/redirect/{order}', [PaymentController::class, 'redirectToMomo'])->name('payment.momo.redirect');
-        Route::post('/payment/confirm/{order}', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
-        Route::post('/payment/retry/{order}', [PaymentController::class, 'retryPayment'])->name('payment.retry');
+            // 2. Checkout routes
+            Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+            Route::get('/checkout-index', [CheckoutController::class, 'index'])->name('checkout.index');
+            Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+            Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+            Route::match(['GET', 'POST'], '/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculate_shipping');
+
+            // 3. Payment Gateway / QR routes
+            Route::get('/payment/qr/{order}', [PaymentController::class, 'showQR'])->name('payment.qr');
+            Route::get('/payment/status/{order}', [PaymentController::class, 'checkStatus'])->name('payment.status');
+            Route::post('/payment/simulate/{order}', [PaymentController::class, 'simulatePayment'])->name('payment.simulate');
+            Route::get('/payment/vnpay/redirect/{order}', [PaymentController::class, 'redirectToVnpay'])->name('payment.vnpay.redirect');
+            Route::get('/payment/momo/redirect/{order}', [PaymentController::class, 'redirectToMomo'])->name('payment.momo.redirect');
+            Route::post('/payment/confirm/{order}', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
+            Route::post('/payment/retry/{order}', [PaymentController::class, 'retryPayment'])->name('payment.retry');
+        });
 
         // 4. Wishlist (Kim Tuyến)
         Route::prefix('wishlist')->name('wishlist.')->middleware(['role:CUSTOMER'])->group(function () {
