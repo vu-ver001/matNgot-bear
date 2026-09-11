@@ -42,21 +42,17 @@
     --shadow-hover: 0 16px 40px rgba(109, 76, 65, 0.14);
 }
 
-<<<<<<< HEAD html {
+html {
     scroll-behavior: smooth;
 }
 
 *,
 ::before,
 ::after {
-
-    =======*,
-    ::before,
-    ::after {
-        >>>>>>>0fc8cd7ffcb51440e478d401b5665104cdff400b box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
     body,
     button,
