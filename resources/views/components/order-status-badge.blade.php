@@ -1,6 +1,20 @@
-@props(['status', 'cancelRequestStatus' => null, 'forStaff' => null, 'paymentStatus' => null])
+@props([
+    'status' => null,
+    'cancelRequestStatus' => null,
+    'forStaff' => null,
+    'paymentStatus' => null,
+    'customerConfirmedAt' => null,
+    'returnRequestStatus' => null,
+    'order' => null,
+])
 
 @php
+    $status = $order ? $order->order_status : ($status ?? 'PENDING');
+    $cancelRequestStatus = $order ? $order->cancel_request_status : $cancelRequestStatus;
+    $paymentStatus = $order ? $order->payment_status : $paymentStatus;
+    $customerConfirmedAt = $order ? $order->customer_confirmed_at : $customerConfirmedAt;
+    $returnRequestStatus = $order ? $order->return_request_status : $returnRequestStatus;
+
     $isStaffView = $forStaff ?? (request()->is('admin*') || request()->is('staff*'));
 
     $colors = [
@@ -18,14 +32,28 @@
         'CONFIRMED' => 'Đã xác nhận',
         'PREPARING' => 'Đang đóng gói',
         'SHIPPING' => 'Đang giao hàng',
-        'COMPLETED' => 'Đã giao',
+        'COMPLETED' => 'Hoàn thành',
         'CANCELLED' => 'Đã hủy',
         'RETURNED' => 'Trả hàng',
     ];
+
+    $isWaitingConfirmation = ($status === 'COMPLETED' && empty($customerConfirmedAt));
 @endphp
 
 <div class="inline-flex items-center gap-1.5 flex-wrap">
-    @if ($cancelRequestStatus === 'PENDING')
+    @if ($returnRequestStatus === 'PENDING')
+        @if ($isStaffView)
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap shadow-2xs">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                Khách yêu cầu trả hàng (Chờ duyệt)
+            </span>
+        @else
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap shadow-2xs">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                Chờ duyệt trả hàng
+            </span>
+        @endif
+    @elseif ($cancelRequestStatus === 'PENDING')
         @if ($isStaffView)
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap shadow-2xs">
                 <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
@@ -35,6 +63,18 @@
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap shadow-2xs">
                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                 Chờ xác nhận hủy
+            </span>
+        @endif
+    @elseif ($isWaitingConfirmation)
+        @if ($isStaffView)
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 whitespace-nowrap">
+                <i class="fa-solid fa-truck-ramp-box text-emerald-600 text-[10px]"></i>
+                Đã giao
+            </span>
+        @else
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap shadow-2xs">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                Đã giao
             </span>
         @endif
     @else

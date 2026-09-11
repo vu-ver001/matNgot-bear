@@ -7,8 +7,7 @@
     </button>
 @endif
 @if ($order->order_status === 'SHIPPING')
-    <form action="{{ route('customer.orders.complete', $order->id) }}" method="POST"
-          onsubmit="return confirm('Bạn đã nhận đủ hàng và muốn xác nhận hoàn tất đơn hàng #{{ $order->order_code }}?')">
+    <form action="{{ route('customer.orders.complete', $order->id) }}" method="POST">
         @csrf
         <button type="submit"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Đã nhận hàng</button>
     </form>

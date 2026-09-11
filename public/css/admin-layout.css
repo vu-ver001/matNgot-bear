@@ -80,12 +80,22 @@ i.fa-brands,
     font-family: "Font Awesome 6 Brands" !important;
 }
 
+html {
+    overflow-x: hidden !important;
+    width: 100%;
+    max-width: 100vw;
+}
+
 body {
     background: var(--bg-page);
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-x: hidden !important;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+    padding-right: 0 !important;
 }
 
 /* ====== SIDEBAR (THEO GIAO DIỆN ẢNH 1 & ẢNH 2) ====== */
@@ -107,12 +117,12 @@ body {
 
 /* Header */
 .sidebar-brand {
-    padding: 1.5rem 1.25rem 1.25rem 1.25rem;
+    padding: 1.25rem 1.25rem 1.15rem 1.25rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid #EADFCF;
-    min-height: 86px;
+    min-height: 82px;
     background: #FAF3EC;
 }
 
@@ -174,7 +184,7 @@ body {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 1rem 0;
+    padding: 0.35rem 0 0.6rem 0;
 }
 
 .sidebar-section-label {
@@ -182,19 +192,25 @@ body {
     font-weight: 700;
     color: #8D6E63;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 0.85rem 1.4rem 0.4rem;
+    letter-spacing: 0.75px;
+    padding: 0.6rem 1.25rem 0.25rem;
     white-space: nowrap;
+}
+
+/* Kéo chữ TỔNG QUAN lên cao gần sát chữ KHU VỰC QUẢN LÝ */
+.sidebar-nav > .sidebar-section-label:first-child {
+    padding-top: 0.35rem !important;
+    margin-top: 0 !important;
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    margin: 2px 12px;
-    border-radius: 12px;
-    font-size: 14px;
+    gap: 11px;
+    padding: 8px 12px;
+    margin: 2px 10px;
+    border-radius: 10px;
+    font-size: 13.5px;
     font-weight: 600;
     color: #4A2E2B;
     text-decoration: none;
@@ -204,10 +220,10 @@ body {
 }
 
 .sidebar-link i {
-    width: 20px;
-    min-width: 20px;
+    width: 18px;
+    min-width: 18px;
     text-align: center;
-    font-size: 16px;
+    font-size: 15px;
     color: #4A2E2B;
 }
 
@@ -225,9 +241,9 @@ body {
 .badge-not-connected {
     border: 1px solid #D7CCC8;
     color: #8D6E63;
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 600;
-    padding: 2px 8px;
+    padding: 1px 6px;
     border-radius: 999px;
     margin-left: auto;
     background: rgba(255, 255, 255, 0.5);
@@ -236,7 +252,7 @@ body {
 
 /* Sidebar Footer & User Profile Card */
 .sidebar-footer-wrap {
-    padding: 12px 14px;
+    padding: 10px 14px;
     border-top: 1px solid #EADFCF;
     position: relative;
     background: #FAF3EC;
@@ -245,9 +261,9 @@ body {
 .sidebar-user-trigger {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 10px;
-    border-radius: 16px;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
@@ -258,18 +274,18 @@ body {
 }
 
 .sidebar-user-avatar {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     border-radius: 50%;
     background: #D48B38;
     color: #FFFFFF;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(212, 139, 56, 0.25);
+    box-shadow: 0 2px 6px rgba(212, 139, 56, 0.2);
 }
 
 .sidebar-user-details {
@@ -278,19 +294,20 @@ body {
 }
 
 .sidebar-user-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #3E2723;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .sidebar-user-email {
-    font-size: 11.5px;
+    font-size: 11px;
     color: #8D6E63;
+    line-height: 1.2;
+    margin-top: 2px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-top: 2px;
 }
 
 /* Popup Card (Ảnh 2) */
@@ -318,6 +335,7 @@ body {
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -468,23 +486,8 @@ html.admin-sidebar-collapsed .sidebar-link:hover::after,
     pointer-events: none;
 }
 
-.sidebar-brand {
-    padding: 1.25rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    position: relative;
-}
-
-.sidebar-brand-icon {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    background: linear-gradient(135deg, #F6D89B 0%, #E59819 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
+html.admin-sidebar-collapsed .sidebar-brand,
+.admin-sidebar.collapsed .sidebar-brand {
     justify-content: center;
     padding: 1.25rem 0.5rem;
 }
@@ -532,21 +535,28 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
 /* ====== MAIN AREA ====== */
 .admin-main {
     margin-left: var(--sidebar-width);
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 100vh;
+    min-width: 0;
+    width: calc(100% - var(--sidebar-width));
+    max-width: calc(100% - var(--sidebar-width));
     display: flex;
     flex-direction: column;
-    transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     background-color: var(--bg-page);
     background-image: url('/images/auth/auth-panel-background.png');
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;
     background-position: center top;
+    overflow-x: hidden;
 }
 
+html.admin-sidebar-collapsed .admin-main,
 .admin-main.expanded {
     margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+    max-width: calc(100% - var(--sidebar-collapsed-width));
 }
 
 .admin-topbar {
@@ -630,8 +640,12 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
 }
 
 .admin-content {
-    padding: 2rem;
-    flex: 1;
+    padding: 1.25rem 1.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Placeholder page styling */
@@ -693,17 +707,194 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
     color: var(--pastel-brown-dark);
 }
 
+/* ====== MOBILE SIDEBAR & RESPONSIVE COMPONENTS ====== */
+.sidebar-mobile-close-btn {
+    display: none;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 12px;
+    background: #FAF5F0;
+    border: 1px solid #EADFCF;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #4A2E2B;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.sidebar-mobile-close-btn:hover {
+    background: #FFEBEE;
+    color: #C62828;
+    border-color: #FFCDD2;
+    transform: scale(1.05);
+}
+
+.admin-mobile-topbar {
+    display: none;
+}
+
+.mobile-sidebar-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(46, 27, 25, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+.mobile-sidebar-backdrop.show {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
 @media (max-width: 992px) {
+
+    /* Ẩn nút thu gọn chevron desktop, hiển thị nút đóng X mobile */
+    .sidebar-collapse-btn {
+        display: none !important;
+    }
+
+    .sidebar-mobile-close-btn {
+        display: flex !important;
+    }
+
+    /* Sidebar thu gọn sang bên trái khi ở màn hình nhỏ */
     .admin-sidebar {
-        transform: translateX(-100%);
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 280px !important;
+        max-width: 85vw !important;
+        z-index: 1050 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: none;
     }
 
     .admin-sidebar.mobile-open {
-        transform: translateX(0);
+        transform: translateX(0) !important;
+        box-shadow: 6px 0 25px rgba(78, 52, 46, 0.2) !important;
     }
 
-    .admin-main {
+    .admin-main,
+    html.admin-sidebar-collapsed .admin-main,
+    .admin-main.expanded {
         margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Thanh Topbar Mobile xuất hiện ở trên cùng */
+    .admin-mobile-topbar {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        background: rgba(253, 251, 247, 0.96);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        min-height: 56px;
+        box-shadow: 0 2px 10px rgba(78, 52, 46, 0.05);
+    }
+
+    /* Nút 3 gạch nằm ở góc trên bên trái */
+    .mobile-menu-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 12px;
+        background: #FFFFFF;
+        border: 1.5px solid #EADFCF;
+        color: #4A2E2B;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(78, 52, 46, 0.06);
+    }
+
+    .mobile-menu-btn:hover,
+    .mobile-menu-btn:active {
+        background: #FAF3EC;
+        border-color: #D48B38;
+        color: #C86A3B;
+        transform: scale(1.05);
+    }
+
+    .mobile-topbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 12px;
+        margin-right: auto;
+    }
+
+    .mobile-brand-title {
+        font-family: 'Be Vietnam Pro', sans-serif;
+        font-size: 16px;
+        font-weight: 800;
+        color: #4A2E2B;
+        text-decoration: none;
+        letter-spacing: -0.2px;
+    }
+
+    .mobile-brand-badge {
+        background: #FFF8E7;
+        color: #B87309;
+        border: 1px solid #F6D89B;
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 999px;
+        text-transform: uppercase;
+    }
+
+    .mobile-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mobile-btn-store {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: #FAF5F0;
+        border: 1px solid #EADFCF;
+        color: #5D4037;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .mobile-btn-store:hover {
+        background: #EAD8C3;
+        color: #3E2723;
+    }
+
+    /* Giảm padding để tối ưu không gian hiển thị trên mobile */
+    .admin-content {
+        padding: 1.25rem 1rem;
     }
 }
 
@@ -824,14 +1015,45 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
     margin-left: 12px;
 }
 
-.stat-icon.brown  { background: #EFEBE9; color: #5D4037; }
-.stat-icon.honey  { background: var(--honey-light); color: var(--honey-dark); }
-.stat-icon.amber  { background: #FEF3C7; color: #D97706; }
-.stat-icon.green  { background: #E8F5E9; color: #2E7D32; }
-.stat-icon.red    { background: #FFEBEE; color: #C62828; }
-.stat-icon.blue   { background: #E3F2FD; color: #1565C0; }
-.stat-icon.cyan   { background: #E0F7FA; color: #00838F; }
-.stat-icon.purple { background: #F3E5F5; color: #6A1B9A; }
+.stat-icon.brown {
+    background: #EFEBE9;
+    color: #5D4037;
+}
+
+.stat-icon.honey {
+    background: var(--honey-light);
+    color: var(--honey-dark);
+}
+
+.stat-icon.amber {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.stat-icon.green {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.stat-icon.red {
+    background: #FFEBEE;
+    color: #C62828;
+}
+
+.stat-icon.blue {
+    background: #E3F2FD;
+    color: #1565C0;
+}
+
+.stat-icon.cyan {
+    background: #E0F7FA;
+    color: #00838F;
+}
+
+.stat-icon.purple {
+    background: #F3E5F5;
+    color: #6A1B9A;
+}
 
 /* 3. Panel Cards */
 .panel-card {
@@ -907,7 +1129,8 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
     pointer-events: none;
 }
 
-.input-control, .select-control {
+.input-control,
+.select-control {
     width: 100%;
     background: var(--bg-page);
     border: 1px solid var(--border);
@@ -924,7 +1147,8 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
     padding-left: 36px;
 }
 
-.input-control:focus, .select-control:focus {
+.input-control:focus,
+.select-control:focus {
     border-color: var(--pastel-brown-main);
     background: #FFFFFF;
     box-shadow: 0 0 0 3px rgba(141, 110, 99, 0.12);
@@ -1159,13 +1383,47 @@ table.data-table tbody tr:hover {
     white-space: nowrap;
 }
 
-.badge-pastel.green  { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
-.badge-pastel.amber  { background: #FFF8E1; color: #B78103; border: 1px solid #FFE082; }
-.badge-pastel.blue   { background: #E3F2FD; color: #1565C0; border: 1px solid #BBDEFB; }
-.badge-pastel.cyan   { background: #E0F7FA; color: #00838F; border: 1px solid #B2EBF2; }
-.badge-pastel.red    { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
-.badge-pastel.purple { background: #F3E5F5; color: #6A1B9A; border: 1px solid #E1BEE7; }
-.badge-pastel.brown  { background: #EFEBE9; color: #5D4037; border: 1px solid #D7CCC8; }
+.badge-pastel.green {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #C8E6C9;
+}
+
+.badge-pastel.amber {
+    background: #FFF8E1;
+    color: #B78103;
+    border: 1px solid #FFE082;
+}
+
+.badge-pastel.blue {
+    background: #E3F2FD;
+    color: #1565C0;
+    border: 1px solid #BBDEFB;
+}
+
+.badge-pastel.cyan {
+    background: #E0F7FA;
+    color: #00838F;
+    border: 1px solid #B2EBF2;
+}
+
+.badge-pastel.red {
+    background: #FFEBEE;
+    color: #C62828;
+    border: 1px solid #FFCDD2;
+}
+
+.badge-pastel.purple {
+    background: #F3E5F5;
+    color: #6A1B9A;
+    border: 1px solid #E1BEE7;
+}
+
+.badge-pastel.brown {
+    background: #EFEBE9;
+    color: #5D4037;
+    border: 1px solid #D7CCC8;
+}
 
 /* 9. Avatar Component */
 .avatar-circle {
@@ -1182,4 +1440,26 @@ table.data-table tbody tr:hover {
     flex-shrink: 0;
     border: 2px solid #FFFFFF;
     box-shadow: 0 2px 6px rgba(109, 76, 65, 0.15);
+}
+
+/* ==========================================================================
+   SWEETALERT2 LAYOUT SHIFT & BLANK FRAME PREVENTION
+   ========================================================================== */
+html.swal2-shown,
+body.swal2-shown,
+html.swal2-height-auto,
+body.swal2-height-auto {
+    height: 100% !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    padding-right: 0 !important;
+}
+
+body.swal2-shown {
+    overflow-y: auto !important;
+}
+
+body {
+    padding-right: 0 !important;
+    margin-right: 0 !important;
 }

@@ -260,5 +260,24 @@
         </div>
 
         @include('ReviewKT.partials.review-modal')
+
+        {{-- Tự động cập nhật dữ liệu mới nhất khi bấm nút Back (Quay lại) trên trình duyệt Chrome/Safari --}}
+        <script>
+            window.addEventListener('pageshow', function (event) {
+                var isBack = event.persisted;
+                if (!isBack && window.performance && window.performance.navigation) {
+                    isBack = window.performance.navigation.type === 2;
+                }
+                if (!isBack && window.performance && window.performance.getEntriesByType) {
+                    var entries = window.performance.getEntriesByType('navigation');
+                    if (entries.length > 0 && entries[0].type === 'back_forward') {
+                        isBack = true;
+                    }
+                }
+                if (isBack) {
+                    window.location.reload();
+                }
+            });
+        </script>
     </body>
 </html>

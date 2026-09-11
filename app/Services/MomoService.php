@@ -44,10 +44,19 @@ class MomoService
 
     /**
      * Generate standard MoMo QR Code URL.
-     * Generates a clean MoMo P2P QR payload without third-party bank / VietQR watermarks.
+     * Uses official dynamic MoMo Sandbox QR so MoMo Test App can scan and recognize the order.
      */
     public function generateQrUrl(Order $order): string
     {
+        try {
+            $gatewayRes = $this->createGatewayPayment($order, null, null, 'captureWallet');
+            if (!empty($gatewayRes['success']) && !empty($gatewayRes['qrCodeUrl'])) {
+                return "https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=8&data=" . urlencode($gatewayRes['qrCodeUrl']);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('MoMo QR sandbox generation failed, falling back to static payload', ['error' => $e->getMessage()]);
+        }
+
         $amount = (int) $order->total_amount;
         $orderCode = $order->order_code;
         $momoPayload = "2|99|{$this->phone}|||0|0|{$amount}|{$orderCode}|transfer_myqr";
@@ -64,9 +73,9 @@ class MomoService
     }
 
     /**
-     * Create MoMo Gateway Online Payment Request (AIO / ATM / QR).
+     * Create MoMo Gateway Online Payment Request (pure MoMo QR / Wallet captureWallet mode).
      */
-    public function createGatewayPayment(Order $order, ?string $returnUrl = null, ?string $notifyUrl = null): array
+    public function createGatewayPayment(Order $order, ?string $returnUrl = null, ?string $notifyUrl = null, string $requestType = 'captureWallet'): array
     {
         $returnUrl = $returnUrl ?? config('services.momo.redirect_url', route('payment.momo.return'));
         $notifyUrl = $notifyUrl ?? config('services.momo.ipn_url', route('payment.momo.ipn'));
@@ -76,7 +85,7 @@ class MomoService
                 'success' => false,
                 'message' => 'MoMo Gateway credentials are not fully configured. Using QR direct payment mode.',
                 'payUrl' => null,
-                'qrUrl' => $this->generateQrUrl($order)
+                'qrCodeUrl' => null,
             ];
         }
 
@@ -85,7 +94,6 @@ class MomoService
         $orderInfo = "Thanh toan don hang {$order->order_code} tai Mat Ngot Bear";
         $amount = (string) (int) $order->total_amount;
         $extraData = base64_encode(json_encode(['order_id' => $order->id]));
-        $requestType = "captureWallet";
 
         // Generate HMAC SHA256 Signature according to MoMo API specs
         $rawHash = "accessKey=" . $this->accessKey .
