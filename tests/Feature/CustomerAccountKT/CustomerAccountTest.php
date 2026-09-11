@@ -14,18 +14,24 @@ class CustomerAccountTest extends TestCase
     {
         $customer = User::factory()->create();
 
-        $pages = [
-            'profile.edit' => 'Hồ sơ cá nhân',
-            'customer.wishlist.index' => 'Danh sách yêu thích',
-        ];
+        $this->actingAs($customer)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSeeText('Hồ sơ cá nhân')
+            ->assertSeeText('Khu vực khách hàng');
 
-        foreach ($pages as $routeName => $heading) {
-            $this->actingAs($customer)
-                ->get(route($routeName))
-                ->assertOk()
-                ->assertSeeText($heading)
-                ->assertSeeText('Khu vực khách hàng');
-        }
+        $this->actingAs($customer)
+            ->get(route('customer.wishlist.index'))
+            ->assertOk()
+            ->assertSeeText('Danh sách yêu thích')
+            ->assertSee('site-header', false)
+            ->assertDontSee('<nav class="nav-bar">', false);
+
+        $this->actingAs($customer)
+            ->get(route('customer.wishlist.index', ['view' => 'account']))
+            ->assertOk()
+            ->assertSeeText('Danh sách yêu thích')
+            ->assertSeeText('Khu vực khách hàng');
     }
 
     public function test_customer_dashboard_redirects_to_profile(): void
@@ -37,13 +43,10 @@ class CustomerAccountTest extends TestCase
             ->assertRedirectToRoute('profile.edit');
     }
 
-    public function test_non_customer_cannot_open_customer_wishlist(): void
+    public function test_guest_cannot_open_customer_wishlist(): void
     {
-        $staff = User::factory()->create(['role' => User::ROLE_STAFF]);
-
-        $this->actingAs($staff)
-            ->get(route('customer.wishlist.index'))
-            ->assertForbidden();
+        $this->get(route('customer.wishlist.index'))
+            ->assertRedirect(route('login'));
     }
 
     public function test_customer_profile_uses_customer_account_layout(): void

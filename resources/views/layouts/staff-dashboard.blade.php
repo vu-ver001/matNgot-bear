@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('page-title', 'Bảng Xử Lý Nhân Viên') - Mật Ngọt Bear</title>
+    <title>@yield('page-title', $title ?? 'Bảng Xử Lý Nhân Viên') - Mật Ngọt Bear</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,7 +74,11 @@
             <div class="sidebar-user-popup" id="staffUserPopup">
                 <div class="user-popup-header">
                     <div class="user-popup-avatar">
-                        {{ $staffInitial }}
+                        @if (!empty($staffUser?->avatar_url))
+                            <img src="{{ $staffUser->avatar_url }}" alt="{{ $staffName }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        @else
+                            {{ $staffInitial }}
+                        @endif
                     </div>
                     <div class="user-popup-info">
                         <div class="user-popup-name">{{ $staffName }}</div>
@@ -85,15 +89,14 @@
                 <div class="user-popup-divider"></div>
 
                 <div class="user-popup-menu">
-                    <a href="{{ route('profile.edit') }}" class="user-popup-item active">
-                        <i class="fa-regular fa-user"></i>
+                    <a href="{{ route('profile.edit') }}" class="user-popup-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-user"></i>
                         <span>Hồ sơ</span>
                     </a>
-                    <div class="user-popup-item disabled">
+                    <a href="{{ route('account.password.edit') }}" class="user-popup-item {{ request()->routeIs('account.password.*') ? 'active' : '' }}">
                         <i class="fa-solid fa-lock"></i>
                         <span>Đổi mật khẩu</span>
-                        <span class="badge-not-connected">Chưa kết nối</span>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="user-popup-divider"></div>
@@ -110,7 +113,11 @@
             <!-- Trigger bar (Ảnh 1) -->
             <div class="sidebar-user-trigger" onclick="toggleStaffUserPopup(event)" id="staffUserTrigger" title="Tài khoản nhân viên">
                 <div class="sidebar-user-avatar">
-                    {{ $staffInitial }}
+                    @if (!empty($staffUser?->avatar_url))
+                        <img src="{{ $staffUser->avatar_url }}" alt="{{ $staffName }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    @else
+                        {{ $staffInitial }}
+                    @endif
                 </div>
                 <div class="sidebar-user-details">
                     <div class="sidebar-user-name">{{ $staffName }}</div>
@@ -155,6 +162,7 @@
             })();
         </script>
         <div class="staff-content {{ $contentClass ?? '' }}">
+            {{ $slot ?? '' }}
             @yield('content')
         </div>
     </div>

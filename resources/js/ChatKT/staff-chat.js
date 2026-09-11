@@ -49,27 +49,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Tạo HTML cho tin nhắn trong chat stream
-    const renderStaffMessageHtml = (msg) => {
-        const isCustomer = msg.is_customer;
+    const renderStaffMessageHtml = (msg, options = {}) => {
+        const isCustomer = Boolean(msg.is_customer);
         const rowClass = isCustomer ? 'is-customer' : 'is-staff';
+        const groupPos = options.groupPos || 'pos-single';
+        const showAvatar = options.showAvatar ?? true;
+        const showTime = options.showTime ?? true;
+        const timestampSec = options.timestamp || Math.floor(Date.now() / 1000);
+
         let avatarHtml = '';
         if (isCustomer) {
-            const rawName = (msg.sender_name || 'Khách hàng').trim();
-            const initial = escapeHtml(rawName.charAt(0).toUpperCase() || 'K');
-            const imgHtml = msg.sender_avatar
-                ? `<img src="${msg.sender_avatar}" alt="${escapeHtml(rawName)}" onerror="this.remove()">`
-                : '';
-            avatarHtml = `<div class="staff-chat-msg-avatar">${imgHtml}<span>${initial}</span></div>`;
+            if (showAvatar) {
+                const rawName = (msg.sender_name || 'Khách hàng').trim();
+                const initial = escapeHtml(rawName.charAt(0).toUpperCase() || 'K');
+                const imgHtml = msg.sender_avatar
+                    ? `<img src="${msg.sender_avatar}" alt="${escapeHtml(rawName)}" onerror="this.remove()">`
+                    : '';
+                avatarHtml = `<div class="staff-chat-msg-avatar">${imgHtml}<span>${initial}</span></div>`;
+            } else {
+                avatarHtml = `<div class="staff-chat-msg-avatar is-spacer" aria-hidden="true"></div>`;
+            }
         }
 
-        const checkIconHtml = !isCustomer
-            ? `<span title="${msg.is_read ? 'Đã xem' : 'Đã gửi'}" style="color: #10b981;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
-                    <path d="M18 6 7 17l-5-5"/>
-                    <path d="m22 10-7.5 7.5L13 16"/>
-                </svg>
-               </span>`
-            : '';
+        const dateStr = msg.sent_at || '';
+        const fullDateTooltip = msg.date ? `${dateStr}, ${msg.date}` : dateStr;
 
         const formatBubbleContent = (content) => {
             if (content && content.includes('📦 [ĐƠN HÀNG #')) {
@@ -89,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="chat-order-card">
                         <div class="chat-order-card__header">
                             <span class="chat-order-card__tag">
-                                <i class="fa-solid fa-box"></i> Đơn hàng #${escapeHtml(code)}
+                                <i class="fa-solid fa-box"></i> #${escapeHtml(code)}
                             </span>
                             ${status ? `<span class="chat-order-card__status">${escapeHtml(status)}</span>` : ''}
                         </div>
@@ -105,20 +108,152 @@ document.addEventListener('DOMContentLoaded', () => {
             return escapeHtml(content).replace(/\n/g, '<br>');
         };
 
+        const images = Array.isArray(msg.image_urls) && msg.image_urls.length > 0
+            ? msg.image_urls
+            : (Array.isArray(msg.images) && msg.images.length > 0
+                ? msg.images
+                : (msg.image_url ? [msg.image_url] : []));
+
+        let imgHtmlContent = '';
+        if (images.length > 0) {
+            const galleryClass = images.length === 1 ? 'is-single' : (images.length === 2 ? 'is-double' : 'is-grid');
+            imgHtmlContent = `
+                <div class="chat-msg-gallery ${galleryClass}">
+                    ${images.map(url => `
+                        <div class="chat-msg-image-wrap">
+                            <img src="${escapeHtml(url)}" alt="Hình ảnh đính kèm" class="chat-msg-image" loading="lazy" onclick="window.open(this.src, '_blank')">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        const textHtmlContent = msg.content ? `
+            <div class="chat-msg-text">${formatBubbleContent(msg.content)}</div>
+        ` : '';
+
+        const timeHtmlContent = (showTime && dateStr) ? `
+            <div class="staff-chat-time chat-msg-time">
+                <span>${escapeHtml(dateStr)}</span>
+            </div>
+        ` : '';
+
+        const isLastSelf = options.isLastSelf ?? false;
+        const statusHtml = (!isCustomer && isLastSelf) ? `
+            <div class="chat-msg-status staff-chat-status" data-status="${msg.is_read ? 'seen' : 'sent'}">
+                ${msg.is_read ? 'Đã xem' : 'Đã gửi'}
+            </div>
+        ` : '';
+
+        let bubbleHtmlContent = '';
+        if (textHtmlContent) {
+            bubbleHtmlContent = `
+                <div class="staff-chat-bubble" title="${escapeHtml(fullDateTooltip)}">
+                    ${textHtmlContent}
+                    ${timeHtmlContent}
+                </div>
+            `;
+        } else if (!imgHtmlContent) {
+            bubbleHtmlContent = `
+                <div class="staff-chat-bubble" title="${escapeHtml(fullDateTooltip)}">
+                    ${timeHtmlContent}
+                </div>
+            `;
+        } else if (timeHtmlContent) {
+            bubbleHtmlContent = `
+                <div class="staff-chat-time chat-msg-time is-outside">
+                    <span>${escapeHtml(dateStr)}</span>
+                </div>
+            `;
+        }
+
+        const hasGalleryClass = images.length > 0 ? 'has-gallery' : '';
+
         return `
-            <div class="staff-chat-msg-row ${rowClass}" data-msg-id="${msg.id}">
+            <div class="staff-chat-msg-row ${rowClass} ${groupPos} ${hasGalleryClass}" 
+                 data-msg-id="${msg.id}" 
+                 data-sender-id="${msg.sender_id || ''}" 
+                 data-is-customer="${isCustomer ? '1' : '0'}" 
+                 data-timestamp="${timestampSec}">
                 ${avatarHtml}
                 <div class="staff-chat-msg-wrap">
-                    <div class="staff-chat-bubble">
-                        ${formatBubbleContent(msg.content)}
-                    </div>
-                    <div class="staff-chat-meta">
-                        <span>${msg.sent_at || ''}</span>
-                        ${checkIconHtml}
-                    </div>
+                    ${imgHtmlContent}
+                    ${bubbleHtmlContent}
+                    ${statusHtml}
                 </div>
             </div>
         `;
+    };
+
+    // Hàm chèn tin nhắn mới phía staff theo chuẩn gom nhóm Messenger / Zalo
+    const appendStaffMessage = (msg) => {
+        if (!chatStream) return null;
+
+        const existingRows = chatStream.querySelectorAll('.staff-chat-msg-row');
+        const lastRow = existingRows.length > 0 ? existingRows[existingRows.length - 1] : null;
+
+        const isCustomer = Boolean(msg.is_customer);
+        const newSenderId = String(msg.sender_id || '');
+        const newTimeSec = msg.timestamp ? parseInt(msg.timestamp, 10) : Math.floor(Date.now() / 1000);
+
+        let isConsecutive = false;
+
+        if (lastRow) {
+            const lastIsCustomer = lastRow.dataset.isCustomer === '1';
+            const lastSenderId = String(lastRow.dataset.senderId || '');
+            const lastTimeSec = parseInt(lastRow.dataset.timestamp, 10) || 0;
+            const diffMinutes = lastTimeSec > 0 ? Math.abs(newTimeSec - lastTimeSec) / 60 : 0;
+
+            const sameSender = (lastSenderId && newSenderId)
+                ? (lastSenderId === newSenderId)
+                : (lastIsCustomer === isCustomer);
+
+            if (sameSender && diffMinutes <= 10) {
+                isConsecutive = true;
+                if (lastRow.classList.contains('pos-single')) {
+                    lastRow.classList.remove('pos-single');
+                    lastRow.classList.add('pos-first');
+                } else if (lastRow.classList.contains('pos-last')) {
+                    lastRow.classList.remove('pos-last');
+                    lastRow.classList.add('pos-middle');
+                }
+
+                // Xóa avatar tin nhắn trước đó của khách (chuyển thành spacer để thẳng hàng)
+                const lastAvatar = lastRow.querySelector('.staff-chat-msg-avatar:not(.is-spacer)');
+                if (lastAvatar) {
+                    const spacer = document.createElement('div');
+                    spacer.className = 'staff-chat-msg-avatar is-spacer';
+                    spacer.setAttribute('aria-hidden', 'true');
+                    lastAvatar.replaceWith(spacer);
+                }
+
+                // Xóa giờ của tin nhắn trước đó (chỉ hiện ở tin cuối của cụm)
+                const lastTimeEl = lastRow.querySelector('.staff-chat-time, .chat-msg-time');
+                if (lastTimeEl) {
+                    lastTimeEl.remove();
+                }
+            }
+        }
+
+        // Trạng thái "Đã gửi" / "Đã xem" CHỈ hiển thị ở tin nhắn cuối cùng của đoạn chat nếu tin nhắn đó do nhân viên / admin gửi
+        const oldStatusEls = chatStream.querySelectorAll('.staff-chat-status, .chat-msg-status');
+        oldStatusEls.forEach(el => el.remove());
+
+        const groupPos = isConsecutive ? 'pos-last' : 'pos-single';
+        const showAvatar = true;
+        const showTime = true;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = renderStaffMessageHtml(msg, { 
+            groupPos, 
+            showAvatar, 
+            showTime, 
+            timestamp: newTimeSec,
+            isLastSelf: !isCustomer 
+        }).trim();
+        const newRow = tempDiv.firstElementChild;
+        chatStream.appendChild(newRow);
+        return newRow;
     };
 
     // Nhận xử lý case (Accept)
@@ -501,25 +636,99 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tự động dọn sạch order_id trên thanh địa chỉ URL ngay khi trang load xong
     cleanOrderIdFromUrl();
 
-    // Gửi tin nhắn phản hồi
+    // Quản lý đính kèm nhiều ảnh và xem trước (Preview) cho Staff/Admin
+    const btnImage = chatForm?.querySelector('[data-chat-btn-image]');
+    const fileInput = chatForm?.querySelector('[data-chat-file-input]');
+    const previewContainer = chatForm?.querySelector('[data-chat-image-preview]');
+
+    let selectedFiles = [];
+
+    const renderPreviews = () => {
+        if (!previewContainer) return;
+        if (selectedFiles.length === 0) {
+            previewContainer.innerHTML = '';
+            previewContainer.style.display = 'none';
+            return;
+        }
+
+        previewContainer.innerHTML = selectedFiles.map((file, idx) => {
+            const objectUrl = URL.createObjectURL(file);
+            return `
+                <div class="chat-image-preview-item" data-index="${idx}">
+                    <img src="${objectUrl}" alt="Xem trước" class="chat-image-preview-thumb">
+                    <button type="button" class="chat-image-preview-close" data-index="${idx}" title="Hủy ảnh">&times;</button>
+                </div>
+            `;
+        }).join('');
+        previewContainer.style.display = 'flex';
+    };
+
+    btnImage?.addEventListener('click', () => {
+        fileInput?.click();
+    });
+
+    fileInput?.addEventListener('change', () => {
+        const files = Array.from(fileInput.files || []);
+        if (!files.length) return;
+
+        for (const file of files) {
+            if (!file.type.startsWith('image/')) {
+                alert(`Tệp "${file.name}" không phải là hình ảnh hợp lệ.`);
+                continue;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`Hình ảnh "${file.name}" vượt quá dung lượng tối đa 5MB.`);
+                continue;
+            }
+
+            if (selectedFiles.length >= 10) {
+                alert('Bạn chỉ có thể gửi tối đa 10 hình ảnh mỗi lần.');
+                break;
+            }
+
+            selectedFiles.push(file);
+        }
+
+        fileInput.value = '';
+        renderPreviews();
+        chatInput?.focus();
+    });
+
+    previewContainer?.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.chat-image-preview-close');
+        if (!removeBtn) return;
+        const index = parseInt(removeBtn.dataset.index, 10);
+        if (!isNaN(index) && index >= 0 && index < selectedFiles.length) {
+            selectedFiles.splice(index, 1);
+            renderPreviews();
+        }
+    });
+
+    // Gửi tin nhắn phản hồi (Hỗ trợ Text & Nhiều file ảnh)
     chatForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         cleanOrderIdFromUrl();
 
         const content = chatInput?.value?.trim();
-        if (!content) return;
+        if (!content && selectedFiles.length === 0) return;
 
         if (submitBtn) submitBtn.disabled = true;
 
         try {
+            const formData = new FormData();
+            if (content) formData.append('content', content);
+            selectedFiles.forEach((file) => {
+                formData.append('images[]', file);
+            });
+
             const res = await fetch(chatForm.action, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                 },
-                body: JSON.stringify({ content }),
+                body: formData,
             });
 
             const result = await res.json();
@@ -554,11 +763,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newMsg = result.data;
                 lastMessageId = Math.max(lastMessageId, newMsg.id);
 
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = renderStaffMessageHtml(newMsg).trim();
-                chatStream.appendChild(tempDiv.firstElementChild);
+                appendStaffMessage(newMsg);
 
                 chatInput.value = '';
+                selectedFiles = [];
+                renderPreviews();
+                if (fileInput) fileInput.value = '';
+
                 scrollToBottom(true);
             }
         } catch (err) {
@@ -685,9 +896,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const newMsg = result.data;
                     lastMessageId = Math.max(lastMessageId, newMsg.id);
 
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = renderStaffMessageHtml(newMsg).trim();
-                    chatStream?.appendChild(tempDiv.firstElementChild);
+                    appendStaffMessage(newMsg);
                     scrollToBottom(true);
 
                     // Xóa bỏ các notice trạng thái cũ (waiting / closed / assigned-other) nếu có
@@ -735,20 +944,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!res.ok) return;
 
                 const json = await res.json();
-                if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-                    let hasNew = false;
-                    json.data.forEach((msg) => {
-                        if (msg.id > lastMessageId) {
-                            lastMessageId = Math.max(lastMessageId, msg.id);
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = renderStaffMessageHtml(msg).trim();
-                            chatStream.appendChild(tempDiv.firstElementChild);
-                            hasNew = true;
-                        }
-                    });
+                if (json.success) {
+                    if (Array.isArray(json.data) && json.data.length > 0) {
+                        let hasNew = false;
+                        json.data.forEach((msg) => {
+                            if (msg.id > lastMessageId) {
+                                lastMessageId = Math.max(lastMessageId, msg.id);
+                                appendStaffMessage(msg);
+                                hasNew = true;
+                            }
+                        });
 
-                    if (hasNew) {
-                        scrollToBottom(true);
+                        if (hasNew) {
+                            scrollToBottom(true);
+                        }
+                    }
+
+                    // Cập nhật trạng thái "Đã xem" nếu tin nhắn cuối cùng của cả đoạn chat do staff/admin gửi
+                    if (json.is_last_msg_self && json.last_msg_seen) {
+                        const lastStatusEl = chatStream.querySelector('.staff-chat-msg-row:last-child .staff-chat-status, .staff-chat-msg-row:last-child .chat-msg-status');
+                        if (lastStatusEl) {
+                            lastStatusEl.setAttribute('data-status', 'seen');
+                            lastStatusEl.textContent = 'Đã xem';
+                        }
+                    } else if (json.is_last_msg_self === false) {
+                        const oldStatusEls = chatStream.querySelectorAll('.staff-chat-status, .chat-msg-status');
+                        oldStatusEls.forEach(el => el.remove());
                     }
                 }
             } catch (e) {

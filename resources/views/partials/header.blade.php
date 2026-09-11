@@ -63,7 +63,7 @@
         @if(!auth()->check() || auth()->user()->role === 'CUSTOMER')
             <!-- Wishlist (Yêu thích) -->
             @auth
-                <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+                <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn {{ request()->routeIs('customer.wishlist*') ? 'active' : '' }}" id="wishlist-header-btn" title="Danh sách yêu thích">
             @endauth
             @guest
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">

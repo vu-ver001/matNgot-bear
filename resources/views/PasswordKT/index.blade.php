@@ -1,8 +1,10 @@
 @php
     $user = auth()->user();
-    $layout = $user->role === \App\Models\User::ROLE_CUSTOMER
-        ? 'customer-account-layout'
-        : 'app-layout';
+    $layout = match ($user->role) {
+        \App\Models\User::ROLE_ADMIN => 'admin-dashboard-layout',
+        \App\Models\User::ROLE_STAFF => 'staff-dashboard-layout',
+        default => 'customer-account-layout',
+    };
     $passwordErrors = $errors->getBag('updatePassword');
     $resetModalOpen = $errors->getBag('default')->any();
     $passwordToast = match (session('status')) {
@@ -17,7 +19,7 @@
 
 <x-dynamic-component :component="$layout" title="Đổi mật khẩu" :flush="true">
     <div
-        class="password-page {{ $user->role !== \App\Models\User::ROLE_CUSTOMER ? 'uses-default-layout' : '' }}"
+        class="password-page {{ !in_array($user->role, [\App\Models\User::ROLE_CUSTOMER, \App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_STAFF]) ? 'uses-default-layout' : '' }}"
         data-password-page
         data-reset-modal-open="{{ $resetModalOpen ? 'true' : 'false' }}"
     >
