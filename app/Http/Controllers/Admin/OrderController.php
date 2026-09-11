@@ -87,7 +87,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'order_ids' => 'required|array|min:1',
             'order_ids.*' => 'required|integer|exists:orders,id',
-            'target_status' => 'nullable|in:SHIPPING',
+            'target_status' => 'nullable|in:CONFIRMED,PREPARING,SHIPPING',
         ]);
 
         $targetStatus = $validated['target_status'] ?? 'SHIPPING';

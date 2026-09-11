@@ -572,6 +572,31 @@ class OrderManagementTest extends TestCase
         }
     }
 
+    public function test_bulk_confirm_pending_orders_for_staff_and_admin(): void
+    {
+        $this->product->update(['stock_quantity' => 100]);
+
+        $shipping = $this->createOrder($this->customer);
+        $shipping->update(['order_status' => 'SHIPPING']);
+
+        foreach ([$this->admin, $this->staff] as $user) {
+            $p1 = $this->createOrder($this->customer);
+            $p2 = $this->createOrder($this->customer);
+            $prefix = strtolower($user->role);
+
+            $response = $this->actingAs($user)->post('/'.$prefix.'/orders/bulk-update-status', [
+                'order_ids' => [$p1->id, $p2->id, $shipping->id],
+                'target_status' => 'CONFIRMED',
+            ]);
+
+            $response->assertSessionHas('success');
+            $this->assertSame('CONFIRMED', $p1->fresh()->order_status);
+            $this->assertSame('CONFIRMED', $p2->fresh()->order_status);
+            $this->assertNotNull($p1->fresh()->confirmed_at);
+            $this->assertSame('SHIPPING', $shipping->fresh()->order_status);
+        }
+    }
+
     public function test_confirmed_order_must_be_prepared_before_shipping(): void
     {
         $order = $this->createOrder($this->customer);

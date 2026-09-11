@@ -14,9 +14,15 @@
     <!-- 1. Card Header: Checkbox, Mã đơn hàng, Tên người nhận, Icon nhắn tin, Trạng thái đơn -->
     <div class="order-card-header flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-3">
+            @php
+                $isActionable = isset($bulkActionableOrderIds) 
+                    ? in_array($order->id, $bulkActionableOrderIds, true) 
+                    : ($order->canTransitionTo('SHIPPING') || $order->canTransitionTo('CONFIRMED'));
+                $checkboxTitle = $order->canTransitionTo('SHIPPING') ? 'Chọn đơn để giao hàng' : 'Chọn đơn để xác nhận';
+            @endphp
             <!-- Checkbox chọn đơn -->
-            @if($order->canTransitionTo('SHIPPING'))
-                <label class="custom-order-checkbox flex items-center cursor-pointer select-none" title="Chọn đơn để giao hàng">
+            @if($isActionable)
+                <label class="custom-order-checkbox flex items-center cursor-pointer select-none" title="{{ $checkboxTitle }}">
                     <input type="checkbox"
                            value="{{ $order->id }}"
                            :checked="isSelected({{ $order->id }})"
