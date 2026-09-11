@@ -15,11 +15,13 @@ class Category extends Model
         'description',
         'is_active',
         'is_pinned',
+        'header_menu_config',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_pinned' => 'boolean',
+        'header_menu_config' => 'array',
     ];
 
     protected $appends = [

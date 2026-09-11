@@ -240,6 +240,11 @@ class Order extends Model
         return $this->hasMany(OrderDetail::class);
     }
 
+    public function orderDetails(): HasMany
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);

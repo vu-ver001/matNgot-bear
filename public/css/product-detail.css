@@ -105,6 +105,8 @@
 .detail-info-col {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .detail-cat-badge {
@@ -124,19 +126,22 @@
 
 .detail-product-title {
     font-family: 'Be Vietnam Pro', sans-serif;
-    font-size: 32px;
-    font-weight: 800;
+    font-size: 24px;
+    font-weight: 700;
     color: var(--primary-dark);
-    line-height: 1.25;
-    margin-bottom: 12px;
+    line-height: 1.35;
+    margin-bottom: 10px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .detail-rating-row {
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-light);
     font-size: 13px;
     color: var(--text-muted);
@@ -149,27 +154,116 @@
     gap: 2px;
 }
 
+/* SALE COUNTDOWN BANNER (Ảnh 2) */
+.sale-countdown-banner {
+    background: linear-gradient(90deg, #F6D89B 0%, #E59819 100%);
+    color: #3E2723;
+    padding: 10px 18px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 14px rgba(229, 152, 25, 0.25);
+    margin-bottom: 0;
+}
+
+.sale-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sale-banner-tag {
+    background: #3E2723;
+    color: #F6D89B;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: -0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.sale-banner-title {
+    font-weight: 800;
+    font-size: 14.5px;
+    letter-spacing: 0.2px;
+    color: #3E2723;
+}
+
+.sale-banner-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #3E2723;
+}
+
+.sale-timer-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #3E2723;
+    font-weight: 800;
+}
+
+.sale-timer-digits {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.timer-box {
+    background: #3E2723;
+    color: #F6D89B;
+    font-size: 13px;
+    font-weight: 900;
+    font-family: 'Be Vietnam Pro', monospace, sans-serif;
+    padding: 3px 6px;
+    border-radius: 4px;
+    min-width: 25px;
+    text-align: center;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(62, 39, 35, 0.3);
+}
+
 /* Price Box */
 .detail-price-box {
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 1.25rem 1.5rem;
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+    transition: all 0.25s ease;
+}
+
+.detail-price-box.has-countdown {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: none;
+}
+
+.detail-price-main-row {
     display: flex;
     align-items: baseline;
-    gap: 16px;
-    margin-bottom: 1.75rem;
+    gap: 14px;
 }
 
 .detail-price-current {
     font-family: 'Be Vietnam Pro', sans-serif;
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 800;
     color: #D32F2F;
 }
 
 .detail-price-old {
-    font-size: 18px;
+    font-size: 16px;
     color: var(--text-light);
     text-decoration: line-through;
 }
@@ -177,10 +271,68 @@
 .detail-sale-badge {
     background: linear-gradient(135deg, #FF5252 0%, #D32F2F 100%);
     color: #FFFFFF;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 800;
-    padding: 4px 10px;
+    padding: 3px 9px;
     border-radius: 999px;
+    letter-spacing: 0.3px;
+}
+
+/* UPCOMING FLASH SALE BAR (Ảnh 3) */
+.upcoming-sale-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px dashed #E59819;
+    margin-top: 4px;
+    color: #D98200;
+}
+
+.upcoming-sale-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.upcoming-flash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #D98200;
+    font-weight: 900;
+    font-size: 13.5px;
+}
+
+.upcoming-flash-badge em {
+    font-style: italic;
+    letter-spacing: 0.5px;
+}
+
+.upcoming-flash-badge i {
+    font-size: 14px;
+}
+
+.upcoming-flash-time {
+    font-weight: 800;
+    font-size: 13px;
+    color: #3E2723;
+}
+
+.upcoming-flash-discount {
+    font-weight: 800;
+    font-size: 11.5px;
+    background: #FFF8E7;
+    color: #C67600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid #F6D89B;
+}
+
+.upcoming-flash-chevron {
+    color: #D98200;
+    font-size: 12px;
 }
 
 /* Specifications Table / Card */
@@ -507,6 +659,9 @@
     color: var(--text-main);
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .star-filter-chip:hover {
@@ -519,6 +674,28 @@
     color: #FFFFFF;
     border-color: #4E342E;
     box-shadow: 0 4px 12px rgba(78, 52, 46, 0.2);
+}
+
+.star-filter-chip.chip-has-images {
+    border-color: rgba(229, 152, 25, 0.6);
+    background: #FFFDF9;
+}
+
+.star-filter-chip.chip-has-images:hover {
+    background: var(--honey-light);
+    border-color: var(--honey);
+    color: var(--honey-dark);
+}
+
+.star-filter-chip.chip-has-images.active {
+    background: linear-gradient(135deg, #E59819 0%, #B87309 100%);
+    color: #FFFFFF;
+    border-color: #B87309;
+    box-shadow: 0 4px 14px rgba(229, 152, 25, 0.35);
+}
+
+.star-filter-chip.chip-has-images.active i {
+    color: #FFFFFF !important;
 }
 
 .review-items-list {
@@ -615,6 +792,200 @@
     margin: 10px 0 12px 0;
 }
 
+/* Lưới ảnh đánh giá thực tế của khách hàng */
+.review-images-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0 14px 0;
+}
+
+.review-image-item {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--bg-surface);
+    box-shadow: 0 4px 12px rgba(78, 52, 46, 0.06);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.review-image-item:hover {
+    transform: translateY(-3px) scale(1.03);
+    border-color: var(--honey);
+    box-shadow: 0 8px 20px rgba(229, 152, 25, 0.25);
+}
+
+.review-image-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.review-image-item:hover .review-image-thumb {
+    transform: scale(1.08);
+}
+
+.review-image-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(62, 39, 35, 0.45);
+    backdrop-filter: blur(2px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.review-image-item:hover .review-image-overlay {
+    opacity: 1;
+}
+
+.review-image-overlay i {
+    font-size: 16px;
+}
+
+/* Modal Lightbox Xem Ảnh Đánh Giá Lớn */
+.review-lightbox-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 18, 15, 0.88);
+    backdrop-filter: blur(8px);
+    z-index: 100000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeInModal 0.22s ease forwards;
+}
+
+.review-lightbox-modal.active {
+    display: flex;
+}
+
+.review-lightbox-container {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.review-lightbox-body {
+    position: relative;
+    max-width: 80vw;
+    max-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#review-lightbox-img {
+    max-width: 80vw;
+    max-height: 80vh;
+    border-radius: var(--radius-md);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    object-fit: contain;
+    background: #000;
+    transition: opacity 0.15s ease;
+}
+
+.review-lightbox-counter {
+    position: absolute;
+    bottom: -36px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    color: #FFFFFF;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.review-lightbox-close {
+    position: absolute;
+    top: -46px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.18);
+    border: none;
+    color: #FFFFFF;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.review-lightbox-close:hover {
+    background: #E53935;
+    transform: scale(1.1);
+}
+
+.review-lightbox-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #FFFFFF;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.review-lightbox-arrow:hover {
+    background: var(--honey);
+    color: #4E342E;
+    transform: translateY(-50%) scale(1.15);
+}
+
+.review-lightbox-arrow.prev {
+    left: -60px;
+}
+
+.review-lightbox-arrow.next {
+    right: -60px;
+}
+
+@media (max-width: 768px) {
+    .review-lightbox-arrow.prev {
+        left: -12px;
+    }
+    .review-lightbox-arrow.next {
+        right: -12px;
+    }
+    .review-image-item {
+        width: 80px;
+        height: 80px;
+    }
+}
+
 .review-item-footer {
     display: flex;
     align-items: center;
@@ -694,4 +1065,549 @@
     .action-buttons-group { grid-template-columns: 1fr; }
     .related-grid { grid-template-columns: 1fr; }
     .detail-product-title { font-size: 24px; }
+}
+
+/* ================= Shopee Style Variant Selection ================= */
+.shopee-variant-box {
+    background: #FAF8F5;
+    border: 1px solid #F0EAE1;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem;
+}
+
+.shopee-variant-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    gap: 16px;
+}
+
+.shopee-variant-row:last-child {
+    margin-bottom: 0;
+}
+
+.shopee-variant-label {
+    width: 90px;
+    flex-shrink: 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #757575;
+    padding-top: 8px;
+    text-transform: capitalize;
+}
+
+.shopee-variant-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex: 1;
+}
+
+.shopee-color-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 14px 3px 3px;
+    background: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    user-select: none;
+}
+
+.shopee-color-option:hover {
+    border-color: #E59819;
+    color: #3E2723;
+    box-shadow: 0 3px 10px rgba(229, 152, 25, 0.25);
+}
+
+.shopee-color-option.active {
+    border-color: #E59819;
+    color: #3E2723;
+    background: #FFF9EC;
+    box-shadow: 0 2px 8px rgba(229, 152, 25, 0.2);
+}
+
+.shopee-color-option.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 11px 11px;
+    border-color: transparent transparent #E59819 transparent;
+}
+
+.shopee-color-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 3px;
+    object-fit: cover;
+    background: #F7F5F2;
+    flex-shrink: 0;
+    border: 1px solid #EBEBEB;
+    display: block;
+}
+
+.shopee-color-text {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.shopee-size-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    height: 38px;
+    padding: 0 16px;
+    background: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #333333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    user-select: none;
+}
+
+.shopee-size-option:hover {
+    border-color: #E59819;
+    color: #3E2723;
+    box-shadow: 0 3px 10px rgba(229, 152, 25, 0.25);
+}
+
+.shopee-size-option.active {
+    border-color: #E59819;
+    color: #3E2723;
+    background: #FFF9EC;
+    box-shadow: 0 2px 8px rgba(229, 152, 25, 0.2);
+}
+
+.shopee-size-option.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 11px 11px;
+    border-color: transparent transparent #E59819 transparent;
+}
+
+/* ==========================================================================
+   SHOPEE DISABLED VARIANT OPTIONS (ĂN KHỚP CSDL)
+   ========================================================================== */
+.shopee-color-option.disabled,
+.shopee-color-option:disabled,
+.shopee-size-option.disabled,
+.shopee-size-option:disabled {
+    opacity: 0.35 !important;
+    background: #F7F7F7 !important;
+    color: #A0A0A0 !important;
+    border: 1px dashed #D0D0D0 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    filter: grayscale(80%);
+}
+
+.shopee-color-option.disabled:hover,
+.shopee-size-option.disabled:hover {
+    border-color: #D0D0D0 !important;
+    box-shadow: none !important;
+    color: #A0A0A0 !important;
+}
+
+.shopee-color-option.disabled::after,
+.shopee-size-option.disabled::after {
+    display: none !important;
+}
+
+/* ==========================================================================
+   GALLERY ZOOM BADGE & CURSOR
+   ========================================================================== */
+.gallery-main-frame {
+    cursor: pointer;
+}
+
+.gallery-zoom-badge {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 14px rgba(78, 52, 46, 0.12);
+    transition: all 0.25s ease;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.gallery-main-frame:hover .gallery-zoom-badge {
+    background: var(--honey);
+    color: #FFFFFF;
+    border-color: var(--honey);
+    box-shadow: 0 4px 16px rgba(229, 152, 25, 0.4);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   SHOPEE-STYLE PRODUCT IMAGE DETAIL MODAL (LIGHTBOX)
+   Tông màu Nâu Be & Vàng Mật Ngọt Bear
+   ========================================================================== */
+.product-image-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(46, 30, 26, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.product-image-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.product-image-modal-container {
+    width: 94vw;
+    max-width: 1080px;
+    height: 86vh;
+    max-height: 680px;
+    background: #FFFFFF;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(46, 30, 26, 0.35);
+    border: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    overflow: hidden;
+    transform: scale(0.94);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.product-image-modal-overlay.active .product-image-modal-container {
+    transform: scale(1);
+}
+
+/* Cột Trái: Ảnh lớn xem chi tiết & Nút điều hướng */
+.modal-gallery-viewer {
+    position: relative;
+    background: #FAF7F2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    overflow: hidden;
+    user-select: none;
+    border-right: 1px solid var(--border-light);
+}
+
+.modal-large-img-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.modal-large-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 8px 24px rgba(78, 52, 46, 0.08);
+}
+
+/* Nút Prev / Next dạng Shopee */
+.modal-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(78, 52, 46, 0.16);
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.modal-nav-btn:hover {
+    background: var(--honey);
+    color: #FFFFFF;
+    border-color: var(--honey);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 18px rgba(229, 152, 25, 0.4);
+}
+
+.modal-nav-btn.prev {
+    left: 16px;
+}
+
+.modal-nav-btn.next {
+    right: 16px;
+}
+
+.modal-counter-badge {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    background: rgba(62, 39, 35, 0.75);
+    backdrop-filter: blur(4px);
+    color: #FFFFFF;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    z-index: 5;
+}
+
+.modal-active-label {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(78, 52, 46, 0.1);
+    max-width: 80%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 5;
+}
+
+/* Cột Phải: Thông tin tóm tắt & Lưới tất cả ảnh */
+.modal-gallery-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #FFFFFF;
+    padding: 24px;
+    overflow: hidden;
+}
+
+.modal-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.modal-cat-tag {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--honey-dark);
+    background: var(--honey-light);
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--honey-gold);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.modal-close-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+    background: #FFEBEE;
+    color: #D32F2F;
+    border-color: #FFCDD2;
+    transform: rotate(90deg);
+}
+
+.modal-product-title {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.modal-price-box {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--border);
+    margin-bottom: 14px;
+}
+
+.modal-price-current {
+    font-size: 18px;
+    font-weight: 800;
+    color: #D32F2F;
+}
+
+.modal-price-old {
+    font-size: 13px;
+    color: var(--text-light);
+    text-decoration: line-through;
+}
+
+.modal-thumbs-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.modal-thumbs-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    overflow-y: auto;
+    max-height: calc(100% - 130px);
+    padding: 4px 6px 12px 0;
+    align-content: flex-start;
+}
+
+.modal-thumbs-grid::-webkit-scrollbar {
+    width: 5px;
+}
+
+.modal-thumbs-grid::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+.modal-thumb-box {
+    width: 72px;
+    height: 72px;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    background: var(--bg-surface, #F8F4EE);
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-thumb-box:hover {
+    border-color: var(--honey);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(229, 152, 25, 0.25);
+}
+
+.modal-thumb-box.active {
+    border-color: #E59819;
+    box-shadow: 0 4px 12px rgba(229, 152, 25, 0.35);
+    transform: translateY(-2px);
+}
+
+.modal-thumb-box.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 12px 12px;
+    border-color: transparent transparent #E59819 transparent;
+    z-index: 3;
+}
+
+.modal-thumb-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 11px;
+    transition: transform 0.25s ease;
+}
+
+.modal-thumb-box:hover img {
+    transform: scale(1.08);
+}
+
+/* Responsive cho Modal */
+@media (max-width: 860px) {
+    .product-image-modal-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+        height: 90vh;
+        max-height: none;
+    }
+
+    .modal-gallery-sidebar {
+        height: 230px;
+        padding: 16px;
+    }
+
+    .modal-thumbs-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
 }

@@ -29,6 +29,9 @@ Route::get('/products/featured', [ProductPublicController::class, 'featured'])->
 // Danh sách sản phẩm (tìm kiếm, lọc, sắp xếp, phân trang)
 Route::get('/products', [ProductPublicController::class, 'index'])->name('api.products.index');
 
+// Gợi ý tìm kiếm tức thì trên header (Live Search Suggestions)
+Route::get('/products/search-suggestions', [ProductPublicController::class, 'suggestions'])->name('api.products.suggestions');
+
 // Chi tiết sản phẩm
 Route::get('/products/{id}', [ProductPublicController::class, 'show'])->name('api.products.show');
 
@@ -37,14 +40,26 @@ Route::get('/products/{id}', [ProductPublicController::class, 'show'])->name('ap
 // 2. ADMIN API (Quản trị viên)
 // ==========================================
 Route::prefix('admin')->name('api.admin.')->group(function () {
-    // Category CRUD & Toggle Pin to Header
+    // Category CRUD & Toggle Pin & Header Megamenu
     Route::patch('categories/{category}/toggle-pin', [AdminCategoryController::class, 'togglePin'])->name('categories.toggle-pin');
+    Route::get('categories/{category}/header-menu', [AdminCategoryController::class, 'getHeaderMenu'])->name('categories.header-menu.get');
+    Route::post('categories/{category}/header-menu', [AdminCategoryController::class, 'saveHeaderMenu'])->name('categories.header-menu.save');
     Route::apiResource('categories', AdminCategoryController::class);
 
     // Product CRUD & Image Management
+    Route::post('products/{id}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
+    Route::delete('products/{id}/force-delete', [AdminProductController::class, 'forceDelete'])->name('products.force-delete');
+    Route::patch('products/{product}/toggle-status', [AdminProductController::class, 'toggleStatus'])->name('products.toggle-status');
     Route::post('products/{product}/images', [AdminProductController::class, 'addImage'])->name('products.images.add');
     Route::patch('products/{product}/images/{image}/primary', [AdminProductController::class, 'setPrimaryImage'])->name('products.images.primary');
     Route::delete('products/{product}/images/{image}', [AdminProductController::class, 'deleteImage'])->name('products.images.delete');
+    Route::get('products/stats', [AdminProductController::class, 'productsStats'])->name('products.stats');
     Route::apiResource('products', AdminProductController::class);
+
+    // Product Variants API (Sản phẩm con)
+    Route::get('product-variants/stats', [AdminProductController::class, 'variantsStats'])->name('variants.stats');
+    Route::patch('product-variants/{variant}/toggle-status', [AdminProductController::class, 'toggleVariantStatus'])->name('variants.toggle-status');
+    Route::delete('product-variants/{variant}', [AdminProductController::class, 'destroyVariant'])->name('variants.destroy');
+    Route::get('product-variants', [AdminProductController::class, 'variantsList'])->name('variants.index');
 });
 

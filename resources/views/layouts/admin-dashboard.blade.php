@@ -11,6 +11,38 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Cấu hình SweetAlert2 triệt tiêu hoàn toàn hiện tượng padding scrollbar và nhảy ngang layout
+        if (typeof Swal !== 'undefined') {
+            const _origSwalFire = Swal.fire;
+            Swal.fire = function(...args) {
+                let options = {};
+                if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
+                    options = Object.assign({ heightAuto: false, scrollbarPadding: false }, args[0]);
+                } else if (args.length >= 2) {
+                    options = {
+                        title: args[0],
+                        text: args[1],
+                        icon: args[2] || undefined,
+                        heightAuto: false,
+                        scrollbarPadding: false
+                    };
+                } else {
+                    options = { heightAuto: false, scrollbarPadding: false };
+                }
+
+                const promise = _origSwalFire.call(this, options);
+                if (promise && typeof promise.finally === 'function') {
+                    promise.finally(() => {
+                        window.scrollTo({ left: 0 });
+                        if (document.documentElement) document.documentElement.scrollLeft = 0;
+                        if (document.body) document.body.scrollLeft = 0;
+                    });
+                }
+                return promise;
+            };
+        }
+    </script>
 
     <!-- Script áp dụng trạng thái Mini Sidebar ngay lập tức trước khi render HTML để triệt tiêu độ khựng -->
     <script>
@@ -23,7 +55,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Admin Dashboard Layout CSS (Tách riêng bởi Khánh Vân) -->
-    <link rel="stylesheet" href="{{ asset('css/admin-layout.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin-layout.css') }}?v={{ file_exists(public_path('css/admin-layout.css')) ? filemtime(public_path('css/admin-layout.css')) : time() }}">
     @yield('styles')
 </head>
 <body>
@@ -44,6 +76,9 @@
             </div>
             <button type="button" class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Thu gọn menu" id="sidebarCollapseBtn">
                 <i class="fa-solid fa-chevron-left" id="sidebarToggleIcon"></i>
+            </button>
+            <button type="button" class="sidebar-mobile-close-btn" onclick="closeMobileSidebar()" title="Đóng menu" id="sidebarMobileCloseBtn">
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
@@ -166,6 +201,22 @@
 
     <!-- ====== MAIN CONTENT ====== -->
     <div class="admin-main" id="adminMain">
+        <!-- Thanh Header Mobile xuất hiện khi thu nhỏ màn hình có nút 3 gạch ở góc trên bên trái -->
+        <header class="admin-mobile-topbar" id="adminMobileTopbar">
+            <button type="button" class="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Mở thanh menu" id="mobileMenuBtn" aria-label="Mở menu quản trị">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="mobile-topbar-brand">
+                <a href="{{ route('admin.dashboard') }}" class="mobile-brand-title">Mật Ngọt Bear</a>
+                <span class="mobile-brand-badge">Admin</span>
+            </div>
+            <div class="mobile-topbar-actions">
+                <a href="{{ route('home') }}" class="mobile-btn-store" title="Xem cửa hàng" target="_blank">
+                    <i class="fa-solid fa-store"></i>
+                </a>
+            </div>
+        </header>
+
         <script>
             (function() {
                 if (localStorage.getItem('mn_admin_sidebar_collapsed') === '1') {
@@ -177,6 +228,9 @@
             @yield('content')
         </div>
     </div>
+
+    <!-- Backdrop mờ khi mở menu trên mobile/màn hình nhỏ -->
+    <div class="mobile-sidebar-backdrop" id="mobileSidebarBackdrop" onclick="closeMobileSidebar()"></div>
 
     <!-- Script Điều Khiển Đóng / Mở Menu & Popup Card Người Dùng -->
     <script>
@@ -234,10 +288,53 @@
             localStorage.setItem('mn_admin_sidebar_collapsed', '1');
         }
 
+        // ====== ĐIỀU KHIỂN MENU KHI THU NHỎ MÀN HÌNH (RESPONSIVE / MOBILE) ======
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            if (sidebar?.classList.contains('mobile-open')) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        }
+
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('mobileSidebarBackdrop');
+            sidebar?.classList.add('mobile-open');
+            backdrop?.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('mobileSidebarBackdrop');
+            sidebar?.classList.remove('mobile-open');
+            backdrop?.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Tự động đóng menu mobile khi phóng to màn hình trở lại (> 992px)
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                closeMobileSidebar();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             if (localStorage.getItem('mn_admin_sidebar_collapsed') === '1') {
                 updateCollapseIcon(true);
             }
+
+            // Tự động đóng sidebar mobile khi bấm vào link chuyển trang
+            const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
+            navLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        closeMobileSidebar();
+                    }
+                });
+            });
         });
     </script>
     @yield('scripts')
