@@ -28,6 +28,10 @@ class WishlistController extends Controller
         );
 
         if (! $request->expectsJson()) {
+            if ($request->query('view') === 'account') {
+                return view('customer.wishlistKT.account', compact('wishlist'));
+            }
+
             return view('customer.wishlistKT.index', compact('wishlist'));
         }
 
@@ -65,9 +69,7 @@ class WishlistController extends Controller
         }
 
         if (! $request->expectsJson()) {
-            return redirect()
-                ->route('customer.wishlist.index')
-                ->with('success', 'Đã xóa sản phẩm khỏi danh sách yêu thích.');
+            return back()->with('success', 'Đã xóa sản phẩm khỏi danh sách yêu thích.');
         }
 
         return response()->json([
@@ -84,9 +86,7 @@ class WishlistController extends Controller
         $removedCount = $this->wishlistService->clearWishlist($request->user());
 
         if (! $request->expectsJson()) {
-            return redirect()
-                ->route('customer.wishlist.index')
-                ->with('success', 'Đã xóa tất cả sản phẩm khỏi danh sách yêu thích.');
+            return back()->with('success', 'Đã xóa tất cả sản phẩm khỏi danh sách yêu thích.');
         }
 
         return response()->json([

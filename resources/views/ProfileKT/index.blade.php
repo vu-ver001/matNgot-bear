@@ -19,9 +19,11 @@
         'profile-no-changes' => ['type' => 'info', 'message' => 'Thông tin chưa có thay đổi.'],
         default => null,
     };
-    $profileLayout = $user->role === \App\Models\User::ROLE_CUSTOMER
-        ? 'customer-account-layout'
-        : 'app-layout';
+    $profileLayout = match ($user->role) {
+        \App\Models\User::ROLE_ADMIN => 'admin-dashboard-layout',
+        \App\Models\User::ROLE_STAFF => 'staff-dashboard-layout',
+        default => 'customer-account-layout',
+    };
 @endphp
 
 <x-dynamic-component :component="$profileLayout" title="Hồ sơ cá nhân" :flush="true">
@@ -29,7 +31,7 @@
         @class([
             'profile-page',
             'is-editing' => $startInEditMode,
-            'uses-default-layout' => $user->role !== \App\Models\User::ROLE_CUSTOMER,
+            'uses-default-layout' => !in_array($user->role, [\App\Models\User::ROLE_CUSTOMER, \App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_STAFF]),
         ])
         data-profile-editor
         data-profile-editing-initially="{{ $startInEditMode ? 'true' : 'false' }}"

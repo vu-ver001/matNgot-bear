@@ -51,7 +51,23 @@ class WishlistTest extends TestCase
             $this->actingAs($user)
                 ->getJson(route('customer.wishlist.index'))
                 ->assertForbidden();
+
+            $this->actingAs($user)
+                ->get(route('customer.wishlist.index'))
+                ->assertForbidden();
         }
+    }
+
+    public function test_customer_can_view_wishlist_in_account_layout(): void
+    {
+        $customer = User::factory()->create();
+
+        $this->actingAs($customer)
+            ->get(route('customer.wishlist.index', ['view' => 'account']))
+            ->assertOk()
+            ->assertViewIs('customer.wishlistKT.account')
+            ->assertSee('Khu vực khách hàng')
+            ->assertSee('Danh sách yêu thích');
     }
 
     public function test_empty_wishlist_returns_successful_response(): void
@@ -240,15 +256,22 @@ class WishlistTest extends TestCase
         ]);
 
         $this->actingAs($customer)
-            ->postJson(route('customer.cart.store', $product))
+            ->postJson(route('customer.cart.store'), [
+                'product_id' => $product->id,
+                'quantity' => 1,
+            ])
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.quantity', 1);
+            ->assertJsonPath('cartItem.quantity', 1);
 
         $this->actingAs($customer)
-            ->postJson(route('customer.cart.store', $product))
+            ->postJson(route('customer.cart.store'), [
+                'product_id' => $product->id,
+                'quantity' => 1,
+            ])
             ->assertOk()
-            ->assertJsonPath('data.quantity', 2);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('cartItem.quantity', 2);
 
         $this->assertDatabaseHas('cart_items', [
             'user_id' => $customer->id,
@@ -267,8 +290,11 @@ class WishlistTest extends TestCase
         $product = $this->createProduct(['stock_quantity' => 0]);
 
         $this->actingAs($customer)
-            ->postJson(route('customer.cart.store', $product))
-            ->assertUnprocessable()
+            ->postJson(route('customer.cart.store'), [
+                'product_id' => $product->id,
+                'quantity' => 1,
+            ])
+            ->assertStatus(400)
             ->assertJsonPath('success', false);
 
         $this->assertDatabaseMissing('cart_items', [
@@ -289,8 +315,11 @@ class WishlistTest extends TestCase
         ]);
 
         $this->actingAs($customer)
-            ->postJson(route('customer.cart.store', $product))
-            ->assertUnprocessable();
+            ->postJson(route('customer.cart.store'), [
+                'product_id' => $product->id,
+                'quantity' => 1,
+            ])
+            ->assertStatus(400);
 
         $this->assertDatabaseHas('cart_items', [
             'user_id' => $customer->id,

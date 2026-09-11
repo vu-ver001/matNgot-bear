@@ -8,7 +8,7 @@
             'label' => 'Mua sắm',
             'items' => [
                 ['label' => 'Đơn hàng của tôi', 'route' => 'customer.orders.index', 'active' => ['customer.orders.*'], 'icon' => 'package'],
-                ['label' => 'Danh sách yêu thích', 'route' => 'customer.wishlist.index', 'active' => ['customer.wishlist.*'], 'icon' => 'heart'],
+                ['label' => 'Danh sách yêu thích', 'route' => 'customer.wishlist.index', 'params' => ['view' => 'account'], 'active' => ['customer.wishlist.*'], 'icon' => 'heart'],
                 ['label' => 'Đánh giá của tôi', 'route' => 'customer.reviews.index', 'active' => ['customer.reviews.*'], 'icon' => 'star'],
             ],
         ],
@@ -125,7 +125,7 @@
                                 @if ($item['route'])
                                     @php($isActive = request()->routeIs(...$item['active']))
                                     <a
-                                        href="{{ route($item['route']) }}"
+                                        href="{{ route($item['route'], $item['params'] ?? []) }}"
                                         @class(['customer-account-nav-item', 'is-active' => $isActive])
                                         @if ($isActive) aria-current="page" @endif
                                         title="{{ $item['label'] }}"
