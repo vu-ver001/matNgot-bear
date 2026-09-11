@@ -192,6 +192,31 @@
     font-weight: 600;
 }
 
+.customer-account-badge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 2px 5px rgba(239, 68, 68, 0.38);
+    flex-shrink: 0;
+    pointer-events: none;
+    box-sizing: border-box;
+    transition: transform 140ms ease;
+}
+
+.customer-account-nav-item:hover .customer-account-badge {
+    transform: scale(1.08);
+}
+
 .customer-account-nav-item.is-active {
     background: #f4d9b9;
     color: #432318;
@@ -209,9 +234,20 @@
 .account-icon {
     width: 20px;
     height: 20px;
+    min-width: 20px;
     flex: 0 0 20px;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    color: inherit;
+    text-align: center;
+    transition: transform 160ms ease, color 160ms ease;
+}
+
+.customer-account-nav-item:hover .account-icon {
+    transform: scale(1.08);
 }
 
 .customer-account-sidebar-footer {
@@ -339,13 +375,14 @@
 
 .customer-account-menu-profile-copy strong {
     color: #432318;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 700;
 }
 
 .customer-account-menu-profile-copy span {
     margin-top: 2px;
     color: #765541;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .customer-account-menu-divider {
@@ -383,6 +420,7 @@
 }
 
 .customer-account-mobile-toggle {
+    position: relative;
     display: none;
     width: 40px;
     height: 40px;
@@ -392,6 +430,18 @@
     background: white;
     color: var(--account-brown-dark);
     box-shadow: 0 6px 18px rgba(76, 42, 27, 0.12);
+}
+
+.customer-mobile-badge-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 2px solid #ffffff;
+    pointer-events: none;
 }
 
 .customer-account-page {
@@ -440,10 +490,22 @@
 
 .is-sidebar-collapsed .customer-account-brand-copy,
 .is-sidebar-collapsed .customer-account-nav-label,
-.is-sidebar-collapsed .customer-account-nav-item span,
-.is-sidebar-collapsed .customer-account-nav-item small,
+.is-sidebar-collapsed .customer-account-nav .customer-account-nav-item span:not(.customer-account-badge),
+.is-sidebar-collapsed .customer-account-nav .customer-account-nav-item small,
 .is-sidebar-collapsed .customer-account-user-copy {
     display: none;
+}
+
+.is-sidebar-collapsed .customer-account-nav-item .customer-account-badge {
+    display: inline-flex !important;
+    position: absolute;
+    top: 7px;
+    right: 20px;
+    margin-left: 0;
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+    padding: 0 4px;
 }
 
 .is-sidebar-collapsed .customer-account-collapse-button {
@@ -454,7 +516,7 @@
     height: 32px;
 }
 
-.is-sidebar-collapsed .customer-account-nav-item,
+.is-sidebar-collapsed .customer-account-nav .customer-account-nav-item,
 .is-sidebar-collapsed .customer-account-user {
     justify-content: center;
     padding-inline: 12px;
@@ -464,6 +526,79 @@
     width: 42px;
     height: 42px;
     flex-basis: 42px;
+}
+
+/* Tooltip trên mini sidebar khi thu gọn giống staff & admin */
+.is-sidebar-collapsed .customer-account-nav .customer-account-nav-item {
+    position: relative;
+}
+
+.is-sidebar-collapsed .customer-account-nav .customer-account-nav-item:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 10px;
+    background: #4A2E2B;
+    color: #FFFFFF;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    z-index: 999;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+    line-height: 1.4;
+}
+
+/* Cho phép popup tài khoản hiển thị tràn ra bên cạnh sidebar khi thu gọn */
+.is-sidebar-collapsed .customer-account-sidebar {
+    overflow: visible;
+}
+
+.is-sidebar-collapsed .customer-account-sidebar-footer {
+    position: relative;
+    overflow: visible;
+}
+
+/* Menu popup xuất hiện bên cạnh avatar khi sidebar thu gọn chuẩn staff & admin */
+.is-sidebar-collapsed .customer-account-user-menu {
+    position: absolute;
+    left: calc(100% + 10px);
+    bottom: 8px;
+    right: auto;
+    width: 260px;
+    border-radius: 20px;
+    box-shadow: 0 16px 42px rgba(76, 42, 27, 0.22);
+    border: 1px solid #ddc8b6;
+    background: #f8eee5;
+    z-index: 999;
+}
+
+.is-sidebar-collapsed .customer-account-user-menu .customer-account-menu-profile {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 4px 16px 10px;
+}
+
+.is-sidebar-collapsed .customer-account-user-menu .customer-account-menu-profile-copy,
+.is-sidebar-collapsed .customer-account-user-menu .customer-account-menu-profile-copy strong,
+.is-sidebar-collapsed .customer-account-user-menu .customer-account-menu-profile-copy span {
+    display: block !important;
+}
+
+.is-sidebar-collapsed .customer-account-user-menu .customer-account-nav-item {
+    width: calc(100% - 18px);
+    margin: 2px 9px;
+    justify-content: flex-start;
+    padding: 9px 12px;
+}
+
+.is-sidebar-collapsed .customer-account-user-menu .customer-account-nav-item span {
+    display: inline !important;
 }
 
 .account-toast {
