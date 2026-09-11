@@ -76,9 +76,11 @@
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.vouchers.index') }}', 'Đăng nhập xem Kho Voucher', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem toàn bộ voucher và nhận ưu đãi nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.vouchers.index')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.vouchers.*') ? 'active' : '' }}" title="Kho voucher & khuyến mãi">
             @endguest
                 <i class="fa-solid fa-ticket" style="font-size: 16px; color: #E08A1E;"></i>
-                @if(($availableVoucherCount ?? 0) > 0)
-                    <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ (int) ($availableVoucherCount ?? 0) > 99 ? '99+' : (int) ($availableVoucherCount ?? 0) }}</span>
-                @endif
+                @auth
+                    @if(($availableVoucherCount ?? 0) > 0)
+                        <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ (int) ($availableVoucherCount ?? 0) > 99 ? '99+' : (int) ($availableVoucherCount ?? 0) }}</span>
+                    @endif
+                @endauth
             </a>
         @endif
 

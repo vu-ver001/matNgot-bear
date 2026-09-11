@@ -32,7 +32,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-black text-[#2C1408] tracking-tight">Giỏ hàng Mật ngọt Bear</h1>
+                        <h1 class="text-xl sm:text-2xl font-black text-[#2C1408] tracking-tight font-bold">Giỏ hàng Mật ngọt Bear</h1>
                         <p class="text-xs font-semibold text-[#786B61] mt-0.5">Kiểm tra danh sách gấu bông bạn đã chọn trước khi thanh toán</p>
                     </div>
                 </div>

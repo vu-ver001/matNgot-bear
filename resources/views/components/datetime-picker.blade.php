@@ -117,7 +117,7 @@
                     <button type="button" 
                             @click="selectNow()"
                             class="text-[#5C3219] hover:text-[#2C160B] font-bold hover:underline flex items-center gap-1">
-                        <span>⚡</span> Chọn hiện tại
+                        <span x-text="disablePast ? '⚡ +1 Giờ tới' : '⚡ Chọn hiện tại'"></span>
                     </button>
                     <span class="text-[#8E8076]">🧸 Mật Ngọt Bear</span>
                 </div>
@@ -146,9 +146,14 @@
                              x-ref="hourList">
                             <template x-for="h in 24" :key="h - 1">
                                 <button type="button"
-                                        @click="selectHour(h - 1)"
+                                        @click="!isHourDisabled(h - 1) && selectHour(h - 1)"
+                                        :disabled="isHourDisabled(h - 1)"
                                         class="w-full py-1 text-center text-xs font-semibold rounded-lg transition-all"
-                                        :class="selectedHour === (h - 1) ? 'bg-gradient-to-r from-[#E09028] to-[#5C3219] text-white shadow-xs' : 'text-[#2E190E] hover:bg-[#FFF5E6]'">
+                                        :class="{
+                                            'opacity-20 cursor-not-allowed pointer-events-none text-[#C4B5A5]': isHourDisabled(h - 1),
+                                            'bg-gradient-to-r from-[#E09028] to-[#5C3219] text-white shadow-xs': selectedHour === (h - 1) && !isHourDisabled(h - 1),
+                                            'text-[#2E190E] hover:bg-[#FFF5E6]': selectedHour !== (h - 1) && !isHourDisabled(h - 1)
+                                        }">
                                     <span x-text="padZero(h - 1)"></span>
                                 </button>
                             </template>
@@ -162,9 +167,14 @@
                              x-ref="minuteList">
                             <template x-for="m in 60" :key="m - 1">
                                 <button type="button"
-                                        @click="selectMinute(m - 1)"
+                                        @click="!isMinuteDisabled(m - 1) && selectMinute(m - 1)"
+                                        :disabled="isMinuteDisabled(m - 1)"
                                         class="w-full py-1 text-center text-xs font-semibold rounded-lg transition-all"
-                                        :class="selectedMinute === (m - 1) ? 'bg-gradient-to-r from-[#E09028] to-[#5C3219] text-white shadow-xs' : 'text-[#2E190E] hover:bg-[#FFF5E6]'">
+                                        :class="{
+                                            'opacity-20 cursor-not-allowed pointer-events-none text-[#C4B5A5]': isMinuteDisabled(m - 1),
+                                            'bg-gradient-to-r from-[#E09028] to-[#5C3219] text-white shadow-xs': selectedMinute === (m - 1) && !isMinuteDisabled(m - 1),
+                                            'text-[#2E190E] hover:bg-[#FFF5E6]': selectedMinute !== (m - 1) && !isMinuteDisabled(m - 1)
+                                        }">
                                     <span x-text="padZero(m - 1)"></span>
                                 </button>
                             </template>

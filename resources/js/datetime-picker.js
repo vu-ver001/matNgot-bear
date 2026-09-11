@@ -264,6 +264,28 @@ export function cuteDateTimePicker(config) {
             }
         },
 
+        isHourDisabled(h) {
+            if (!this.disablePast) return false;
+            const now = new Date();
+            const isToday = this.selectedYear === now.getFullYear() &&
+                            this.selectedMonth === now.getMonth() &&
+                            this.selectedDate === now.getDate();
+            if (!isToday) return false;
+            return h < now.getHours();
+        },
+
+        isMinuteDisabled(m) {
+            if (!this.disablePast) return false;
+            const now = new Date();
+            const isToday = this.selectedYear === now.getFullYear() &&
+                            this.selectedMonth === now.getMonth() &&
+                            this.selectedDate === now.getDate();
+            if (!isToday) return false;
+            if (this.selectedHour < now.getHours()) return true;
+            if (this.selectedHour === now.getHours()) return m <= now.getMinutes();
+            return false;
+        },
+
         selectDay(year, month, date) {
             const cellTime = new Date(year, month, date).getTime();
             if (cellTime < this.minTime) return;
@@ -273,21 +295,45 @@ export function cuteDateTimePicker(config) {
             this.selectedDate = date;
             this.viewYear = year;
             this.viewMonth = month;
+
+            // Nếu ngày chọn là hôm nay mà giờ/phút hiện tại đang ở quá khứ, tự động đẩy lên tương lai
+            if (this.disablePast) {
+                const now = new Date();
+                const isToday = year === now.getFullYear() && month === now.getMonth() && date === now.getDate();
+                if (isToday) {
+                    if (this.selectedHour < now.getHours()) {
+                        this.selectedHour = Math.min(23, now.getHours() + 1);
+                    }
+                    if (this.selectedHour === now.getHours() && this.selectedMinute <= now.getMinutes()) {
+                        this.selectedMinute = Math.min(59, now.getMinutes() + 5);
+                    }
+                }
+            }
+
             this.emitChange();
         },
 
         selectHour(h) {
+            if (this.isHourDisabled(h)) return;
             this.selectedHour = h;
+            if (this.isMinuteDisabled(this.selectedMinute)) {
+                const now = new Date();
+                this.selectedMinute = Math.min(59, now.getMinutes() + 5);
+            }
             this.emitChange();
         },
 
         selectMinute(m) {
+            if (this.isMinuteDisabled(m)) return;
             this.selectedMinute = m;
             this.emitChange();
         },
 
         selectNow() {
             const now = new Date();
+            if (this.disablePast) {
+                now.setHours(now.getHours() + 1); // Đẩy 1 giờ vào tương lai nếu không cho chọn quá khứ/hiện tại
+            }
             this.selectedYear = now.getFullYear();
             this.selectedMonth = now.getMonth();
             this.selectedDate = now.getDate();
@@ -300,6 +346,19 @@ export function cuteDateTimePicker(config) {
         },
 
         confirmSelection() {
+            // Kiểm tra lần cuối nếu disablePast bật mà thời điểm <= now thì tự động đẩy lên
+            if (this.disablePast) {
+                const selected = new Date(this.selectedYear, this.selectedMonth, this.selectedDate, this.selectedHour, this.selectedMinute);
+                const now = new Date();
+                if (selected <= now) {
+                    now.setMinutes(now.getMinutes() + 15);
+                    this.selectedYear = now.getFullYear();
+                    this.selectedMonth = now.getMonth();
+                    this.selectedDate = now.getDate();
+                    this.selectedHour = now.getHours();
+                    this.selectedMinute = now.getMinutes();
+                }
+            }
             this.open = false;
             this.emitChange();
         },

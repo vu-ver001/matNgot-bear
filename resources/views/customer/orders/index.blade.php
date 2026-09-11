@@ -69,36 +69,38 @@
                             <!-- Order Card Item -->
                             <div class="order-card-ecommerce" x-data="{ showAllProducts: false, showNotReceived: false, openChangePayment: false, openReturnModal: false }">
                                 <!-- 1. Card Header: Store identity & Order Status -->
-                                <div class="order-card-header flex flex-col md:flex-row md:items-center justify-between gap-3">
-                                    <div class="flex flex-wrap items-center gap-2.5">
-                                        <div class="w-7 h-7 rounded-lg bg-[#E08A1E]/15 text-[#8C4A19] flex items-center justify-center text-sm font-bold">
+                                <div class="order-card-header flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3">
+                                    <div class="flex items-center gap-2 sm:gap-2.5 shrink-0 whitespace-nowrap overflow-x-auto max-w-full pb-0.5 md:pb-0">
+                                        <div class="w-7 h-7 rounded-lg bg-[#E08A1E]/15 text-[#8C4A19] flex items-center justify-center text-sm font-bold shrink-0">
                                             🧸
                                         </div>
-                                        <span class="font-bold text-sm text-[#4E342E]">{{ $card['shop']['name'] }}</span>
+                                        <span class="font-bold text-sm text-[#4E342E] shrink-0 whitespace-nowrap">{{ $card['shop']['name'] }}</span>
 
                                         <!-- Nút Nhắn tin là icon (giống bên Staff) -->
                                         <a href="{{ route('customer.messages.index') }}" 
-                                           class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 flex items-center justify-center transition shadow-2xs hover:scale-105" 
+                                           class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 flex items-center justify-center transition shadow-2xs hover:scale-105 shrink-0" 
                                            title="Chat với Shop">
                                             <i class="fa-regular fa-comment-dots text-xs"></i>
                                         </a>
 
-                                        <span class="text-stone-300">|</span>
-                                        <a href="{{ route('customer.orders.show', $order) }}" class="text-xs text-[#8E8076] hover:text-amber-800 font-mono font-bold">
+                                        <span class="text-stone-300 shrink-0">|</span>
+                                        <a href="{{ route('customer.orders.show', $order) }}" class="text-xs text-[#8E8076] hover:text-amber-800 font-mono font-bold shrink-0 whitespace-nowrap">
                                             #{{ $order->order_code }}
                                         </a>
                                     </div>
 
-                                    <div class="flex items-center gap-3 shrink-0 flex-wrap">
-                                        <div class="order-delivery-status">
-                                            <i class="fa-solid fa-truck-fast text-emerald-600"></i>
-                                            <span>{{ $card['order']['deliveryStatus'] }}</span>
+                                    <div class="flex items-center gap-2 sm:gap-3 flex-wrap md:justify-end min-w-0">
+                                        <div class="order-delivery-status text-xs sm:text-[12.5px] min-w-0">
+                                            <i class="fa-solid fa-truck-fast text-emerald-600 shrink-0"></i>
+                                            <span class="break-words leading-tight">{{ $card['order']['deliveryStatus'] }}</span>
                                         </div>
 
-                                        <span class="text-stone-300 hidden md:inline">|</span>
+                                        <span class="text-stone-300 hidden lg:inline shrink-0">|</span>
 
-                                        <x-order-status-badge :order="$order" />
-                                        <x-payment-status-badge :status="$order->payment_status" />
+                                        <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                                            <x-order-status-badge :order="$order" />
+                                            <x-payment-status-badge :status="$order->payment_status" />
+                                        </div>
                                     </div>
                                 </div>
 

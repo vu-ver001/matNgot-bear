@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Voucher extends Model
@@ -45,6 +47,47 @@ class Voucher extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'voucher_products');
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'voucher_id');
+    }
+
+    public function shippingOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'shipping_voucher_id');
+    }
+
+    /**
+     * Tổng số đơn hàng đã từng áp dụng voucher này (bao gồm cả đơn giảm giá & freeship).
+     */
+    public function getTotalOrdersCount(): int
+    {
+        if (isset($this->orders_count) && isset($this->shipping_orders_count)) {
+            return (int) $this->orders_count + (int) $this->shipping_orders_count;
+        }
+
+        return Order::where('voucher_id', $this->id)
+            ->orWhere('shipping_voucher_id', $this->id)
+            ->count();
+    }
+
+    /**
+     * Số đơn hàng đang trong quá trình xử lý (chưa hoàn tất hoặc chưa hủy).
+     */
+    public function getActiveOrdersCount(): int
+    {
+        if (isset($this->active_orders_count) && isset($this->active_shipping_orders_count)) {
+            return (int) $this->active_orders_count + (int) $this->active_shipping_orders_count;
+        }
+
+        return Order::where(function ($query) {
+                $query->where('voucher_id', $this->id)
+                      ->orWhere('shipping_voucher_id', $this->id);
+            })
+            ->whereNotIn('order_status', ['COMPLETED', 'CANCELLED'])
+            ->count();
     }
 
     /**
@@ -325,4 +368,29 @@ class Voucher extends Model
             ],
         };
     }
+
+    /**
+     * Tự động chuyển các voucher đã hết hạn vào thùng rác (xóa mềm).
+     *
+     * @return int Số lượng voucher đã được tự động xóa mềm
+     */
+    public static function autoTrashExpired(): int
+    {
+        $now = Carbon::now();
+
+        $expiredVouchers = static::query()
+            ->whereNull('deleted_at')
+            ->whereNotNull('end_date')
+            ->where('end_date', '<', $now)
+            ->get();
+
+        $count = 0;
+        foreach ($expiredVouchers as $voucher) {
+            $voucher->delete();
+            $count++;
+        }
+
+        return $count;
+    }
 }
+

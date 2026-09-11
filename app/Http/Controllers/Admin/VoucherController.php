@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Voucher;
 use Carbon\Carbon;
@@ -20,20 +21,31 @@ class VoucherController extends Controller
      */
     public function index(Request $request): View
     {
-        $isTrashed = $request->input('status') === 'TRASHED';
-        $query = $isTrashed 
-            ? Voucher::onlyTrashed()->with(['categories', 'products']) 
-            : Voucher::query()->with(['categories', 'products']);
+        $status = $request->input('status');
+        $now = Carbon::now();
+
+        // Mặc định: KHÔNG hiển thị voucher đã xóa mềm trên trang chính
+        // Chỉ hiển thị voucher đã xóa mềm khi người dùng chọn xem Thùng rác (status=TRASHED)
+        if ($status === 'TRASHED') {
+            $query = Voucher::onlyTrashed()->with(['categories', 'products']);
+        } else {
+            $query = Voucher::with(['categories', 'products']);
+        }
+
+        $query->withCount([
+            'orders',
+            'shippingOrders',
+            'orders as active_orders_count' => fn($q) => $q->whereNotIn('order_status', ['COMPLETED', 'CANCELLED']),
+            'shippingOrders as active_shipping_orders_count' => fn($q) => $q->whereNotIn('order_status', ['COMPLETED', 'CANCELLED']),
+        ]);
 
         // Search by voucher code
         if ($request->filled('search')) {
             $query->where('code', 'like', '%' . trim($request->input('search')) . '%');
         }
 
-        // Filter by real status (if not in trash view)
-        if (!$isTrashed && $request->filled('status')) {
-            $status = $request->input('status');
-            $now = Carbon::now();
+        // Filter by real status
+        if ($request->filled('status') && $status !== 'TRASHED') {
             if ($status === 'RUNNING') {
                 $query->where('status', 'ACTIVE')
                       ->where('start_date', '<=', $now)
@@ -64,7 +76,6 @@ class VoucherController extends Controller
         }
 
         // Statistics
-        $now = Carbon::now();
         $stats = [
             'total' => Voucher::count(),
             'running' => Voucher::where('status', 'ACTIVE')
@@ -86,7 +97,7 @@ class VoucherController extends Controller
 
         $vouchers = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
-        return view('admin.vouchers.index', compact('vouchers', 'stats', 'isTrashed'));
+        return view('admin.vouchers.index', compact('vouchers', 'stats'));
     }
 
     /**
@@ -94,8 +105,8 @@ class VoucherController extends Controller
      */
     public function create(): View
     {
-        $categories = Category::where('is_active', true)->withCount('products')->orderBy('name')->get();
-        $products = Product::where('status', 'ACTIVE')->with(['category', 'images' => fn($q) => $q->orderBy('is_primary', 'desc')])->orderBy('name')->get();
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $products = Product::where('status', 'ACTIVE')->orderBy('name')->get();
 
         return view('admin.vouchers.create', compact('categories', 'products'));
     }
@@ -322,26 +333,99 @@ class VoucherController extends Controller
     }
 
     /**
-     * Remove the specified voucher from storage (Soft Delete).
+     * Xóa voucher: Tất cả đều là XÓA MỀM (Soft Delete), không xóa vĩnh viễn
+     * để bảo toàn lịch sử đơn hàng và đối soát tài chính của người dùng.
      */
     public function destroy(Voucher $voucher): RedirectResponse
     {
+        $now = Carbon::now();
+        $isExpired = $voucher->end_date && $voucher->end_date->isPast();
+        $isOutOfStock = $voucher->used_count >= $voucher->usage_limit;
+        $isUpcoming = $voucher->start_date && $voucher->start_date->isFuture();
+        $isRunning = $voucher->status === 'ACTIVE' && !$isExpired && !$isOutOfStock && !$isUpcoming;
+
+        // Nếu voucher đang diễn ra -> Chặn không cho xóa, yêu cầu chuyển sang vô hiệu hóa trước
+        if ($isRunning) {
+            return back()->with('error', "Không thể xóa voucher [{$voucher->code}] khi đang diễn ra. Vui lòng chuyển trạng thái voucher sang 'Vô hiệu hóa' trước khi chuyển vào thùng rác!");
+        }
+
+        $activeOrdersCount = $voucher->getActiveOrdersCount();
+
+        // Nếu đang có đơn hàng chưa hoàn tất -> Chặn không cho xóa
+        if ($activeOrdersCount > 0) {
+            return back()->with('error', "Không thể xóa voucher [{$voucher->code}] vì đang có {$activeOrdersCount} đơn hàng chưa hoàn tất đang áp dụng mã này!");
+        }
+
+        // Tất cả đều chuyển sang trạng thái xóa mềm (cột deleted_at trong csdl)
         $code = $voucher->code;
         $voucher->delete();
 
-        return redirect()->route('admin.vouchers.index')->with('success', "Đã chuyển voucher [{$code}] vào thùng rác thành công!");
+        return redirect()->route('admin.vouchers.index')->with('success', "Đã chuyển voucher [{$code}] vào thùng rác (xóa mềm) thành công!");
     }
 
     /**
-     * Restore the specified soft-deleted voucher.
+     * Restore the specified voucher and optionally extend end_date or usage_limit.
+     * Áp dụng cho cả voucher đã xóa mềm lẫn voucher đã hết hạn chưa xóa mềm.
      */
-    public function restore(int $id): RedirectResponse
+    public function restore(Request $request, int $id): RedirectResponse
     {
-        $voucher = Voucher::onlyTrashed()->findOrFail($id);
-        $code = $voucher->code;
-        $voucher->restore();
+        $voucher = Voucher::withTrashed()->findOrFail($id);
 
-        return back()->with('success', "Đã khôi phục voucher [{$code}] thành công!");
+        $rules = [
+            'end_date' => 'nullable|date',
+            'usage_limit' => "nullable|integer|min:{$voucher->used_count}",
+        ];
+
+        if ($request->filled('end_date')) {
+            $rules['end_date'] .= '|after:now';
+            if ($voucher->start_date && $voucher->start_date->isFuture()) {
+                $rules['end_date'] .= '|after:' . $voucher->start_date->toDateTimeString();
+            }
+        }
+
+        $validated = $request->validate($rules, [
+            'end_date.after' => 'Thời gian kết thúc mới phải ở tương lai (sau thời điểm hiện tại). Không được chọn thời gian trong quá khứ hoặc hiện tại.',
+            'usage_limit.min' => "Tổng số lượt dùng mới không thể nhỏ hơn số lượt đã sử dụng ({$voucher->used_count} lượt).",
+        ]);
+
+        $updates = [];
+
+        if ($request->filled('end_date')) {
+            $updates['end_date'] = Carbon::parse($validated['end_date']);
+        }
+
+        if ($request->filled('usage_limit')) {
+            $updates['usage_limit'] = (int) $validated['usage_limit'];
+        }
+
+        // Tự động kích hoạt lại trạng thái ACTIVE nếu đang INACTIVE khi gia hạn
+        if ($voucher->status === 'INACTIVE' && (!empty($updates['end_date']) || !empty($updates['usage_limit']))) {
+            $updates['status'] = 'ACTIVE';
+        }
+
+        if (!empty($updates)) {
+            $voucher->update($updates);
+        }
+
+        $code = $voucher->code;
+        if ($voucher->trashed()) {
+            $voucher->restore();
+        }
+
+        $details = [];
+        if (!empty($updates['end_date'])) {
+            $details[] = "Gia hạn đến: " . $updates['end_date']->format('d/m/Y H:i');
+        }
+        if (!empty($updates['usage_limit'])) {
+            $details[] = "Lượt dùng mới: {$updates['usage_limit']}";
+        }
+
+        $msg = "Đã khôi phục voucher [{$code}] thành công!";
+        if (!empty($details)) {
+            $msg = "Đã khôi phục voucher [{$code}] thành công (" . implode(', ', $details) . ")!";
+        }
+
+        return back()->with('success', $msg);
     }
 
     /**
@@ -349,7 +433,13 @@ class VoucherController extends Controller
      */
     public function forceDelete(int $id): RedirectResponse
     {
-        $voucher = Voucher::onlyTrashed()->findOrFail($id);
+        $voucher = Voucher::withTrashed()->findOrFail($id);
+        $totalOrdersCount = $voucher->getTotalOrdersCount();
+
+        if ($totalOrdersCount > 0) {
+            return back()->with('error', "Không thể xóa vĩnh viễn voucher [{$voucher->code}] vì đã có {$totalOrdersCount} đơn hàng từng áp dụng mã này trong hệ thống. Chỉ voucher chưa từng có đơn hàng nào sử dụng mới được phép xóa vĩnh viễn!");
+        }
+
         $code = $voucher->code;
 
         // Detach pivot relations

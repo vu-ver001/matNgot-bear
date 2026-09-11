@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\CartItem;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentRefundRequest;
 use App\Models\PaymentSetting;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -17,7 +20,9 @@ class PaymentRolePermissionTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $staff;
+
     private User $customer;
 
     protected function setUp(): void
@@ -61,7 +66,7 @@ class PaymentRolePermissionTest extends TestCase
     private function createDummyOrder(): Order
     {
         return Order::create([
-            'order_code' => 'TEST' . strtoupper(uniqid()),
+            'order_code' => 'TEST'.strtoupper(uniqid()),
             'customer_id' => $this->customer->id,
             'recipient_name' => 'Người Nhận Test',
             'recipient_phone' => '0987654321',
@@ -83,7 +88,7 @@ class PaymentRolePermissionTest extends TestCase
         $response = $this->actingAs($this->staff)->get(route('staff.payments.index'));
         $response->assertStatus(200);
         $response->assertSee('Giao Dịch Hôm Nay');
-        $response->assertDontSee('Xuất Báo Cáo Excel/CSV');
+        $response->assertDontSee('Xuất Báo Cáo');
     }
 
     /**
@@ -194,7 +199,7 @@ class PaymentRolePermissionTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('admin.payments.index'));
         $response->assertStatus(200);
         $response->assertSee('Thực Thu Thành Công');
-        $response->assertSee('Xuất Báo Cáo Excel/CSV');
+        $response->assertSee('Xuất Báo Cáo');
 
         $exportResponse = $this->actingAs($this->admin)->get(route('admin.payments.export'));
         $exportResponse->assertStatus(200);
@@ -297,8 +302,8 @@ class PaymentRolePermissionTest extends TestCase
      */
     public function test_order_placement_does_not_modify_user_personal_profile()
     {
-        $category = \App\Models\Category::create(['name' => 'Gấu Bông', 'slug' => 'gau-bong']);
-        $product = \App\Models\Product::create([
+        $category = Category::create(['name' => 'Gấu Bông', 'slug' => 'gau-bong']);
+        $product = Product::create([
             'category_id' => $category->id,
             'name' => 'Gấu Dâu Losto',
             'slug' => 'gau-dau-losto',
@@ -313,7 +318,7 @@ class PaymentRolePermissionTest extends TestCase
             'address' => 'Số 10 Nhà Riêng, Phường Cầu Giấy, Hà Nội',
         ]);
 
-        $cartItem = \App\Models\CartItem::create([
+        $cartItem = CartItem::create([
             'user_id' => $this->customer->id,
             'product_id' => $product->id,
             'quantity' => 1,
@@ -349,4 +354,3 @@ class PaymentRolePermissionTest extends TestCase
         ]);
     }
 }
-

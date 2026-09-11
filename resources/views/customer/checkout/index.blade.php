@@ -380,13 +380,44 @@
         }
 
         /* Right Column Sticky Card */
+        @media (min-width: 1024px) {
+            .mn-sticky-sidebar {
+                position: -webkit-sticky !important;
+                position: sticky !important;
+                top: 24px !important;
+                z-index: 20;
+                align-self: flex-start !important;
+            }
+        }
+
         .mn-summary-card {
             background-color: var(--bg-card);
             border: 1.5px solid var(--border-card);
             border-radius: 22px;
             padding: 22px;
             box-shadow: 0 2px 8px rgba(43, 24, 16, 0.03);
-            margin-bottom: 24px;
+            margin-bottom: 14px;
+        }
+
+        .mn-summary-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .mn-order-items-scroll {
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .mn-order-items-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .mn-order-items-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .mn-order-items-scroll::-webkit-scrollbar-thumb {
+            background: #EADBCC;
+            border-radius: 4px;
         }
 
         .mn-summary-header {
@@ -489,6 +520,7 @@
             allVouchers: @json($allVouchers ?? $orderVouchers),
             usedVoucherCodes: @json($usedVoucherCodes ?? []),
             savedProfile: @json($savedProfile ?? null),
+            previousAddresses: @json($previousAddresses ?? []),
             userAddress: @json($user->address ?? ''),
             initialShipping: @json($initialShipping ?? null),
             googleMapsApiKey: @json($googleMapsApiKey ?? ''),
@@ -734,11 +766,11 @@
                                         </div>
                                         <div>
                                             <div class="font-bold flex items-center gap-1.5 flex-wrap">
-                                                <span x-text="distanceInfo.loading ? 'Đang tính toán khoảng cách...' : ('Khoảng cách ước tính: ~' + distanceInfo.distance_km + ' km')"></span>
-                                                <span class="text-[10.5px] text-[#7D6B5D]" x-text="distanceInfo.duration_text ? ('(' + distanceInfo.duration_text + ' vận chuyển)') : ''"></span>
+                                                <span x-text="distanceInfo.loading ? 'Đang kết nối tính cước vận chuyển...' : (distanceInfo.route_text || ('Kho Mật Ngọt Bear ➔ ' + (selectedDistrict ? (selectedDistrict + ', ' + selectedProvince) : (selectedProvince || 'Hà Nội'))))"></span>
+                                                <span class="text-[10.5px] text-[#7D6B5D]" x-show="shippingOptions[shippingMethod]?.time" x-text="'• Nhận dự kiến: ' + shippingOptions[shippingMethod]?.time"></span>
                                             </div>
                                             <div class="text-[10px] text-[#7D6B5D] mt-0.5">
-                                                <span x-text="distanceInfo.source === 'GOOGLE_MAPS_API' ? '✨ Tính toán qua Google Maps API' : '📦 Tính theo bản đồ khoảng cách từ kho Mật Ngọt Bear (Số 41A, P.Phú Diễn, Hà Nội)'"></span>
+                                                <span x-text="distanceInfo.source === 'GHN_API' ? '⚡ Cước phí và ngày giao hàng thực tế từ Giao Hàng Nhanh (GHN) API' : '📦 Cước phí vận chuyển theo khu vực từ kho Mật Ngọt Bear (Hà Nội)'"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -1281,7 +1313,7 @@
                     </div>
 
                     {{-- Right Column: Sticky Summary --}}
-                    <div class="lg:col-span-5 space-y-3 lg:sticky lg:top-6">
+                    <div class="lg:col-span-5 space-y-3 mn-sticky-sidebar lg:sticky lg:top-6">
 
                         {{-- Card: ĐƠN HÀNG CỦA BẠN --}}
                         <div class="mn-summary-card">
@@ -1292,7 +1324,7 @@
                                 </span>
                             </div>
 
-                            <div class="space-y-4 divide-y divide-[#F4E8D8]">
+                            <div class="space-y-4 divide-y divide-[#F4E8D8] mn-order-items-scroll">
                                 @foreach($cartItems as $item)
                                     @php
                                         $unitPrice = $item->product->sale_price ?? $item->product->price;
@@ -1432,6 +1464,7 @@
             allVouchers: @json($allVouchers ?? $orderVouchers),
             usedVoucherCodes: @json($usedVoucherCodes ?? []),
             savedProfile: @json($savedProfile ?? null),
+            previousAddresses: @json($previousAddresses ?? []),
             userAddress: @json($user->address ?? ''),
             initialShipping: @json($initialShipping ?? null),
             googleMapsApiKey: @json($googleMapsApiKey ?? ''),
@@ -1466,10 +1499,11 @@
                     express: { id: 'express', name: 'Giao hàng hoả tốc', desc: 'Giao trong 2 - 4 giờ tại Hà Nội', fee: 55000, time: '2 - 4 giờ', available: true, disabled_reason: '' }
                 },
                 distanceInfo: {
-                    distance_km: initialShip?.distance_km || 6.5,
-                    duration_text: initialShip?.duration_text || '16 phút',
+                    route_text: initialShip?.route_text || 'Kho Mật Ngọt Bear (Hà Nội) ➔ Hà Nội',
+                    distance_km: initialShip?.distance_km || null,
+                    duration_text: initialShip?.duration_text || '',
                     is_hanoi_inner: initialShip?.is_hanoi_inner !== undefined ? initialShip.is_hanoi_inner : true,
-                    source: initialShip?.source || 'REGIONAL_MATRIX',
+                    source: initialShip?.source || 'GHN_API',
                     loading: false
                 },
 
@@ -1480,6 +1514,9 @@
                 selectedProvince: config.savedProfile?.province || 'Hà Nội',
                 selectedWard: config.savedProfile?.ward || '',
                 streetAddress: config.savedProfile?.street || '',
+
+                previousAddresses: config.previousAddresses || [],
+                openPreviousAddresses: false,
 
                 // 63 Provinces / Cities in Vietnam with post-merger administrative wards & communes
                 provinces: [
@@ -2092,6 +2129,27 @@
                     this.onAddressChange();
                 },
 
+                selectPreviousAddress(addr) {
+                    if (!addr) return;
+                    if (addr.recipient_name) this.recipientName = addr.recipient_name;
+                    if (addr.recipient_phone) this.recipientPhone = addr.recipient_phone;
+                    if (addr.province) {
+                        this.selectProvinceName(addr.province);
+                    }
+                    if (addr.ward) {
+                        this.selectedWard = addr.ward;
+                        if (!this.availableWards.includes(this.selectedWard)) {
+                            this.availableWards.unshift(this.selectedWard);
+                        }
+                    }
+                    if (addr.street) {
+                        this.streetAddress = addr.street;
+                    }
+                    this.cleanStreetAddress();
+                    this.onAddressChange();
+                    this.openPreviousAddresses = false;
+                },
+
                 onAddressChange() {
                     this.updateShippingCalculation();
                 },
@@ -2121,6 +2179,7 @@
                             const data = await response.json();
                             if (data.success && data.options) {
                                 this.shippingOptions = data.options;
+                                this.distanceInfo.route_text = data.route_text;
                                 this.distanceInfo.distance_km = data.distance_km;
                                 this.distanceInfo.duration_text = data.duration_text;
                                 this.distanceInfo.is_hanoi_inner = data.is_hanoi_inner;

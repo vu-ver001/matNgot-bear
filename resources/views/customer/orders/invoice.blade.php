@@ -190,13 +190,13 @@
                     <p>
                         <strong>Phương thức:</strong> 
                         @if($order->payment_method === 'BANK_TRANSFER')
-                            🏦 Chuyển khoản QR (MB Bank)
+                            Chuyển khoản QR (MB Bank)
                         @elseif($order->payment_method === 'CARD')
-                            💳 Cổng thanh toán VNPAY (ATM/Visa/QR)
+                            Cổng thanh toán VNPAY (ATM/Visa/QR)
                         @elseif($order->payment_method === 'E_WALLET')
-                            👛 Ví điện tử MoMo
+                            Ví điện tử MoMo
                         @else
-                            💵 Thanh toán khi nhận hàng (COD)
+                            Thanh toán khi nhận hàng (COD)
                         @endif
                     </p>
                     <p>
