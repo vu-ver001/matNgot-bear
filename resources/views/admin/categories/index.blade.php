@@ -240,6 +240,10 @@
     let currentCategoriesList = [];
 
     async function loadCategoriesTable() {
+        window.scrollTo({ left: 0 });
+        if (document.documentElement) document.documentElement.scrollLeft = 0;
+        if (document.body) document.body.scrollLeft = 0;
+
         const tbody = document.getElementById('categories-table-body');
         const search = document.getElementById('cat-search').value;
         const status = document.getElementById('cat-status-filter').value;
@@ -514,8 +518,8 @@
         if (!catName) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Bé Gấu nhắc bạn nè! 🐻',
-                html: 'Vui lòng nhập <b>Tên danh mục</b> nha!',
+                title: 'Thông báo',
+                html: 'Vui lòng nhập <b>Tên danh mục</b>!',
                 confirmButtonColor: '#8D6E63'
             });
             document.getElementById('cat-name').focus();
@@ -555,7 +559,7 @@
                 }
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Bé Gấu nhắc bạn nè! 🐻',
+                    title: 'Thông báo',
                     html: errHtml,
                     confirmButtonColor: '#8D6E63'
                 });

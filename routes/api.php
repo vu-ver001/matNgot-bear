@@ -47,6 +47,8 @@ Route::prefix('admin')->name('api.admin.')->group(function () {
     Route::apiResource('categories', AdminCategoryController::class);
 
     // Product CRUD & Image Management
+    Route::post('products/{id}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
+    Route::delete('products/{id}/force-delete', [AdminProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::patch('products/{product}/toggle-status', [AdminProductController::class, 'toggleStatus'])->name('products.toggle-status');
     Route::post('products/{product}/images', [AdminProductController::class, 'addImage'])->name('products.images.add');
     Route::patch('products/{product}/images/{image}/primary', [AdminProductController::class, 'setPrimaryImage'])->name('products.images.primary');
@@ -57,6 +59,7 @@ Route::prefix('admin')->name('api.admin.')->group(function () {
     // Product Variants API (Sản phẩm con)
     Route::get('product-variants/stats', [AdminProductController::class, 'variantsStats'])->name('variants.stats');
     Route::patch('product-variants/{variant}/toggle-status', [AdminProductController::class, 'toggleVariantStatus'])->name('variants.toggle-status');
+    Route::delete('product-variants/{variant}', [AdminProductController::class, 'destroyVariant'])->name('variants.destroy');
     Route::get('product-variants', [AdminProductController::class, 'variantsList'])->name('variants.index');
 });
 

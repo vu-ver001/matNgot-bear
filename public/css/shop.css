@@ -524,6 +524,8 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     min-height: 42px;
+    word-break: break-word;
+    overflow-wrap: break-word;
     transition: color 0.2s ease;
 }
 

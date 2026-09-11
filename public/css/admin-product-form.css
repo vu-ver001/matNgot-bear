@@ -42,9 +42,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 1.25rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1.5px dashed var(--pf-beige-border);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
 .form-breadcrumb {
@@ -739,6 +739,24 @@ textarea.input-control {
 }
 
 .btn-del-thumb:hover {
+    transform: scale(1.15);
+}
+
+.btn-lock-thumb {
+    border: none;
+    background: transparent !important;
+    color: #8D6E63;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.btn-lock-thumb:hover {
+    color: #5C3219;
     transform: scale(1.15);
 }
 

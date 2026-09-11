@@ -5,8 +5,8 @@
 @section('page-title', 'Quản Lý Sản Phẩm Gấu Bông')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('css/admin-products.css') }}">
-<link rel="stylesheet" href="{{ asset('css/admin-products-index.css') }}">
+<link rel="stylesheet" href="{{ asset('css/admin-products.css') }}?v={{ file_exists(public_path('css/admin-products.css')) ? filemtime(public_path('css/admin-products.css')) : time() }}">
+<link rel="stylesheet" href="{{ asset('css/admin-products-index.css') }}?v={{ file_exists(public_path('css/admin-products-index.css')) ? filemtime(public_path('css/admin-products-index.css')) : time() }}">
 @endsection
 
 @section('content')
@@ -15,10 +15,10 @@
 <!-- Header Banner -->
 <div class="prod-page-header">
     <div class="prod-page-title-group">
-        <h1>
+        <h1 id="prod-header-title">
             Quản Lý Sản Phẩm Gấu Bông
         </h1>
-        <div class="prod-page-desc">
+        <div class="prod-page-desc" id="prod-header-desc">
             Theo dõi kho hàng, phân loại kích thước/màu sắc, bảng giá bán và trạng thái kinh doanh theo thời gian thực.
         </div>
     </div>
@@ -84,12 +84,12 @@
             <span class="panel-title-icon">
                 <i class="fa-solid fa-box-open"></i>
             </span>
-            <span>Danh Sách Sản Phẩm</span>
+            <span id="panel-main-title">Danh Sách Sản Phẩm</span>
             <span id="prod-counter-pill" class="badge-category" style="margin-left: 4px; font-size: 12px;">Đang tải...</span>
         </div>
         <div class="panel-header-actions">
             <!-- Cụm chuyển đổi Chế độ xem: Sản phẩm cha vs Sản phẩm con -->
-            <div class="segment-view-switch">
+            <div class="segment-view-switch" id="table-mode-tabs-wrap">
                 <button type="button" class="segment-btn active" id="btn-view-parents" onclick="switchViewMode('parents')" title="Xem danh sách Sản phẩm cha">
                     <i class="fa-solid fa-boxes-stacked"></i>
                     <span>Sản phẩm cha</span>
@@ -163,13 +163,13 @@
         <table class="data-table">
             <thead id="products-table-head">
                 <tr>
-                    <th style="width: 65px; text-align: center;">Ảnh</th>
-                    <th style="width: 210px;">Thông Tin Gấu Bông</th>
-                    <th style="width: 130px;">Danh Mục</th>
-                    <th style="width: 140px;">Giá Bán</th>
-                    <th style="width: 140px;">Phân Loại (Size/Màu)</th>
-                    <th style="width: 145px; text-align: center;">Tồn Kho</th>
-                    <th style="width: 100px; text-align: center;">Trạng Thái</th>
+                    <th style="width: 52px; text-align: center;">Ảnh</th>
+                    <th style="width: 180px;">Thông Tin Gấu Bông</th>
+                    <th style="width: 110px;">Danh Mục</th>
+                    <th style="width: 115px;">Giá Bán</th>
+                    <th style="width: 125px;">Phân Loại (Size/Màu)</th>
+                    <th style="width: 100px; text-align: center;">Tồn Kho</th>
+                    <th style="width: 70px; text-align: center;">Trạng Thái</th>
                     <th style="width: 110px; text-align: right;">Thao Tác</th>
                 </tr>
             </thead>
@@ -221,6 +221,16 @@
 </div>
 
 <script>
+    function escapeHtml(str) {
+        return (str || '')
+            .toString()
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
     let searchTimeout = null;
     let categoriesList = [];
     let currentLoadedProducts = [];
@@ -249,13 +259,13 @@
         if (mode === 'parents') {
             thead.innerHTML = `
                 <tr>
-                    <th style="width: 65px; text-align: center;">Ảnh</th>
-                    <th style="width: 210px;">Thông Tin Gấu Bông</th>
-                    <th style="width: 130px;">Danh Mục</th>
-                    <th style="width: 140px;">Giá Bán</th>
-                    <th style="width: 140px;">Phân Loại (Size/Màu)</th>
-                    <th style="width: 145px; text-align: center;">Tồn Kho</th>
-                    <th style="width: 100px; text-align: center;">Trạng Thái</th>
+                    <th style="width: 52px; text-align: center;">Ảnh</th>
+                    <th style="width: 180px;">Thông Tin Gấu Bông</th>
+                    <th style="width: 110px;">Danh Mục</th>
+                    <th style="width: 115px;">Giá Bán</th>
+                    <th style="width: 125px;">Phân Loại (Size/Màu)</th>
+                    <th style="width: 100px; text-align: center;">Tồn Kho</th>
+                    <th style="width: 70px; text-align: center;">Trạng Thái</th>
                     <th style="width: 110px; text-align: right;">Thao Tác</th>
                 </tr>
             `;
@@ -267,16 +277,16 @@
         } else {
             thead.innerHTML = `
                 <tr>
-                    <th style="width: 60px; text-align: center;">Ảnh</th>
-                    <th style="width: 75px; text-align: center;">ID Cha</th>
-                    <th style="width: 75px; text-align: center;">ID Con</th>
-                    <th>Sản Phẩm Cha &amp; SKU Con</th>
-                    <th style="width: 105px;">Kích Thước</th>
-                    <th style="width: 115px;">Màu Sắc</th>
-                    <th style="width: 140px;">Giá Bán &amp; KM</th>
-                    <th style="width: 90px; text-align: center;">Tồn Kho</th>
-                    <th style="width: 110px; text-align: center;">Trạng Thái</th>
-                    <th style="width: 85px; text-align: right;">Thao Tác</th>
+                    <th style="width: 50px; text-align: center;">Ảnh</th>
+                    <th style="width: 55px; text-align: center;">ID Cha</th>
+                    <th style="width: 55px; text-align: center;">ID Con</th>
+                    <th style="width: 155px;">Sản Phẩm Cha &amp; SKU Con</th>
+                    <th style="width: 85px;">Kích Thước</th>
+                    <th style="width: 105px;">Màu Sắc</th>
+                    <th style="width: 120px;">Giá Bán &amp; KM</th>
+                    <th style="width: 75px; text-align: center;">Tồn Kho</th>
+                    <th style="width: 70px; text-align: center;">Trạng Thái</th>
+                    <th style="width: 75px; text-align: right;">Thao Tác</th>
                 </tr>
             `;
             // Cập nhật text phụ KPI cho phân loại con
@@ -310,6 +320,9 @@
     }
 
     function loadCurrentData(page = 1) {
+        window.scrollTo({ left: 0 });
+        if (document.documentElement) document.documentElement.scrollLeft = 0;
+        if (document.body) document.body.scrollLeft = 0;
         if (currentViewMode === 'parents') {
             loadProducts(page);
         } else {
@@ -343,37 +356,12 @@
             </tr>
         `;
 
+        let data;
         try {
             const res = await fetch(`/api/admin/products?${params.toString()}`);
-            const data = await res.json();
-
-            if (data.success) {
-                currentLoadedProducts = Array.isArray(data.data) ? data.data : (data.data?.data || []);
-                const meta = data.meta || { current_page: 1, last_page: 1, total: currentLoadedProducts.length };
-                renderProductsTable(currentLoadedProducts, meta);
-                updateProductStats();
-                syncKpiActiveState();
-
-                const counterPill = document.getElementById('prod-counter-pill');
-                if (counterPill) {
-                    counterPill.innerText = `Tìm thấy ${meta.total} sản phẩm cha`;
-                }
-            } else {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 3rem;">
-                            <div class="empty-state-box">
-                                <i class="fa-solid fa-triangle-exclamation" style="color: var(--mn-red);"></i>
-                                <h3>Không thể tải dữ liệu</h3>
-                                <p>${data.message || 'Vui lòng thử lại sau.'}</p>
-                                <button type="button" class="btn-gold-primary" onclick="loadProducts(1)">Tải lại</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
+            data = await res.json();
         } catch (e) {
-            console.error("Lỗi loadProducts:", e);
+            console.error("Lỗi fetch loadProducts:", e);
             tbody.innerHTML = `
                 <tr>
                     <td colspan="8" style="text-align: center; padding: 3rem;">
@@ -382,6 +370,37 @@
                             <h3>Lỗi kết nối máy chủ</h3>
                             <p>Đã xảy ra lỗi khi lấy dữ liệu sản phẩm. Vui lòng kiểm tra lại kết nối.</p>
                             <button type="button" class="btn-gold-primary" onclick="loadProducts(1)">Thử lại ngay</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        if (data && data.success) {
+            currentLoadedProducts = Array.isArray(data.data) ? data.data : (data.data?.data || []);
+            const meta = data.meta || { current_page: 1, last_page: 1, total: currentLoadedProducts.length };
+            try {
+                renderProductsTable(currentLoadedProducts, meta);
+            } catch (renderErr) {
+                console.error("Lỗi renderProductsTable:", renderErr);
+            }
+            updateProductStats();
+            syncKpiActiveState();
+
+            const counterPill = document.getElementById('prod-counter-pill');
+            if (counterPill) {
+                counterPill.innerText = `Tìm thấy ${meta.total} sản phẩm cha`;
+            }
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 3rem;">
+                        <div class="empty-state-box">
+                            <i class="fa-solid fa-triangle-exclamation" style="color: var(--mn-red);"></i>
+                            <h3>Không thể tải dữ liệu</h3>
+                            <p>${(data && data.message) || 'Vui lòng thử lại sau.'}</p>
+                            <button type="button" class="btn-gold-primary" onclick="loadProducts(1)">Tải lại</button>
                         </div>
                     </td>
                 </tr>
@@ -396,11 +415,11 @@
                 <tr>
                     <td colspan="8" style="text-align: center; padding: 3.5rem;">
                         <div class="empty-state-box">
-                            <i class="fa-solid fa-box-open"></i>
+                            <div style="font-size: 38px; margin-bottom: 12px; color: #D7CCC8;"><i class="fa-solid fa-box-open"></i></div>
                             <h3>Không tìm thấy gấu bông nào</h3>
                             <p>Không có sản phẩm nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại.</p>
-                            <button type="button" class="page-btn" style="margin: 0 auto; display: inline-flex;" onclick="resetProductFilters()">
-                                <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+                            <button type="button" class="btn-reset-filter" onclick="resetProductFilters()">
+                                <i class="fa-solid fa-rotate-left" style="font-size: 13px; margin: 0;"></i> <span>Đặt lại bộ lọc</span>
                             </button>
                         </div>
                     </td>
@@ -433,50 +452,38 @@
 
             let stockHtml = '';
             const stockQty = Number(p.stock_quantity) || 0;
-            // Kiểm tra sản phẩm cha có chứa ít nhất 1 phân loại con (size/màu) có tồn kho <= 5
-            const hasWarningVariant = p.variants && p.variants.some(v => Number(v.stock_quantity) <= 5);
-
             if (stockQty <= 0) {
-                stockHtml = `<span class="stock-pill out-stock"><i class="fa-solid fa-circle-xmark"></i> 0</span>`;
-            } else if (hasWarningVariant) {
-                const minVariantStock = Math.min(...p.variants.map(v => Number(v.stock_quantity)));
-                stockHtml = `
-                    <div style="display: inline-flex; align-items: center; gap: 6px;">
-                        <span class="stock-pill in-stock">
-                            <i class="fa-solid fa-circle-check"></i> ${stockQty}
-                        </span>
-                        <i class="fa-solid fa-circle-exclamation stock-warning-icon" style="color: #E08A1E; font-size: 15px; cursor: help;" title="Có sản phẩm con tồn kho &le; 5 (thấp nhất: ${minVariantStock})"></i>
-                    </div>
-                `;
+                stockHtml = `<span class="stock-pill out-stock"><i class="fa-solid fa-circle-xmark"></i> Hết hàng (0)</span>`;
+            } else if (stockQty <= 5) {
+                stockHtml = `<span class="stock-pill low-stock"><i class="fa-solid fa-triangle-exclamation"></i> Sắp hết (${stockQty})</span>`;
             } else {
                 stockHtml = `<span class="stock-pill in-stock"><i class="fa-solid fa-circle-check"></i> ${stockQty}</span>`;
             }
 
-            const soldCount = p.sold_count || 0;
+            const soldCount = Number(p.sold_count) || 0;
 
             return `
                 <tr>
-                    <!-- 1. Ảnh sản phẩm -->
+                    <!-- 1. Ảnh Sản Phẩm -->
                     <td style="text-align: center;">
                         <div class="prod-thumb-cell" style="margin: 0 auto;">
                             <img src="${primaryImg.image_url}" class="prod-thumb-img" alt="${p.name}" onerror="this.src='https://placehold.co/100x100/F7EFE9/5D4037?text=Gau'">
-                            ${imgCount > 1 ? `<span class="prod-thumb-badge" title="${imgCount} ảnh thư viện"><i class="fa-solid fa-images"></i> ${imgCount}</span>` : ''}
+                            ${imgCount > 1 ? `<span class="badge-img-count"><i class="fa-solid fa-camera"></i>${imgCount}</span>` : ''}
                         </div>
                     </td>
 
-                    <!-- 2. Tên & Danh mục -->
+                    <!-- 2. Thông Tin Gấu Bông -->
                     <td>
                         <div class="prod-info-wrap">
-                            <a href="javascript:void(0)" onclick="openQuickView(${p.id})" class="prod-title-link" title="${p.name}">
+                            <div class="prod-title" title="${p.name}">
                                 ${p.name}
-                            </a>
+                            </div>
                             <div class="prod-meta-tags">
                                 <span class="badge-id">#${p.id}</span>
-                                ${variantCount > 0 ? `
-                                    <span class="badge-variant-pill" title="Sản phẩm có ${variantCount} phân loại kích thước/màu sắc">
-                                        <i class="fa-solid fa-layer-group"></i> ${variantCount} mẫu
-                                    </span>
-                                ` : ''}
+                                ${variantCount > 0 
+                                    ? `<span class="badge-variant-pill"><i class="fa-solid fa-boxes-stacked"></i> ${variantCount} mẫu</span>` 
+                                    : ''
+                                }
                             </div>
                         </div>
                     </td>
@@ -503,10 +510,6 @@
                                   `
                                 : `
                                     <div class="price-main">${Number(p.price).toLocaleString('vi-VN')} đ</div>
-                                    ${p.sale_price && Number(p.sale_price) < Number(p.price)
-                                        ? `<div style="font-size: 11px; color: var(--mn-brown-subtle);"><i class="fa-regular fa-clock"></i> Hết hạn KM</div>`
-                                        : ''
-                                    }
                                   `
                             }
                         </div>
@@ -535,8 +538,8 @@
                     </td>
 
                     <!-- 6. Tồn Kho & Đã Bán -->
-                    <td style="text-align: center; min-width: 140px;">
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                    <td style="text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
                             ${stockHtml}
                             <div class="sold-tag">
                                 <i class="fa-solid fa-fire" style="color: #E65100;"></i> Đã bán: ${soldCount}
@@ -544,22 +547,22 @@
                         </div>
                     </td>
 
-                    <!-- 7. Trạng Thái Kinh Doanh (Switch toggle giống sản phẩm con) -->
-                    <td style="text-align: center;">
-                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <!-- 7. Trạng Thái Kinh Doanh -->
+                    <td style="text-align: center; width: 70px;">
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
                             <div class="switch-toggle-box" onclick="toggleProductStatus(${p.id}, '${p.status}', '${p.name.replace(/'/g, "\\'")}')" title="Bấm để ${p.status === 'ACTIVE' ? 'tạm ngừng bán' : 'mở bán'} sản phẩm này">
                                 <div class="switch-toggle-track ${p.status === 'ACTIVE' ? 'active' : ''}">
                                     <span class="switch-toggle-thumb"></span>
                                 </div>
                             </div>
-                            <span style="font-size: 11px; font-weight: 700; color: ${p.status === 'ACTIVE' ? '#10B981' : '#8D6E63'};">
+                            <span style="font-size: 10px; font-weight: 700; color: ${p.status === 'ACTIVE' ? '#10B981' : '#8D6E63'};">
                                 ${p.status === 'ACTIVE' ? 'Bật' : 'Tắt'}
                             </span>
                         </div>
                     </td>
 
-                    <!-- 8. Thao Tác (Có Xem nhanh) -->
-                    <td style="text-align: right;">
+                    <!-- 8. Thao Tác -->
+                    <td style="text-align: right; width: 110px;">
                         <div class="actions-cell-wrap">
                             <!-- Xem nhanh -->
                             <button type="button" class="btn-action-round view" onclick="openQuickView(${p.id})" title="Xem nhanh toàn bộ chi tiết & biến thể">
@@ -571,11 +574,12 @@
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
 
-                            <!-- Đổi trạng thái / Ngừng bán -->
-                            <button type="button" class="btn-action-round ${p.status === 'ACTIVE' ? 'toggle-off' : 'toggle-on'}" 
-                                    onclick="toggleProductStatus(${p.id}, '${p.status}', '${p.name.replace(/'/g, "\\'")}')" 
-                                    title="${p.status === 'ACTIVE' ? 'Tạm ngừng kinh doanh' : 'Mở bán trở lại'}">
-                                <i class="fa-solid ${p.status === 'ACTIVE' ? 'fa-pause' : 'fa-play'}"></i>
+                            <!-- Xóa sản phẩm (Xóa mềm) -->
+                            <button type="button" class="btn-action-round delete" 
+                                    data-name="${escapeHtml(p.name)}"
+                                    onclick="confirmDeleteProduct(${p.id}, this.getAttribute('data-name'), ${variantCount})" 
+                                    title="Xóa mềm sản phẩm này">
+                                <i class="fa-regular fa-trash-can"></i>
                             </button>
                         </div>
                     </td>
@@ -612,37 +616,12 @@
             </tr>
         `;
 
+        let data;
         try {
             const res = await fetch(`/api/admin/product-variants?${params.toString()}`);
-            const data = await res.json();
-
-            if (data.success) {
-                currentLoadedVariants = Array.isArray(data.data) ? data.data : (data.data?.data || []);
-                const meta = data.meta || { current_page: 1, last_page: 1, total: currentLoadedVariants.length };
-                renderVariantsTable(currentLoadedVariants, meta);
-                updateProductStats();
-                syncKpiActiveState();
-
-                const counterPill = document.getElementById('prod-counter-pill');
-                if (counterPill) {
-                    counterPill.innerText = `Tìm thấy ${meta.total} phân loại con`;
-                }
-            } else {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="10" style="text-align: center; padding: 3rem;">
-                            <div class="empty-state-box">
-                                <i class="fa-solid fa-triangle-exclamation" style="color: var(--mn-red);"></i>
-                                <h3>Không thể tải dữ liệu</h3>
-                                <p>${data.message || 'Vui lòng thử lại sau.'}</p>
-                                <button type="button" class="btn-gold-primary" onclick="loadVariants(1)">Tải lại</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
+            data = await res.json();
         } catch (e) {
-            console.error("Lỗi loadVariants:", e);
+            console.error("Lỗi fetch loadVariants:", e);
             tbody.innerHTML = `
                 <tr>
                     <td colspan="10" style="text-align: center; padding: 3rem;">
@@ -651,6 +630,37 @@
                             <h3>Lỗi kết nối máy chủ</h3>
                             <p>Đã xảy ra lỗi khi lấy dữ liệu phân loại con. Vui lòng thử lại.</p>
                             <button type="button" class="btn-gold-primary" onclick="loadVariants(1)">Thử lại ngay</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        if (data && data.success) {
+            currentLoadedVariants = Array.isArray(data.data) ? data.data : (data.data?.data || []);
+            const meta = data.meta || { current_page: 1, last_page: 1, total: currentLoadedVariants.length };
+            try {
+                renderVariantsTable(currentLoadedVariants, meta);
+            } catch (renderErr) {
+                console.error("Lỗi renderVariantsTable:", renderErr);
+            }
+            updateProductStats();
+            syncKpiActiveState();
+
+            const counterPill = document.getElementById('prod-counter-pill');
+            if (counterPill) {
+                counterPill.innerText = `Tìm thấy ${meta.total} phân loại con`;
+            }
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 3rem;">
+                        <div class="empty-state-box">
+                            <i class="fa-solid fa-triangle-exclamation" style="color: var(--mn-red);"></i>
+                            <h3>Không thể tải dữ liệu</h3>
+                            <p>${(data && data.message) || 'Vui lòng thử lại sau.'}</p>
+                            <button type="button" class="btn-gold-primary" onclick="loadVariants(1)">Tải lại</button>
                         </div>
                     </td>
                 </tr>
@@ -665,11 +675,11 @@
                 <tr>
                     <td colspan="10" style="text-align: center; padding: 3.5rem;">
                         <div class="empty-state-box">
-                            <i class="fa-solid fa-layer-group"></i>
+                            <i class="fa-solid fa-layer-group empty-state-icon"></i>
                             <h3>Không tìm thấy sản phẩm con nào</h3>
                             <p>Không có phân loại nào khớp với từ khóa hoặc bộ lọc hiện tại.</p>
-                            <button type="button" class="page-btn" style="margin: 0 auto; display: inline-flex;" onclick="resetProductFilters()">
-                                <i class="fa-solid fa-rotate-left"></i> Đặt lại bộ lọc
+                            <button type="button" class="btn-reset-filter" onclick="resetProductFilters()">
+                                <i class="fa-solid fa-rotate-left" style="font-size: 13px; margin: 0;"></i> <span>Đặt lại bộ lọc</span>
                             </button>
                         </div>
                     </td>
@@ -683,6 +693,10 @@
             const p = v.product || {};
             const imgUrl = v.image_url || 'https://placehold.co/100x100/F7EFE9/5D4037?text=Gau';
             const isOnSale = Boolean(v.sale_price && Number(v.sale_price) < Number(v.price));
+            let discountPercent = 0;
+            if (isOnSale && v.price && v.sale_price) {
+                discountPercent = Math.round(((Number(v.price) - Number(v.sale_price)) / Number(v.price)) * 100);
+            }
             const isActive = v.status === 'ACTIVE';
 
             let stockHtml = '';
@@ -757,8 +771,9 @@
                                     <div class="price-sale-highlight">
                                         ${Number(v.sale_price).toLocaleString('vi-VN')} đ
                                     </div>
-                                    <div class="price-original-crossed">
-                                        ${Number(v.price).toLocaleString('vi-VN')} đ
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span class="price-original-crossed">${Number(v.price).toLocaleString('vi-VN')} đ</span>
+                                        ${discountPercent > 0 ? `<span class="badge-sale-percent">-${discountPercent}%</span>` : ''}
                                     </div>
                                   `
                                 : `
@@ -773,33 +788,36 @@
                         ${stockHtml}
                     </td>
 
-                    <!-- 8. Trạng Thái Con: Switch Toggle Button (Ảnh 3) -->
-                    <td style="text-align: center;">
-                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <!-- 8. Trạng Thái Con: Switch Toggle Button (Thu gọn) -->
+                    <td style="text-align: center; width: 70px;">
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
                             <div class="switch-toggle-box" onclick="toggleVariantStatusQuick(${v.id}, '${v.status}')" title="Bấm để ${isActive ? 'tạm ngừng bán' : 'mở bán'} phân loại này">
                                 <div class="switch-toggle-track ${isActive ? 'active' : ''}">
                                     <span class="switch-toggle-thumb"></span>
                                 </div>
                             </div>
-                            <span style="font-size: 11px; font-weight: 700; color: ${isActive ? '#10B981' : '#8D6E63'};">
+                            <span style="font-size: 10px; font-weight: 700; color: ${isActive ? '#10B981' : '#8D6E63'};">
                                 ${isActive ? 'Bật' : 'Tắt'}
                             </span>
                         </div>
                     </td>
 
                     <!-- 9. Thao Tác: BỎ NÚT XEM NHANH THEO YÊU CẦU -->
-                    <td style="text-align: right;">
+                    <td style="text-align: right; width: 75px;">
                         <div class="actions-cell-wrap" style="justify-content: flex-end;">
                             <!-- Chỉnh sửa -->
                             <a href="/admin/products/${v.product_id}/edit" class="btn-action-round edit" title="Chỉnh sửa sản phẩm cha">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
 
-                            <!-- Bật / Tắt trạng thái con -->
-                            <button type="button" class="btn-action-round ${isActive ? 'toggle-off' : 'toggle-on'}" 
-                                    onclick="toggleVariantStatusQuick(${v.id}, '${v.status}')" 
-                                    title="${isActive ? 'Tạm ngừng bán phân loại này' : 'Mở bán lại'}">
-                                <i class="fa-solid ${isActive ? 'fa-pause' : 'fa-play'}"></i>
+                            <!-- Xóa phân loại -->
+                            <button type="button" class="btn-action-round delete" 
+                                    data-color="${escapeHtml(v.color || '')}"
+                                    data-size="${escapeHtml(v.size || '')}"
+                                    data-parent="${escapeHtml(p.name || '')}"
+                                    onclick="confirmDeleteVariant(${v.id}, this.getAttribute('data-color'), this.getAttribute('data-size'), this.getAttribute('data-parent'))" 
+                                    title="Xóa phân loại con này">
+                                <i class="fa-regular fa-trash-can"></i>
                             </button>
                         </div>
                     </td>
@@ -837,6 +855,496 @@
             console.error("Lỗi toggleVariantStatusQuick:", e);
             Swal.fire('Lỗi', 'Không thể kết nối máy chủ.', 'error');
         }
+    }
+
+    // ==========================================
+    // XÁC NHẬN XÓA SẢN PHẨM CHA & CON (POPUP ĐẸP THEO STYLE VOUCHER)
+    // ==========================================
+    function confirmDeleteProduct(id, name, variantCount = 0) {
+        const variantText = variantCount > 0 
+            ? `toàn bộ <strong>${variantCount} sản phẩm con (các phân loại size/màu)</strong>`
+            : `toàn bộ các sản phẩm con (các phân loại size/màu)`;
+
+        const variantAlert = `
+            <div style="margin-top: 14px; padding: 12px 16px; background: #FFF9F2; border: 1.5px dashed #F59E0B; border-radius: 12px; text-align: left;">
+                <div style="color: #C2410C; font-weight: 800; font-size: 13.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Ràng buộc xóa:
+                </div>
+                <div style="color: #9A3412; font-size: 13px; line-height: 1.45;">
+                    Khi xóa sản phẩm cha này, hệ thống sẽ <strong>tự động xóa đồng thời ${variantText}</strong> thuộc về nó.
+                </div>
+            </div>
+        `;
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Xác nhận xóa sản phẩm cha?',
+                html: `
+                    <div style="font-size: 14.5px; color: #2E190E; margin-top: 4px; line-height: 1.5;">
+                        Bạn có chắc chắn muốn xóa sản phẩm cha <strong style="color: #5C3219; font-size: 15.5px;">[${escapeHtml(name)}]</strong> không?
+                    </div>
+                    ${variantAlert}
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy bỏ',
+                confirmButtonColor: '#E53E3E',
+                cancelButtonColor: '#8E8076',
+                background: '#FAF6F0',
+                color: '#2E190E',
+                customClass: {
+                    popup: 'rounded-3xl border-2 border-[#EBDDCD]',
+                    confirmButton: 'rounded-xl font-bold px-5 py-2.5 shadow-md',
+                    cancelButton: 'rounded-xl font-bold px-5 py-2.5'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch(`/api/admin/products/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đã xóa mềm thành công!',
+                                text: data.message || `Đã chuyển sản phẩm [${name}] cùng toàn bộ sản phẩm con sang ngừng kinh doanh.`,
+                                timer: 1800,
+                                showConfirmButton: false
+                            });
+                            loadCurrentData(1);
+                            updateProductStats();
+                        } else {
+                            // Chặn xóa nếu có sản phẩm con đang trong đơn hàng chưa hoàn tất
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Không thể xóa!',
+                                text: data.message || 'Không thể xóa vì có sản phẩm con đang trong đơn hàng xử lý.',
+                                confirmButtonColor: '#5C3219',
+                                background: '#FAF6F0',
+                                color: '#2E190E',
+                                customClass: {
+                                    popup: 'rounded-3xl border-2 border-[#EBDDCD]',
+                                    confirmButton: 'rounded-xl font-bold px-5 py-2.5 shadow-md'
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        Swal.fire('Lỗi kết nối', 'Có lỗi xảy ra khi xóa sản phẩm.', 'error');
+                    }
+                }
+            });
+        } else {
+            if (confirm(`Bạn có chắc chắn muốn xóa sản phẩm [${name}]? Toàn bộ sản phẩm con cũng sẽ bị xóa theo.`)) {
+                fetch(`/api/admin/products/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                }).then(() => loadCurrentData(1));
+            }
+        }
+    }
+
+    function confirmDeleteVariant(id, color, size, parentName) {
+        const variantDesc = (size || color) ? `${size} - ${color}`.trim() : `ID #${id}`;
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Xóa phân loại con?',
+                html: `Bạn có chắc chắn muốn xóa phân loại <strong style="color: #5C3219;">[${escapeHtml(variantDesc)}]</strong> của sản phẩm <strong style="color: #5C3219;">[${escapeHtml(parentName)}]</strong> không?<br><span style="font-size: 13px; color: #8E8076;">Phân loại này sẽ bị xóa khỏi hệ thống. Tồn kho và khoảng giá sản phẩm cha sẽ tự động tính toán lại.</span>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-trash-can"></i> Đồng ý xóa',
+                cancelButtonText: 'Hủy bỏ',
+                confirmButtonColor: '#E53E3E',
+                cancelButtonColor: '#8E8076',
+                background: '#FAF6F0',
+                color: '#2E190E',
+                customClass: {
+                    popup: 'rounded-3xl border-2 border-[#EBDDCD]',
+                    confirmButton: 'rounded-xl font-bold px-5 py-2.5 shadow-md',
+                    cancelButton: 'rounded-xl font-bold px-5 py-2.5'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch(`/api/admin/product-variants/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đã xóa!',
+                                text: `Phân loại [${variantDesc}] đã được xóa thành công.`,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            loadCurrentData(1);
+                        } else {
+                            // Chặn xóa nếu có sản phẩm con đang trong đơn hàng chưa hoàn tất
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Không thể xóa!',
+                                text: data.message || 'Không thể xóa vì có sản phẩm con đang trong đơn hàng xử lý.',
+                                confirmButtonColor: '#5C3219',
+                                background: '#FAF6F0',
+                                color: '#2E190E',
+                                customClass: {
+                                    popup: 'rounded-3xl border-2 border-[#EBDDCD]',
+                                    confirmButton: 'rounded-xl font-bold px-5 py-2.5 shadow-md'
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        Swal.fire('Lỗi kết nối', 'Có lỗi xảy ra khi xóa phân loại.', 'error');
+                    }
+                }
+            });
+        } else {
+            if (confirm(`Bạn có chắc chắn muốn xóa phân loại [${variantDesc}]?`)) {
+                fetch(`/api/admin/product-variants/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                }).then(() => loadCurrentData(1));
+            }
+        }
+    }
+
+    // ==========================================
+    // KHÔI PHỤC SẢN PHẨM TỪ THÙNG RÁC
+    // ==========================================
+    let currentRestoringProduct = null;
+    let selectedRestoreVariantIds = new Set();
+
+    function confirmRestoreProduct(id, name) {
+        const product = currentLoadedProducts ? currentLoadedProducts.find(p => p.id === id) : null;
+
+        // Nếu sản phẩm có các sản phẩm con (biến thể): Mở Modal chọn khôi phục từng sản phẩm con
+        if (product && product.variants && product.variants.length > 0) {
+            openRestoreModal(product);
+            return;
+        }
+
+        // Nếu sản phẩm đơn không có biến thể con: Xác nhận khôi phục thông thường
+        Swal.fire({
+            title: 'Khôi phục sản phẩm?',
+            html: `Bạn có chắc chắn muốn khôi phục sản phẩm <strong style="color: #5C3219;">[${escapeHtml(name)}]</strong> về danh sách kinh doanh không?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Khôi phục ngay',
+            cancelButtonText: 'Hủy bỏ',
+            confirmButtonColor: '#10B981',
+            cancelButtonColor: '#8E8076',
+            background: '#FAF6F0',
+            color: '#2E190E',
+            customClass: {
+                popup: 'rounded-3xl border-2 border-[#EBDDCD]',
+                confirmButton: 'rounded-xl font-bold px-5 py-2.5 shadow-md',
+                cancelButton: 'rounded-xl font-bold px-5 py-2.5'
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                executeRestoreProduct(id, name, []);
+            }
+        });
+    }
+
+    function openRestoreModal(product) {
+        currentRestoringProduct = product;
+        // Mặc định chọn tất cả các biến thể con để người dùng tiện quản lý
+        selectedRestoreVariantIds = new Set(product.variants.map(v => v.id));
+
+        document.getElementById('restore-modal-product-name').innerText = `Khôi phục: ${product.name}`;
+        renderRestoreVariantsList(product);
+
+        const modal = document.getElementById('restoreModal');
+        if (modal) {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeRestoreModal() {
+        const modal = document.getElementById('restoreModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        currentRestoringProduct = null;
+        selectedRestoreVariantIds.clear();
+
+        const btn = document.getElementById('btn-submit-restore');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Khôi phục sản phẩm cha';
+        }
+    }
+
+    function handleRestoreBackdropClick(event) {
+        if (event.target.id === 'restoreModal') {
+            closeRestoreModal();
+        }
+    }
+
+    function renderRestoreVariantsList(product) {
+        const container = document.getElementById('restore-variants-list-container');
+        if (!container) return;
+
+        const primaryImg = (product.images && product.images.find(img => img.is_primary)) || (product.images && product.images[0]) || { image_url: 'https://placehold.co/100x100/F7EFE9/5D4037?text=Gau' };
+
+        container.innerHTML = product.variants.map(v => {
+            const isSelected = selectedRestoreVariantIds.has(v.id);
+            const imgUrl = v.image_url || primaryImg.image_url;
+            const priceFormatted = Number(v.price || 0).toLocaleString('vi-VN') + ' đ';
+
+            return `
+                <div class="restore-variant-item ${isSelected ? 'is-selected' : ''}" id="restore-item-${v.id}">
+                    <!-- Ảnh biến thể -->
+                    <img src="${imgUrl}" class="restore-var-img" alt="${product.name}" onerror="this.src='https://placehold.co/100x100/F7EFE9/5D4037?text=Gau'">
+
+                    <!-- Thông tin biến thể -->
+                    <div class="restore-var-info">
+                        <div class="restore-var-badges">
+                            <span class="badge-var-size">
+                                <i class="fa-solid fa-ruler-combined" style="font-size: 9.5px;"></i> ${v.size || 'Size chuẩn'}
+                            </span>
+                            <span class="badge-var-color">
+                                <i class="fa-solid fa-palette" style="font-size: 9.5px;"></i> ${v.color || 'Màu chuẩn'}
+                            </span>
+                            ${v.sku ? `<span class="badge-var-sku">SKU: ${v.sku}</span>` : ''}
+                            ${v.is_default ? `<span class="badge-var-default">Mặc định</span>` : ''}
+                        </div>
+                        <div class="restore-var-meta">
+                            <span class="restore-var-price">${priceFormatted}</span>
+                            <span class="restore-var-stock">
+                                <i class="fa-solid fa-boxes-stacked" style="color: #8D6E63;"></i> Kho: <strong>${v.stock_quantity ?? 0}</strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Nút Khôi phục cạnh sản phẩm con -->
+                    <div>
+                        <button type="button" 
+                                class="btn-var-restore ${isSelected ? 'btn-active' : 'btn-inactive'}" 
+                                id="btn-var-restore-${v.id}"
+                                onclick="toggleVariantSelection(${v.id})"
+                                title="${isSelected ? 'Nhấn để bỏ qua phân loại này' : 'Nhấn để khôi phục phân loại này'}">
+                            <i class="${isSelected ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'}"></i>
+                            <span>${isSelected ? 'Khôi phục' : 'Bỏ qua'}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        updateRestoreCountDisplay();
+    }
+
+    function toggleVariantSelection(variantId) {
+        if (selectedRestoreVariantIds.has(variantId)) {
+            selectedRestoreVariantIds.delete(variantId);
+        } else {
+            selectedRestoreVariantIds.add(variantId);
+        }
+
+        const isSelected = selectedRestoreVariantIds.has(variantId);
+        const itemEl = document.getElementById(`restore-item-${variantId}`);
+        const btnEl = document.getElementById(`btn-var-restore-${variantId}`);
+
+        if (itemEl) {
+            itemEl.classList.toggle('is-selected', isSelected);
+        }
+
+        if (btnEl) {
+            btnEl.className = `btn-var-restore ${isSelected ? 'btn-active' : 'btn-inactive'}`;
+            btnEl.innerHTML = `
+                <i class="${isSelected ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'}"></i>
+                <span>${isSelected ? 'Khôi phục' : 'Bỏ qua'}</span>
+            `;
+            btnEl.title = isSelected ? 'Nhấn để bỏ qua phân loại này' : 'Nhấn để khôi phục phân loại này';
+        }
+
+        updateRestoreCountDisplay();
+    }
+
+    function toggleAllRestoreVariants(selectState) {
+        if (!currentRestoringProduct || !currentRestoringProduct.variants) return;
+
+        if (selectState) {
+            currentRestoringProduct.variants.forEach(v => selectedRestoreVariantIds.add(v.id));
+        } else {
+            selectedRestoreVariantIds.clear();
+        }
+
+        renderRestoreVariantsList(currentRestoringProduct);
+    }
+
+    function updateRestoreCountDisplay() {
+        const countEl = document.getElementById('restore-selected-count');
+        if (countEl) {
+            countEl.innerText = selectedRestoreVariantIds.size;
+        }
+    }
+
+    async function submitRestoreWithVariants() {
+        if (!currentRestoringProduct) return;
+
+        const totalVariants = currentRestoringProduct.variants ? currentRestoringProduct.variants.length : 0;
+        const selectedCount = selectedRestoreVariantIds.size;
+
+        if (totalVariants > 0 && selectedCount === 0) {
+            const confirmResult = await Swal.fire({
+                title: 'Chưa chọn phân loại con?',
+                text: 'Bạn chưa chọn khôi phục phân loại con nào. Sản phẩm cha sẽ được khôi phục nhưng tất cả sản phẩm con sẽ ở trạng thái ngừng bán. Bạn có muốn tiếp tục?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Vẫn khôi phục',
+                cancelButtonText: 'Xem lại',
+                confirmButtonColor: '#E08A1E',
+                cancelButtonColor: '#8E8076',
+                background: '#FAF6F0',
+                color: '#2E190E',
+                customClass: {
+                    popup: 'rounded-3xl border-2 border-[#EBDDCD]',
+                    confirmButton: 'rounded-xl font-bold px-5 py-2.5 shadow-md',
+                    cancelButton: 'rounded-xl font-bold px-5 py-2.5'
+                }
+            });
+
+            if (!confirmResult.isConfirmed) {
+                return;
+            }
+        }
+
+        const btn = document.getElementById('btn-submit-restore');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang khôi phục...';
+        }
+
+        await executeRestoreProduct(currentRestoringProduct.id, currentRestoringProduct.name, Array.from(selectedRestoreVariantIds));
+        closeRestoreModal();
+    }
+
+    async function executeRestoreProduct(id, name, variantIds = null) {
+        try {
+            const payload = {};
+            if (variantIds !== null) {
+                payload.variant_ids = variantIds;
+            }
+
+            const res = await fetch(`/api/admin/products/${id}/restore`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Đã khôi phục!',
+                    text: data.message || `Đã khôi phục sản phẩm [${name}] thành công!`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+                loadCurrentData(1);
+                updateProductStats();
+            } else {
+                Swal.fire('Lỗi', data.message || 'Không thể khôi phục sản phẩm.', 'error');
+            }
+        } catch (e) {
+            console.error('Lỗi restore:', e);
+            Swal.fire('Lỗi kết nối', 'Có lỗi xảy ra khi khôi phục sản phẩm.', 'error');
+        }
+    }
+
+    // ==========================================
+    // XÓA VĨNH VIỄN (XÓA CỨNG) SẢN PHẨM
+    // ==========================================
+    function confirmForceDeleteProduct(id, name, hasBeenOrdered) {
+        // YÊU CẦU: Nếu sản phẩm đã từng được đặt thì chỉ được phép xóa mềm, không được xóa cứng!
+        if (hasBeenOrdered) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Chỉ được phép xóa mềm!',
+                html: `Sản phẩm <strong style="color: #5C3219;">[${escapeHtml(name)}]</strong> đã từng phát sinh đơn hàng trong quá khứ.<br><br><span style="font-size: 13px; color: #8E8076;">Để bảo toàn tính toàn vẹn và lịch sử đơn hàng của khách hàng, hệ thống chỉ cho phép <strong>xóa mềm (lưu trữ)</strong>, không được phép xóa vĩnh viễn.</span>`,
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#5C3219',
+                background: '#FAF6F0',
+                color: '#2E190E',
+                customClass: {
+                    popup: 'rounded-3xl border-2 border-[#EBDDCD]',
+                    confirmButton: 'rounded-xl font-bold px-5 py-2.5 shadow-md'
+                }
+            });
+            return;
+        }
+
+        // Chưa từng được đặt -> Cho phép xóa cứng vĩnh viễn
+        Swal.fire({
+            title: 'Xóa vĩnh viễn sản phẩm?',
+            html: `Bạn có chắc chắn muốn <strong style="color: #DC2626;">XÓA VĨNH VIỄN</strong> sản phẩm <strong style="color: #5C3219;">[${escapeHtml(name)}]</strong> không?<br><span style="font-size: 13px; color: #DC2626; font-weight: 600;">Hành động này sẽ xóa hoàn toàn sản phẩm khỏi hệ thống và không thể khôi phục lại!</span>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xóa vĩnh viễn',
+            cancelButtonText: 'Hủy bỏ',
+            confirmButtonColor: '#DC2626',
+            cancelButtonColor: '#8E8076',
+            background: '#FAF6F0',
+            color: '#2E190E',
+            customClass: {
+                popup: 'rounded-3xl border-2 border-[#EBDDCD]',
+                confirmButton: 'rounded-xl font-bold px-5 py-2.5 shadow-md',
+                cancelButton: 'rounded-xl font-bold px-5 py-2.5'
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/admin/products/${id}/force-delete`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Đã xóa vĩnh viễn!',
+                            text: data.message || `Sản phẩm [${name}] đã được xóa vĩnh viễn khỏi hệ thống!`,
+                            timer: 1600,
+                            showConfirmButton: false
+                        });
+                        loadCurrentData(1);
+                        updateProductStats();
+                    } else {
+                        Swal.fire('Lỗi', data.message || 'Không thể xóa vĩnh viễn sản phẩm.', 'error');
+                    }
+                } catch (e) {
+                    Swal.fire('Lỗi kết nối', 'Có lỗi xảy ra khi xóa vĩnh viễn sản phẩm.', 'error');
+                }
+            }
+        });
     }
 
     // ==========================================
@@ -927,7 +1435,11 @@
             // Lấy tổng số cha để hiển thị trên badge
             fetch('/api/admin/products/stats')
                 .then(r => r.json())
-                .then(d => { if (d.success && d.data) document.getElementById('badge-count-parents').innerText = d.data.total; })
+                .then(d => { 
+                    if (d.success && d.data) {
+                        document.getElementById('badge-count-parents').innerText = d.data.total;
+                    }
+                })
                 .catch(() => {});
         }
     }
@@ -973,7 +1485,7 @@
 
         const result = await Swal.fire({
             title: `Xác nhận ${actionText}?`,
-            html: `Bạn có chắc muốn ${actionText} sản phẩm <strong>${productName || '#' + id}</strong>?<br><small style="color:#795548;">Sản phẩm sẽ ${isCurrentlyActive ? 'tạm ẩn khỏi danh mục khách hàng' : 'hiển thị lại cho khách hàng đặt mua'}.</small>`,
+            html: `Bạn có chắc muốn ${actionText} sản phẩm <strong>${productName || '#' + id}</strong>?<br><small style="color:#795548;">${isCurrentlyActive ? 'Sản phẩm sẽ tạm ẩn khỏi cửa hàng và <strong>tự động tắt toàn bộ chi tiết sản phẩm con</strong>.' : 'Sản phẩm sẽ hiển thị lại cho khách hàng đặt mua.'}</small>`,
             icon: isCurrentlyActive ? 'warning' : 'question',
             showCancelButton: true,
             confirmButtonColor: confirmColor,

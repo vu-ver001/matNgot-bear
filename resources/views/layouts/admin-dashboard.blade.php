@@ -11,6 +11,38 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Cấu hình SweetAlert2 triệt tiêu hoàn toàn hiện tượng padding scrollbar và nhảy ngang layout
+        if (typeof Swal !== 'undefined') {
+            const _origSwalFire = Swal.fire;
+            Swal.fire = function(...args) {
+                let options = {};
+                if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
+                    options = Object.assign({ heightAuto: false, scrollbarPadding: false }, args[0]);
+                } else if (args.length >= 2) {
+                    options = {
+                        title: args[0],
+                        text: args[1],
+                        icon: args[2] || undefined,
+                        heightAuto: false,
+                        scrollbarPadding: false
+                    };
+                } else {
+                    options = { heightAuto: false, scrollbarPadding: false };
+                }
+
+                const promise = _origSwalFire.call(this, options);
+                if (promise && typeof promise.finally === 'function') {
+                    promise.finally(() => {
+                        window.scrollTo({ left: 0 });
+                        if (document.documentElement) document.documentElement.scrollLeft = 0;
+                        if (document.body) document.body.scrollLeft = 0;
+                    });
+                }
+                return promise;
+            };
+        }
+    </script>
 
     <!-- Script áp dụng trạng thái Mini Sidebar ngay lập tức trước khi render HTML để triệt tiêu độ khựng -->
     <script>
@@ -23,7 +55,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Admin Dashboard Layout CSS (Tách riêng bởi Khánh Vân) -->
-    <link rel="stylesheet" href="{{ asset('css/admin-layout.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin-layout.css') }}?v={{ file_exists(public_path('css/admin-layout.css')) ? filemtime(public_path('css/admin-layout.css')) : time() }}">
     @yield('styles')
 </head>
 <body>

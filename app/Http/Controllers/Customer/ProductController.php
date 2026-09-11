@@ -27,6 +27,7 @@ class ProductController extends Controller
             ->with([
                 'category:id,name',
                 'images' => fn($q) => $q->orderByDesc('is_primary')->orderBy('sort_order', 'asc'),
+                'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ])
             ->orderByDesc('sold_count')
             ->take(8)
@@ -37,6 +38,7 @@ class ProductController extends Controller
             ->with([
                 'category:id,name',
                 'images' => fn($q) => $q->orderByDesc('is_primary')->orderBy('sort_order', 'asc'),
+                'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ])
             ->orderByDesc('created_at')
             ->take(8)
@@ -97,6 +99,11 @@ class ProductController extends Controller
             1 => $product->reviews->where('rating', 1)->count(),
         ];
 
+        // Số lượng đánh giá có kèm hình ảnh
+        $withImagesCount = $product->reviews->filter(function ($r) {
+            return !empty($r->images) && is_array($r->images) && count($r->images) > 0;
+        })->count();
+
         // Lấy các sản phẩm liên quan cùng danh mục
         $relatedProducts = Product::query()
             ->where('category_id', $product->category_id)
@@ -109,6 +116,6 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('product-detail', compact('product', 'relatedProducts', 'ratingCounts'));
+        return view('product-detail', compact('product', 'relatedProducts', 'ratingCounts', 'withImagesCount'));
     }
 }

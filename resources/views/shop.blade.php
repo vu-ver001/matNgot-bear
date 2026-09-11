@@ -169,13 +169,13 @@
                 </div>
                 <!-- Dòng 2: Khung 25cm-40cm; 45cm-60cm -->
                 <div class="size-preset-row">
-                    <span class="preset-chip size-range-chip" data-range="25-40" onclick="setSizeRangePreset(25, 40, this)">25cm - 40cm</span>
-                    <span class="preset-chip size-range-chip" data-range="45-60" onclick="setSizeRangePreset(45, 60, this)">45cm - 60cm</span>
+                    <span class="preset-chip size-range-chip {{ request('size_range') == '25-40' ? 'active' : '' }}" data-range="25-40" onclick="setSizeRangePreset(25, 40, this)">25cm - 40cm</span>
+                    <span class="preset-chip size-range-chip {{ request('size_range') == '45-60' ? 'active' : '' }}" data-range="45-60" onclick="setSizeRangePreset(45, 60, this)">45cm - 60cm</span>
                 </div>
                 <!-- Dòng 3: Khung 60cm-1m2; 1m2-1m8 -->
                 <div class="size-preset-row" style="margin-bottom: 10px;">
-                    <span class="preset-chip size-range-chip" data-range="60-120" onclick="setSizeRangePreset(60, 120, this)">60cm - 1m2</span>
-                    <span class="preset-chip size-range-chip" data-range="120-180" onclick="setSizeRangePreset(120, 180, this)">1m2 - 1m8</span>
+                    <span class="preset-chip size-range-chip {{ request('size_range') == '60-120' ? 'active' : '' }}" data-range="60-120" onclick="setSizeRangePreset(60, 120, this)">60cm - 1m2</span>
+                    <span class="preset-chip size-range-chip {{ request('size_range') == '120-180' ? 'active' : '' }}" data-range="120-180" onclick="setSizeRangePreset(120, 180, this)">1m2 - 1m8</span>
                 </div>
                 <!-- Dưới cùng: Nút áp dụng giống mục khoảng giá -->
                 <button type="button" class="btn-honey-main" style="width: 100%; padding: 8px 14px; font-size: 12px; justify-content: center;" onclick="applyCustomSizeFilter()">
@@ -298,7 +298,7 @@
         loadCatalogProducts();
 
         // Tự động lướt xuống danh sách sản phẩm khi có hash hoặc tham số lọc
-        if (window.location.hash === '#catalog-layout' || window.location.hash.includes('catalog') || window.location.search.includes('category_id') || window.location.search.includes('scroll=')) {
+        if (window.location.hash === '#catalog-layout' || window.location.hash.includes('catalog') || window.location.search.includes('category_id') || window.location.search.includes('size_range') || window.location.search.includes('size=') || window.location.search.includes('scroll=')) {
             setTimeout(() => {
                 scrollToCatalogSection(true);
             }, 150);
@@ -532,9 +532,11 @@
             grid.innerHTML = products.map(p => {
                 const primaryImg = (p.images && p.images.find(img => img && img.is_primary)) || (p.images && p.images[0]) || null;
                 const imgUrl = (primaryImg && primaryImg.image_url) ? primaryImg.image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' + encodeURIComponent(p.name || 'Gau Bong');
-                const price = Number(p.price || 0);
-                const salePrice = p.sale_price ? Number(p.sale_price) : null;
-                const isOnSale = p.is_on_sale !== undefined ? Boolean(p.is_on_sale) : (salePrice !== null && salePrice < price);
+                const price = Number(p.lowest_price !== undefined ? p.lowest_price : (p.price || 0));
+                const salePrice = (p.lowest_sale_price !== undefined && p.lowest_sale_price !== null) 
+                    ? Number(p.lowest_sale_price) 
+                    : (p.sale_price ? Number(p.sale_price) : null);
+                const isOnSale = (salePrice !== null && salePrice > 0 && salePrice < price);
                 const discountPct = (isOnSale && price > 0 && salePrice) ? Math.round(((price - salePrice) / price) * 100) : 0;
                 const nameEscaped = (p.name || 'Gấu bông').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 const catName = (p.category && p.category.name) ? p.category.name : 'Gấu Bông';
