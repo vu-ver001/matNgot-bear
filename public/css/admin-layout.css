@@ -80,12 +80,22 @@ i.fa-brands,
     font-family: "Font Awesome 6 Brands" !important;
 }
 
+html {
+    overflow-x: hidden !important;
+    width: 100%;
+    max-width: 100vw;
+}
+
 body {
     background: var(--bg-page);
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-x: hidden !important;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+    padding-right: 0 !important;
 }
 
 /* ====== SIDEBAR (THEO GIAO DIỆN ẢNH 1 & ẢNH 2) ====== */
@@ -107,12 +117,12 @@ body {
 
 /* Header */
 .sidebar-brand {
-    padding: 1.5rem 1.25rem 1.25rem 1.25rem;
+    padding: 1.25rem 1.25rem 1.15rem 1.25rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid #EADFCF;
-    min-height: 86px;
+    min-height: 82px;
     background: #FAF3EC;
 }
 
@@ -174,7 +184,7 @@ body {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 1rem 0;
+    padding: 0.35rem 0 0.6rem 0;
 }
 
 .sidebar-section-label {
@@ -182,19 +192,25 @@ body {
     font-weight: 700;
     color: #8D6E63;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 0.85rem 1.4rem 0.4rem;
+    letter-spacing: 0.75px;
+    padding: 0.6rem 1.25rem 0.25rem;
     white-space: nowrap;
+}
+
+/* Kéo chữ TỔNG QUAN lên cao gần sát chữ KHU VỰC QUẢN LÝ */
+.sidebar-nav > .sidebar-section-label:first-child {
+    padding-top: 0.35rem !important;
+    margin-top: 0 !important;
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    margin: 2px 12px;
-    border-radius: 12px;
-    font-size: 14px;
+    gap: 11px;
+    padding: 8px 12px;
+    margin: 2px 10px;
+    border-radius: 10px;
+    font-size: 13.5px;
     font-weight: 600;
     color: #4A2E2B;
     text-decoration: none;
@@ -204,10 +220,10 @@ body {
 }
 
 .sidebar-link i {
-    width: 20px;
-    min-width: 20px;
+    width: 18px;
+    min-width: 18px;
     text-align: center;
-    font-size: 16px;
+    font-size: 15px;
     color: #4A2E2B;
 }
 
@@ -225,9 +241,9 @@ body {
 .badge-not-connected {
     border: 1px solid #D7CCC8;
     color: #8D6E63;
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 600;
-    padding: 2px 8px;
+    padding: 1px 6px;
     border-radius: 999px;
     margin-left: auto;
     background: rgba(255, 255, 255, 0.5);
@@ -236,7 +252,7 @@ body {
 
 /* Sidebar Footer & User Profile Card */
 .sidebar-footer-wrap {
-    padding: 12px 14px;
+    padding: 10px 14px;
     border-top: 1px solid #EADFCF;
     position: relative;
     background: #FAF3EC;
@@ -245,9 +261,9 @@ body {
 .sidebar-user-trigger {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 10px;
-    border-radius: 16px;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
@@ -258,18 +274,18 @@ body {
 }
 
 .sidebar-user-avatar {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     border-radius: 50%;
     background: #D48B38;
     color: #FFFFFF;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(212, 139, 56, 0.25);
+    box-shadow: 0 2px 6px rgba(212, 139, 56, 0.2);
 }
 
 .sidebar-user-details {
@@ -278,19 +294,20 @@ body {
 }
 
 .sidebar-user-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #3E2723;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .sidebar-user-email {
-    font-size: 11.5px;
+    font-size: 11px;
     color: #8D6E63;
+    line-height: 1.2;
+    margin-top: 2px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-top: 2px;
 }
 
 /* Popup Card (Ảnh 2) */
@@ -469,23 +486,8 @@ html.admin-sidebar-collapsed .sidebar-link:hover::after,
     pointer-events: none;
 }
 
-.sidebar-brand {
-    padding: 1.25rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    position: relative;
-}
-
-.sidebar-brand-icon {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    background: linear-gradient(135deg, #F6D89B 0%, #E59819 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
+html.admin-sidebar-collapsed .sidebar-brand,
+.admin-sidebar.collapsed .sidebar-brand {
     justify-content: center;
     padding: 1.25rem 0.5rem;
 }
@@ -533,21 +535,28 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
 /* ====== MAIN AREA ====== */
 .admin-main {
     margin-left: var(--sidebar-width);
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 100vh;
+    min-width: 0;
+    width: calc(100% - var(--sidebar-width));
+    max-width: calc(100% - var(--sidebar-width));
     display: flex;
     flex-direction: column;
-    transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     background-color: var(--bg-page);
     background-image: url('/images/auth/auth-panel-background.png');
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;
     background-position: center top;
+    overflow-x: hidden;
 }
 
+html.admin-sidebar-collapsed .admin-main,
 .admin-main.expanded {
     margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+    max-width: calc(100% - var(--sidebar-collapsed-width));
 }
 
 .admin-topbar {
@@ -631,8 +640,12 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
 }
 
 .admin-content {
-    padding: 2rem;
-    flex: 1;
+    padding: 1.25rem 1.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Placeholder page styling */
@@ -774,8 +787,12 @@ html.admin-sidebar-collapsed .sidebar-user-popup,
         box-shadow: 6px 0 25px rgba(78, 52, 46, 0.2) !important;
     }
 
-    .admin-main {
+    .admin-main,
+    html.admin-sidebar-collapsed .admin-main,
+    .admin-main.expanded {
         margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     /* Thanh Topbar Mobile xuất hiện ở trên cùng */
@@ -1423,4 +1440,26 @@ table.data-table tbody tr:hover {
     flex-shrink: 0;
     border: 2px solid #FFFFFF;
     box-shadow: 0 2px 6px rgba(109, 76, 65, 0.15);
+}
+
+/* ==========================================================================
+   SWEETALERT2 LAYOUT SHIFT & BLANK FRAME PREVENTION
+   ========================================================================== */
+html.swal2-shown,
+body.swal2-shown,
+html.swal2-height-auto,
+body.swal2-height-auto {
+    height: 100% !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    padding-right: 0 !important;
+}
+
+body.swal2-shown {
+    overflow-y: auto !important;
+}
+
+body {
+    padding-right: 0 !important;
+    margin-right: 0 !important;
 }

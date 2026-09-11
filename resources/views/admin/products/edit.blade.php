@@ -33,7 +33,7 @@
     </div>
 </div>
 
-<form id="edit-product-form" onsubmit="handleUpdateProduct(event)" enctype="multipart/form-data">
+<form id="edit-product-form" onsubmit="handleUpdateProduct(event)" enctype="multipart/form-data" novalidate>
     @csrf
     @method('PUT')
 
@@ -59,9 +59,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Tên Sản Phẩm Gấu Bông <span class="req">*</span></label>
-                    <input type="text" id="prod-name" name="name" class="input-control" required value="{{ $product->name }}" placeholder="Ví dụ: Gấu Bông Teddy Áo Len Cổ Điển...">
-                    <div class="form-hint">Tên hiển thị chính trên website và tiêu đề trang chi tiết sản phẩm.</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="form-label" style="margin-bottom: 0;">Tên Sản Phẩm Gấu Bông <span class="req">*</span></label>
+                        <span id="prod-name-counter" style="font-size: 12px; font-weight: 700; color: #8D6E63; background: #FFF3E0; padding: 2px 8px; border-radius: 999px; border: 1px solid #FFE0B2;">{{ mb_strlen($product->name ?? '') }}/120</span>
+                    </div>
+                    <input type="text" id="prod-name" name="name" class="input-control" maxlength="120" required value="{{ $product->name }}" placeholder="Ví dụ: Gấu Bông Teddy Áo Len Cổ Điển..." oninput="updateNameCounter(this)">
                 </div>
 
                 <div class="form-grid-2">
@@ -141,7 +143,7 @@
                                 <th style="width: 15%; text-align: left;">Giá Gốc <span style="color:#C62828;">*</span></th>
                                 <th style="width: 18%; text-align: left;">Giá Sale &amp; Hẹn Giờ</th>
                                 <th style="width: 14%; text-align: left;">Tồn Kho <span style="color:#C62828;">*</span></th>
-                                <th style="width: 52px; text-align: center;">Bật/Tắt</th>
+                                <th style="width: 76px; text-align: center;">Trạng thái</th>
                                 <th style="width: 48px; text-align: center;">Mặc Định</th>
                                 <th style="width: 32px; text-align: center;">Xóa</th>
                             </tr>
@@ -553,7 +555,7 @@
                         <button type="button" class="btn-badge-primary" onclick="setPrimaryExisting(${idx})">
                             ${img.is_primary ? '<i class="fa-solid fa-star"></i> Bìa' : 'Chọn bìa'}
                         </button>
-                        <button type="button" class="btn-del-thumb" onclick="removeExistingImage(${idx})" title="${isFromVariant ? 'Ảnh của sản phẩm con (không thể xóa tại đây)' : 'Xóa ảnh này'}" style="${isFromVariant ? 'background: rgba(121, 85, 72, 0.9);' : ''}">
+                        <button type="button" class="${isFromVariant ? 'btn-lock-thumb' : 'btn-del-thumb'}" onclick="removeExistingImage(${idx})" title="${isFromVariant ? 'Ảnh của sản phẩm con (không thể xóa tại đây)' : 'Xóa ảnh này'}">
                             <i class="${isFromVariant ? 'fa-solid fa-lock' : 'fa-solid fa-trash-can'}"></i>
                         </button>
                     </div>
@@ -571,7 +573,7 @@
                         <button type="button" class="btn-badge-primary" onclick="setPrimaryNew(${idx})">
                             ${item.is_primary ? '<i class="fa-solid fa-star"></i> Bìa' : 'Chọn bìa'}
                         </button>
-                        <button type="button" class="btn-del-thumb" onclick="removeNewFile(${idx})" title="${isFromVariant ? 'Ảnh của sản phẩm con (không thể xóa tại đây)' : 'Bỏ ảnh này'}" style="${isFromVariant ? 'background: rgba(121, 85, 72, 0.9);' : ''}">
+                        <button type="button" class="${isFromVariant ? 'btn-lock-thumb' : 'btn-del-thumb'}" onclick="removeNewFile(${idx})" title="${isFromVariant ? 'Ảnh của sản phẩm con (không thể xóa tại đây)' : 'Bỏ ảnh này'}">
                             <i class="${isFromVariant ? 'fa-solid fa-lock' : 'fa-solid fa-trash-can'}"></i>
                         </button>
                     </div>
@@ -600,7 +602,7 @@
         if (isFromVariant) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Bé Gấu nhắc bạn nè! 🐻',
+                title: 'Thông báo',
                 html: 'Không thể xóa vì đây là ảnh của sản phẩm con!<br><span style="font-size: 12.5px; color: #8D6E63;">(Bạn chỉ xóa được những ảnh vừa thêm tại mục Bộ Ảnh Chung thôi nha)</span>',
                 confirmButtonColor: '#8D6E63'
             });
@@ -620,7 +622,7 @@
         if (item && item.sourceVariantUid) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Bé Gấu nhắc bạn nè! 🐻',
+                title: 'Thông báo',
                 html: 'Không thể xóa vì đây là ảnh của sản phẩm con!<br><span style="font-size: 12.5px; color: #8D6E63;">(Bạn chỉ xóa được những ảnh vừa thêm tại mục Bộ Ảnh Chung thôi nha)</span>',
                 confirmButtonColor: '#8D6E63'
             });
@@ -764,7 +766,7 @@
                 <tr class="${v.is_default ? 'is-default-row' : ''}">
                     <td style="text-align: center;">
                         <input type="file" id="var-file-${idx}" accept="image/*" style="display:none;" onchange="handleVariantFileSelect(${idx}, event)">
-                        <div class="variant-thumb-wrap" onclick="triggerVariantFile(${idx})" title="${hasVariantImg ? 'Bấm để đổi ảnh riêng cho phân loại này' : 'Bắt buộc: Bấm để chọn ảnh cho phân loại này'}" style="${!hasVariantImg ? 'border: 1.5px dashed #E53935; background: #FFEBEE;' : ''}">
+                        <div class="variant-thumb-wrap" id="var-thumb-${idx}" onclick="triggerVariantFile(${idx})" title="${hasVariantImg ? 'Bấm để đổi ảnh riêng cho phân loại này' : 'Bắt buộc: Bấm để chọn ảnh cho phân loại này'}" style="${!hasVariantImg ? 'border: 1.5px dashed #E53935; background: #FFEBEE;' : ''}">
                             <img src="${thumbSrc}" class="variant-thumb-img" id="var-img-preview-${idx}">
                             <div class="variant-thumb-overlay">
                                 <i class="fa-solid fa-camera"></i>
@@ -772,16 +774,16 @@
                         </div>
                     </td>
                     <td>
-                        <input type="text" class="v-input" value="${escapeHtml(v.size || '')}" placeholder="30cm, 40cm,..." onblur="handleSizeBlur(${idx}, this)" oninput="updateVariantField(${idx}, 'size', this.value)" required>
+                        <input type="text" id="var-size-${idx}" class="v-input" value="${escapeHtml(v.size || '')}" placeholder="30cm, 40cm,..." onblur="handleSizeBlur(${idx}, this)" oninput="updateVariantField(${idx}, 'size', this.value)">
                     </td>
                     <td>
-                        <input type="text" class="v-input" value="${escapeHtml(v.color || '')}" placeholder="Nâu socola, Vàng bơ,..." oninput="updateVariantField(${idx}, 'color', this.value)" required>
+                        <input type="text" id="var-color-${idx}" class="v-input" value="${escapeHtml(v.color || '')}" placeholder="Nâu socola, Vàng bơ,..." oninput="updateVariantField(${idx}, 'color', this.value)">
                     </td>
                     <td>
-                        <input type="text" inputmode="numeric" class="v-input v-input-num" value="${formattedPrice}" placeholder="550.000" onblur="handlePriceBlur(${idx}, 'price', this)" onkeydown="handlePriceKeydown(event, this)" required>
+                        <input type="text" id="var-price-${idx}" inputmode="numeric" class="v-input v-input-num" value="${formattedPrice}" placeholder="550.000" onblur="handlePriceBlur(${idx}, 'price', this)" onkeydown="handlePriceKeydown(event, this)">
                     </td>
                     <td>
-                        <input type="text" inputmode="numeric" class="v-input v-input-num" value="${formattedSalePrice}" placeholder="360.000" onblur="handlePriceBlur(${idx}, 'sale_price', this)" onkeydown="handlePriceKeydown(event, this)">
+                        <input type="text" id="var-sale-price-${idx}" inputmode="numeric" class="v-input v-input-num" value="${formattedSalePrice}" placeholder="360.000" onblur="handlePriceBlur(${idx}, 'sale_price', this)" onkeydown="handlePriceKeydown(event, this)">
                         <div style="text-align: left;">
                             <button type="button" class="variant-time-btn ${timeBtnClass}" onclick="openSaleTimeModal(${idx})" title="Cài đặt ngày giờ bắt đầu và kết thúc khuyến mãi">
                                 ${timeBtnLabel}
@@ -789,7 +791,7 @@
                         </div>
                     </td>
                     <td>
-                        <input type="number" class="v-input v-input-num" value="${v.stock_quantity !== '' && v.stock_quantity !== null && v.stock_quantity !== undefined ? v.stock_quantity : ''}" min="0" placeholder="20" oninput="updateVariantField(${idx}, 'stock_quantity', this.value)" required>
+                        <input type="number" id="var-stock-${idx}" class="v-input v-input-num" value="${v.stock_quantity !== '' && v.stock_quantity !== null && v.stock_quantity !== undefined ? v.stock_quantity : ''}" min="0" placeholder="20" oninput="updateVariantField(${idx}, 'stock_quantity', this.value)">
                     </td>
                     <td style="text-align: center;">
                         <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 4px;">
@@ -1065,10 +1067,51 @@
         document.getElementById('comb-sale-end').value = formatDateTimeLocal(end);
     }
 
+    function isVariantFilled(v) {
+        if (!v) return false;
+        const hasSize = !!(v.size && String(v.size).trim() !== '');
+        const hasColor = !!(v.color && String(v.color).trim() !== '');
+        const hasPrice = (v.price !== '' && v.price !== null && v.price !== undefined && parseFloat(v.price) > 0);
+        const hasSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined && parseFloat(v.sale_price) > 0);
+        const hasStock = (v.stock_quantity !== '' && v.stock_quantity !== null && v.stock_quantity !== undefined && String(v.stock_quantity).trim() !== '');
+        const hasImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
+        const hasSaleTimes = !!(v.sale_start_at || v.sale_end_at);
+        return hasSize || hasColor || hasPrice || hasSalePrice || hasStock || hasImg || hasSaleTimes;
+    }
+
+    function syncVariantsFromDom() {
+        variantsList.forEach((v, idx) => {
+            const sizeInput = document.getElementById(`var-size-${idx}`);
+            if (sizeInput) v.size = sizeInput.value.trim();
+
+            const colorInput = document.getElementById(`var-color-${idx}`);
+            if (colorInput) v.color = colorInput.value.trim();
+
+            const priceInput = document.getElementById(`var-price-${idx}`);
+            if (priceInput) {
+                const rawP = priceInput.value.trim();
+                v.price = rawP ? parseCurrencyToNumber(rawP) : '';
+            }
+
+            const salePriceInput = document.getElementById(`var-sale-price-${idx}`);
+            if (salePriceInput) {
+                const rawSp = salePriceInput.value.trim();
+                v.sale_price = rawSp ? parseCurrencyToNumber(rawSp) : null;
+            }
+
+            const stockInput = document.getElementById(`var-stock-${idx}`);
+            if (stockInput) {
+                const rawSt = stockInput.value.trim();
+                v.stock_quantity = rawSt !== '' ? rawSt : '';
+            }
+        });
+    }
+
     // ==========================================
     // TẠO NHANH / ÁP DỤNG HÀNG LOẠT (POPUP KẾT HỢP)
     // ==========================================
     function openCombinedBulkModal() {
+        syncVariantsFromDom();
         const m = document.getElementById('combined-bulk-modal');
         m.style.display = 'flex';
         m.classList.add('show');
@@ -1081,6 +1124,7 @@
     }
 
     function executeCombinedBulkApply() {
+        syncVariantsFromDom();
         const sizesRaw = document.getElementById('comb-sizes').value.trim();
         const colorsRaw = document.getElementById('comb-colors').value.trim();
         const pRaw = document.getElementById('comb-price').value.trim();
@@ -1113,7 +1157,7 @@
                 Swal.fire('Thời gian không hợp lệ', 'Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi đến tương lai (không chọn quá khứ)!', 'warning');
                 return;
             }
-            if (endDate <= startDate) {
+            if (!endDate || endDate <= startDate) {
                 Swal.fire('Thời gian không hợp lệ', 'Ngày kết thúc sale phải diễn ra sau ngày bắt đầu!', 'warning');
                 return;
             }
@@ -1174,17 +1218,45 @@
                 });
             });
 
-            variantsList = newVariants;
-            renderVariantsTable();
-            closeCombinedBulkModal();
+            // Lọc các sản phẩm con hiện tại đã được nhập bất kỳ thông tin nào
+            const filledExisting = variantsList.filter(isVariantFilled);
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Tạo thành công!',
-                text: `Đã tạo ${newVariants.length} phân loại sản phẩm con (${listSizes.filter(Boolean).length || 1} Size × ${listColors.filter(Boolean).length || 1} Màu) kèm giá & tồn kho!`,
-                timer: 1800,
-                showConfirmButton: false
-            });
+            if (filledExisting.length > 0) {
+                // Đã có sản phẩm con có dữ liệu: giữ nguyên và thêm các sản phẩm tạo nhanh ở phía dưới
+                const hasExistingDefault = filledExisting.some(v => v.is_default);
+                newVariants.forEach((v, idx) => {
+                    v.is_default = hasExistingDefault ? false : (idx === 0);
+                });
+                variantsList = [...filledExisting, ...newVariants];
+
+                renderVariantsTable();
+                closeCombinedBulkModal();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Tạo thành công!',
+                    text: `Đã thêm ${newVariants.length} phân loại sản phẩm con mới ở phía dưới các phân loại đã nhập!`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+            } else {
+                // Chưa nhập gì hoặc đã xóa hết: thay thế hoàn toàn
+                if (newVariants.length > 0) {
+                    newVariants[0].is_default = true;
+                }
+                variantsList = newVariants;
+
+                renderVariantsTable();
+                closeCombinedBulkModal();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Tạo thành công!',
+                    text: `Đã tạo ${newVariants.length} phân loại sản phẩm con (${listSizes.filter(Boolean).length || 1} Size × ${listColors.filter(Boolean).length || 1} Màu) kèm giá & tồn kho!`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+            }
             return;
         }
 
@@ -1315,8 +1387,25 @@
         document.getElementById('edit-product-form').requestSubmit();
     }
 
+    function highlightAndNotify(el, message, title = 'Thông báo') {
+        if (el) {
+            el.classList.add('is-invalid');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (typeof el.focus === 'function') el.focus();
+        }
+        Swal.fire({
+            icon: 'warning',
+            title: title,
+            html: message,
+            confirmButtonColor: '#8D6E63'
+        });
+    }
+
     async function handleUpdateProduct(e) {
         e.preventDefault();
+
+        // Xóa các highlight lỗi cũ
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
         const name = document.getElementById('prod-name').value.trim();
         const category_id = document.getElementById('prod-category').value;
@@ -1325,31 +1414,27 @@
         const description = document.getElementById('prod-description').value.trim();
 
         if (!name) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Bé Gấu nhắc bạn nè! 🐻',
-                html: 'Vui lòng nhập <b>Tên sản phẩm</b> nha!',
-                confirmButtonColor: '#8D6E63'
-            });
-            document.getElementById('prod-name').focus();
+            highlightAndNotify(document.getElementById('prod-name'), 'Vui lòng nhập đầy đủ <b>Tên sản phẩm</b>!');
+            return;
+        }
+        if (name.length < 5) {
+            highlightAndNotify(document.getElementById('prod-name'), 'Tên sản phẩm quá ngắn! Vui lòng nhập tối thiểu <b>5 ký tự</b>.', 'Thông tin chưa hợp lệ');
+            return;
+        }
+        if (name.length > 120) {
+            highlightAndNotify(document.getElementById('prod-name'), `Tên sản phẩm hiện có <b>${name.length} ký tự</b>, vượt quá giới hạn <b>120 ký tự</b> (theo chuẩn sàn TMĐT như Shopee/TikTok Shop).<br><br>Vui lòng rút gọn lại dưới 120 ký tự để lưu sản phẩm!`, 'Thông tin chưa hợp lệ');
             return;
         }
         if (!category_id) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Bé Gấu nhắc bạn nè! 🐻',
-                html: 'Vui lòng chọn <b>Danh mục sản phẩm</b> nha!',
-                confirmButtonColor: '#8D6E63'
-            });
-            document.getElementById('prod-category').focus();
+            highlightAndNotify(document.getElementById('prod-category'), 'Vui lòng chọn đầy đủ <b>Danh mục sản phẩm</b>!');
             return;
         }
 
         if (!variantsList.length) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Bé Gấu nhắc bạn nè! 🐻',
-                html: 'Sản phẩm phải có ít nhất 1 phân loại con nha!',
+                title: 'Thông báo',
+                html: 'Sản phẩm phải có ít nhất 1 phân loại con!',
                 confirmButtonColor: '#8D6E63'
             });
             return;
@@ -1365,80 +1450,48 @@
             // Ràng buộc Cột Ảnh bắt buộc
             const hasImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
             if (!hasImg) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Bé Gấu nhắc bạn nè! 🐻',
-                    html: `Vui lòng tải ảnh cho <b>${label}</b> nha!<br><span style="font-size: 12.5px; color: #8D6E63;">(Hãy bấm vào icon máy ảnh ở cột <b>Ảnh *</b> của phân loại này)</span>`,
-                    confirmButtonColor: '#8D6E63'
-                });
+                const thumbEl = document.getElementById(`var-thumb-${i}`);
+                highlightAndNotify(thumbEl, `Vui lòng tải ảnh cho <b>${label}</b>!<br><span style="font-size: 12.5px; color: #8D6E63;">(Hãy bấm vào icon máy ảnh ở cột <b>Ảnh *</b> của phân loại này)</span>`);
                 return;
             }
 
-            if (!v.size) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Bé Gấu nhắc bạn nè! 🐻',
-                    html: `Vui lòng nhập <b>Kích thước</b> cho <b>${label}</b> nha!`,
-                    confirmButtonColor: '#8D6E63'
-                });
+            if (!v.size || !v.size.trim()) {
+                const sizeEl = document.getElementById(`var-size-${i}`);
+                highlightAndNotify(sizeEl, `Vui lòng nhập đầy đủ <b>Kích thước</b> cho <b>${label}</b>!`);
                 return;
             }
             if (!/^\d+(\.\d+)?cm$/i.test(v.size.trim())) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Bé Gấu nhắc bạn nè! 🐻',
-                    html: `Kích thước của <b>${label}</b> (<b>"${escapeHtml(v.size)}"</b>) chưa đúng định dạng rồi ạ!<br><br>Kích thước bắt buộc phải là số kèm đơn vị <b>"cm"</b> viết liền nhau (ví dụ: <b>30cm, 45cm</b>).<br><span style="color:#C62828;">(Dạng có khoảng trắng như <i>45 cm</i> hoặc thiếu chữ <i>cm</i> đều bị lỗi nha!)</span>`,
-                    confirmButtonColor: '#8D6E63'
-                });
+                const sizeEl = document.getElementById(`var-size-${i}`);
+                highlightAndNotify(sizeEl, `Kích thước của <b>${label}</b> (<b>"${escapeHtml(v.size)}"</b>) chưa đúng định dạng!<br><br>Kích thước bắt buộc phải là số kèm đơn vị <b>"cm"</b> viết liền nhau (ví dụ: <b>30cm, 45cm</b>).<br><span style="color:#C62828;">(Dạng có khoảng trắng như <i>45 cm</i> hoặc thiếu chữ <i>cm</i> đều không hợp lệ)</span>`, 'Thông tin chưa hợp lệ');
                 return;
             }
-            if (!v.color) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Bé Gấu nhắc bạn nè! 🐻',
-                    html: `Vui lòng nhập <b>Màu sắc</b> cho <b>${label}</b> nha!`,
-                    confirmButtonColor: '#8D6E63'
-                });
+            if (!v.color || !v.color.trim()) {
+                const colorEl = document.getElementById(`var-color-${i}`);
+                highlightAndNotify(colorEl, `Vui lòng nhập đầy đủ <b>Màu sắc</b> cho <b>${label}</b>!`);
                 return;
             }
             const vPrice = parseCurrencyToNumber(v.price);
             const vSalePrice = v.sale_price ? parseCurrencyToNumber(v.sale_price) : null;
 
             if (vPrice <= 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Bé Gấu nhắc bạn nè! 🐻',
-                    html: `Vui lòng nhập <b>Giá gốc</b> cho <b>${label}</b> nha!`,
-                    confirmButtonColor: '#8D6E63'
-                });
+                const priceEl = document.getElementById(`var-price-${i}`);
+                highlightAndNotify(priceEl, `Vui lòng nhập đầy đủ <b>Giá gốc</b> hợp lệ cho <b>${label}</b>!`);
                 return;
             }
             if (v.stock_quantity === '' || v.stock_quantity === null || v.stock_quantity === undefined || parseInt(v.stock_quantity) < 0 || isNaN(parseInt(v.stock_quantity))) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Bé Gấu nhắc bạn nè! 🐻',
-                    html: `Vui lòng nhập <b>Số lượng tồn kho</b> cho <b>${label}</b> nha!`,
-                    confirmButtonColor: '#8D6E63'
-                });
+                const stockEl = document.getElementById(`var-stock-${i}`);
+                highlightAndNotify(stockEl, `Vui lòng nhập đầy đủ <b>Số lượng tồn kho</b> cho <b>${label}</b>!`);
                 return;
             }
             if (vSalePrice && vSalePrice > 0) {
                 if (vSalePrice >= vPrice) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Bé Gấu nhắc bạn nè! 🐻',
-                        html: `Giá khuyến mãi của <b>${label}</b> phải nhỏ hơn giá gốc nha!`,
-                        confirmButtonColor: '#8D6E63'
-                    });
+                    const salePriceEl = document.getElementById(`var-sale-price-${i}`);
+                    highlightAndNotify(salePriceEl, `Giá khuyến mãi của <b>${label}</b> phải nhỏ hơn giá gốc!`, 'Thông tin chưa hợp lệ');
                     return;
                 }
                 if (!v.sale_start_at || !v.sale_end_at) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Bé Gấu nhắc bạn nè! 🐻',
-                        html: `<b>${label}</b> đã nhập giá khuyến mãi thì bạn nhớ cài đặt cả Ngày bắt đầu và Ngày kết thúc sale nha!`,
-                        confirmButtonColor: '#8D6E63'
-                    });
+                    const salePriceEl = document.getElementById(`var-sale-price-${i}`);
+                    highlightAndNotify(salePriceEl, `<b>${label}</b> đã nhập giá khuyến mãi thì bạn nhớ cài đặt cả Ngày bắt đầu và Ngày kết thúc sale!`);
                     return;
                 }
             }
@@ -1450,21 +1503,13 @@
                 const isStartChanged = (curStart !== origStart);
 
                 if (isStartChanged && start < nowBuffer) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Bé Gấu nhắc bạn nè! 🐻',
-                        html: `Ngày bắt đầu sale của <b>${label}</b> đã được thay đổi, do đó phải từ thời điểm hiện tại trở đi nha!`,
-                        confirmButtonColor: '#8D6E63'
-                    });
+                    const salePriceEl = document.getElementById(`var-sale-price-${i}`);
+                    highlightAndNotify(salePriceEl, `Ngày bắt đầu sale của <b>${label}</b> đã được thay đổi, do đó phải từ thời điểm hiện tại trở đi!`, 'Thông tin chưa hợp lệ');
                     return;
                 }
                 if (end <= start) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Bé Gấu nhắc bạn nè! 🐻',
-                        html: `Ngày kết thúc sale của <b>${label}</b> phải sau ngày bắt đầu nha!`,
-                        confirmButtonColor: '#8D6E63'
-                    });
+                    const salePriceEl = document.getElementById(`var-sale-price-${i}`);
+                    highlightAndNotify(salePriceEl, `Ngày kết thúc sale của <b>${label}</b> phải sau ngày bắt đầu!`, 'Thông tin chưa hợp lệ');
                     return;
                 }
             }
@@ -1552,10 +1597,24 @@
                 let errorMsg = data.message || 'Không thể cập nhật sản phẩm';
                 if (data.errors) {
                     errorMsg = Object.values(data.errors).flat().join('<br>');
+                    if (data.errors.name) {
+                        const nameInput = document.getElementById('prod-name');
+                        if (nameInput) {
+                            nameInput.classList.add('is-invalid');
+                            nameInput.focus();
+                            nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                    if (data.errors.category_id) {
+                        const catInput = document.getElementById('prod-category');
+                        if (catInput) {
+                            catInput.classList.add('is-invalid');
+                        }
+                    }
                 }
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Bé Gấu nhắc bạn nè! 🐻',
+                    title: 'Thông tin chưa hợp lệ',
                     html: errorMsg,
                     confirmButtonColor: '#8D6E63'
                 });
@@ -1567,5 +1626,43 @@
             submitBtn.innerHTML = originalText;
         }
     }
+
+    function updateNameCounter(input) {
+        input.classList.remove('is-invalid');
+        const counter = document.getElementById('prod-name-counter');
+        if (!counter) return;
+        const len = input.value.length;
+        counter.innerText = `${len}/120`;
+        if (len >= 120) {
+            counter.style.color = '#D32F2F';
+            counter.style.background = '#FFEBEE';
+            counter.style.borderColor = '#FFCDD2';
+        } else if (len >= 100) {
+            counter.style.color = '#E65100';
+            counter.style.background = '#FFF3E0';
+            counter.style.borderColor = '#FFE0B2';
+        } else {
+            counter.style.color = '#8D6E63';
+            counter.style.background = '#FFF3E0';
+            counter.style.borderColor = '#FFE0B2';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const prodNameInput = document.getElementById('prod-name');
+        if (prodNameInput) updateNameCounter(prodNameInput);
+
+        // Tự động gỡ bỏ viền đỏ highlight khi người dùng bắt đầu nhập / sửa lỗi
+        document.addEventListener('input', (e) => {
+            if (e.target && e.target.classList && e.target.classList.contains('is-invalid')) {
+                e.target.classList.remove('is-invalid');
+            }
+        });
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.classList && e.target.classList.contains('is-invalid')) {
+                e.target.classList.remove('is-invalid');
+            }
+        });
+    });
 </script>
 @endsection

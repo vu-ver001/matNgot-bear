@@ -22,9 +22,22 @@ class ProductRequest extends FormRequest
      */
     public function rules(): array
     {
+        $product = $this->route('product');
+        $productId = is_object($product) ? $product->id : $product;
+
         return [
-            'category_id'     => ['required', 'integer', 'exists:categories,id'],
-            'name'            => ['required', 'string', 'max:200'],
+            'category_id'     => [
+                'required',
+                'integer',
+                Rule::exists('categories', 'id')->where(fn ($q) => $q->where('is_active', true)->whereNull('deleted_at')),
+            ],
+            'name'            => [
+                'required',
+                'string',
+                'min:5',
+                'max:120',
+                Rule::unique('products', 'name')->ignore($productId)->whereNull('deleted_at'),
+            ],
             'description'     => ['nullable', 'string'],
             'price'           => ['nullable', 'numeric', 'min:0'],
             'sale_price'      => ['nullable', 'numeric', 'min:0'],
@@ -79,21 +92,23 @@ class ProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'                 => 'Bé Gấu nhắc bạn: Vui lòng nhập Tên sản phẩm nha! 🐻',
-            'name.max'                      => 'Tên sản phẩm không được vượt quá 200 ký tự.',
-            'category_id.required'          => 'Bé Gấu nhắc bạn: Vui lòng chọn Danh mục sản phẩm nha! 🐻',
-            'category_id.exists'            => 'Danh mục được chọn không tồn tại trong hệ thống.',
+            'name.required'                 => 'Vui lòng nhập tên sản phẩm.',
+            'name.min'                      => 'Tên sản phẩm quá ngắn, vui lòng nhập tối thiểu 5 ký tự.',
+            'name.max'                      => 'Tên sản phẩm không được vượt quá 120 ký tự (chuẩn sàn TMĐT Shopee/TikTok Shop).',
+            'name.unique'                   => 'Tên sản phẩm gấu bông này đã tồn tại trong hệ thống, vui lòng đặt tên khác.',
+            'category_id.required'          => 'Vui lòng chọn danh mục sản phẩm.',
+            'category_id.exists'            => 'Danh mục sản phẩm được chọn không tồn tại hoặc đang tạm ẩn kinh doanh.',
             'status.required'               => 'Trạng thái sản phẩm là bắt buộc.',
             'status.in'                     => 'Trạng thái sản phẩm không hợp lệ.',
 
-            'variants.*.size.required_with' => 'Bé Gấu nhắc bạn: Vui lòng nhập Kích thước cho từng sản phẩm con nha! 🐻',
-            'variants.*.size.regex'         => 'Bé Gấu nhắc bạn: Kích thước bắt buộc phải đúng dạng số kèm đơn vị "cm" viết liền (ví dụ: 45cm), không có khoảng trắng nha! 🐻',
+            'variants.*.size.required_with' => 'Vui lòng nhập kích thước cho từng sản phẩm con.',
+            'variants.*.size.regex'         => 'Kích thước bắt buộc phải đúng dạng số kèm đơn vị "cm" viết liền (ví dụ: 45cm), không có khoảng trắng.',
 
-            'variants.*.color.required_with'=> 'Bé Gấu nhắc bạn: Vui lòng nhập Màu sắc cho từng sản phẩm con nha! 🐻',
-            'variants.*.price.required_with'   => 'Bé Gấu nhắc bạn: Vui lòng nhập Giá gốc cho từng sản phẩm con nha! 🐻',
+            'variants.*.color.required_with'=> 'Vui lòng nhập màu sắc cho từng sản phẩm con.',
+            'variants.*.price.required_with'   => 'Vui lòng nhập giá gốc cho từng sản phẩm con.',
             'variants.*.price.numeric'         => 'Giá sản phẩm con phải là một số hợp lệ.',
             'variants.*.price.min'             => 'Giá sản phẩm con không được âm.',
-            'variants.*.stock_quantity.required_with' => 'Bé Gấu nhắc bạn: Vui lòng nhập Số lượng tồn kho cho từng sản phẩm con nha! 🐻',
+            'variants.*.stock_quantity.required_with' => 'Vui lòng nhập số lượng tồn kho cho từng sản phẩm con.',
             'variants.*.stock_quantity.integer'=> 'Số lượng tồn kho sản phẩm con phải là số nguyên.',
             'variants.*.stock_quantity.min'    => 'Số lượng tồn kho sản phẩm con không được âm.',
 
@@ -130,7 +145,7 @@ class ProductRequest extends FormRequest
                 // Ràng buộc Cột Ảnh bắt buộc cho từng sản phẩm con
                 $hasVariantImg = $this->hasFile("variant_images.{$idx}") || (!empty($v['image_url']) && !str_contains($v['image_url'], 'placehold.co'));
                 if (!$hasVariantImg) {
-                    $validator->errors()->add("variants.{$idx}.image", "Bé Gấu nhắc bạn: Vui lòng chọn ảnh cho {$label} nha! 🐻");
+                    $validator->errors()->add("variants.{$idx}.image", "Vui lòng chọn ảnh cho {$label}.");
                 }
 
                 $price = isset($v['price']) && is_numeric($v['price']) ? (float) $v['price'] : null;

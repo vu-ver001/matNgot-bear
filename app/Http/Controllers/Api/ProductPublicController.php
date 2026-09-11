@@ -22,6 +22,7 @@ class ProductPublicController extends Controller
                 'images' => function ($q) {
                     $q->orderByDesc('is_primary')->orderBy('sort_order', 'asc');
                 },
+                'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ]);
 
         // 1. Tìm kiếm từ khóa thông minh (Không phân biệt hoa/thường, hỗ trợ cả không dấu và gần đúng)
@@ -282,6 +283,7 @@ class ProductPublicController extends Controller
                 'images' => function ($q) {
                     $q->orderByDesc('is_primary')->orderBy('sort_order', 'asc');
                 },
+                'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ])
             ->orderByDesc('sold_count')
             ->take(8)
@@ -390,13 +392,15 @@ class ProductPublicController extends Controller
 
         $results = $matched->map(function ($p) {
             $primaryImg = $p->images->firstWhere('is_primary', true) ?? $p->images->first();
-            $effectivePrice = ($p->sale_price && $p->sale_price > 0 && $p->sale_price < $p->price) ? $p->sale_price : $p->price;
+            $regPrice = (float) $p->lowest_price;
+            $sPrice = $p->lowest_sale_price ? (float) $p->lowest_sale_price : null;
+            $effectivePrice = ($sPrice && $sPrice > 0 && $sPrice < $regPrice) ? $sPrice : $regPrice;
             
             return [
                 'id'              => $p->id,
                 'name'            => $p->name,
-                'price'           => (float) $p->price,
-                'sale_price'      => $p->sale_price ? (float) $p->sale_price : null,
+                'price'           => $regPrice,
+                'sale_price'      => $sPrice,
                 'effective_price' => (float) $effectivePrice,
                 'min_price'       => (float) $effectivePrice,
                 'category'        => $p->category?->name,

@@ -508,7 +508,7 @@
                     Swal.fire({
                         icon: 'info',
                         title: 'Không khả dụng cho ' + roleName,
-                        html: `Tài khoản <strong>${roleName}</strong> chỉ dùng để quản lý hệ thống, không có chức năng thêm vào giỏ hàng hay đặt hàng.<br><br>Vui lòng chuyển sang tài khoản <strong>Khách hàng</strong> để trải nghiệm mua sắm!`,
+                        html: `Tài khoản <strong>${roleName}</strong> chỉ dùng để quản lý hệ thống, không có chức năng thêm sản phẩm vào yêu thích, giỏ hàng hay đặt hàng.<br><br>Vui lòng chuyển sang tài khoản <strong>Khách hàng</strong> để trải nghiệm mua sắm!`,
                         confirmButtonColor: '#E08A1E',
                         confirmButtonText: 'Đã hiểu'
                     });
@@ -696,8 +696,20 @@
                 eventObj.stopPropagation();
             }
 
-            // Tài khoản STAFF hoặc ADMIN: Không có chức năng yêu thích
+            // Tài khoản STAFF hoặc ADMIN: Không có chức năng yêu thích (hiển thị popup thông báo như thêm giỏ hàng)
             if (window.userRole === 'STAFF' || window.userRole === 'ADMIN') {
+                const roleName = window.userRole === 'ADMIN' ? 'Quản Trị Viên (Admin)' : 'Nhân Viên (Staff)';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Không khả dụng cho ' + roleName,
+                        html: `Tài khoản <strong>${roleName}</strong> chỉ dùng để quản lý hệ thống, không có chức năng thêm vào giỏ hàng hay đặt hàng.<br><br>Vui lòng chuyển sang tài khoản <strong>Khách hàng</strong> để trải nghiệm mua sắm!`,
+                        confirmButtonColor: '#E08A1E',
+                        confirmButtonText: 'Đã hiểu'
+                    });
+                } else {
+                    alert(`Tài khoản ${roleName} không có chức năng này. Vui lòng chuyển sang tài khoản Khách hàng.`);
+                }
                 return false;
             }
 

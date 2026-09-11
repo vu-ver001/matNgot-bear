@@ -22,7 +22,7 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('css/staff-layout.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/staff-layout.css') }}?v={{ file_exists(public_path('css/staff-layout.css')) ? filemtime(public_path('css/staff-layout.css')) : time() }}">
     @yield('styles')
 </head>
 <body>
@@ -43,6 +43,9 @@
             </div>
             <button type="button" class="sidebar-collapse-btn" onclick="toggleStaffSidebar()" title="Thu gọn menu" id="staffSidebarCollapseBtn">
                 <i class="fa-solid fa-chevron-left" id="staffSidebarToggleIcon"></i>
+            </button>
+            <button type="button" class="sidebar-mobile-close-btn" onclick="closeMobileStaffSidebar()" title="Đóng menu" id="staffSidebarMobileCloseBtn">
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
@@ -128,6 +131,22 @@
 
     <!-- ====== MAIN CONTENT ====== -->
     <div class="staff-main" id="staffMain">
+        <!-- Thanh Header Mobile xuất hiện khi thu nhỏ màn hình có nút 3 gạch ở góc trên bên trái (Giống Admin) -->
+        <header class="staff-mobile-topbar" id="staffMobileTopbar">
+            <button type="button" class="mobile-menu-btn" onclick="toggleMobileStaffSidebar()" title="Mở thanh menu" id="staffMobileMenuBtn" aria-label="Mở menu xử lý">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="mobile-topbar-brand">
+                <a href="{{ route('staff.orders.index') }}" class="mobile-brand-title">Mật Ngọt Bear</a>
+                <span class="mobile-brand-badge">Bảng Xử Lý</span>
+            </div>
+            <div class="mobile-topbar-actions">
+                <a href="{{ route('home') }}" class="mobile-btn-store" title="Xem cửa hàng" target="_blank">
+                    <i class="fa-solid fa-store"></i>
+                </a>
+            </div>
+        </header>
+
         <script>
             (function() {
                 if (localStorage.getItem('mn_staff_sidebar_collapsed') === '1') {
@@ -139,6 +158,9 @@
             @yield('content')
         </div>
     </div>
+
+    <!-- Backdrop mờ khi mở menu trên mobile/màn hình nhỏ -->
+    <div class="mobile-sidebar-backdrop" id="staffMobileSidebarBackdrop" onclick="closeMobileStaffSidebar()"></div>
 
     <!-- Script Điều Khiển Đóng / Mở Menu & Popup Card Cho Staff -->
     <script>
@@ -196,11 +218,55 @@
             localStorage.setItem('mn_staff_sidebar_collapsed', '1');
         }
 
+        // ====== ĐIỀU KHIỂN MENU KHI THU NHỎ MÀN HÌNH (RESPONSIVE / MOBILE) ======
+        function toggleMobileStaffSidebar() {
+            const sidebar = document.getElementById('staffSidebar');
+            if (sidebar?.classList.contains('mobile-open')) {
+                closeMobileStaffSidebar();
+            } else {
+                openMobileStaffSidebar();
+            }
+        }
+
+        function openMobileStaffSidebar() {
+            const sidebar = document.getElementById('staffSidebar');
+            const backdrop = document.getElementById('staffMobileSidebarBackdrop');
+            sidebar?.classList.add('mobile-open');
+            backdrop?.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileStaffSidebar() {
+            const sidebar = document.getElementById('staffSidebar');
+            const backdrop = document.getElementById('staffMobileSidebarBackdrop');
+            sidebar?.classList.remove('mobile-open');
+            backdrop?.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Tự động đóng menu mobile khi phóng to màn hình trở lại (> 992px)
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                closeMobileStaffSidebar();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             if (localStorage.getItem('mn_staff_sidebar_collapsed') === '1') {
                 updateStaffCollapseIcon(true);
             }
+
+            // Tự động đóng sidebar mobile khi bấm vào link chuyển trang
+            const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
+            navLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        closeMobileStaffSidebar();
+                    }
+                });
+            });
         });
     </script>
+    @yield('scripts')
 </body>
 </html>

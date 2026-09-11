@@ -476,4 +476,22 @@ textarea.input-control { resize: vertical; min-height: 80px; }
     }
 }
 
+/* ==========================================
+   INVALID / ERROR INPUT HIGHLIGHTING
+   ========================================== */
+.input-control.is-invalid,
+.select-control.is-invalid,
+.v-input.is-invalid {
+    border-color: #EF4444 !important;
+    background-color: #FEF2F2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.variant-thumb-wrap.is-invalid {
+    border: 2px solid #EF4444 !important;
+    background-color: #FEF2F2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+
 

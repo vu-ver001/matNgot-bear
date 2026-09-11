@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductRequest;
 use App\Models\Category;
+use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
@@ -22,10 +23,17 @@ class ProductController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         if (!$request->wantsJson() && !$request->is('api/*')) {
-            return view('admin.products.index', ['currentPage' => 'products']);
+            return view('admin.products.index', [
+                'currentPage' => 'products',
+            ]);
         }
 
-        $query = Product::with(['category', 'images', 'variants']);
+        $query = Product::query()->with(['category', 'images', 'variants']);
+
+        $query->withExists(['orderDetails as has_been_ordered'])
+              ->withExists(['orderDetails as has_pending_orders' => function ($q) {
+                  $q->whereHas('order', fn ($oq) => $oq->whereIn('order_status', ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING']));
+              }]);
 
         // Tìm kiếm theo tên sản phẩm
         if ($request->filled('search')) {
@@ -42,15 +50,36 @@ class ProductController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        // Lọc theo tình trạng tồn kho
+        // Lọc theo tình trạng tồn kho: Lọc ra sản phẩm cha có ít nhất 1 sản phẩm con thỏa mãn điều kiện
         if ($request->filled('stock_status')) {
             $stockStatus = $request->input('stock_status');
             if ($stockStatus === 'in_stock') {
-                $query->where('stock_quantity', '>', 5);
+                // Có ít nhất 1 sản phẩm con còn hàng dồi dào (> 5)
+                $query->where(function ($q) {
+                    $q->whereHas('variants', function ($vq) {
+                        $vq->where('stock_quantity', '>', 5);
+                    })->orWhere(function ($pq) {
+                        $pq->doesntHave('variants')->where('stock_quantity', '>', 5);
+                    });
+                });
             } elseif ($stockStatus === 'low_stock') {
-                $query->where('stock_quantity', '>', 0)->where('stock_quantity', '<=', 5);
+                // Có ít nhất 1 sản phẩm con sắp hết hàng (1 - 5)
+                $query->where(function ($q) {
+                    $q->whereHas('variants', function ($vq) {
+                        $vq->where('stock_quantity', '>', 0)->where('stock_quantity', '<=', 5);
+                    })->orWhere(function ($pq) {
+                        $pq->doesntHave('variants')->where('stock_quantity', '>', 0)->where('stock_quantity', '<=', 5);
+                    });
+                });
             } elseif ($stockStatus === 'out_of_stock') {
-                $query->where('stock_quantity', '<=', 0);
+                // Có ít nhất 1 sản phẩm con đã hết hàng (<= 0)
+                $query->where(function ($q) {
+                    $q->whereHas('variants', function ($vq) {
+                        $vq->where('stock_quantity', '<=', 0);
+                    })->orWhere(function ($pq) {
+                        $pq->doesntHave('variants')->where('stock_quantity', '<=', 0);
+                    });
+                });
             } elseif ($stockStatus === 'warning') {
                 // Một sản phẩm cha được tính là "cần cảnh báo" nếu chứa ít nhất 1 phân loại con (size/màu) có số lượng tồn kho <= 5
                 $query->where(function ($q) {
@@ -102,7 +131,8 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        $categories = Category::all();
+        // Chỉ lấy các danh mục đang kinh doanh (is_active = true)
+        $categories = Category::where('is_active', true)->orderBy('name', 'asc')->get();
         return view('admin.products.create', [
             'categories'  => $categories,
             'currentPage' => 'products',
@@ -119,7 +149,8 @@ class ProductController extends Controller
             'images' => fn($q) => $q->orderBy('sort_order', 'asc'),
             'variants' => fn($q) => $q->orderBy('id', 'asc')
         ]);
-        $categories = Category::all();
+        // Chỉ lấy các danh mục đang kinh doanh (is_active = true)
+        $categories = Category::where('is_active', true)->orderBy('name', 'asc')->get();
 
         return view('admin.products.edit', [
             'product'     => $product,
@@ -145,16 +176,19 @@ class ProductController extends Controller
                 $variantsInput = json_decode($variantsInput, true) ?: [];
             }
 
-            // Tính toán giá trị mặc định từ biến thể nếu có
-            $defaultPrice = null;
+            // Tính toán giá trị từ biến thể: Giá bán của sản phẩm cha luôn lấy giá thấp nhất của sản phẩm con
+            $defaultPrice = 0;
             $defaultSalePrice = null;
             $defaultStock = 0;
             $defaultSize = null;
             $defaultColor = null;
 
             if (!empty($variantsInput)) {
-                $prices = array_column($variantsInput, 'price');
-                $defaultPrice = !empty($prices) ? min(array_filter($prices, fn($p) => is_numeric($p))) : 0;
+                $numericPrices = array_filter(
+                    array_map(fn($v) => isset($v['price']) && is_numeric($v['price']) ? (float)$v['price'] : null, $variantsInput),
+                    fn($p) => $p !== null && $p > 0
+                );
+                $lowestPrice = !empty($numericPrices) ? min($numericPrices) : 0;
                 
                 $stocks = array_column($variantsInput, 'stock_quantity');
                 $defaultStock = array_sum(array_map('intval', $stocks));
@@ -162,33 +196,31 @@ class ProductController extends Controller
                 $firstVariant = $variantsInput[0] ?? [];
                 $defaultSize = $firstVariant['size'] ?? null;
                 $defaultColor = $firstVariant['color'] ?? null;
-                $defaultSalePrice = !empty($firstVariant['sale_price']) ? $firstVariant['sale_price'] : null;
+
+                // Giá khuyến mãi thấp nhất hợp lệ
+                $salePrices = array_filter(
+                    array_map(fn($v) => isset($v['sale_price']) && is_numeric($v['sale_price']) ? (float)$v['sale_price'] : null, $variantsInput),
+                    fn($sp) => $sp !== null && $sp > 0 && $sp < $lowestPrice
+                );
+                $lowestSalePrice = !empty($salePrices) ? min($salePrices) : null;
 
                 foreach ($variantsInput as $v) {
                     if (!empty($v['is_default'])) {
-                        $defaultPrice = $v['price'] ?? $defaultPrice;
-                        $defaultSalePrice = !empty($v['sale_price']) ? $v['sale_price'] : $defaultSalePrice;
                         $defaultSize = $v['size'] ?? $defaultSize;
                         $defaultColor = $v['color'] ?? $defaultColor;
                         break;
                     }
                 }
-            }
 
-            if (!isset($parentData['price']) || $parentData['price'] === null) {
-                $parentData['price'] = $defaultPrice ?? 0;
-            }
-            if (!isset($parentData['sale_price']) || $parentData['sale_price'] === null) {
-                $parentData['sale_price'] = $defaultSalePrice;
-            }
-            if (!isset($parentData['stock_quantity']) || $parentData['stock_quantity'] === null) {
+                $parentData['price'] = $lowestPrice;
+                $parentData['sale_price'] = $lowestSalePrice;
                 $parentData['stock_quantity'] = $defaultStock;
-            }
-            if (!isset($parentData['size']) || empty($parentData['size'])) {
                 $parentData['size'] = $defaultSize;
-            }
-            if (!isset($parentData['color']) || empty($parentData['color'])) {
                 $parentData['color'] = $defaultColor;
+            } else {
+                if (!isset($parentData['price']) || $parentData['price'] === null) {
+                    $parentData['price'] = 0;
+                }
             }
 
             // Tạo sản phẩm cha
@@ -281,6 +313,9 @@ class ProductController extends Controller
                         'status'         => $vData['status'] ?? 'ACTIVE',
                     ]);
                 }
+
+                // Đồng bộ chính xác giá bán của sản phẩm cha lấy giá bán thấp nhất của sản phẩm con
+                $product->syncLowestPriceFromVariants();
             }
 
             return $product;
@@ -444,11 +479,27 @@ class ProductController extends Controller
 
                 // Cập nhật lại tổng tồn kho và khoảng giá lên sản phẩm cha
                 $allVariants = $product->variants()->get();
-                $prices = $allVariants->pluck('price')->filter(fn($p) => is_numeric($p) && $p > 0)->all();
+                $prices = $allVariants->pluck('price')->filter(fn($p) => is_numeric($p) && (float)$p > 0)->map(fn($p) => (float)$p)->values()->all();
+                $minPrice = !empty($prices) ? min($prices) : (float)$product->price;
+
+                $cheapestVariant = $allVariants->sortBy('price')->first();
+                $minSalePrice = null;
+                if ($cheapestVariant && !empty($cheapestVariant->sale_price) && (float)$cheapestVariant->sale_price < $minPrice) {
+                    $minSalePrice = (float)$cheapestVariant->sale_price;
+                }
+                $validSalePrices = $allVariants->pluck('sale_price')
+                    ->filter(fn($sp) => is_numeric($sp) && (float)$sp > 0 && (float)$sp < $minPrice)
+                    ->map(fn($sp) => (float)$sp)
+                    ->values()
+                    ->all();
+                if (!empty($validSalePrices)) {
+                    $minSalePrice = min($validSalePrices);
+                }
+
                 $defaultVar = $allVariants->firstWhere('is_default', true) ?? $allVariants->first();
 
-                $parentData['price'] = !empty($prices) ? min($prices) : ($defaultVar ? $defaultVar->price : $product->price);
-                $parentData['sale_price'] = $defaultVar ? $defaultVar->sale_price : null;
+                $parentData['price'] = $minPrice;
+                $parentData['sale_price'] = $minSalePrice;
                 $parentData['stock_quantity'] = (int) $allVariants->sum('stock_quantity');
                 $parentData['size'] = $defaultVar ? $defaultVar->size : $product->size;
                 $parentData['color'] = $defaultVar ? $defaultVar->color : $product->color;
@@ -456,6 +507,15 @@ class ProductController extends Controller
 
             // Cập nhật sản phẩm cha
             $product->update($parentData);
+
+            // Ràng buộc: Nếu sản phẩm cha tạm dừng kinh doanh, tự động tắt toàn bộ sản phẩm con
+            if ($product->status === 'INACTIVE') {
+                $product->variants()->update(['status' => 'INACTIVE']);
+            }
+
+            if (!empty($variantsInput)) {
+                $product->syncLowestPriceFromVariants();
+            }
         });
 
         $product->load(['category', 'images', 'variants']);
@@ -473,35 +533,203 @@ class ProductController extends Controller
 
 
     /**
-     * Ngừng kinh doanh sản phẩm (cập nhật status thành INACTIVE thay vì xóa vĩnh viễn).
+     * Xóa sản phẩm cha.
+     * Ràng buộc:
+     * 1. Chặn xóa nếu có sản phẩm con đang trong đơn hàng chưa hoàn tất (chờ xử lý, đang giao...).
+     * 2. Xóa mềm toàn bộ: Chuyển trạng thái sản phẩm cha và toàn bộ sản phẩm con sang INACTIVE (ngừng kinh doanh), đánh dấu deleted_at và ẩn khỏi cửa hàng.
      */
     public function destroy(Product $product): JsonResponse|RedirectResponse
     {
-        $product->update(['status' => 'INACTIVE']);
+        // 1. Chặn xóa nếu có sản phẩm con trong đơn hàng chưa hoàn tất (chờ xử lý, đang giao)
+        if ($product->hasPendingOrders()) {
+            $msg = 'Không thể xóa vì có sản phẩm con đang trong đơn hàng xử lý.';
+            if (request()->wantsJson() || request()->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                ], 422);
+            }
+            return back()->with('error', $msg);
+        }
 
-        if (!request()->wantsJson() && !request()->is('api/*')) {
-            return redirect()->route('admin.products.index')->with('success', 'Đã ngừng kinh doanh sản phẩm #' . $product->id . '!');
+        $name = $product->name;
+        $variantCount = $product->variants()->count();
+
+        // 2. Thao tác xóa từ danh sách luôn là XÓA MỀM toàn bộ:
+        // Đổi trạng thái sản phẩm cha và toàn bộ sản phẩm con sang INACTIVE, đánh dấu deleted_at
+        $product->update(['status' => 'INACTIVE']);
+        $product->variants()->update(['status' => 'INACTIVE']);
+        $product->variants()->delete(); // Xóa mềm toàn bộ sản phẩm con (cập nhật deleted_at)
+        $product->delete(); // Xóa mềm sản phẩm cha (cập nhật deleted_at)
+
+        $msg = "Đã xóa mềm sản phẩm [{$name}] cùng toàn bộ {$variantCount} sản phẩm con thành công (chuyển sang ngừng kinh doanh).";
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'is_soft_deleted' => true,
+            ]);
+        }
+        return redirect()->route('admin.products.index')->with('success', $msg);
+    }
+
+    /**
+     * Xóa 1 sản phẩm con (biến thể) của sản phẩm cha.
+     * Ràng buộc:
+     * 1. Chặn xóa nếu sản phẩm cha có đơn hàng chưa hoàn tất.
+     * 2. Chặn xóa nếu đây là sản phẩm con duy nhất còn lại của sản phẩm cha.
+     * 3. Tự động chuyển cờ mặc định (is_default) nếu biến thể bị xóa là mặc định.
+     * 4. Tự động đồng bộ lại khoảng giá thấp nhất và tồn kho của sản phẩm cha.
+     */
+    public function destroyVariant(ProductVariant $variant): JsonResponse
+    {
+        $product = $variant->product;
+
+        // 1. Chặn xóa nếu có đơn hàng chưa hoàn tất
+        if ($product && $product->hasPendingOrders()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa vì có sản phẩm con đang trong đơn hàng xử lý.',
+            ], 422);
+        }
+
+        // 2. Chặn xóa nếu đây là sản phẩm con duy nhất còn lại
+        if ($product && $product->variants()->count() <= 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa vì đây là phân loại con duy nhất còn lại của sản phẩm [' . $product->name . ']. Một sản phẩm cần có ít nhất 1 phân loại để hiển thị giá và đặt mua. Nếu không muốn bán sản phẩm này nữa, vui lòng tạm dừng kinh doanh hoặc xóa sản phẩm cha.',
+            ], 422);
+        }
+
+        // 3. Nếu là biến thể mặc định, chuyển cờ mặc định sang biến thể kế tiếp
+        if ($variant->is_default && $product) {
+            $other = $product->variants()->where('id', '!=', $variant->id)->first();
+            if ($other) {
+                $other->update(['is_default' => true]);
+            }
+        }
+
+        $variantName = ($variant->size ? $variant->size : '') . ($variant->color ? ' - ' . $variant->color : '');
+        $variant->update(['status' => 'INACTIVE']);
+        $variant->delete();
+
+        // 4. Đồng bộ lại giá bán và tổng tồn kho sản phẩm cha
+        if ($product) {
+            $product->syncLowestPriceFromVariants();
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Ngừng kinh doanh sản phẩm thành công.',
+            'message' => "Đã xóa phân loại con [{$variantName}] thành công. Kho và giá của sản phẩm cha đã được tự động đồng bộ lại.",
         ]);
     }
 
     /**
+     * Khôi phục sản phẩm từ thùng rác (Restore).
+     * Hỗ trợ chọn lọc danh sách sản phẩm con (biến thể) cần khôi phục / kích hoạt lại.
+     */
+    public function restore(?Request $request = null, ?int $id = null): JsonResponse|RedirectResponse
+    {
+        $request = $request ?: request();
+        $productId = $id ?? (int) $request->route('id');
+
+        $product = Product::onlyTrashed()->with('variants')->findOrFail($productId);
+        $product->status = Product::STATUS_ACTIVE;
+        $product->restore();
+
+        // Xử lý các sản phẩm con (biến thể) được chọn khôi phục
+        if ($request->has('variant_ids')) {
+            $variantIds = (array) $request->input('variant_ids', []);
+            if (!empty($variantIds)) {
+                // Kích hoạt lại các biến thể được chọn
+                $product->variants()->whereIn('id', $variantIds)->update(['status' => 'ACTIVE']);
+                // Các biến thể không được chọn sẽ được giữ ở trạng thái ngừng bán (INACTIVE)
+                $product->variants()->whereNotIn('id', $variantIds)->update(['status' => 'INACTIVE']);
+            } else {
+                // Nếu người dùng cố ý bỏ chọn tất cả biến thể
+                $product->variants()->update(['status' => 'INACTIVE']);
+            }
+        } else {
+            // Mặc định khôi phục tất cả biến thể đang có
+            $product->variants()->update(['status' => 'ACTIVE']);
+        }
+
+        // Đồng bộ lại giá bán và tồn kho từ các biến thể còn hoạt động
+        $product->syncLowestPriceFromVariants();
+
+        $activeVariantsCount = $product->variants()->where('status', 'ACTIVE')->count();
+        if ($product->variants()->count() > 0) {
+            $msg = "Đã khôi phục sản phẩm [{$product->name}] cùng {$activeVariantsCount} sản phẩm con thành công!";
+        } else {
+            $msg = "Đã khôi phục sản phẩm [{$product->name}] thành công!";
+        }
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'data'    => $product->fresh(['variants', 'images']),
+            ]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Xóa vĩnh viễn sản phẩm khỏi hệ thống (Force Delete).
+     * Chỉ được phép nếu sản phẩm chưa từng phát sinh đơn hàng trong quá khứ.
+     */
+    public function forceDelete(int $id): JsonResponse|RedirectResponse
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+
+        if ($product->hasBeenOrdered()) {
+            $msg = "Sản phẩm [{$product->name}] đã từng được đặt trong đơn hàng nên chỉ được phép xóa mềm, không thể xóa vĩnh viễn.";
+            if (request()->wantsJson() || request()->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                ], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $name = $product->name;
+        $product->images()->delete();
+        $product->variants()->delete();
+        $product->forceDelete();
+
+        $msg = "Đã xóa vĩnh viễn sản phẩm [{$name}] khỏi hệ thống!";
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+            ]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
      * Chuyển đổi trạng thái kinh doanh của sản phẩm (ACTIVE <-> INACTIVE).
+     * Ràng buộc: Khi sản phẩm cha tạm dừng kinh doanh (INACTIVE), tự động tắt toàn bộ sản phẩm con.
      */
     public function toggleStatus(Product $product): JsonResponse
     {
         $newStatus = $product->status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
         $product->update(['status' => $newStatus]);
 
+        if ($newStatus === 'INACTIVE') {
+            $product->variants()->update(['status' => 'INACTIVE']);
+        }
+
         return response()->json([
             'success' => true,
-            'message' => $newStatus === 'ACTIVE' ? 'Đã kích hoạt sản phẩm mở bán trở lại!' : 'Đã chuyển sản phẩm sang ngừng kinh doanh!',
+            'message' => $newStatus === 'ACTIVE' 
+                ? 'Đã kích hoạt sản phẩm mở bán trở lại!' 
+                : 'Đã chuyển sản phẩm sang ngừng kinh doanh và tự động tắt toàn bộ chi tiết sản phẩm con!',
             'status'  => $newStatus,
-            'data'    => $product,
+            'data'    => $product->fresh(['variants']),
         ]);
     }
 
@@ -581,7 +809,7 @@ class ProductController extends Controller
     {
         $query = ProductVariant::with(['product' => function($q) {
             $q->select('id', 'name', 'category_id', 'status');
-        }, 'product.category:id,name']);
+        }, 'product.category:id,name'])->whereHas('product');
 
         // Tìm kiếm theo tên cha, SKU con, kích thước, màu sắc, ID cha
         if ($request->filled('search')) {
@@ -667,6 +895,8 @@ class ProductController extends Controller
             });
         })->count();
 
+        $trashed = Product::onlyTrashed()->count();
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -674,6 +904,7 @@ class ProductController extends Controller
                 'active'   => $active,
                 'inactive' => $inactive,
                 'warning'  => $warning,
+                'trashed'  => $trashed,
             ]
         ]);
     }
@@ -683,10 +914,10 @@ class ProductController extends Controller
      */
     public function variantsStats(): JsonResponse
     {
-        $total = ProductVariant::count();
-        $active = ProductVariant::where('status', 'ACTIVE')->count();
-        $inactive = ProductVariant::where('status', 'INACTIVE')->count();
-        $warning = ProductVariant::where('stock_quantity', '<=', 5)->count();
+        $total = ProductVariant::whereHas('product')->count();
+        $active = ProductVariant::whereHas('product')->where('status', 'ACTIVE')->count();
+        $inactive = ProductVariant::whereHas('product')->where('status', 'INACTIVE')->count();
+        $warning = ProductVariant::whereHas('product')->where('stock_quantity', '<=', 5)->count();
 
         return response()->json([
             'success' => true,
@@ -701,10 +932,19 @@ class ProductController extends Controller
 
     /**
      * Bật / tắt trạng thái kinh doanh của riêng 1 biến thể con.
+     * Chặn bật sản phẩm con nếu sản phẩm cha hiện đang tạm dừng kinh doanh.
      */
     public function toggleVariantStatus(ProductVariant $variant): JsonResponse
     {
         $newStatus = ($variant->status === 'ACTIVE') ? 'INACTIVE' : 'ACTIVE';
+
+        if ($newStatus === 'ACTIVE' && $variant->product && $variant->product->status === 'INACTIVE') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể bật phân loại này vì sản phẩm cha hiện đang tạm dừng kinh doanh. Vui lòng bật sản phẩm cha trước.',
+            ], 422);
+        }
+
         $variant->update(['status' => $newStatus]);
 
         return response()->json([

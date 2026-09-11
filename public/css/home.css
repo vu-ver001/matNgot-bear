@@ -84,35 +84,38 @@
     }
 }
 
-/* Navigation Arrows (< >) */
+/* Navigation Arrows (< >) - Bỏ hình tròn, chỉ giữ mũi tên thanh thoát, hover đậm màu */
 .hero-nav-arrow {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.88);
-    border: 1px solid rgba(234, 216, 195, 0.85);
-    color: #4A2E2B;
+    width: auto;
+    height: auto;
+    padding: 10px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: rgba(93, 64, 55, 0.65);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 34px;
     cursor: pointer;
     z-index: 12;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px rgba(78, 52, 46, 0.14);
+    backdrop-filter: none;
+    box-shadow: none;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25));
 }
 
 .hero-nav-arrow:hover {
-    background: #C86A3B;
-    color: #FFFFFF;
-    border-color: #C86A3B;
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 10px 28px rgba(200, 106, 59, 0.4);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #3E2723;
+    transform: translateY(-50%) scale(1.22);
+    filter: drop-shadow(0 4px 14px rgba(62, 39, 35, 0.5));
 }
 
 .hero-nav-arrow.prev {
@@ -617,9 +620,13 @@
         min-height: 520px;
     }
     .hero-nav-arrow {
-        width: 40px;
-        height: 40px;
-        font-size: 14px;
+        width: auto;
+        height: auto;
+        font-size: 28px;
+        padding: 8px 4px;
+        background: transparent;
+        box-shadow: none;
+        border: none;
     }
     .hero-nav-arrow.prev { left: 12px; }
     .hero-nav-arrow.next { right: 12px; }
@@ -679,9 +686,13 @@
         min-height: 480px;
     }
     .hero-nav-arrow {
-        width: 32px;
-        height: 32px;
-        font-size: 11px;
+        width: auto;
+        height: auto;
+        font-size: 24px;
+        padding: 6px 2px;
+        background: transparent;
+        box-shadow: none;
+        border: none;
     }
     .hero-nav-arrow.prev { left: 4px; }
     .hero-nav-arrow.next { right: 4px; }
