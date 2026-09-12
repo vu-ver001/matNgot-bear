@@ -319,7 +319,7 @@ class Product extends Model
         }
 
         $prices = $variants->pluck('price')
-            ->filter(fn($p) => is_numeric($p) && (float)$p > 0)
+            ->filter(fn($p) => is_numeric($p) && (float)$p >= 0)
             ->map(fn($p) => (float)$p)
             ->values()
             ->all();
