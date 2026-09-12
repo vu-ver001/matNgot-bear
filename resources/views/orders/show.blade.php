@@ -109,8 +109,9 @@
                         <tbody>
                             @foreach ($order->details as $detail)
                                 @php
-                                    $rawImg = $detail->product?->images?->where('is_primary', true)->first()?->image_url
-                                        ?? $detail->product?->images?->first()?->image_url;
+                                    $rawImg = $detail->variant_image_url
+                                        ?: ($detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                            ?? $detail->product?->images?->first()?->image_url);
                                     $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
                                 @endphp
                                 <tr>
@@ -128,6 +129,14 @@
                                             @endif
                                             <div class="min-w-0">
                                                 <div class="font-bold text-[#4E342E] leading-snug">{{ $detail->product_name }}</div>
+                                                @if ($detail->variant_size || $detail->variant_color || $detail->variant_sku)
+                                                    <div class="text-xs text-[#795548] mt-0.5">
+                                                        @if ($detail->variant_size) Size: {{ $detail->variant_size }} @endif
+                                                        @if ($detail->variant_size && $detail->variant_color) · @endif
+                                                        @if ($detail->variant_color) Màu: {{ $detail->variant_color }} @endif
+                                                        @if ($detail->variant_sku) · SKU: {{ $detail->variant_sku }} @endif
+                                                    </div>
+                                                @endif
                                                 @if ($isStaff && $detail->product)
                                                     <div class="text-xs text-[#795548]">Mã SP: #{{ $detail->product_id }}</div>
                                                 @endif

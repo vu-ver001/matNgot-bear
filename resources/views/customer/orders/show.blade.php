@@ -656,7 +656,18 @@
                                     <tbody class="bg-white divide-y divide-gray-200">
                                         @foreach ($order->details as $detail)
                                             <tr>
-                                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B]">{{ $detail->product_name }}</td>
+                                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B]">
+                                                    <div>{{ $detail->product_name }}</div>
+                                                    @if ($detail->variant_size || $detail->variant_color || $detail->variant_sku)
+                                                        <div class="text-xs text-[#64748B] mt-0.5">
+                                                            {{ implode(' · ', array_filter([
+                                                                $detail->variant_size ? 'Size: '.$detail->variant_size : null,
+                                                                $detail->variant_color ? 'Màu: '.$detail->variant_color : null,
+                                                                $detail->variant_sku ? 'SKU: '.$detail->variant_sku : null,
+                                                            ])) }}
+                                                        </div>
+                                                    @endif
+                                                </td>
                                                 <td class="px-4 py-4 text-sm text-[#64748B] text-right">{{ number_format($detail->product_price, 0, ',', '.') }} đ</td>
                                                 <td class="px-4 py-4 text-sm text-[#64748B] text-right">{{ $detail->quantity }}</td>
                                                 <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right">{{ number_format($detail->line_total, 0, ',', '.') }} đ</td>
