@@ -37,10 +37,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('order_details', function (Blueprint $table): void {
-            $table->dropForeign(['product_variant_id']);
-            $table->dropIndex(['product_variant_id']);
             $table->dropColumn([
-                'product_variant_id',
                 'variant_sku',
                 'variant_size',
                 'variant_color',
@@ -48,6 +45,5 @@ return new class extends Migration
                 'original_unit_price',
             ]);
         });
-
     }
 };

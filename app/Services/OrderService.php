@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Voucher;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class OrderService
 {
@@ -575,15 +576,11 @@ class OrderService
             }
 
             if ($newStatus === 'RETURNED' && $oldStatus === 'COMPLETED') {
-                foreach ($order->details as $detail) {
-                    $detail->product()->withTrashed()->first()?->where('sold_count', '>=', $detail->quantity)->decrement('sold_count', $detail->quantity);
-                }
+                $this->updateSoldCounts($order, false);
             }
 
             if ($newStatus === 'COMPLETED') {
-                foreach ($order->details as $detail) {
-                    $detail->product()->withTrashed()->first()?->increment('sold_count', $detail->quantity);
-                }
+                $this->updateSoldCounts($order, true);
             }
 
             return $order->fresh();
@@ -615,22 +612,60 @@ class OrderService
 
             // Luôn khóa sản phẩm cha trước rồi mới khóa biến thể, cùng thứ tự
             // với createOrder(), để tránh deadlock khi đặt/hủy đồng thời.
-            $variant = $detail->productVariant()->withTrashed()->lockForUpdate()->first();
+            $variant = $detail->productVariant()->withTrashed()->lockForUpdate()->first()
+                ?? $this->resolveLegacyVariantForRestore($detail, $product);
             if ($variant) {
                 $variant->increment('stock_quantity', $quantity);
                 $product->syncLowestPriceFromVariants();
                 continue;
             }
 
-            // Legacy order detail without a variant snapshot. Once a product has
-            // variants, its parent stock is derived from those rows, so adding
-            // to the parent would make the denormalized value drift.
-
             if (ProductVariant::withTrashed()->where('product_id', $product->id)->exists()) {
-                $product->syncLowestPriceFromVariants();
-            } else {
-                $product->increment('stock_quantity', $quantity);
+                throw new RuntimeException(
+                    "Không xác định được biến thể cần hoàn kho cho sản phẩm '{$detail->product_name}'. "
+                    .'Vui lòng đối chiếu SKU/size/màu của đơn hàng trước khi hủy hoặc trả hàng.'
+                );
             }
+
+            $product->increment('stock_quantity', $quantity);
+        }
+    }
+
+    private function resolveLegacyVariantForRestore(OrderDetail $detail, Product $product): ?ProductVariant
+    {
+        $variants = ProductVariant::withTrashed()
+            ->where('product_id', $product->id)
+            ->when($detail->variant_sku, fn ($query, $sku) => $query->where('sku', $sku))
+            ->when(! $detail->variant_sku && $detail->variant_size, fn ($query) => $query->where('size', $detail->variant_size))
+            ->when(! $detail->variant_sku && $detail->variant_color, fn ($query) => $query->where('color', $detail->variant_color))
+            ->lockForUpdate()
+            ->get();
+
+        return $variants->count() === 1 ? $variants->first() : null;
+    }
+
+    private function updateSoldCounts(Order $order, bool $increment): void
+    {
+        $quantitiesByProduct = $order->details
+            ->groupBy('product_id')
+            ->map(fn ($details) => (int) $details->sum('quantity'))
+            ->sortKeys();
+
+        foreach ($quantitiesByProduct as $productId => $quantity) {
+            if ($quantity < 1) {
+                continue;
+            }
+
+            $product = Product::withTrashed()->whereKey($productId)->lockForUpdate()->first();
+            if (! $product) {
+                continue;
+            }
+
+            $product->update([
+                'sold_count' => $increment
+                    ? (int) $product->sold_count + $quantity
+                    : max(0, (int) $product->sold_count - $quantity),
+            ]);
         }
     }
 
