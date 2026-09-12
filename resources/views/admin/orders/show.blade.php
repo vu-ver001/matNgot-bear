@@ -450,9 +450,9 @@
                         <tbody>
                             @foreach ($order->details as $detail)
                                 @php
-                                    $rawImg = $detail->variant?->image_url
-                                        ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
-                                        ?? $detail->product?->images?->first()?->image_url;
+                                    $rawImg = $detail->variant_image_url
+                                        ?: ($detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                            ?? $detail->product?->images?->first()?->image_url);
                                     $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
                                 @endphp
                                 <tr>

@@ -109,9 +109,10 @@
                         <tbody>
                             @foreach ($order->details as $detail)
                                 @php
-                                    $rawImg = $detail->variant?->image_url
-                                        ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
-                                        ?? $detail->product?->images?->first()?->image_url;
+                                    $rawImg = $detail->variant_image_url
+                                        ?: ($detail->variant?->image_url
+                                            ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                            ?? $detail->product?->images?->first()?->image_url);
                                     $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
                                 @endphp
                                 <tr>
@@ -129,14 +130,25 @@
                                             @endif
                                             <div class="min-w-0">
                                                 <div class="font-bold text-[#4E342E] leading-snug">{{ $detail->product_name }}</div>
-                                                @if ($detail->variant_display)
-                                                    <div class="mt-0.5">
+                                                @php
+                                                    $variantLabel = $detail->variant_display;
+                                                    if (empty($variantLabel) || $variantLabel === 'Phân loại tiêu chuẩn') {
+                                                        $vParts = array_filter([
+                                                            $detail->variant_size ? 'Size: '.$detail->variant_size : null,
+                                                            $detail->variant_color ? 'Màu: '.$detail->variant_color : null,
+                                                        ]);
+                                                        $variantLabel = !empty($vParts) ? implode(' · ', $vParts) : null;
+                                                    }
+                                                    $sku = $detail->variant_sku ?: $detail->variant?->sku;
+                                                @endphp
+                                                @if ($variantLabel)
+                                                    <div class="mt-0.5 flex items-center flex-wrap gap-1">
                                                         <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded shadow-2xs">
                                                             <span>✨</span>
-                                                            <span>{{ $detail->variant_display }}</span>
+                                                            <span>{{ $variantLabel }}</span>
                                                         </span>
-                                                        @if ($detail->variant?->sku)
-                                                            <span class="text-[10px] text-gray-400 font-mono ml-1">({{ $detail->variant->sku }})</span>
+                                                        @if ($sku)
+                                                            <span class="text-[10px] text-gray-400 font-mono">({{ $sku }})</span>
                                                         @endif
                                                     </div>
                                                 @endif

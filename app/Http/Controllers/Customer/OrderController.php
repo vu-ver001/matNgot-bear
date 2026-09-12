@@ -59,6 +59,7 @@ class OrderController extends Controller
 
         $orders = $query->with([
             'details.product.images',
+            'details.productVariant',
             'voucher',
             'shippingVoucher',
             'reviews',
@@ -103,7 +104,7 @@ class OrderController extends Controller
         $this->orderService->checkAndCancelIfExpired($order);
         $order->refresh();
 
-        $order->load(['details.product.images', 'payments', 'statusHistories', 'voucher', 'reviews']);
+        $order->load(['details.product.images', 'details.productVariant', 'payments', 'statusHistories', 'voucher', 'reviews']);
 
         return response()
             ->view('customer.orders.show', compact('order'))
@@ -121,7 +122,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['details.product.images', 'payments', 'voucher', 'customer']);
+        $order->load(['details.product.images', 'details.productVariant', 'payments', 'voucher', 'customer']);
 
         return view('customer.orders.invoice', compact('order'));
     }

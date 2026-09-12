@@ -34,8 +34,8 @@
         <!-- Component Header (Không gồm thanh danh mục con) -->
         @include('partials.header')
 
-        <!-- Navigation Menu Row with Mega Menu (Image 1 Style) (Hidden on Cart & Checkout) -->
-        @if (!request()->routeIs('customer.cart*') && !request()->routeIs('customer.checkout*') && !request()->routeIs('customer.payment.*'))
+        <!-- Navigation Menu Row with Mega Menu (Image 1 Style) (Hidden on Cart, Checkout, Payment & Wishlist) -->
+        @if (!request()->routeIs('customer.cart*') && !request()->routeIs('customer.checkout*') && !request()->routeIs('customer.payment.*') && !request()->routeIs('customer.wishlist*') && !isset($hideNavbar))
         <nav class="nav-bar">
             <div class="nav-container">
                 @php

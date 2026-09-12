@@ -7,6 +7,7 @@ use App\Models\OrderDetail;
 use App\Models\OrderStatusHistory;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Voucher;
 use Illuminate\Support\Facades\DB;
 
@@ -17,33 +18,64 @@ class OrderService
         return DB::transaction(function () use ($data, $cartItems) {
             $subtotal = 0;
             $orderDetails = [];
+            $variantProducts = [];
+            $voucherItems = [];
+
+            // Khóa sản phẩm cha theo thứ tự ổn định khi một đơn có nhiều
+            // dòng, tránh deadlock giữa hai lượt đặt hàng đồng thời.
+            $cartItems = collect($cartItems)
+                ->sortBy(fn ($cartItem) => sprintf(
+                    '%020d-%020d',
+                    (int) data_get($cartItem, 'product_id', 0),
+                    (int) (data_get($cartItem, 'product_variant_id')
+                        ?: data_get($cartItem, 'variant_id')
+                        ?: data_get($cartItem, 'productVariant.id', 0))
+                ))
+                ->values()
+                ->all();
 
             foreach ($cartItems as $cartItem) {
-                $product = Product::lockForUpdate()->find($cartItem->product_id);
+                $productId = (int) data_get($cartItem, 'product_id', 0);
+                $product = Product::lockForUpdate()->find($productId);
 
-                if (! $product) {
-                    throw new \Exception("Sản phẩm không tồn tại hoặc đã bị xóa.");
+                $quantity = (int) data_get($cartItem, 'quantity', 0);
+                if ($quantity < 1) {
+                    throw new \Exception('Số lượng sản phẩm không hợp lệ.');
                 }
 
+                if (! $product || $product->status !== Product::STATUS_ACTIVE) {
+                    $productName = $product?->name ?? 'không xác định';
+                    throw new \Exception("Sản phẩm '{$productName}' hiện không còn kinh doanh.");
+                }
+
+                $variantId = data_get($cartItem, 'product_variant_id')
+                    ?: data_get($cartItem, 'variant_id')
+                    ?: data_get($cartItem, 'productVariant.id');
                 $variant = null;
-                if (! empty($cartItem->product_variant_id)) {
-                    $variant = \App\Models\ProductVariant::lockForUpdate()->find($cartItem->product_variant_id);
 
-                    if (! $variant || $variant->status !== 'ACTIVE') {
-                        throw new \Exception("Phân loại sản phẩm của '{$product->name}' không hợp lệ hoặc đã ngừng kinh doanh.");
-                    }
+                if ($variantId) {
+                    $variant = ProductVariant::withTrashed()
+                        ->where('product_id', $product->id)
+                        ->whereKey((int) $variantId)
+                        ->lockForUpdate()
+                        ->first();
 
-                    if ($variant->stock_quantity < $cartItem->quantity) {
-                        throw new \Exception("Phân loại '{$variant->color} · {$variant->size}' của sản phẩm '{$product->name}' không đủ tồn kho (chỉ còn {$variant->stock_quantity}).");
+                    if (! $variant || $variant->trashed() || $variant->status !== 'ACTIVE') {
+                        throw new \Exception("Phân loại của sản phẩm '{$product->name}' hiện không còn kinh doanh.");
                     }
+                } elseif (ProductVariant::withTrashed()->where('product_id', $product->id)->exists()) {
+                    throw new \Exception("Vui lòng chọn size/màu cho sản phẩm '{$product->name}' trước khi đặt hàng.");
                 }
 
-                if ($product->stock_quantity < $cartItem->quantity) {
-                    throw new \Exception("Sản phẩm '{$product->name}' không đủ tồn kho (chỉ còn {$product->stock_quantity}).");
+                $originalPrice = $variant ? (float) $variant->price : (float) $product->price;
+                $price = $variant ? (float) $variant->effective_price : $this->effectiveProductPrice($product);
+                $availableStock = $variant ? (int) $variant->stock_quantity : (int) $product->stock_quantity;
+
+                if ($availableStock < $quantity) {
+                    throw new \Exception("Sản phẩm '{$product->name}' không đủ tồn kho.");
                 }
 
-                $price = $variant ? $variant->effective_price : ($product->sale_price ?? $product->price);
-                $lineTotal = $price * $cartItem->quantity;
+                $lineTotal = $price * $quantity;
                 $subtotal += $lineTotal;
 
                 $variantName = $variant ? "{$variant->color} · {$variant->size}" : null;
@@ -53,17 +85,35 @@ class OrderService
                     'product_variant_id' => $variant?->id,
                     'variant_name' => $variantName,
                     'product_name' => $product->name,
+                    'variant_sku' => $variant?->sku,
+                    'variant_size' => $variant?->size,
+                    'variant_color' => $variant?->color,
+                    'variant_image_url' => $variant?->image_url,
                     'product_price' => $price,
-                    'quantity' => $cartItem->quantity,
+                    'original_unit_price' => $originalPrice,
+                    'quantity' => $quantity,
                     'line_total' => $lineTotal,
                 ];
 
+                $voucherItems[] = [
+                    'product_id' => $product->id,
+                    'category_id' => $product->category_id,
+                    'price' => $price,
+                    'quantity' => $quantity,
+                ];
+
                 if ($variant) {
-                    $variant->decrement('stock_quantity', $cartItem->quantity);
-                    $product->syncVariantsStats();
+                    $variant->decrement('stock_quantity', $quantity);
+                    $variantProducts[$product->id] = $product;
                 } else {
-                    $product->decrement('stock_quantity', $cartItem->quantity);
+                    $product->decrement('stock_quantity', $quantity);
                 }
+            }
+
+            // Parent stock/price are denormalized display values. Recalculate them only
+            // after all variant rows have been locked and updated in this transaction.
+            foreach ($variantProducts as $product) {
+                $product->syncLowestPriceFromVariants();
             }
 
             $shippingFee = isset($data['shipping_fee']) ? (float) $data['shipping_fee'] : 30000;
@@ -78,7 +128,7 @@ class OrderService
                 $voucher = Voucher::find($data['voucher_id']);
 
                 if ($voucher && $voucher->voucher_type === 'ORDER') {
-                    $result = $voucher->validateForCustomer((int) $data['customer_id'], $subtotal, $shippingFee, $cartItems);
+                    $result = $voucher->validateForCustomer((int) $data['customer_id'], $subtotal, $shippingFee, $voucherItems);
 
                     if (! $result['valid']) {
                         throw new \Exception($result['message']);
@@ -93,7 +143,7 @@ class OrderService
                 $shippingVoucher = Voucher::find($data['shipping_voucher_id']);
 
                 if ($shippingVoucher && $shippingVoucher->voucher_type === 'SHIPPING') {
-                    $result = $shippingVoucher->validateForCustomer((int) $data['customer_id'], $subtotal, $shippingFee, $cartItems);
+                    $result = $shippingVoucher->validateForCustomer((int) $data['customer_id'], $subtotal, $shippingFee, $voucherItems);
 
                     if (! $result['valid']) {
                         throw new \Exception($result['message']);
@@ -146,8 +196,20 @@ class OrderService
                 Voucher::where('id', $data['shipping_voucher_id'])->increment('used_count');
             }
 
-            return $order->load(['details.product', 'voucher', 'shippingVoucher']);
+            return $order->load(['details.product', 'details.productVariant', 'voucher', 'shippingVoucher']);
         });
+    }
+
+    /**
+     * Resolve the legacy product-only price. Products with variants are always
+     * priced through ProductVariant before reaching this method.
+     */
+    private function effectiveProductPrice(Product $product): float
+    {
+        $price = (float) $product->price;
+        $salePrice = (float) ($product->sale_price ?? 0);
+
+        return $salePrice > 0 && $salePrice < $price ? $salePrice : $price;
     }
 
     public function cancelOrder(Order $order, ?int $cancelledBy = null, ?string $reason = null, array $refundData = []): Order
@@ -530,15 +592,44 @@ class OrderService
 
     public function restoreStock(Order $order): void
     {
-        foreach ($order->details as $detail) {
-            if (! empty($detail->product_variant_id)) {
-                $variant = $detail->variant()->withTrashed()->first();
-                if ($variant) {
-                    $variant->increment('stock_quantity', $detail->quantity);
-                    $variant->product?->syncVariantsStats();
-                }
+        // Dùng cùng thứ tự khóa với createOrder() để hủy đồng thời không tự
+        // tạo deadlock khi hai đơn chứa cùng nhiều sản phẩm.
+        $details = collect($order->details)
+            ->sortBy(fn ($detail) => sprintf(
+                '%020d-%020d',
+                (int) $detail->product_id,
+                (int) ($detail->product_variant_id ?? 0)
+            ))
+            ->values();
+
+        foreach ($details as $detail) {
+            $quantity = (int) $detail->quantity;
+            if ($quantity < 1) {
+                continue;
+            }
+
+            $product = $detail->product()->withTrashed()->lockForUpdate()->first();
+            if (! $product) {
+                continue;
+            }
+
+            // Luôn khóa sản phẩm cha trước rồi mới khóa biến thể, cùng thứ tự
+            // với createOrder(), để tránh deadlock khi đặt/hủy đồng thời.
+            $variant = $detail->productVariant()->withTrashed()->lockForUpdate()->first();
+            if ($variant) {
+                $variant->increment('stock_quantity', $quantity);
+                $product->syncLowestPriceFromVariants();
+                continue;
+            }
+
+            // Legacy order detail without a variant snapshot. Once a product has
+            // variants, its parent stock is derived from those rows, so adding
+            // to the parent would make the denormalized value drift.
+
+            if (ProductVariant::withTrashed()->where('product_id', $product->id)->exists()) {
+                $product->syncLowestPriceFromVariants();
             } else {
-                $detail->product()->withTrashed()->first()?->increment('stock_quantity', $detail->quantity);
+                $product->increment('stock_quantity', $quantity);
             }
         }
     }

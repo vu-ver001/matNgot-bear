@@ -149,8 +149,12 @@ class StaffChatController extends Controller
                         'sender_name' => $m->sender?->full_name ?? $m->sender?->name ?? 'Người dùng',
                         'sender_avatar' => $m->sender?->avatar_url,
                         'content' => $m->content,
+                        'image_url' => $m->image_url,
+                        'image_urls' => $m->image_urls,
+                        'images' => $m->image_urls,
                         'sent_at' => $m->sent_at?->format('H:i'),
                         'date' => $m->sent_at?->format('d/m/Y'),
+                        'timestamp' => $m->sent_at?->timestamp ?? now()->timestamp,
                         'is_read' => (bool) $m->is_read,
                     ]),
                 ],
@@ -317,7 +321,14 @@ class StaffChatController extends Controller
         $orderId = $request->filled('order_id') ? (int) $request->input('order_id') : null;
         $isFirstMessage = $case->messages()->count() === 0;
 
-        $message = $this->chatService->staffSendMessage($user, $case, $request->input('content'), $orderId);
+        $message = $this->chatService->staffSendMessage(
+            $user,
+            $case,
+            $request->input('content'),
+            $orderId,
+            $request->file('image'),
+            $request->file('images')
+        );
 
         if ($request->expectsJson() || $request->ajax()) {
             $case->refresh()->loadMissing(['order']);
@@ -331,8 +342,12 @@ class StaffChatController extends Controller
                     'is_customer' => false,
                     'sender_name' => $user->full_name ?? $user->name ?? 'Nhân viên hỗ trợ',
                     'content' => $message->content,
+                    'image_url' => $message->image_url,
+                    'image_urls' => $message->image_urls,
+                    'images' => $message->image_urls,
                     'sent_at' => $message->sent_at?->format('H:i'),
                     'date' => $message->sent_at?->format('d/m/Y'),
+                    'timestamp' => $message->sent_at?->timestamp ?? now()->timestamp,
                     'is_read' => (bool) $message->is_read,
                     'case_id' => $case->id,
                     'order_id' => $case->order_id,
@@ -364,8 +379,14 @@ class StaffChatController extends Controller
             $this->chatService->markMessagesAsReadForStaff($case);
         }
 
+        $lastMsg = \App\Models\Message::where('conversation_id', $case->conversation_id)->latest('id')->first();
+        $isLastMsgSelf = $lastMsg && ((int) $lastMsg->sender_id !== (int) $case->customer_id);
+        $lastMsgSeen = $isLastMsgSelf && (bool) $lastMsg->is_read;
+
         return response()->json([
             'success' => true,
+            'is_last_msg_self' => $isLastMsgSelf,
+            'last_msg_seen' => $lastMsgSeen,
             'data' => $newMessages->map(fn ($m) => [
                 'id' => $m->id,
                 'sender_id' => $m->sender_id,
@@ -373,8 +394,12 @@ class StaffChatController extends Controller
                 'sender_name' => $m->sender?->full_name ?? $m->sender?->name ?? 'Người dùng',
                 'sender_avatar' => $m->sender?->avatar_url,
                 'content' => $m->content,
+                'image_url' => $m->image_url,
+                'image_urls' => $m->image_urls,
+                'images' => $m->image_urls,
                 'sent_at' => $m->sent_at?->format('H:i'),
                 'date' => $m->sent_at?->format('d/m/Y'),
+                'timestamp' => $m->sent_at?->timestamp ?? now()->timestamp,
                 'is_read' => (bool) $m->is_read,
             ]),
         ]);

@@ -18,10 +18,9 @@
             style="--auth-hero-image: url('{{ asset('images/auth/bear-hero.png') }}'); --auth-panel-image: url('{{ asset('images/auth/auth-panel-background.png') }}')"
         >
             <a
-                href="#"
+                href="{{ route('home') }}"
                 class="auth-home-link"
-                data-placeholder-link
-                title="Liên kết trang chủ sẽ được cập nhật sau"
+                title="Về trang chủ Mật Ngọt Bear"
             >
                 <span>Mật Ngọt Bear</span>
                 <span aria-hidden="true">⌂</span>

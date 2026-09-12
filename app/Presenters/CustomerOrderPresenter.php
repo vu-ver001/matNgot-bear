@@ -36,9 +36,9 @@ class CustomerOrderPresenter
             $product = $detail->product;
             $variant = $detail->variant;
 
-            $rawImg = $variant?->image_url
-                ?? $product?->images?->where('is_primary', true)->first()?->image_url
-                ?? $product?->images?->first()?->image_url;
+            $rawImg = $detail->variant_image_url
+                ?: ($product?->images?->where('is_primary', true)->first()?->image_url
+                    ?? $product?->images?->first()?->image_url);
 
             $imageUrl = '';
             if ($rawImg) {
@@ -52,19 +52,25 @@ class CustomerOrderPresenter
             } elseif ($variant) {
                 $variation = "{$variant->color} · {$variant->size}";
             } else {
-                $variationParts = [];
-                if ($product && ! empty($product->size)) {
-                    $variationParts[] = 'Size: '.$product->size;
+                $size = $detail->variant_size ?: $product?->size;
+                $color = $detail->variant_color ?: $product?->color;
+                if (! empty($color) && ! empty($size)) {
+                    $variation = "{$color} · {$size}";
+                } elseif (! empty($size)) {
+                    $variation = 'Size: '.$size;
+                } elseif (! empty($color)) {
+                    $variation = 'Màu: '.$color;
+                } else {
+                    $variation = 'Phân loại tiêu chuẩn';
                 }
-                if ($product && ! empty($product->color)) {
-                    $variationParts[] = 'Màu: '.$product->color;
-                }
-                $variation = ! empty($variationParts) ? implode(', ', $variationParts) : 'Phân loại tiêu chuẩn';
             }
 
             $currentPrice = (float) $detail->product_price;
+            $snapshotOriginalPrice = (float) ($detail->original_unit_price ?? 0);
             $basePrice = $variant ? (float) $variant->price : ($product ? (float) $product->price : $currentPrice);
-            $originalPrice = $basePrice > $currentPrice ? $basePrice : $currentPrice;
+            $originalPrice = $snapshotOriginalPrice > $currentPrice
+                ? $snapshotOriginalPrice
+                : ($basePrice > $currentPrice ? $basePrice : $currentPrice);
 
             $productUrl = $detail->product_id
                 ? route('products.show', $detail->product_id)

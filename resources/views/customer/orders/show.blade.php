@@ -4,7 +4,7 @@
             <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-3 flex-wrap">
                     <h2 class="font-bold text-2xl text-[#2B1810] tracking-tight">Chi tiết đơn hàng <span class="text-[#E08A1E] font-mono">{{ $order->order_code }}</span></h2>
-                    <a href="{{ route('customer.messages.index') }}"
+                    <a href="{{ route('customer.messages.index', ['order_id' => $order->id]) }}"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer shadow-2xs hover:scale-102"
                        title="Chat với Shop">
                         <i class="fa-regular fa-comment-dots text-sm"></i>
@@ -675,16 +675,27 @@
                                                         @endif
                                                         <div class="min-w-0">
                                                             <div class="font-bold text-[#1E293B]">{{ $detail->product_name }}</div>
-                                                            @if($detail->variant_display)
+                                                            @php
+                                                                $variantLabel = $detail->variant_display;
+                                                                if (empty($variantLabel) || $variantLabel === 'Phân loại tiêu chuẩn') {
+                                                                    $vParts = array_filter([
+                                                                        $detail->variant_size ? 'Size: '.$detail->variant_size : null,
+                                                                        $detail->variant_color ? 'Màu: '.$detail->variant_color : null,
+                                                                    ]);
+                                                                    $variantLabel = !empty($vParts) ? implode(' · ', $vParts) : null;
+                                                                }
+                                                                $sku = $detail->variant_sku ?: $detail->variant?->sku;
+                                                            @endphp
+                                                            @if($variantLabel)
                                                                 <div class="mt-0.5">
                                                                     <span class="inline-flex items-center gap-1 text-xs font-semibold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded shadow-2xs">
                                                                         <span>✨</span>
-                                                                        <span>{{ $detail->variant_display }}</span>
+                                                                        <span>{{ $variantLabel }}</span>
                                                                     </span>
                                                                 </div>
                                                             @endif
-                                                            @if ($detail->variant?->sku)
-                                                                <div class="text-[11px] text-gray-400 font-mono mt-0.5">SKU: {{ $detail->variant->sku }}</div>
+                                                            @if ($sku)
+                                                                <div class="text-[11px] text-gray-400 font-mono mt-0.5">SKU: {{ $sku }}</div>
                                                             @endif
                                                         </div>
                                                     </div>
@@ -1005,7 +1016,7 @@
                             <span>🧸</span>
                             <span>Mật Ngọt Bear</span>
                         </h4>
-                        <a href="{{ route('customer.messages.index') }}"
+                        <a href="{{ route('customer.messages.index', ['order_id' => $order->id]) }}"
                            class="w-full bg-amber-50 hover:bg-amber-100 text-[#8C4A19] font-bold py-2.5 px-4 rounded-xl border border-amber-300 text-xs flex items-center justify-center gap-2 transition shadow-2xs">
                             <i class="fa-regular fa-comment-dots text-sm text-[#E08A1E]"></i>
                             <span>Chat với Shop</span>

@@ -15,7 +15,12 @@ class OrderDetail extends Model
         'product_variant_id',
         'product_name',
         'variant_name',
+        'variant_sku',
+        'variant_size',
+        'variant_color',
+        'variant_image_url',
         'product_price',
+        'original_unit_price',
         'quantity',
         'line_total',
     ];
@@ -23,6 +28,7 @@ class OrderDetail extends Model
     protected $casts = [
         'product_variant_id' => 'integer',
         'product_price' => 'decimal:2',
+        'original_unit_price' => 'decimal:2',
         'quantity' => 'integer',
         'line_total' => 'decimal:2',
     ];
@@ -82,5 +88,10 @@ class OrderDetail extends Model
         }
 
         return 'Phân loại tiêu chuẩn';
+    }
+
+    public function productVariant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class)->withTrashed();
     }
 }

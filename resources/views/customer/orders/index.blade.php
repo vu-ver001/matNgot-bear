@@ -77,8 +77,8 @@
                                         <span class="font-bold text-sm text-[#4E342E] shrink-0 whitespace-nowrap">{{ $card['shop']['name'] }}</span>
 
                                         <!-- Nút Nhắn tin là icon (giống bên Staff) -->
-                                        <a href="{{ route('customer.messages.index') }}" 
-                                           class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 flex items-center justify-center transition shadow-2xs hover:scale-105 shrink-0" 
+                                        <a href="{{ route('customer.messages.index', ['order_id' => $order->id]) }}" 
+                                           class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 flex items-center justify-center transition shadow-2xs hover:scale-105" 
                                            title="Chat với Shop">
                                             <i class="fa-regular fa-comment-dots text-xs"></i>
                                         </a>
@@ -248,7 +248,7 @@
                                         @endif
 
                                         <!-- Chat với Shop -->
-                                        <a href="{{ route('customer.messages.index') }}" 
+                                        <a href="{{ route('customer.messages.index', ['order_id' => $order->id]) }}" 
                                            class="btn-card-action btn-card-secondary"
                                            title="Chat với Shop">
                                             <i class="fa-regular fa-comment-dots text-amber-700"></i> Chat với Shop

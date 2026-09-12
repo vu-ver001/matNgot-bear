@@ -2,11 +2,91 @@
 <link rel="stylesheet" href="{{ asset('css/order-components.css') }}">
 
 @php
-    $bulkShippingOrderIds = $orders
-        ->filter(fn ($order) => $order->canTransitionTo('SHIPPING'))
-        ->pluck('id')->values()->all();
+    $currentStatus = (string) request('order_status', '');
+    $currentTab = (string) request('tab', '');
+
+    if ($currentStatus === 'PENDING') {
+        $bulkTargetStatus = 'CONFIRMED';
+        $bulkActionLabel = 'Chấp nhận đơn hàng loạt';
+        $bulkActionIcon = 'fa-solid fa-circle-check';
+        $bulkConfirmTitle = 'Xác nhận chấp nhận đơn hàng loạt?';
+        $bulkConfirmText = 'Bạn có chắc chắn muốn chấp nhận :count đơn hàng đã chọn sang trạng thái "Đã xác nhận"?';
+        $bulkConfirmButtonText = '<i class="fa-solid fa-circle-check mr-1"></i> Đồng ý chấp nhận';
+        $bulkConfirmColor = '#B87309';
+        $bulkCountLabel = 'chờ xác nhận';
+        $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('CONFIRMED'))->pluck('id')->values()->all();
+    } elseif ($currentStatus === 'CONFIRMED') {
+        $bulkTargetStatus = 'PREPARING';
+        $bulkActionLabel = 'Chuẩn bị hàng loạt';
+        $bulkActionIcon = 'fa-solid fa-box-open';
+        $bulkConfirmTitle = 'Xác nhận chuẩn bị hàng loạt?';
+        $bulkConfirmText = 'Bạn có chắc chắn muốn chuyển :count đơn hàng đã chọn sang trạng thái "Chờ lấy hàng"?';
+        $bulkConfirmButtonText = '<i class="fa-solid fa-box-open mr-1"></i> Bắt đầu chuẩn bị';
+        $bulkConfirmColor = '#2563EB';
+        $bulkCountLabel = 'chờ chuẩn bị';
+        $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('PREPARING'))->pluck('id')->values()->all();
+    } elseif ($currentStatus === 'PREPARING') {
+        $bulkTargetStatus = 'SHIPPING';
+        $bulkActionLabel = 'Giao hàng loạt';
+        $bulkActionIcon = 'fa-solid fa-truck-fast';
+        $bulkConfirmTitle = 'Xác nhận giao hàng loạt?';
+        $bulkConfirmText = 'Bạn có chắc chắn muốn chuyển :count đơn hàng đã chọn sang trạng thái "Đang giao hàng"?';
+        $bulkConfirmButtonText = '<i class="fa-solid fa-truck-fast mr-1"></i> Đồng ý giao hàng';
+        $bulkConfirmColor = '#E08A1E';
+        $bulkCountLabel = 'có thể giao';
+        $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('SHIPPING'))->pluck('id')->values()->all();
+    } else {
+        $pendingIds = $orders->filter(fn ($o) => $o->canTransitionTo('CONFIRMED'))->pluck('id')->values()->all();
+        $preparingIds = $orders->filter(fn ($o) => $o->canTransitionTo('SHIPPING'))->pluck('id')->values()->all();
+
+        if (count($pendingIds) > 0) {
+            $bulkTargetStatus = 'CONFIRMED';
+            $bulkActionLabel = 'Chấp nhận đơn hàng loạt';
+            $bulkActionIcon = 'fa-solid fa-circle-check';
+            $bulkConfirmTitle = 'Xác nhận chấp nhận đơn hàng loạt?';
+            $bulkConfirmText = 'Bạn có chắc chắn muốn chấp nhận :count đơn hàng chờ xác nhận đã chọn?';
+            $bulkConfirmButtonText = '<i class="fa-solid fa-circle-check mr-1"></i> Đồng ý chấp nhận';
+            $bulkConfirmColor = '#B87309';
+            $bulkCountLabel = 'chờ xác nhận';
+            $bulkActionableOrderIds = $pendingIds;
+        } elseif (count($preparingIds) > 0) {
+            $bulkTargetStatus = 'SHIPPING';
+            $bulkActionLabel = 'Giao hàng loạt';
+            $bulkActionIcon = 'fa-solid fa-truck-fast';
+            $bulkConfirmTitle = 'Xác nhận giao hàng loạt?';
+            $bulkConfirmText = 'Bạn có chắc chắn muốn chuyển :count đơn hàng đã chọn sang trạng thái "Đang giao hàng"?';
+            $bulkConfirmButtonText = '<i class="fa-solid fa-truck-fast mr-1"></i> Đồng ý giao hàng';
+            $bulkConfirmColor = '#E08A1E';
+            $bulkCountLabel = 'có thể giao';
+            $bulkActionableOrderIds = $preparingIds;
+        } else {
+            $bulkTargetStatus = 'CONFIRMED';
+            $bulkActionLabel = 'Chấp nhận đơn hàng loạt';
+            $bulkActionIcon = 'fa-solid fa-circle-check';
+            $bulkConfirmTitle = 'Xác nhận chấp nhận đơn hàng loạt?';
+            $bulkConfirmText = 'Bạn có chắc chắn muốn chấp nhận :count đơn hàng đã chọn?';
+            $bulkConfirmButtonText = '<i class="fa-solid fa-circle-check mr-1"></i> Đồng ý chấp nhận';
+            $bulkConfirmColor = '#B87309';
+            $bulkCountLabel = 'hợp lệ';
+            $bulkActionableOrderIds = [];
+        }
+    }
+
+    $bulkConfig = [
+        'targetStatus' => $bulkTargetStatus,
+        'actionLabel' => $bulkActionLabel,
+        'actionIcon' => $bulkActionIcon,
+        'confirmTitle' => $bulkConfirmTitle,
+        'confirmText' => $bulkConfirmText,
+        'confirmButtonText' => $bulkConfirmButtonText,
+        'confirmButtonColor' => $bulkConfirmColor,
+        'countLabel' => $bulkCountLabel,
+    ];
+
+    $showBulkToolbar = !in_array($currentStatus, ['SHIPPING', 'COMPLETED', 'RETURNED', 'CANCELLED'], true) 
+        && !in_array($currentTab, ['cancel_requests', 'need_refund'], true);
 @endphp
-<div class="orders-ui" x-data="bulkOrderManager({{ json_encode($bulkShippingOrderIds) }})">
+<div class="orders-ui" x-data="bulkOrderManager({{ json_encode($bulkActionableOrderIds) }}, {{ json_encode($bulkConfig) }})">
 @include('orders.partials.alerts')
 @include('orders.partials.stats')
 
@@ -67,7 +147,7 @@
     @include('orders.partials.filters')
 
     <!-- Bulk Operations Toolbar -->
-    @include('orders.partials.bulk-toolbar', ['routePrefix' => $routePrefix])
+    @include('orders.partials.bulk-toolbar', ['routePrefix' => $routePrefix, 'showBulkToolbar' => $showBulkToolbar])
 
     <!-- Orders Cards List -->
     <div class="orders-cards-container space-y-4">
@@ -75,7 +155,8 @@
             @include('orders.partials.staff-order-card', [
                 'order' => $order,
                 'routePrefix' => $routePrefix,
-                'isStaff' => $isStaff
+                'isStaff' => $isStaff,
+                'bulkActionableOrderIds' => $bulkActionableOrderIds
             ])
         @empty
             <div class="p-10 text-center text-[#8E8076] bg-white rounded-2xl border border-amber-200/60">
