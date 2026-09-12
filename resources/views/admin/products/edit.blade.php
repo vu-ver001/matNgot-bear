@@ -986,7 +986,7 @@
     function updateSummaryStats() {
         document.getElementById('sum-count').innerText = `${variantsList.length} phân loại`;
 
-        const prices = variantsList.map(v => parseFloat(v.price) || 0).filter(p => p > 0);
+        const prices = variantsList.map(v => (v.price !== '' && v.price !== null && v.price !== undefined) ? parseFloat(v.price) : NaN).filter(p => !isNaN(p) && p >= 0);
         if (prices.length > 0) {
             const minP = Math.min(...prices);
             const maxP = Math.max(...prices);
@@ -1473,7 +1473,7 @@
             const vPrice = parseCurrencyToNumber(v.price);
             const vSalePrice = v.sale_price ? parseCurrencyToNumber(v.sale_price) : null;
 
-            if (vPrice <= 0) {
+            if (v.price === '' || v.price === null || v.price === undefined || isNaN(vPrice) || vPrice < 0) {
                 const priceEl = document.getElementById(`var-price-${i}`);
                 highlightAndNotify(priceEl, `Vui lòng nhập đầy đủ <b>Giá gốc</b> hợp lệ cho <b>${label}</b>!`);
                 return;
