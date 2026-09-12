@@ -24,7 +24,7 @@
                 </li>
                 <li style="margin-bottom: 12px; color: #D7CCC8; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: default;">
                     <i class="fa-solid fa-angle-right" style="color: var(--honey-gold, #E59819);"></i>
-                    <span>Giao Hàng Toàn Quốc 30k</span>
+                    <span>Giao Hàng Nhanh GHN Toàn Quốc</span>
                 </li>
                 <li style="margin-bottom: 12px; color: #D7CCC8; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: default;">
                     <i class="fa-solid fa-angle-right" style="color: var(--honey-gold, #E59819);"></i>

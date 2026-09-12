@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
     ->everyFifteenMinutes()
     ->withoutOverlapping()
     ->runInBackground();
+
+

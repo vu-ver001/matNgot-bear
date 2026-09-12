@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Voucher extends Model
@@ -45,6 +47,47 @@ class Voucher extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'voucher_products');
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'voucher_id');
+    }
+
+    public function shippingOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'shipping_voucher_id');
+    }
+
+    /**
+     * Tổng số đơn hàng đã từng áp dụng voucher này (bao gồm cả đơn giảm giá & freeship).
+     */
+    public function getTotalOrdersCount(): int
+    {
+        if (isset($this->orders_count) && isset($this->shipping_orders_count)) {
+            return (int) $this->orders_count + (int) $this->shipping_orders_count;
+        }
+
+        return Order::where('voucher_id', $this->id)
+            ->orWhere('shipping_voucher_id', $this->id)
+            ->count();
+    }
+
+    /**
+     * Số đơn hàng đang trong quá trình xử lý (chưa hoàn tất hoặc chưa hủy).
+     */
+    public function getActiveOrdersCount(): int
+    {
+        if (isset($this->active_orders_count) && isset($this->active_shipping_orders_count)) {
+            return (int) $this->active_orders_count + (int) $this->active_shipping_orders_count;
+        }
+
+        return Order::where(function ($query) {
+                $query->where('voucher_id', $this->id)
+                      ->orWhere('shipping_voucher_id', $this->id);
+            })
+            ->whereNotIn('order_status', ['COMPLETED', 'CANCELLED'])
+            ->count();
     }
 
     /**
@@ -125,22 +168,18 @@ class Voucher extends Model
         }
 
         // 5. Kiểm tra phạm vi áp dụng (Category / Product / All)
-        $eligibleSubtotal = $orderSubtotal;
+        $eligibleSubtotal = 0;
 
         if (!empty($cartItems)) {
             if ($this->apply_scope === 'CATEGORY') {
                 $allowedCategoryIds = $this->categories->pluck('id')->toArray();
-                $eligibleSubtotal = 0;
                 $hasMatchingProduct = false;
 
                 foreach ($cartItems as $item) {
-                    $itemCategoryId = $item->product?->category_id ?? ($item['category_id'] ?? null);
-                    $itemPrice = $item->product?->sale_price ?? $item->product?->price ?? ($item['price'] ?? 0);
-                    $itemQty = $item->quantity ?? ($item['quantity'] ?? 1);
-
-                    if ($itemCategoryId && in_array($itemCategoryId, $allowedCategoryIds)) {
+                    $details = $this->resolveItemPriceAndDetails($item);
+                    if ($details['category_id'] && in_array($details['category_id'], $allowedCategoryIds)) {
                         $hasMatchingProduct = true;
-                        $eligibleSubtotal += ($itemPrice * $itemQty);
+                        $eligibleSubtotal += ($details['price'] * $details['quantity']);
                     }
                 }
 
@@ -153,17 +192,13 @@ class Voucher extends Model
                 }
             } elseif ($this->apply_scope === 'PRODUCT') {
                 $allowedProductIds = $this->products->pluck('id')->toArray();
-                $eligibleSubtotal = 0;
                 $hasMatchingProduct = false;
 
                 foreach ($cartItems as $item) {
-                    $itemProductId = $item->product_id ?? ($item->product?->id ?? ($item['product_id'] ?? null));
-                    $itemPrice = $item->product?->sale_price ?? $item->product?->price ?? ($item['price'] ?? 0);
-                    $itemQty = $item->quantity ?? ($item['quantity'] ?? 1);
-
-                    if ($itemProductId && in_array($itemProductId, $allowedProductIds)) {
+                    $details = $this->resolveItemPriceAndDetails($item);
+                    if ($details['product_id'] && in_array($details['product_id'], $allowedProductIds)) {
                         $hasMatchingProduct = true;
-                        $eligibleSubtotal += ($itemPrice * $itemQty);
+                        $eligibleSubtotal += ($details['price'] * $details['quantity']);
                     }
                 }
 
@@ -173,10 +208,18 @@ class Voucher extends Model
                         'message' => "Mã giảm giá [{$this->code}] chỉ áp dụng cho một số sản phẩm nhất định trong chương trình khuyến mãi.",
                     ];
                 }
+            } else {
+                // ALL: Áp dụng trên toàn bộ sản phẩm con trong giỏ hàng
+                foreach ($cartItems as $item) {
+                    $details = $this->resolveItemPriceAndDetails($item);
+                    $eligibleSubtotal += ($details['price'] * $details['quantity']);
+                }
             }
+        } else {
+            $eligibleSubtotal = $orderSubtotal;
         }
 
-        // 6. Kiểm tra điều kiện giá trị đơn hàng tối thiểu (áp dụng trên phần tiền hợp lệ)
+        // 6. Kiểm tra điều kiện giá trị đơn hàng tối thiểu (áp dụng trên phần tiền hợp lệ của sản phẩm con)
         if ($eligibleSubtotal < (float)$this->min_order_value) {
             $minFormatted = number_format($this->min_order_value, 0, ',', '.') . 'đ';
             return [
@@ -325,4 +368,130 @@ class Voucher extends Model
             ],
         };
     }
+
+    /**
+     * Tự động chuyển các voucher đã hết hạn vào thùng rác (xóa mềm).
+     *
+     * @return int Số lượng voucher đã được tự động xóa mềm
+     */
+    public static function autoTrashExpired(): int
+    {
+        $now = Carbon::now();
+
+        $expiredVouchers = static::query()
+            ->whereNull('deleted_at')
+            ->whereNotNull('end_date')
+            ->where('end_date', '<', $now)
+            ->get();
+
+        $count = 0;
+        foreach ($expiredVouchers as $voucher) {
+            $voucher->delete();
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * Trích xuất thông tin sản phẩm, phân loại con (variant) và đơn giá thực tế.
+     * Đảm bảo luôn lấy đúng đơn giá của sản phẩm con (biến thể) thay vì giá của sản phẩm cha.
+     */
+    public function resolveItemPriceAndDetails($item): array
+    {
+        $productId = null;
+        $variantId = null;
+        $categoryId = null;
+        $quantity = 1;
+        $price = null;
+
+        if (is_object($item)) {
+            $productId = $item->product_id ?? ($item->product?->id ?? null);
+            $variantId = $item->product_variant_id ?? ($item->variant?->id ?? null);
+            $categoryId = $item->product?->category_id ?? null;
+            $quantity = (int) ($item->quantity ?? 1);
+
+            // 1. Nếu trên item đã có giá đơn vị rõ ràng (ví dụ product_price trong OrderDetail)
+            if (isset($item->product_price) && is_numeric($item->product_price) && (float) $item->product_price > 0) {
+                $price = (float) $item->product_price;
+            }
+
+            // 2. ƯU TIÊN SỐ 1: Nếu có sản phẩm con (variant) -> Lấy giá của sản phẩm con
+            if ($price === null && $variantId) {
+                $variant = !empty($item->variant) ? $item->variant : \App\Models\ProductVariant::withTrashed()->find($variantId);
+                if ($variant) {
+                    $price = (float) ($variant->effective_price ?? ($variant->is_on_sale ? $variant->sale_price : $variant->price));
+                    if (!$productId && $variant->product_id) {
+                        $productId = $variant->product_id;
+                    }
+                }
+            }
+
+            // 3. Nếu là CartItem có accessor effective_price
+            if ($price === null && isset($item->effective_price) && (float) $item->effective_price > 0) {
+                $price = (float) $item->effective_price;
+            }
+
+            // 4. Fallback: Chỉ lấy giá sản phẩm cha nếu sản phẩm đó không có sản phẩm con nào
+            if ($price === null) {
+                $product = !empty($item->product) ? $item->product : ($productId ? \App\Models\Product::withTrashed()->find($productId) : null);
+                if ($product) {
+                    $price = (float) ($product->sale_price ?? $product->price);
+                    if (!$categoryId) {
+                        $categoryId = $product->category_id;
+                    }
+                }
+            }
+        } elseif (is_array($item)) {
+            $productId = $item['product_id'] ?? ($item['product']['id'] ?? null);
+            $variantId = $item['product_variant_id'] ?? ($item['variant']['id'] ?? null);
+            $categoryId = $item['category_id'] ?? ($item['product']['category_id'] ?? null);
+            $quantity = (int) ($item['quantity'] ?? 1);
+
+            if (isset($item['product_price']) && is_numeric($item['product_price']) && (float) $item['product_price'] > 0) {
+                $price = (float) $item['product_price'];
+            }
+
+            if ($price === null && $variantId) {
+                $variant = !empty($item['variant']) && is_object($item['variant']) 
+                    ? $item['variant'] 
+                    : \App\Models\ProductVariant::withTrashed()->find($variantId);
+                if ($variant) {
+                    $price = (float) ($variant->effective_price ?? ($variant->is_on_sale ? $variant->sale_price : $variant->price));
+                    if (!$productId && $variant->product_id) {
+                        $productId = $variant->product_id;
+                    }
+                }
+            }
+
+            if ($price === null && isset($item['effective_price']) && (float) $item['effective_price'] > 0) {
+                $price = (float) $item['effective_price'];
+            } elseif ($price === null && isset($item['price']) && (float) $item['price'] > 0) {
+                $price = (float) $item['price'];
+            }
+
+            if ($price === null && $productId) {
+                $product = \App\Models\Product::withTrashed()->find($productId);
+                if ($product) {
+                    $price = (float) ($product->sale_price ?? $product->price);
+                    if (!$categoryId) {
+                        $categoryId = $product->category_id;
+                    }
+                }
+            }
+        }
+
+        if (!$categoryId && $productId) {
+            $categoryId = \App\Models\Product::withTrashed()->find($productId)?->category_id;
+        }
+
+        return [
+            'product_id' => $productId,
+            'variant_id' => $variantId,
+            'category_id' => $categoryId,
+            'quantity' => max(1, $quantity),
+            'price' => (float) ($price ?? 0),
+        ];
+    }
 }
+

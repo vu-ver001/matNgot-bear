@@ -406,7 +406,7 @@
                     <i class="fa-solid fa-truck-fast"></i>
                 </div>
                 <div class="trust-text">
-                    <h5>Giao Hàng Toàn Quốc 30K</h5>
+                    <h5>Giao Hàng Toàn Quốc</h5>
                     <p>Freeship đơn hàng từ 500.000đ</p>
                 </div>
             </div>
@@ -532,15 +532,6 @@
                                     </span>
                                     <span class="sold-count-text">Đã bán {{ $product->sold_count ?? 0 }}</span>
                                 </div>
-                                @if($product->stock_quantity > 0)
-                                    <button type="button" class="btn-add-cart-quick" onclick="addToCart({{ $product->id }}, '{{ addslashes($product->name) }}')" title="Thêm vào giỏ">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
-                                @else
-                                    <button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
-                                        <i class="fa-solid fa-ban"></i>
-                                    </button>
-                                @endif
                             </div>
                         </div>
                     </div>
@@ -625,15 +616,6 @@
                                     </span>
                                     <span class="sold-count-text">Đã bán {{ $product->sold_count ?? 0 }}</span>
                                 </div>
-                                @if($product->stock_quantity > 0)
-                                    <button type="button" class="btn-add-cart-quick" onclick="addToCart({{ $product->id }}, '{{ addslashes($product->name) }}')" title="Thêm vào giỏ">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
-                                @else
-                                    <button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
-                                        <i class="fa-solid fa-ban"></i>
-                                    </button>
-                                @endif
                             </div>
                         </div>
                     </div>

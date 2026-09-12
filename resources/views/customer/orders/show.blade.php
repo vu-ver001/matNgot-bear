@@ -655,18 +655,50 @@
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
                                         @foreach ($order->details as $detail)
+                                            @php
+                                                $rawImg = $detail->variant?->image_url
+                                                    ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                                    ?? $detail->product?->images?->first()?->image_url;
+                                                $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+                                            @endphp
                                             <tr>
                                                 <td class="px-4 py-4 text-sm font-medium text-[#1E293B]">
-                                                    <div>{{ $detail->product_name }}</div>
-                                                    @if ($detail->variant_size || $detail->variant_color || $detail->variant_sku)
-                                                        <div class="text-xs text-[#64748B] mt-0.5">
-                                                            {{ implode(' · ', array_filter([
-                                                                $detail->variant_size ? 'Size: '.$detail->variant_size : null,
-                                                                $detail->variant_color ? 'Màu: '.$detail->variant_color : null,
-                                                                $detail->variant_sku ? 'SKU: '.$detail->variant_sku : null,
-                                                            ])) }}
+                                                    <div class="flex items-center gap-3">
+                                                        @if ($primaryImg)
+                                                            <img src="{{ $primaryImg }}" alt="{{ $detail->product_name }}"
+                                                                 class="w-12 h-12 object-cover rounded-xl border border-amber-200/70 bg-white shrink-0 shadow-2xs"
+                                                                 onerror="this.src='https://placehold.co/100x100/f5e6ca/7c4a2d?text=Bear'">
+                                                        @else
+                                                            <div class="w-12 h-12 rounded-xl border border-amber-200/70 bg-amber-100/70 text-amber-800 font-bold flex items-center justify-center shrink-0 text-xl shadow-2xs">
+                                                                🧸
+                                                            </div>
+                                                        @endif
+                                                        <div class="min-w-0">
+                                                            <div class="font-bold text-[#1E293B]">{{ $detail->product_name }}</div>
+                                                            @php
+                                                                $variantLabel = $detail->variant_display;
+                                                                if (empty($variantLabel) || $variantLabel === 'Phân loại tiêu chuẩn') {
+                                                                    $vParts = array_filter([
+                                                                        $detail->variant_size ? 'Size: '.$detail->variant_size : null,
+                                                                        $detail->variant_color ? 'Màu: '.$detail->variant_color : null,
+                                                                    ]);
+                                                                    $variantLabel = !empty($vParts) ? implode(' · ', $vParts) : null;
+                                                                }
+                                                                $sku = $detail->variant_sku ?: $detail->variant?->sku;
+                                                            @endphp
+                                                            @if($variantLabel)
+                                                                <div class="mt-0.5">
+                                                                    <span class="inline-flex items-center gap-1 text-xs font-semibold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded shadow-2xs">
+                                                                        <span>✨</span>
+                                                                        <span>{{ $variantLabel }}</span>
+                                                                    </span>
+                                                                </div>
+                                                            @endif
+                                                            @if ($sku)
+                                                                <div class="text-[11px] text-gray-400 font-mono mt-0.5">SKU: {{ $sku }}</div>
+                                                            @endif
                                                         </div>
-                                                    @endif
+                                                    </div>
                                                 </td>
                                                 <td class="px-4 py-4 text-sm text-[#64748B] text-right">{{ number_format($detail->product_price, 0, ',', '.') }} đ</td>
                                                 <td class="px-4 py-4 text-sm text-[#64748B] text-right">{{ $detail->quantity }}</td>

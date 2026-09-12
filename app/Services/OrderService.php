@@ -78,9 +78,12 @@ class OrderService
                 $lineTotal = $price * $quantity;
                 $subtotal += $lineTotal;
 
+                $variantName = $variant ? "{$variant->color} · {$variant->size}" : null;
+
                 $orderDetails[] = [
                     'product_id' => $product->id,
                     'product_variant_id' => $variant?->id,
+                    'variant_name' => $variantName,
                     'product_name' => $product->name,
                     'variant_sku' => $variant?->sku,
                     'variant_size' => $variant?->size,
@@ -257,16 +260,9 @@ class OrderService
 
             if (! $currentOrder->stock_restored) {
                 $this->restoreStock($currentOrder);
+                $this->restoreVoucherUsage($currentOrder);
                 $currentOrder->update(['stock_restored' => true]);
                 $order->stock_restored = true;
-            }
-
-            // Hoàn lại lượt dùng voucher
-            if ($order->discount_amount > 0 && ! empty($order->voucher_id)) {
-                Voucher::where('id', $order->voucher_id)->where('used_count', '>', 0)->decrement('used_count');
-            }
-            if ($order->shipping_discount_amount > 0 && ! empty($order->shipping_voucher_id)) {
-                Voucher::where('id', $order->shipping_voucher_id)->where('used_count', '>', 0)->decrement('used_count');
             }
 
             return $order->fresh();
@@ -466,15 +462,8 @@ class OrderService
 
             if (! $order->stock_restored) {
                 $this->restoreStock($order);
+                $this->restoreVoucherUsage($order);
                 $order->update(['stock_restored' => true]);
-            }
-
-            // Hoàn lại lượt dùng voucher
-            if ($order->discount_amount > 0 && ! empty($order->voucher_id)) {
-                Voucher::where('id', $order->voucher_id)->where('used_count', '>', 0)->decrement('used_count');
-            }
-            if ($order->shipping_discount_amount > 0 && ! empty($order->shipping_voucher_id)) {
-                Voucher::where('id', $order->shipping_voucher_id)->where('used_count', '>', 0)->decrement('used_count');
             }
 
             return $order->fresh();
@@ -553,6 +542,10 @@ class OrderService
                     $this->refundPayment($paidPayment);
                 }
             } elseif ($newStatus === 'RETURNED') {
+                if ($order->hasPendingReturnRequest()) {
+                    $updateData['return_request_status'] = 'APPROVED';
+                }
+
                 $paidPayment = $order->payments->firstWhere('status', 'PAID');
 
                 if ($paidPayment) {
@@ -575,9 +568,16 @@ class OrderService
                 'changed_at' => now(),
             ]);
 
-            if ($newStatus === 'CANCELLED' && ! $order->stock_restored) {
+            if (in_array($newStatus, ['CANCELLED', 'RETURNED']) && ! $order->stock_restored) {
                 $this->restoreStock($order);
+                $this->restoreVoucherUsage($order);
                 $order->update(['stock_restored' => true]);
+            }
+
+            if ($newStatus === 'RETURNED' && $oldStatus === 'COMPLETED') {
+                foreach ($order->details as $detail) {
+                    $detail->product()->withTrashed()->first()?->where('sold_count', '>=', $detail->quantity)->decrement('sold_count', $detail->quantity);
+                }
             }
 
             if ($newStatus === 'COMPLETED') {
@@ -631,6 +631,17 @@ class OrderService
             } else {
                 $product->increment('stock_quantity', $quantity);
             }
+        }
+    }
+
+    public function restoreVoucherUsage(Order $order): void
+    {
+        if ($order->discount_amount > 0 && ! empty($order->voucher_id)) {
+            Voucher::where('id', $order->voucher_id)->where('used_count', '>', 0)->decrement('used_count');
+        }
+
+        if ($order->shipping_discount_amount > 0 && ! empty($order->shipping_voucher_id)) {
+            Voucher::where('id', $order->shipping_voucher_id)->where('used_count', '>', 0)->decrement('used_count');
         }
     }
 

@@ -40,7 +40,7 @@
 
     <!-- 2. 4 PROMISE BADGES (Exact Match to Image 2) -->
     <div class="promise-badges-row">
-        <div class="promise-badge-card" onclick="Swal.fire({title:'Giao Hàng Tận Nhà', text:'Đồng giá ship 30.000đ toàn quốc. Miễn phí ship đơn từ 500k!', icon:'info', confirmButtonColor:'#5D4037'})">
+        <div class="promise-badge-card" onclick="Swal.fire({title:'Giao Hàng Tận Nhà', text:'Giao hàng nhanh GHN toàn quốc, cước phí chuẩn xác theo địa chỉ nhận hàng và hỗ trợ voucher freeship!', icon:'info', confirmButtonColor:'#5D4037'})">
             <div class="promise-icon-circle pink"><i class="fa-solid fa-truck-fast"></i></div>
             <div class="promise-badge-title">GIAO HÀNG TẬN NHÀ</div>
         </div>
@@ -575,14 +575,6 @@
                                         </span>
                                         <span class="sold-count-text">Đã bán ${p.sold_count || 0}</span>
                                     </div>
-                                    ${(p.stock_quantity > 0)
-                                        ? `<button type="button" class="btn-add-cart-quick" onclick="addToCart(${p.id}, '${nameEscaped}')" title="Thêm vào giỏ hàng">
-                                            <i class="fa-solid fa-plus"></i>
-                                           </button>`
-                                        : `<button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
-                                            <i class="fa-solid fa-ban"></i>
-                                           </button>`
-                                    }
                                 </div>
                             </div>
                         </div>

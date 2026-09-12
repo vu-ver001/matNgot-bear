@@ -458,31 +458,45 @@
         window.dbWishlistProductIds = @json(auth()->check() ? \App\Models\WishlistItem::where('user_id', auth()->id())->pluck('product_id')->map(fn($id) => (int)$id)->toArray() : []);
 
         // Cart & Wishlist state (distinct product count)
-        let cartItemsCount = window.isCustomerAuthenticated ? {{ (int) ($realCartCount ?? 0) }} : 0;
-        let wishlistCount = window.isCustomerAuthenticated ? {{ (int) ($realWishlistCount ?? 0) }} : 0;
+        window.cartItemsCount = window.isCustomerAuthenticated ? {{ (int) ($realCartCount ?? 0) }} : 0;
+        window.wishlistCount = window.isCustomerAuthenticated ? {{ (int) ($realWishlistCount ?? 0) }} : 0;
+        let cartItemsCount = window.cartItemsCount;
+        let wishlistCount = window.wishlistCount;
         updateCartBadge();
         updateWishlistBadge();
 
         function saveGuestCart(cart) {
             localStorage.setItem('mn_guest_cart', JSON.stringify(cart));
             cartItemsCount = window.isCustomerAuthenticated ? cart.length : 0;
+            window.cartItemsCount = cartItemsCount;
             updateCartBadge();
         }
 
         function updateCartBadge() {
             const badge = document.getElementById('cart-count');
+            const count = (typeof window.cartItemsCount !== 'undefined') ? window.cartItemsCount : cartItemsCount;
             if (badge) {
-                badge.innerText = cartItemsCount > 99 ? '99+' : cartItemsCount;
-                badge.style.display = 'flex';
+                if (window.isCustomerAuthenticated && count > 0) {
+                    badge.innerText = count > 99 ? '99+' : count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.innerText = '0';
+                    badge.style.display = 'none';
+                }
             }
-            updateWishlistBadge();
         }
 
         function updateWishlistBadge() {
             const wBadge = document.getElementById('wishlist-count');
+            const count = (typeof window.wishlistCount !== 'undefined') ? window.wishlistCount : wishlistCount;
             if (wBadge) {
-                wBadge.innerText = wishlistCount > 99 ? '99+' : wishlistCount;
-                wBadge.style.display = 'flex';
+                if (window.isCustomerAuthenticated && count > 0) {
+                    wBadge.innerText = count > 99 ? '99+' : count;
+                    wBadge.style.display = 'flex';
+                } else {
+                    wBadge.innerText = '0';
+                    wBadge.style.display = 'none';
+                }
             }
         }
 
@@ -493,6 +507,7 @@
                     .then(data => {
                         if (data && data.cart_count !== undefined) {
                             cartItemsCount = data.cart_count;
+                            window.cartItemsCount = data.cart_count;
                             updateCartBadge();
                         }
                     })
@@ -500,7 +515,7 @@
             }
         }
 
-        function addToCart(productId, productName = 'Gấu bông', qty = 1, redirectMode = false) {
+        function addToCart(productId, productName = 'Gấu bông', qty = 1, redirectMode = false, variantId = null) {
             // Tài khoản Nhân viên (STAFF) hoặc Quản trị viên (ADMIN): Không được mua hàng
             if (window.userRole === 'STAFF' || window.userRole === 'ADMIN') {
                 const roleName = window.userRole === 'ADMIN' ? 'Quản Trị Viên (Admin)' : 'Nhân Viên (Staff)';
@@ -522,7 +537,10 @@
             // Không được thêm vào giỏ hàng hay mua ngay -> Hiển thị Popup Đăng nhập đồng bộ như yêu cầu
             if (!window.isCustomerAuthenticated) {
                 if (redirectMode === 'checkout' || redirectMode === true) {
-                    const targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id=" + productId + "&quantity=" + qty;
+                    let targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id=" + productId + "&quantity=" + qty;
+                    if (variantId) {
+                        targetCheckoutUrl += "&variant_id=" + variantId;
+                    }
                     openAuthModal(
                         targetCheckoutUrl, 
                         'Đăng nhập để Mua ngay', 
@@ -550,6 +568,7 @@
                     },
                     body: JSON.stringify({
                         product_id: productId,
+                        product_variant_id: variantId,
                         quantity: qty
                     })
                 })
@@ -568,14 +587,34 @@
                     if (data.success) {
                         if (data.cart_count !== undefined) {
                             cartItemsCount = data.cart_count;
+                            window.cartItemsCount = data.cart_count;
                         }
                         updateCartBadge();
 
+                        // Shopee pattern: Đảm bảo sản phẩm vừa thêm luôn được tích chọn
+                        if (data.cartItem?.id) {
+                            try {
+                                const newItemId = data.cartItem.id;
+                                const unselected = JSON.parse(localStorage.getItem('mn_unselected_cart_items') || '[]');
+                                if (Array.isArray(unselected)) {
+                                    localStorage.setItem('mn_unselected_cart_items', JSON.stringify(unselected.filter(id => id !== newItemId)));
+                                }
+                                const selected = JSON.parse(localStorage.getItem('mn_selected_cart_items') || '[]');
+                                if (Array.isArray(selected) && !selected.includes(newItemId)) {
+                                    selected.push(newItemId);
+                                    localStorage.setItem('mn_selected_cart_items', JSON.stringify(selected));
+                                }
+                            } catch (e) {}
+                        }
+
                         if (redirectMode === 'checkout' || redirectMode === true) {
                             const cartItemId = data.cartItem?.id;
-                            const targetCheckoutUrl = cartItemId 
+                            let targetCheckoutUrl = cartItemId 
                                 ? "{{ route('customer.checkout.index') }}?selected_items[]=" + cartItemId
                                 : "{{ route('customer.checkout.index') }}?product_id=" + productId + "&quantity=" + qty;
+                            if (!cartItemId && variantId) {
+                                targetCheckoutUrl += "&variant_id=" + variantId;
+                            }
 
                             window.location.href = targetCheckoutUrl;
                         } else if (redirectMode === 'cart') {

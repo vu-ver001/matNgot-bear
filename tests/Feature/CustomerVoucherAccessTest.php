@@ -211,4 +211,30 @@ class CustomerVoucherAccessTest extends TestCase
         $staffResponse->assertDontSee('title="Giỏ hàng"', false);
         $staffResponse->assertSee('title="Kho voucher & khuyến mãi"', false);
     }
+
+    public function test_voucher_badge_count_is_hidden_for_guests_and_shown_for_logged_in_users(): void
+    {
+        \App\Models\Voucher::create([
+            'code' => 'TESTBADGE' . rand(100, 999),
+            'voucher_type' => 'ORDER',
+            'discount_type' => 'FIXED',
+            'discount_value' => 10000,
+            'min_order_value' => 50000,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addMonth(),
+            'usage_limit' => 100,
+            'used_count' => 0,
+            'status' => 'ACTIVE',
+        ]);
+
+        // Guest: does NOT see the orange badge count on voucher icon
+        $guestResponse = $this->get(route('home'));
+        $guestResponse->assertStatus(200);
+        $guestResponse->assertDontSee('background: #E08A1E; color: #ffffff;', false);
+
+        // Customer: sees the orange badge count
+        $customerResponse = $this->actingAs($this->customer)->get(route('home'));
+        $customerResponse->assertStatus(200);
+        $customerResponse->assertSee('background: #E08A1E; color: #ffffff;', false);
+    }
 }

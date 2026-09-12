@@ -78,6 +78,7 @@ class OrderManagementTest extends TestCase
         $order = $this->createOrder($this->customer);
         $payment = $this->createPayment($order);
         $order->update(['payment_method' => 'BANK_TRANSFER', 'payment_status' => 'UNPAID']);
+        $payment->update(['method' => 'BANK_TRANSFER']);
 
         $this->actingAs($this->staff);
         $this->get(route('staff.orders.index'))
@@ -126,6 +127,26 @@ class OrderManagementTest extends TestCase
             ->assertOk()
             ->assertSee('Nhắn tin cho khách')
             ->assertSee(e(route('admin.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])), false);
+    }
+
+    public function test_cod_order_payment_does_not_show_manual_confirmation_buttons(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $payment = $this->createPayment($order); // method is COD
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Thu khi giao hàng')
+            ->assertSee('Thu tiền khi giao hàng (COD)')
+            ->assertDontSee(route('admin.payments.updateStatus', $payment), false);
+
+        $this->actingAs($this->staff)
+            ->get(route('staff.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Thu khi giao hàng')
+            ->assertSee('Thu tiền khi giao hàng (COD)')
+            ->assertDontSee(route('staff.payments.updateStatus', $payment), false);
     }
 
     public function test_shared_order_list_preserves_customer_scope_and_staff_filters(): void

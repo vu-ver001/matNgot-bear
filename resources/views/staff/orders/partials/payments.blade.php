@@ -26,11 +26,15 @@
                                 </td>
                                 <td data-label="Số tiền" class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
                                 <td data-label="Trạng thái">
-                                    <x-payment-status-badge :status="$payment->status" />
+                                    <x-payment-status-badge :status="$payment->status" :method="$payment->method" />
                                     <div class="text-xs text-[#8E8076] mt-1">{{ $payment->paid_at?->format('d/m/Y H:i') ?? $payment->created_at->format('d/m/Y H:i') }}</div>
                                 </td>
                                 <td data-label="Xử lý" class="text-right">
-                                    @if ($payment->status === 'PENDING')
+                                    @if ($payment->method === 'COD')
+                                        <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/60 inline-block">
+                                            Thu khi giao hàng
+                                        </span>
+                                    @elseif ($payment->status === 'PENDING')
                                         <div class="flex flex-wrap justify-end gap-1.5">
                                             <form method="POST" action="{{ route('staff.payments.updateStatus', $payment) }}">
                                                 @csrf

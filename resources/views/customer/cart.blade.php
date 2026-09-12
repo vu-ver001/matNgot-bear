@@ -6,15 +6,42 @@
     {{-- Main Container --}}
     <div class="py-10 bg-[#FAF6EE] min-h-[calc(100vh-140px)] pb-36 font-sans" x-data="cartComponent({{ json_encode(
         $cartItems->map(function ($item) {
-            $price = $item->product->sale_price ?? $item->product->price;
+            $price = (float) $item->effective_price;
+            $imgUrl = $item->effective_image;
+            if (!str_starts_with($imgUrl, 'http')) {
+                $imgUrl = asset($imgUrl);
+            }
+
+            $variants = ($item->product && $item->product->variants)
+                ? $item->product->variants->map(function ($v) use ($imgUrl) {
+                    $vImg = !empty($v->image_url)
+                        ? (str_starts_with($v->image_url, 'http') ? $v->image_url : asset($v->image_url))
+                        : $imgUrl;
+                    return [
+                        'id' => $v->id,
+                        'color' => $v->color,
+                        'size' => $v->size,
+                        'price' => (float) $v->price,
+                        'sale_price' => (float) ($v->sale_price ?? 0),
+                        'effective_price' => (float) $v->effective_price,
+                        'stock_quantity' => (int) $v->stock_quantity,
+                        'image_url' => $vImg,
+                    ];
+                })->values()->all()
+                : [];
+
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
+                'product_variant_id' => $item->product_variant_id,
                 'name' => $item->product->name,
+                'variant_display' => $item->variant ? ($item->variant->color . ' · ' . $item->variant->size) : null,
                 'quantity' => $item->quantity,
-                'stock_quantity' => $item->product->stock_quantity,
-                'unit_price' => (float) $price,
+                'stock_quantity' => (int) $item->effective_stock,
+                'unit_price' => $price,
                 'line_total' => (float) ($price * $item->quantity),
+                'image_url' => $imgUrl,
+                'available_variants' => $variants,
             ];
         }),
     ) }})">
@@ -32,7 +59,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-black text-[#2C1408] tracking-tight">Giỏ hàng Mật ngọt Bear</h1>
+                        <h1 class="text-xl sm:text-2xl font-black text-[#2C1408] tracking-tight font-bold">Giỏ hàng Mật ngọt Bear</h1>
                         <p class="text-xs font-semibold text-[#786B61] mt-0.5">Kiểm tra danh sách gấu bông bạn đã chọn trước khi thanh toán</p>
                     </div>
                 </div>
@@ -44,7 +71,7 @@
                             d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
                         </path>
                     </svg>
-                    <span>{{ $cartItems->count() }} sản phẩm trong giỏ</span>
+                    <span x-text="items.length + ' sản phẩm trong giỏ'">{{ $cartItems->count() }} sản phẩm trong giỏ</span>
                 </div>
             </div>
 
@@ -126,8 +153,8 @@
                         <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#FAF6EE]/80 border border-[#F0E6D8]">
                             <span class="text-xl">🚚</span>
                             <div>
-                                <div class="text-xs font-bold text-[#2C1408]">Đồng giá ship 30k</div>
-                                <div class="text-[11px] text-[#786B61]">Freeship đơn từ 300k</div>
+                                <div class="text-xs font-bold text-[#2C1408]">Giao hàng nhanh</div>
+                                <div class="text-[11px] text-[#786B61]">Freeship đơn từ 500.000đ</div>
                             </div>
                         </div>
                         <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#FAF6EE]/80 border border-[#F0E6D8]">
@@ -221,7 +248,7 @@
                             </button>
                             <span class="cursor-pointer font-bold text-[#5C3219] hover:text-[#E08A1E] text-xs transition"
                                 @click="toggleSelectAll(!isAllSelected)">
-                                CHỌN TẤT CẢ (<span x-text="items.length">{{ $cartItems->count() }}</span> SẢN PHẨM)
+                                CHỌN TẤT CẢ
                             </span>
                         </div>
                         <div class="hidden md:block md:col-span-2 text-center text-[#786B61]">ĐƠN GIÁ</div>
@@ -234,19 +261,22 @@
                         @foreach ($cartItems as $item)
                             @php
                                 $product = $item->product;
-                                $primaryImage =
-                                    $product->images->firstWhere('is_primary', true) ?? $product->images->first();
-                                $imageUrl = $primaryImage
-                                    ? asset($primaryImage->image_url)
-                                    : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
-                                $price = $product->sale_price ?? $product->price;
-                                $hasDiscount = !empty($product->sale_price) && $product->sale_price < $product->price;
-                                $discountPercent = $hasDiscount && $product->price > 0 
-                                    ? round((($product->price - $product->sale_price) / $product->price) * 100) 
+                                $variant = $item->variant;
+                                $imageUrl = $item->effective_image;
+                                $price = $item->effective_price;
+                                $originalPrice = $variant ? $variant->price : $product->price;
+                                $hasDiscount = $price < $originalPrice;
+                                $discountPercent = $hasDiscount && $originalPrice > 0 
+                                    ? round((($originalPrice - $price) / $originalPrice) * 100) 
                                     : 0;
+                                $effectiveStock = $item->effective_stock;
                             @endphp
 
                             <div class="bg-white rounded-2xl p-3.5 md:p-4 transition-all duration-200 grid grid-cols-12 gap-3 items-center shadow-xs hover:shadow-md"
+                                x-show="hasItem({{ $item->id }})"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
                                 :class="isSelected({{ $item->id }}) ? 'border-2 border-[#E08A1E] bg-[#FFFDF9]' :
                                     'border border-[#F0E6D8] hover:border-[#E08A1E]/50'">
 
@@ -269,9 +299,9 @@
                                     <div class="flex items-center gap-4 flex-1 min-w-0">
                                         {{-- Image Thumbnail with Zoom & Sale Badge --}}
                                         <a href="{{ route('products.show', $product->id) }}"
-                                            class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-[#FAF6EE] border border-[#EBDDCD] shrink-0 group block shadow-2xs"
+                                            class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-[#EBDDCD] shrink-0 group block shadow-2xs overflow-hidden bg-white"
                                             title="Xem chi tiết {{ $product->name }}">
-                                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}"
+                                            <img :src="getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}'" alt="{{ $product->name }}"
                                                 class="w-full h-full object-cover object-center transform transition duration-300 group-hover:scale-105">
                                             @if ($hasDiscount)
                                                 <span class="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-xs leading-none">
@@ -296,27 +326,47 @@
                                                 </a>
                                             </h3>
 
-                                            {{-- Attributes / Variants --}}
-                                            <div class="flex flex-wrap gap-2 text-xs font-semibold text-[#786B61] mt-2">
-                                                @if ($product->size)
-                                                    <span class="bg-[#F3EDE3] px-2.5 py-1 rounded-md text-[#5C3219]">
-                                                        Size: {{ $product->size }}
-                                                    </span>
-                                                @endif
-                                                @if ($product->color)
-                                                    <span class="bg-[#F3EDE3] px-2.5 py-1 rounded-md text-[#5C3219]">
-                                                        Màu: {{ $product->color }}
-                                                    </span>
+                                            {{-- Attributes / Shopee Variant Selector Button --}}
+                                            <div class="mt-2">
+                                                @if ($variant || ($item->product->variants && $item->product->variants->count() > 0))
+                                                    <button type="button"
+                                                        @click="openVariantSelector({{ $item->id }})"
+                                                        class="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-200 border border-[#FDE68A] bg-[#FFF8ED] hover:bg-[#FFF2D6] text-[#9A4A0A] hover:border-[#E08A1E] shadow-2xs hover:shadow-xs text-left cursor-pointer"
+                                                        title="Bấm để chọn phân loại khác như Shopee">
+                                                        <span class="text-[#D97706] group-hover:scale-110 transition-transform">✨</span>
+                                                        <span class="text-[#786B61] font-medium">Phân loại:</span>
+                                                        <span class="text-[#2C1408] font-bold"
+                                                            x-text="getItemVariantDisplay({{ $item->id }}) || '{{ $variant ? ($variant->color . ' · ' . $variant->size) : 'Chọn phân loại' }}'">
+                                                            {{ $variant ? ($variant->color . ' · ' . $variant->size) : 'Chọn phân loại' }}
+                                                        </span>
+                                                        <svg class="w-3.5 h-3.5 text-[#9A4A0A] group-hover:translate-y-0.5 transition-transform shrink-0 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                                        </svg>
+                                                    </button>
+                                                @else
+                                                    <div class="flex flex-wrap gap-2 text-xs font-semibold text-[#786B61]">
+                                                        @if ($product->size)
+                                                            <span class="bg-[#F3EDE3] px-2.5 py-1 rounded-md text-[#5C3219]">
+                                                                Size: {{ $product->size }}
+                                                            </span>
+                                                        @endif
+                                                        @if ($product->color)
+                                                            <span class="bg-[#F3EDE3] px-2.5 py-1 rounded-md text-[#5C3219]">
+                                                                Màu: {{ $product->color }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
                                                 @endif
                                             </div>
 
                                             {{-- Stock alert --}}
-                                            @if ($product->stock_quantity <= 5)
+                                            <template x-if="getItemStock({{ $item->id }}) <= 5">
                                                 <p class="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                                    Chỉ còn {{ $product->stock_quantity }} sản phẩm trong kho
+                                                    <span x-show="getItemStock({{ $item->id }}) <= 0">Phân loại này hiện đang tạm hết hàng</span>
+                                                    <span x-show="getItemStock({{ $item->id }}) > 0">Chỉ còn <span x-text="getItemStock({{ $item->id }})"></span> sản phẩm trong kho</span>
                                                 </p>
-                                            @endif
+                                            </template>
                                         </div>
                                     </div>
                                 </div>
@@ -324,12 +374,13 @@
                                 {{-- Price (Mobile & Desktop) --}}
                                 <div class="col-span-4 md:col-span-2 text-left md:text-center">
                                     <span class="text-xs text-[#9CA3AF] block md:hidden">Đơn giá:</span>
-                                    <div class="font-bold text-[#E08A1E] text-base sm:text-lg">
+                                    <div class="font-bold text-[#E08A1E] text-base sm:text-lg"
+                                        x-text="formatVND(getItemPrice({{ $item->id }}))">
                                         {{ number_format($price, 0, ',', '.') }}đ
                                     </div>
                                     @if ($hasDiscount)
                                         <div class="text-xs text-[#9CA3AF] line-through font-normal mt-0.5">
-                                            {{ number_format($product->price, 0, ',', '.') }}đ
+                                            {{ number_format($originalPrice, 0, ',', '.') }}đ
                                         </div>
                                     @endif
                                 </div>
@@ -350,7 +401,7 @@
 
                                         <button type="button"
                                             @click="updateQuantity({{ $item->id }}, getItemQuantity({{ $item->id }}) + 1)"
-                                            :disabled="getItemQuantity({{ $item->id }}) >= {{ $product->stock_quantity }}"
+                                            :disabled="getItemQuantity({{ $item->id }}) >= getItemStock({{ $item->id }})"
                                             class="text-gray-500 hover:text-[#2C1408] font-bold text-base transition disabled:opacity-30 disabled:cursor-not-allowed">
                                             +
                                         </button>
@@ -365,8 +416,8 @@
                                     </div>
 
                                     <button type="button"
-                                        @click="deleteItem({{ $item->id }}, '{{ addslashes($product->name) }}')"
-                                        class="text-gray-400 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-rose-50"
+                                        @click="deleteItem({{ $item->id }})"
+                                        class="text-gray-400 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer"
                                         title="Xóa sản phẩm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -416,7 +467,7 @@
                                     </div>
                                     <div class="text-2xl sm:text-3xl font-bold text-[#E08A1E] tracking-tight leading-none mt-1"
                                         x-text="formatVND(selectedSubtotal)">
-                                        {{ number_format($cartItems->sum(fn($i) => ($i->product->sale_price ?? $i->product->price) * $i->quantity), 0, ',', '.') }}đ
+                                        {{ number_format($cartItems->sum(fn($i) => $i->effective_price * $i->quantity), 0, ',', '.') }}đ
                                     </div>
                                 </div>
 
@@ -435,6 +486,153 @@
 
                 </form>
             @endif
+
+        {{-- Shopee-style Variant Selector Modal --}}
+        <div x-show="activeVariantModal" 
+             x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity"
+             x-transition:enter="ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @keydown.escape.window="closeVariantSelector()">
+            
+            {{-- Modal Card --}}
+            <div @click.outside="closeVariantSelector()"
+                 class="bg-white rounded-3xl shadow-2xl border border-[#F0E6D8] max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]"
+                 x-show="activeVariantModal"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
+                
+                {{-- Header with Product Preview --}}
+                <div class="p-5 border-b border-[#F0E6D8] bg-[#FFFDF9] flex items-start gap-4 relative">
+                    <img :src="activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url" 
+                         :alt="activeVariantModal?.item?.name" 
+                         class="w-20 h-20 rounded-2xl object-cover border-2 border-[#EBDDCD] shadow-sm shrink-0 bg-white">
+                    
+                    <div class="flex-1 min-w-0 pr-6">
+                        <h4 class="font-bold text-[#2C1408] text-sm sm:text-base line-clamp-1" x-text="activeVariantModal?.item?.name"></h4>
+                        <div class="mt-1 flex items-baseline gap-2">
+                            <span class="text-xl sm:text-2xl font-black text-[#E08A1E]" 
+                                  x-text="formatVND(activeVariantModal?.selectedVariant?.effective_price || activeVariantModal?.item?.unit_price)">
+                            </span>
+                            <template x-if="activeVariantModal?.selectedVariant && activeVariantModal?.selectedVariant?.price > activeVariantModal?.selectedVariant?.effective_price">
+                                <span class="text-xs text-gray-400 line-through" 
+                                      x-text="formatVND(activeVariantModal?.selectedVariant?.price)">
+                                </span>
+                            </template>
+                        </div>
+                        <div class="mt-1 text-xs text-[#786B61] flex items-center gap-1.5 font-medium">
+                            <span>Kho:</span>
+                            <span class="font-bold" 
+                                  :class="(activeVariantModal?.selectedVariant?.stock_quantity ?? 0) <= 0 ? 'text-rose-600' : 'text-[#2C1408]'"
+                                  x-text="activeVariantModal?.selectedVariant?.stock_quantity ?? 0">
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Close X Button --}}
+                    <button type="button" 
+                            @click="closeVariantSelector()" 
+                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition cursor-pointer"
+                            title="Đóng">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Body: Color & Size Options --}}
+                <div class="p-5 overflow-y-auto space-y-5 flex-1">
+                    {{-- Color Selection --}}
+                    <template x-if="activeVariantModal?.colors && activeVariantModal?.colors.length > 0">
+                        <div>
+                            <label class="block text-xs font-bold text-[#786B61] uppercase tracking-wider mb-2.5">
+                                Màu sắc: <span class="text-[#2C1408] font-black normal-case" x-text="activeVariantModal?.selectedColor || 'Chưa chọn'"></span>
+                            </label>
+                            <div class="flex flex-wrap gap-2.5">
+                                <template x-for="color in activeVariantModal?.colors" :key="color">
+                                    <button type="button" 
+                                            @click="selectModalColor(color)"
+                                            class="px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer relative"
+                                            :class="activeVariantModal?.selectedColor === color 
+                                                ? 'border-[#E08A1E] bg-[#FFF8EE] text-[#E08A1E] shadow-2xs ring-2 ring-[#E08A1E]/30' 
+                                                : 'border-[#EBDDCD] bg-white text-[#2C1408] hover:border-[#E08A1E]/60 hover:bg-[#FAF6EE]'">
+                                        <span x-text="color"></span>
+                                        <svg x-show="activeVariantModal?.selectedColor === color" 
+                                             class="w-3.5 h-3.5 text-[#E08A1E]" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Size Selection --}}
+                    <template x-if="activeVariantModal?.sizes && activeVariantModal?.sizes.length > 0">
+                        <div>
+                            <label class="block text-xs font-bold text-[#786B61] uppercase tracking-wider mb-2.5">
+                                Kích thước: <span class="text-[#2C1408] font-black normal-case" x-text="activeVariantModal?.selectedSize || 'Chưa chọn'"></span>
+                            </label>
+                            <div class="flex flex-wrap gap-2.5">
+                                <template x-for="size in activeVariantModal?.sizes" :key="size">
+                                    <button type="button" 
+                                            @click="selectModalSize(size)"
+                                            class="px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer relative"
+                                            :class="activeVariantModal?.selectedSize === size 
+                                                ? 'border-[#E08A1E] bg-[#FFF8EE] text-[#E08A1E] shadow-2xs ring-2 ring-[#E08A1E]/30' 
+                                                : 'border-[#EBDDCD] bg-white text-[#2C1408] hover:border-[#E08A1E]/60 hover:bg-[#FAF6EE]'">
+                                        <span x-text="size"></span>
+                                        <svg x-show="activeVariantModal?.selectedSize === size" 
+                                             class="w-3.5 h-3.5 text-[#E08A1E]" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Out of Stock Notice --}}
+                    <template x-if="activeVariantModal?.selectedVariant && (activeVariantModal?.selectedVariant?.stock_quantity ?? 0) <= 0">
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs font-bold text-rose-600">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <span>Phân loại này hiện đang tạm hết hàng, bạn vui lòng chọn phân loại khác nhé!</span>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- Footer Action Buttons --}}
+                <div class="p-4 bg-[#FAF6F0] border-t border-[#F0E6D8] flex items-center justify-end gap-3">
+                    <button type="button" 
+                            @click="closeVariantSelector()" 
+                            class="px-5 py-2.5 rounded-xl border border-[#D1C4B5] text-[#786B61] hover:text-[#2C1408] hover:bg-white text-xs font-bold transition cursor-pointer">
+                        TRỞ LẠI
+                    </button>
+                    <button type="button" 
+                            @click="confirmVariantChange()" 
+                            :disabled="!activeVariantModal?.selectedVariant || (activeVariantModal?.selectedVariant?.stock_quantity ?? 0) <= 0 || activeVariantModal?.isUpdating"
+                            class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E08A1E] to-[#E67E17] hover:from-[#D17E17] hover:to-[#D1700F] text-white text-xs font-extrabold shadow-md shadow-[#E08A1E]/30 transition transform active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 cursor-pointer">
+                        <template x-if="activeVariantModal?.isUpdating">
+                            <svg class="animate-spin -ml-1 mr-1 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                        </template>
+                        <span x-text="activeVariantModal?.isUpdating ? 'Đang cập nhật...' : 'XÁC NHẬN'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
 
         </div>
     </div>

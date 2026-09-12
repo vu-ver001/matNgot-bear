@@ -34,6 +34,7 @@ class CustomerOrderPresenter
 
         $products = $order->details->map(function (OrderDetail $detail) {
             $product = $detail->product;
+            $variant = $detail->variant;
 
             $rawImg = $detail->variant_image_url
                 ?: ($product?->images?->where('is_primary', true)->first()?->image_url
@@ -46,25 +47,30 @@ class CustomerOrderPresenter
                 $imageUrl = 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
             }
 
-            $variationParts = [];
-            $size = $detail->variant_size ?: $product?->size;
-            $color = $detail->variant_color ?: $product?->color;
-            if (! empty($size)) {
-                $variationParts[] = 'Size: '.$size;
+            if (! empty($detail->variant_name)) {
+                $variation = $detail->variant_name;
+            } elseif ($variant) {
+                $variation = "{$variant->color} · {$variant->size}";
+            } else {
+                $size = $detail->variant_size ?: $product?->size;
+                $color = $detail->variant_color ?: $product?->color;
+                if (! empty($color) && ! empty($size)) {
+                    $variation = "{$color} · {$size}";
+                } elseif (! empty($size)) {
+                    $variation = 'Size: '.$size;
+                } elseif (! empty($color)) {
+                    $variation = 'Màu: '.$color;
+                } else {
+                    $variation = 'Phân loại tiêu chuẩn';
+                }
             }
-            if (! empty($color)) {
-                $variationParts[] = 'Màu: '.$color;
-            }
-            if (! empty($detail->variant_sku)) {
-                $variationParts[] = 'SKU: '.$detail->variant_sku;
-            }
-            $variation = ! empty($variationParts) ? implode(', ', $variationParts) : 'Phân loại tiêu chuẩn';
 
             $currentPrice = (float) $detail->product_price;
             $snapshotOriginalPrice = (float) ($detail->original_unit_price ?? 0);
+            $basePrice = $variant ? (float) $variant->price : ($product ? (float) $product->price : $currentPrice);
             $originalPrice = $snapshotOriginalPrice > $currentPrice
                 ? $snapshotOriginalPrice
-                : (($product && $product->price > $currentPrice) ? (float) $product->price : $currentPrice);
+                : ($basePrice > $currentPrice ? $basePrice : $currentPrice);
 
             $productUrl = $detail->product_id
                 ? route('products.show', $detail->product_id)

@@ -451,7 +451,8 @@
                             @foreach ($order->details as $detail)
                                 @php
                                     $rawImg = $detail->variant_image_url
-                                        ?: ($detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                        ?: ($detail->variant?->image_url
+                                            ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
                                             ?? $detail->product?->images?->first()?->image_url);
                                     $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
                                 @endphp
@@ -470,16 +471,30 @@
                                             @endif
                                             <div class="min-w-0">
                                                 <div class="font-bold text-[#4E342E]">{{ $detail->product_name }}</div>
-                                                @if ($detail->variant_size || $detail->variant_color || $detail->variant_sku)
-                                                    <div class="text-xs text-[#795548] mt-0.5">
-                                                        @if ($detail->variant_size) Size: {{ $detail->variant_size }} @endif
-                                                        @if ($detail->variant_size && $detail->variant_color) · @endif
-                                                        @if ($detail->variant_color) Màu: {{ $detail->variant_color }} @endif
-                                                        @if ($detail->variant_sku) · SKU: {{ $detail->variant_sku }} @endif
+                                                @php
+                                                    $variantLabel = $detail->variant_display;
+                                                    if (empty($variantLabel) || $variantLabel === 'Phân loại tiêu chuẩn') {
+                                                        $vParts = array_filter([
+                                                            $detail->variant_size ? 'Size: '.$detail->variant_size : null,
+                                                            $detail->variant_color ? 'Màu: '.$detail->variant_color : null,
+                                                        ]);
+                                                        $variantLabel = !empty($vParts) ? implode(' · ', $vParts) : null;
+                                                    }
+                                                    $sku = $detail->variant_sku ?: $detail->variant?->sku;
+                                                @endphp
+                                                @if ($variantLabel)
+                                                    <div class="mt-0.5 flex items-center flex-wrap gap-1">
+                                                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded shadow-2xs">
+                                                            <span>✨</span>
+                                                            <span>{{ $variantLabel }}</span>
+                                                        </span>
+                                                        @if ($sku)
+                                                            <span class="text-[10px] text-gray-400 font-mono">({{ $sku }})</span>
+                                                        @endif
                                                     </div>
                                                 @endif
                                                 @if ($detail->product)
-                                                    <div class="text-[11px] text-[#8E8076]">Mã SP: #{{ $detail->product_id }}</div>
+                                                    <div class="text-[11px] text-[#8E8076] mt-0.5">Mã SP: #{{ $detail->product_id }}</div>
                                                 @endif
                                             </div>
                                         </div>
@@ -560,11 +575,15 @@
                                 <tr>
                                     <td class="font-bold text-[#4E342E]">{{ $payment->method }}</td>
                                     <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
-                                    <td><x-payment-status-badge :status="$payment->status" /></td>
+                                    <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
                                     <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>
                                     <td class="text-xs text-[#8E8076]">{{ $payment->paid_at?->format('d/m/Y H:i') ?? $payment->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="text-right">
-                                        @if ($payment->status === 'PENDING')
+                                        @if ($payment->method === 'COD')
+                                            <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/60 inline-block">
+                                                Thu khi giao hàng
+                                            </span>
+                                        @elseif ($payment->status === 'PENDING')
                                             <div class="flex justify-end gap-1.5">
                                                 <form method="POST" action="{{ route('staff.payments.updateStatus', $payment) }}">
                                                     @csrf
