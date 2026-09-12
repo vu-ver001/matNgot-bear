@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('page-title', 'Bảng Xử Lý Nhân Viên') - Mật Ngọt Bear</title>
+    <title>@yield('page-title', $title ?? 'Bảng Xử Lý Nhân Viên') - Mật Ngọt Bear</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('css/staff-layout.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/staff-layout.css') }}?v={{ file_exists(public_path('css/staff-layout.css')) ? filemtime(public_path('css/staff-layout.css')) : time() }}">
     @yield('styles')
 </head>
 <body>
@@ -43,6 +43,9 @@
             </div>
             <button type="button" class="sidebar-collapse-btn" onclick="toggleStaffSidebar()" title="Thu gọn menu" id="staffSidebarCollapseBtn">
                 <i class="fa-solid fa-chevron-left" id="staffSidebarToggleIcon"></i>
+            </button>
+            <button type="button" class="sidebar-mobile-close-btn" onclick="closeMobileStaffSidebar()" title="Đóng menu" id="staffSidebarMobileCloseBtn">
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
@@ -71,7 +74,11 @@
             <div class="sidebar-user-popup" id="staffUserPopup">
                 <div class="user-popup-header">
                     <div class="user-popup-avatar">
-                        {{ $staffInitial }}
+                        @if (!empty($staffUser?->avatar_url))
+                            <img src="{{ $staffUser->avatar_url }}" alt="{{ $staffName }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        @else
+                            {{ $staffInitial }}
+                        @endif
                     </div>
                     <div class="user-popup-info">
                         <div class="user-popup-name">{{ $staffName }}</div>
@@ -82,15 +89,14 @@
                 <div class="user-popup-divider"></div>
 
                 <div class="user-popup-menu">
-                    <a href="{{ route('profile.edit') }}" class="user-popup-item active">
-                        <i class="fa-regular fa-user"></i>
+                    <a href="{{ route('profile.edit') }}" class="user-popup-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-user"></i>
                         <span>Hồ sơ</span>
                     </a>
-                    <div class="user-popup-item disabled">
+                    <a href="{{ route('account.password.edit') }}" class="user-popup-item {{ request()->routeIs('account.password.*') ? 'active' : '' }}">
                         <i class="fa-solid fa-lock"></i>
                         <span>Đổi mật khẩu</span>
-                        <span class="badge-not-connected">Chưa kết nối</span>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="user-popup-divider"></div>
@@ -107,7 +113,11 @@
             <!-- Trigger bar (Ảnh 1) -->
             <div class="sidebar-user-trigger" onclick="toggleStaffUserPopup(event)" id="staffUserTrigger" title="Tài khoản nhân viên">
                 <div class="sidebar-user-avatar">
-                    {{ $staffInitial }}
+                    @if (!empty($staffUser?->avatar_url))
+                        <img src="{{ $staffUser->avatar_url }}" alt="{{ $staffName }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    @else
+                        {{ $staffInitial }}
+                    @endif
                 </div>
                 <div class="sidebar-user-details">
                     <div class="sidebar-user-name">{{ $staffName }}</div>
@@ -128,6 +138,22 @@
 
     <!-- ====== MAIN CONTENT ====== -->
     <div class="staff-main" id="staffMain">
+        <!-- Thanh Header Mobile xuất hiện khi thu nhỏ màn hình có nút 3 gạch ở góc trên bên trái (Giống Admin) -->
+        <header class="staff-mobile-topbar" id="staffMobileTopbar">
+            <button type="button" class="mobile-menu-btn" onclick="toggleMobileStaffSidebar()" title="Mở thanh menu" id="staffMobileMenuBtn" aria-label="Mở menu xử lý">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="mobile-topbar-brand">
+                <a href="{{ route('staff.orders.index') }}" class="mobile-brand-title">Mật Ngọt Bear</a>
+                <span class="mobile-brand-badge">Bảng Xử Lý</span>
+            </div>
+            <div class="mobile-topbar-actions">
+                <a href="{{ route('home') }}" class="mobile-btn-store" title="Xem cửa hàng" target="_blank">
+                    <i class="fa-solid fa-store"></i>
+                </a>
+            </div>
+        </header>
+
         <script>
             (function() {
                 if (localStorage.getItem('mn_staff_sidebar_collapsed') === '1') {
@@ -136,9 +162,13 @@
             })();
         </script>
         <div class="staff-content {{ $contentClass ?? '' }}">
+            {{ $slot ?? '' }}
             @yield('content')
         </div>
     </div>
+
+    <!-- Backdrop mờ khi mở menu trên mobile/màn hình nhỏ -->
+    <div class="mobile-sidebar-backdrop" id="staffMobileSidebarBackdrop" onclick="closeMobileStaffSidebar()"></div>
 
     <!-- Script Điều Khiển Đóng / Mở Menu & Popup Card Cho Staff -->
     <script>
@@ -196,11 +226,55 @@
             localStorage.setItem('mn_staff_sidebar_collapsed', '1');
         }
 
+        // ====== ĐIỀU KHIỂN MENU KHI THU NHỎ MÀN HÌNH (RESPONSIVE / MOBILE) ======
+        function toggleMobileStaffSidebar() {
+            const sidebar = document.getElementById('staffSidebar');
+            if (sidebar?.classList.contains('mobile-open')) {
+                closeMobileStaffSidebar();
+            } else {
+                openMobileStaffSidebar();
+            }
+        }
+
+        function openMobileStaffSidebar() {
+            const sidebar = document.getElementById('staffSidebar');
+            const backdrop = document.getElementById('staffMobileSidebarBackdrop');
+            sidebar?.classList.add('mobile-open');
+            backdrop?.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileStaffSidebar() {
+            const sidebar = document.getElementById('staffSidebar');
+            const backdrop = document.getElementById('staffMobileSidebarBackdrop');
+            sidebar?.classList.remove('mobile-open');
+            backdrop?.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Tự động đóng menu mobile khi phóng to màn hình trở lại (> 992px)
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                closeMobileStaffSidebar();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             if (localStorage.getItem('mn_staff_sidebar_collapsed') === '1') {
                 updateStaffCollapseIcon(true);
             }
+
+            // Tự động đóng sidebar mobile khi bấm vào link chuyển trang
+            const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
+            navLinks.forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        closeMobileStaffSidebar();
+                    }
+                });
+            });
         });
     </script>
+    @yield('scripts')
 </body>
 </html>

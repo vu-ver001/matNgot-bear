@@ -1,20 +1,27 @@
 @php
     $user = auth()->user();
-    $initial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(trim($user->full_name), 0, 1));
+    $initial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(trim($user?->full_name ?? ''), 0, 1));
+    $unreadMessagesCount = $user ? app(\App\Services\ChatKT\ChatService::class)->countUnreadMessagesForCustomer($user) : 0;
 
     $menuGroups = [
         [
             'label' => 'Mua sắm',
             'items' => [
                 ['label' => 'Đơn hàng của tôi', 'route' => 'customer.orders.index', 'active' => ['customer.orders.*'], 'icon' => 'package'],
-                ['label' => 'Danh sách yêu thích', 'route' => 'customer.wishlist.index', 'active' => ['customer.wishlist.*'], 'icon' => 'heart'],
+                ['label' => 'Danh sách yêu thích', 'route' => 'customer.wishlist.index', 'params' => ['view' => 'account'], 'active' => ['customer.wishlist.*'], 'icon' => 'heart'],
                 ['label' => 'Đánh giá của tôi', 'route' => 'customer.reviews.index', 'active' => ['customer.reviews.*'], 'icon' => 'star'],
             ],
         ],
         [
             'label' => 'Hỗ trợ',
             'items' => [
-                ['label' => 'Tin nhắn / Hỗ trợ', 'route' => 'customer.messages.index', 'active' => ['customer.messages.*', 'account.messages*'], 'icon' => 'message'],
+                [
+                    'label' => 'Tin nhắn / Hỗ trợ',
+                    'route' => 'customer.messages.index',
+                    'active' => ['customer.messages.*', 'account.messages*'],
+                    'icon' => 'message',
+                    'badge' => $unreadMessagesCount,
+                ],
             ],
         ],
     ];
@@ -33,14 +40,14 @@
         <link href="https://fonts.bunny.net/css?family=montserrat:400,500,600,700&display=swap" rel="stylesheet">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Caveat:wght@600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         @if (request()->routeIs('customer.orders.*'))
             <link rel="stylesheet" href="{{ asset('css/order-components.css') }}">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         @endif
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans {{ request()->routeIs('customer.messages.*') ? '' : 'antialiased' }}">
         <div
             class="customer-account-app"
             x-data="{
@@ -118,16 +125,22 @@
                                 @if ($item['route'])
                                     @php($isActive = request()->routeIs(...$item['active']))
                                     <a
-                                        href="{{ route($item['route']) }}"
+                                        href="{{ route($item['route'], $item['params'] ?? []) }}"
                                         @class(['customer-account-nav-item', 'is-active' => $isActive])
                                         @if ($isActive) aria-current="page" @endif
                                         title="{{ $item['label'] }}"
+                                        data-title="{{ $item['label'] }}"
                                     >
                                         @include('customer.partials.account-icon', ['name' => $item['icon']])
                                         <span>{{ $item['label'] }}</span>
+                                        @if (!empty($item['badge']) && $item['badge'] > 0)
+                                            <span class="customer-account-badge" title="{{ $item['badge'] }} tin nhắn chưa đọc">
+                                                {{ $item['badge'] > 99 ? '99+' : $item['badge'] }}
+                                            </span>
+                                        @endif
                                     </a>
                                 @else
-                                    <span class="customer-account-nav-item is-disabled" title="Chức năng chưa kết nối">
+                                    <span class="customer-account-nav-item is-disabled" title="Chức năng chưa kết nối" data-title="{{ $item['label'] }}">
                                         @include('customer.partials.account-icon', ['name' => $item['icon']])
                                         <span>{{ $item['label'] }}</span>
                                         <small>Chưa kết nối</small>
@@ -142,9 +155,10 @@
                     <button
                         type="button"
                         class="customer-account-user"
-                        @click="sidebarCollapsed ? (setSidebarCollapsed(false), accountMenuOpen = true) : accountMenuOpen = ! accountMenuOpen"
+                        @click="accountMenuOpen = ! accountMenuOpen"
                         :aria-expanded="accountMenuOpen.toString()"
                         aria-controls="customer-account-user-menu"
+                        :title="sidebarCollapsed ? '{{ $user->full_name }}' : 'Tài khoản cá nhân'"
                     >
                         <div class="customer-account-avatar" aria-hidden="true">
                             @if ($user->avatar_url)
@@ -232,6 +246,9 @@
                     aria-label="Mở menu tài khoản"
                 >
                     @include('customer.partials.account-icon', ['name' => 'menu'])
+                    @if ($unreadMessagesCount > 0)
+                        <span class="customer-mobile-badge-dot" aria-hidden="true"></span>
+                    @endif
                 </button>
 
                 <main @class(['customer-account-page', 'is-flush-page' => ($flush ?? false), 'orders-page' => request()->routeIs('customer.orders.*')])>
@@ -243,5 +260,24 @@
         </div>
 
         @include('ReviewKT.partials.review-modal')
+
+        {{-- Tự động cập nhật dữ liệu mới nhất khi bấm nút Back (Quay lại) trên trình duyệt Chrome/Safari --}}
+        <script>
+            window.addEventListener('pageshow', function (event) {
+                var isBack = event.persisted;
+                if (!isBack && window.performance && window.performance.navigation) {
+                    isBack = window.performance.navigation.type === 2;
+                }
+                if (!isBack && window.performance && window.performance.getEntriesByType) {
+                    var entries = window.performance.getEntriesByType('navigation');
+                    if (entries.length > 0 && entries[0].type === 'back_forward') {
+                        isBack = true;
+                    }
+                }
+                if (isBack) {
+                    window.location.reload();
+                }
+            });
+        </script>
     </body>
 </html>

@@ -593,5 +593,20 @@
                 window.location.reload();
             }, 900);
         });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const autoOrderId = urlParams.get('order_id') || urlParams.get('order');
+            if (autoOrderId) {
+                setTimeout(function () {
+                    if (window.openOrderReviewModal) {
+                        window.openOrderReviewModal(autoOrderId);
+                    } else {
+                        const btn = document.querySelector(`[data-open-order-review-modal][data-order-id="${autoOrderId}"]`);
+                        if (btn) btn.click();
+                    }
+                }, 350);
+            }
+        });
     </script>
 </x-customer-account-layout>

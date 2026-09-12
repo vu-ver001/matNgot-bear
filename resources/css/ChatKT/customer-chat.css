@@ -1,26 +1,125 @@
 /* ==========================================================
    CUSTOMER CHAT STYLES (MẬT NGỌT BEAR)
-   Design chuẩn theo Mockup Ảnh 2
+   Design chuẩn theo Mockup Ảnh 2 & Đồng bộ 100% với Admin / Staff
    ========================================================== */
 
-.customer-chat-container {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 24px;
-    align-items: start;
-    width: 100%;
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
+    --customer-chat-outer-spacing: 2rem;
 }
 
-/* KHUNG CHAT CHÍNH (BÊN TRÁI) */
+/* ĐỒNG BỘ TOÀN BỘ FONT CHỮ 'BE VIETNAM PRO' CHUẨN 100% NHƯ ADMIN & STAFF (KHÔNG GHI ĐÈ ICON) */
+.customer-account-app:has(.customer-chat-container),
+.customer-account-workspace:has(.customer-chat-container),
+.customer-account-page:has(.customer-chat-container),
+.customer-chat-container,
+.customer-chat-main,
+.customer-chat-header,
+.customer-chat-header *,
+.customer-chat-body,
+.customer-chat-msg-row,
+.customer-chat-bubble,
+.customer-chat-bubble p,
+.customer-chat-bubble div,
+.chat-msg-text,
+.chat-msg-time,
+.chat-msg-status,
+.customer-chat-time,
+.customer-chat-status,
+.customer-chat-date-divider span,
+.customer-chat-footer,
+.customer-chat-input,
+.customer-chat-btn-send span,
+.customer-chat-sidebar,
+.customer-chat-sidebar * {
+    font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    box-sizing: border-box;
+}
+
+/* BẢO VỆ TUYỆT ĐỐI CHO ICON FONT AWESOME KHÔNG BỊ BIẾN THÀNH 5 GẠCH (NOTDEF GLYPH) */
+.customer-chat-container i,
+.customer-chat-container [class*="fa-"],
+i[class*="fa-"] {
+    font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    font-style: normal !important;
+}
+
+.customer-chat-container i.fa-solid,
+.customer-chat-container [class*="fa-solid"] {
+    font-weight: 900 !important;
+}
+
+.customer-chat-container i.fa-regular,
+.customer-chat-container [class*="fa-regular"] {
+    font-weight: 400 !important;
+}
+
+/* CĂN ĐỀU 4 PHÍA LỀ TRÊN - DƯỚI - TRÁI - PHẢI BẰNG NHAU (2rem = 32px) CHUẨN NHÂN VIÊN & ADMIN */
+.customer-account-workspace:has(.customer-chat-container) {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.customer-account-page:has(.customer-chat-container) {
+    padding: var(--customer-chat-outer-spacing, 2rem) !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #fffaf5 !important;
+}
+
+/* BỎ VIỀN VÀ BACKGROUND TRẮNG BỌC NGOÀI CỦA LAYOUT CUSTOMER-ACCOUNT */
+.customer-account-content.is-flush,
+.customer-account-content:has(.customer-chat-container),
+.customer-account-page:has(.customer-chat-container) .customer-account-content {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.customer-chat-container {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 320px !important;
+    gap: 16px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    flex: 1 !important;
+}
+
+/* KHUNG CHAT CHÍNH (BÊN TRÁI) - KHỚP 100% VIEWPORT NHƯ ADMIN & STAFF */
 .customer-chat-main {
     background: #ffffff;
     border-radius: 18px;
-    border: 1px solid #f0e6de;
-    box-shadow: 0 4px 20px rgba(132, 60, 22, 0.05);
-    display: flex;
-    flex-direction: column;
-    height: 720px;
-    overflow: hidden;
+    border: 1px solid #ede1d7;
+    box-shadow: 0 4px 20px rgba(132, 60, 22, 0.04);
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
 }
 
 /* HEADER KHUNG CHAT */
@@ -73,6 +172,7 @@
     padding: 2px 8px;
     border-radius: 20px;
     border: 1px solid #bbf7d0;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .customer-chat-header__badge-online::before {
@@ -82,6 +182,43 @@
     height: 7px;
     border-radius: 50%;
     background: #22c55e;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+}
+
+/* 1. Chờ tiếp nhận (WAITING) - Vàng cam */
+.customer-chat-header__badge-online.is-waiting {
+    background: #fef8ec;
+    color: #b45309;
+    border-color: #fde68a;
+}
+
+.customer-chat-header__badge-online.is-waiting::before {
+    background: #f59e0b;
+}
+
+/* 2. Đang hỗ trợ (IN_PROGRESS) hoặc Trực tuyến - Xanh lá */
+.customer-chat-header__badge-online.is-in-progress,
+.customer-chat-header__badge-online.is-online {
+    background: #eafbf1;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.customer-chat-header__badge-online.is-in-progress::before,
+.customer-chat-header__badge-online.is-online::before {
+    background: #22c55e;
+}
+
+/* 3. Ngoại tuyến (OFFLINE) - Xám */
+.customer-chat-header__badge-online.is-offline {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+}
+
+.customer-chat-header__badge-online.is-offline::before {
+    background: #9ca3af;
 }
 
 .customer-chat-header__subtext {
@@ -94,11 +231,11 @@
 .customer-chat-body {
     flex: 1;
     overflow-y: auto;
-    padding: 24px;
+    padding: 20px;
     background: #faf7f5;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 3px;
 }
 
 /* DÒNG PHÂN CÁCH NGÀY THÁNG */
@@ -106,24 +243,52 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 8px 0;
+    margin: 12px 0;
 }
 
 .customer-chat-date-divider span {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #a89488;
-    background: #f0e7df;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #704a32 !important;
+    background: #eedfd2 !important;
     padding: 4px 14px;
     border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(90, 40, 10, 0.05);
+    font-family: 'Be Vietnam Pro', sans-serif !important;
 }
 
 /* KHỐI TIN NHẮN TỪNG DÒNG */
 .customer-chat-msg-row {
     display: flex;
     align-items: flex-end;
-    gap: 10px;
-    max-width: 80%;
+    gap: 8px;
+    max-width: 75%;
+    margin-bottom: 3px;
+    transition: margin 0.2s ease;
+}
+
+/* Khoảng cách giữa các cụm tin nhắn hoặc tin nhắn đơn lẻ chuẩn Messenger */
+.customer-chat-msg-row.pos-single,
+.customer-chat-msg-row.pos-last {
+    margin-bottom: 12px;
+}
+
+/* Khoảng cách tách biệt rõ ràng khi gửi tin nhắn ảnh liên tiếp hoặc đơn lẻ */
+.customer-chat-msg-row.has-gallery,
+.customer-chat-msg-row:has(.chat-msg-gallery) {
+    margin-bottom: 10px;
+}
+
+.customer-chat-msg-row.has-gallery.pos-single,
+.customer-chat-msg-row.has-gallery.pos-last,
+.customer-chat-msg-row.pos-single:has(.chat-msg-gallery),
+.customer-chat-msg-row.pos-last:has(.chat-msg-gallery) {
+    margin-bottom: 14px;
+}
+
+.customer-chat-msg-row + .customer-chat-msg-row.has-gallery,
+.customer-chat-msg-row + .customer-chat-msg-row:has(.chat-msg-gallery) {
+    margin-top: 4px;
 }
 
 .customer-chat-msg-row.is-shop {
@@ -146,141 +311,297 @@
     margin-bottom: 2px;
 }
 
-/* BONG BÓNG TIN NHẮN */
+.customer-chat-msg-row__avatar.is-spacer {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* BONG BÓNG TIN NHẮN (CHUẨN ZALO & ĐỒNG BỘ 100% VỚI ADMIN / STAFF) */
 .customer-chat-bubble {
-    padding: 12px 18px;
-    border-radius: 18px;
-    font-size: 14px;
-    line-height: 1.55;
+    min-width: 60px;
+    padding: 8px 14px 6px 14px;
+    border-radius: 16px;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    color: #3a2316 !important;
+    font-weight: 400 !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
     word-break: break-word;
     position: relative;
     box-shadow: 0 2px 8px rgba(90, 40, 10, 0.04);
+    -webkit-font-smoothing: subpixel-antialiased !important;
+    -moz-osx-font-smoothing: auto !important;
 }
 
+.chat-msg-text {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    color: #3a2316 !important;
+    font-weight: 400 !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
+    word-break: break-word;
+    -webkit-font-smoothing: subpixel-antialiased !important;
+    -moz-osx-font-smoothing: auto !important;
+}
+
+/* Shop (bên trái - tin nhắn nhận vào) */
 .customer-chat-msg-row.is-shop .customer-chat-bubble {
-    background: #ffffff;
-    color: #3b2314;
-    border: 1px solid #ede1d7;
-    border-bottom-left-radius: 4px;
+    background: #ffffff !important;
+    color: #3a2316 !important;
+    border: 1px solid #ede1d7 !important;
+    border-bottom-left-radius: 4px !important;
 }
 
+.customer-chat-msg-row.is-shop.pos-first .customer-chat-bubble {
+    border-radius: 16px 16px 16px 4px !important;
+}
+
+.customer-chat-msg-row.is-shop.pos-middle .customer-chat-bubble {
+    border-radius: 4px 16px 16px 4px !important;
+}
+
+.customer-chat-msg-row.is-shop.pos-last .customer-chat-bubble {
+    border-radius: 4px 16px 16px 16px !important;
+}
+
+/* Khách hàng (bên phải - tin nhắn gửi đi) */
 .customer-chat-msg-row.is-customer .customer-chat-bubble {
-    background: #faeee5;
-    color: #431f0a;
-    border: 1px solid #f2dac8;
-    border-bottom-right-radius: 4px;
+    background: #faeee5 !important;
+    color: #3a2316 !important;
+    border: 1px solid #f2dac8 !important;
+    border-bottom-right-radius: 4px !important;
 }
 
-/* THỜI GIAN & DẤU CHECK */
-.customer-chat-meta {
+.customer-chat-msg-row.is-customer.pos-first .customer-chat-bubble {
+    border-radius: 16px 16px 4px 16px !important;
+}
+
+.customer-chat-msg-row.is-customer.pos-middle .customer-chat-bubble {
+    border-radius: 16px 4px 4px 16px !important;
+}
+
+.customer-chat-msg-row.is-customer.pos-last .customer-chat-bubble {
+    border-radius: 16px 4px 16px 16px !important;
+}
+
+/* THỜI GIAN VÀ TRẠNG THÁI BÊN TRONG BONG BÓNG (CHUẨN ZALO) */
+.chat-msg-time,
+.customer-chat-time {
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 11px;
-    color: #a38d80;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
     margin-top: 4px;
+    user-select: none;
+    font-weight: 400 !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
 }
 
-.customer-chat-msg-row.is-customer .customer-chat-meta {
-    justify-content: flex-end;
+.customer-chat-msg-row.is-shop .chat-msg-time,
+.customer-chat-msg-row.is-shop .customer-chat-time {
+    color: #8c7667 !important;
+    justify-content: flex-start !important;
 }
 
-.customer-chat-check-icon {
-    display: inline-flex;
-    color: #10b981;
-    font-size: 12px;
+.customer-chat-msg-row.is-customer .chat-msg-time,
+.customer-chat-msg-row.is-customer .customer-chat-time {
+    color: #9a7b66 !important;
+    justify-content: flex-end !important;
+}
+
+/* KHỐI BỌC BONG BÓNG VÀ TRẠNG THÁI GỬI (CHUẨN MESSENGER / ZALO) */
+.customer-chat-msg-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+.customer-chat-msg-row.is-customer .customer-chat-msg-wrap {
+    align-items: flex-end;
+}
+
+.chat-msg-status {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #9a7b66 !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
+    margin-top: 3px;
+    margin-right: 4px;
+    line-height: 1.2;
+    letter-spacing: 0.1px;
+    user-select: none;
+    text-align: right;
+    animation: chatMsgStatusFadeIn 0.2s ease-out;
+}
+
+.chat-msg-status[data-status="seen"] {
+    color: #10b981 !important;
+    font-weight: 600 !important;
+}
+
+@keyframes chatMsgStatusFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.customer-chat-meta {
+    display: none !important;
 }
 
 /* FOOTER Ô NHẬP TIN NHẮN */
 .customer-chat-footer {
-    padding: 16px 22px;
+    padding: 14px 18px;
     background: #ffffff;
     border-top: 1px solid #f0e6de;
 }
 
 .customer-chat-form {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
 }
 
-.customer-chat-input-wrap {
-    flex: 1;
+.customer-chat-form-row {
     display: flex;
     align-items: center;
-    background: #fbf9f8;
-    border: 1px solid #e8ded6;
-    border-radius: 12px;
-    padding: 0 14px;
-    transition: all 0.2s ease;
+    gap: 10px;
+    width: 100%;
 }
 
-.customer-chat-input-wrap:focus-within {
-    border-color: #a05a2c;
+/* NÚT ĐÍNH KÈM HÌNH ẢNH (NẰM BÊN NGOÀI BORDER CỦA Ô NHẬP) */
+.chat-btn-image,
+.customer-chat-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(160, 90, 44, 0.1);
+    border: 1.5px solid #e8ded6;
+    border-radius: 12px;
+    color: #843c16;
+    font-size: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(109, 76, 65, 0.04);
+    padding: 0;
+    outline: none !important;
 }
 
+.chat-btn-image:hover,
+.customer-chat-btn-icon:hover {
+    background: #fdf6ec;
+    border-color: #d4a373;
+    color: #b45309;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(132, 60, 22, 0.12);
+}
+
+.chat-btn-image:active,
+.customer-chat-btn-icon:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(132, 60, 22, 0.1);
+}
+
+.chat-btn-image:focus,
+.chat-btn-image:focus-visible,
+.customer-chat-btn-icon:focus,
+.customer-chat-btn-icon:focus-visible {
+    outline: none !important;
+    border-color: #a05a2c;
+    box-shadow: 0 0 0 3px rgba(160, 90, 44, 0.15) !important;
+}
+
+/* Ô NHẬP TIN NHẮN (CÓ BORDER CHUẨN NHƯ CÁC Ô NHẬP KHÁC, FOCUS GLOW CARAMEL, KHÔNG KHUNG XANH) */
 .customer-chat-input {
     flex: 1;
     height: 44px;
-    background: transparent;
-    border: none;
-    outline: none;
+    background: #ffffff;
+    border: 1.5px solid #e8ded6;
+    border-radius: 12px;
+    padding: 0 16px;
     font-size: 14px;
     color: #3b2314;
+    outline: none !important;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    box-shadow: 0 1px 3px rgba(109, 76, 65, 0.04);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .customer-chat-input::placeholder {
     color: #a89488;
+    font-size: 14px;
 }
 
-.customer-chat-btn-icon {
+.customer-chat-input:focus,
+.customer-chat-input:focus-visible {
+    border-color: #a05a2c !important;
+    background-color: #ffffff !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(160, 90, 44, 0.15) !important;
+    -webkit-focus-ring-color: transparent !important;
+}
+
+/* Khung wrap phụ trợ (nếu có) */
+.customer-chat-input-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
     background: transparent;
     border: none;
-    cursor: pointer;
-    color: #947e71;
-    padding: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    transition: color 0.15s ease, background 0.15s ease;
+    padding: 0;
 }
 
-.customer-chat-btn-icon:hover {
-    color: #63381e;
-    background: #f3ede7;
-}
-
+/* NÚT GỬI TIN NHẮN ĐỒNG BỘ */
 .customer-chat-btn-send {
     height: 44px;
-    padding: 0 24px;
-    background: #843c16;
+    padding: 0 22px;
+    background: linear-gradient(135deg, #843c16 0%, #a05a2c 100%);
     color: #ffffff;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-    box-shadow: 0 3px 10px rgba(132, 60, 22, 0.25);
+    gap: 8px;
+    flex-shrink: 0;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(132, 60, 22, 0.22);
+    outline: none !important;
 }
 
 .customer-chat-btn-send:hover {
-    background: #6a2f0f;
+    background: linear-gradient(135deg, #6a2f0f 0%, #843c16 100%);
     transform: translateY(-1px);
-    box-shadow: 0 5px 14px rgba(132, 60, 22, 0.35);
+    box-shadow: 0 4px 14px rgba(132, 60, 22, 0.32);
+}
+
+.customer-chat-btn-send:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(132, 60, 22, 0.2);
 }
 
 .customer-chat-btn-send:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
 }
 
 .customer-chat-footer__subtext {
@@ -289,13 +610,34 @@
     margin: 8px 0 0 4px;
 }
 
-/* ==========================================================
-   CỘT WIDGET BÊN PHẢI (MOCKUP ẢNH 2)
-   ========================================================== */
 .customer-chat-sidebar {
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     gap: 16px;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.customer-chat-sidebar:has(.customer-chat-card-faq.is-expanded),
+.customer-chat-sidebar:has([data-faq-toggle-btn][aria-expanded="true"]) {
+    overflow: hidden !important;
+}
+
+.customer-chat-sidebar::-webkit-scrollbar,
+.customer-chat-body::-webkit-scrollbar {
+    width: 6px;
+}
+.customer-chat-sidebar::-webkit-scrollbar-thumb,
+.customer-chat-body::-webkit-scrollbar-thumb {
+    background: rgba(132, 60, 22, 0.18);
+    border-radius: 999px;
+}
+.customer-chat-sidebar::-webkit-scrollbar-thumb:hover,
+.customer-chat-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(132, 60, 22, 0.35);
 }
 
 /* CARD 1: LỜI CHÀO */
@@ -308,6 +650,7 @@
     line-height: 1.6;
     color: #7c441e;
     box-shadow: 0 2px 10px rgba(132, 60, 22, 0.04);
+    flex-shrink: 0;
 }
 
 .customer-chat-card-welcome p {
@@ -321,6 +664,7 @@
     border-radius: 16px;
     padding: 18px 20px;
     box-shadow: 0 2px 10px rgba(132, 60, 22, 0.04);
+    flex-shrink: 0;
 }
 
 .customer-chat-card-hours__title {
@@ -373,6 +717,19 @@
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(132, 60, 22, 0.04);
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    transition: flex 0.25s ease;
+}
+
+/* Khi ấn xem tất cả câu hỏi: Card FAQ dài tới xuống bằng trang tin nhắn (flex: 1) */
+.customer-chat-card-faq.is-expanded,
+.customer-chat-card-faq:has([data-faq-toggle-btn][aria-expanded="true"]) {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
 }
 
 .customer-chat-card-faq__title {
@@ -383,6 +740,7 @@
     font-weight: 700;
     color: #4a2810;
     margin: 0 0 14px 0;
+    flex: 0 0 auto;
 }
 
 .customer-chat-faq-list {
@@ -442,6 +800,9 @@
     color: #843c16;
     text-decoration: none;
     transition: all 0.15s ease;
+    flex: 0 0 auto;
+    cursor: pointer;
+    user-select: none;
 }
 
 .customer-chat-faq-btn-all:hover {
@@ -459,6 +820,173 @@
     .customer-chat-main {
         height: 600px;
     }
+
+    .customer-chat-sidebar {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .customer-chat-card-faq.is-expanded,
+    .customer-chat-card-faq:has([data-faq-toggle-btn][aria-expanded="true"]) {
+        flex: none !important;
+        height: auto !important;
+    }
+}
+
+/* ==========================================================
+   SHOPEE-STYLE ORDER SUGGESTION WIDGET (GỢI Ý GỬI ĐƠN HÀNG)
+   ========================================================== */
+.staff-support-order-suggestion {
+    background: #fffdfa;
+    border: 1.5px solid #f2decb;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 16px rgba(132, 60, 22, 0.08);
+    position: relative;
+    animation: customerOrderSuggestionSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes customerOrderSuggestionSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.staff-support-order-suggestion__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #eedecf;
+}
+
+.staff-support-order-suggestion__title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #843c16;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.staff-support-order-suggestion__title i {
+    color: #e59819;
+}
+
+.staff-support-order-suggestion__close {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: #a89488;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.staff-support-order-suggestion__close:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
+.staff-support-order-suggestion__body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.staff-support-order-suggestion__thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    border: 1px solid #ede1d7;
+    object-fit: cover;
+    background: #fbf8f5;
+    flex-shrink: 0;
+}
+
+.staff-support-order-suggestion__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.staff-support-order-suggestion__code-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.staff-support-order-suggestion__code {
+    font-size: 13px;
+    font-weight: 700;
+    color: #3b2314;
+}
+
+.staff-support-order-suggestion__status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: #f4eae1;
+    color: #843c16;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.staff-support-order-suggestion__product {
+    font-size: 12.5px;
+    color: #634b3e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.staff-support-order-suggestion__total {
+    font-size: 12px;
+    color: #8c7667;
+}
+
+.staff-support-order-suggestion__total strong {
+    color: #b45309;
+    font-size: 13px;
+}
+
+.staff-support-order-suggestion__btn-send {
+    padding: 8px 14px;
+    background: linear-gradient(135deg, #843c16 0%, #a05a2c 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 8px rgba(132, 60, 22, 0.25);
+    white-space: nowrap;
+}
+
+.staff-support-order-suggestion__btn-send:hover {
+    background: linear-gradient(135deg, #6a2f0f 0%, #843c16 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(132, 60, 22, 0.35);
 }
 
 /* ==========================================================
@@ -470,7 +998,8 @@
     border-radius: 12px;
     padding: 12px 14px;
     box-shadow: 0 2px 8px rgba(109, 76, 65, 0.06);
-    max-width: 320px;
+    max-width: 350px;
+    min-width: 250px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -488,22 +1017,32 @@
 }
 
 .chat-order-card__tag {
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 700;
     color: #843c16;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .chat-order-card__status {
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 700;
-    padding: 2px 6px;
+    padding: 2px 8px;
     border-radius: 6px;
     background: #fdf5ef;
     color: #843c16;
     border: 1px solid #f2decb;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
 }
 
 .chat-order-card__body {
@@ -576,4 +1115,319 @@
     color: #b45309;
     text-decoration: underline;
 }
+
+/* HÌNH ẢNH TRONG BONG BÓNG CHAT */
+.chat-msg-image-wrap {
+    max-width: 280px;
+    max-height: 280px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.chat-msg-image-wrap:only-child,
+.chat-msg-image-wrap:last-child {
+    margin-bottom: 0;
+}
+
+.chat-msg-image {
+    display: block;
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.chat-msg-image:hover {
+    filter: brightness(0.96);
+    transform: scale(1.01);
+}
+
+/* THƯ VIỆN ẢNH NHIỀU HÌNH (CHUẨN ZALO - TÁCH BIỆT NGOÀI BONG BÓNG) */
+.chat-msg-gallery {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 0;
+    max-width: 480px;
+    width: fit-content;
+}
+
+.customer-chat-msg-row.is-customer .chat-msg-gallery {
+    margin-left: auto;
+}
+
+.customer-chat-msg-row:not(.is-customer) .chat-msg-gallery {
+    margin-right: auto;
+}
+
+.chat-msg-gallery.is-single {
+    display: block;
+    max-width: 300px;
+}
+
+.chat-msg-gallery.is-double {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 360px;
+}
+
+.chat-msg-gallery.is-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 480px;
+}
+
+.chat-msg-gallery .chat-msg-image-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    background: #f1ede8;
+}
+
+.chat-msg-gallery.is-single .chat-msg-image-wrap {
+    aspect-ratio: auto;
+    max-height: 320px;
+    border-radius: 12px;
+}
+
+.chat-msg-gallery .chat-msg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.chat-msg-gallery .chat-msg-image:hover {
+    filter: brightness(0.95);
+    transform: scale(1.02);
+}
+
+.chat-msg-gallery + .customer-chat-bubble {
+    margin-top: 6px;
+}
+
+.chat-msg-time.is-outside,
+.customer-chat-time.is-outside {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: #9a7b66 !important;
+    margin-top: 4px !important;
+    padding: 0 4px !important;
+    user-select: none !important;
+    line-height: 1.2 !important;
+}
+
+.customer-chat-msg-row.is-customer .chat-msg-time.is-outside,
+.customer-chat-msg-row.is-customer .customer-chat-time.is-outside {
+    text-align: right;
+    align-self: flex-end;
+}
+
+.customer-chat-msg-row:not(.is-customer) .chat-msg-time.is-outside,
+.customer-chat-msg-row:not(.is-customer) .customer-chat-time.is-outside {
+    text-align: left;
+    align-self: flex-start;
+}
+
+/* Fallback trong trường hợp bong bóng cũ chứa gallery */
+.customer-chat-bubble:has(> .chat-msg-gallery:only-child) {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 576px) {
+    .chat-msg-gallery.is-grid {
+        max-width: 100%;
+        gap: 4px;
+    }
+    .chat-msg-gallery.is-single {
+        max-width: 240px;
+    }
+}
+
+.chat-msg-text {
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+/* XEM TRƯỚC HÌNH ẢNH TRƯỚC KHI GỬI (KHÁCH HÀNG) - NẰM TRÊN THANH CHAT */
+.chat-image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #fff8f3;
+    border: 1px dashed #e6c8b0;
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    max-height: 140px;
+    overflow-y: auto;
+}
+
+.chat-image-preview-item {
+    position: relative;
+    display: inline-block;
+}
+
+.chat-image-preview-thumb {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #d4a373;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    display: block;
+}
+
+.chat-image-preview-close {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: #dc2626;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.chat-image-preview-close:hover {
+    background: #b91c1c;
+    transform: scale(1.1);
+}
+
+/* ==========================================================
+   MỞ RỘNG / THU GỌN CÂU HỎI THƯỜNG GẶP TẠI SIDEBAR (SCROLLABLE)
+   ========================================================== */
+.customer-chat-faq-list-wrap {
+    transition: all 0.25s ease;
+}
+
+/* Chiếm trọn không gian còn lại khi Card FAQ mở rộng, và dài quá thì cuộn bên trong */
+.customer-chat-card-faq.is-expanded .customer-chat-faq-list-wrap,
+.customer-chat-card-faq:has([data-faq-toggle-btn][aria-expanded="true"]) .customer-chat-faq-list-wrap,
+.customer-chat-faq-list-wrap.is-scrollable {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 6px;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #d8beaa #fdfaf7;
+}
+
+/* Thanh cuộn tinh tế, pastel đồng bộ phong cách Mật Ngọt Bear */
+.customer-chat-faq-list-wrap::-webkit-scrollbar,
+.customer-chat-card-faq.is-expanded .customer-chat-faq-list-wrap::-webkit-scrollbar,
+.customer-chat-faq-list-wrap.is-scrollable::-webkit-scrollbar {
+    width: 5px;
+}
+
+.customer-chat-faq-list-wrap::-webkit-scrollbar-track,
+.customer-chat-card-faq.is-expanded .customer-chat-faq-list-wrap::-webkit-scrollbar-track,
+.customer-chat-faq-list-wrap.is-scrollable::-webkit-scrollbar-track {
+    background: #fdfaf7;
+    border-radius: 999px;
+}
+
+.customer-chat-faq-list-wrap::-webkit-scrollbar-thumb,
+.customer-chat-card-faq.is-expanded .customer-chat-faq-list-wrap::-webkit-scrollbar-thumb,
+.customer-chat-faq-list-wrap.is-scrollable::-webkit-scrollbar-thumb {
+    background: #d8beaa;
+    border-radius: 999px;
+    transition: background 0.2s ease;
+}
+
+.customer-chat-faq-list-wrap::-webkit-scrollbar-thumb:hover,
+.customer-chat-card-faq.is-expanded .customer-chat-faq-list-wrap::-webkit-scrollbar-thumb:hover,
+.customer-chat-faq-list-wrap.is-scrollable::-webkit-scrollbar-thumb:hover {
+    background: #843c16;
+}
+
+@media (max-width: 992px) {
+    .customer-chat-card-faq.is-expanded .customer-chat-faq-list-wrap,
+    .customer-chat-card-faq:has([data-faq-toggle-btn][aria-expanded="true"]) .customer-chat-faq-list-wrap,
+    .customer-chat-faq-list-wrap.is-scrollable {
+        flex: none !important;
+        max-height: 380px !important;
+        overflow-y: auto !important;
+    }
+}
+
+.customer-chat-faq-extra {
+    margin-top: 4px;
+    animation: customerFaqSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes customerFaqSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.customer-chat-faq-btn-all svg[data-faq-toggle-icon] {
+    transition: transform 0.25s ease;
+}
+
+.customer-chat-faq-btn-all[aria-expanded="true"] svg[data-faq-toggle-icon] {
+    transform: rotate(180deg);
+}
+
+/* SIDEBAR FAQ ITEMS INTERACTION HOVER */
+.customer-chat-faq-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.customer-chat-faq-item:hover {
+    background: #fff7ed;
+    color: #843c16;
+    padding-left: 14px;
+    border-radius: 8px;
+}
+
+.customer-chat-faq-btn-all {
+    cursor: pointer;
+    border: 1px solid #e5d7cc;
+    width: 100%;
+    text-align: center;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.customer-chat-faq-btn-all:hover {
+    background: #fdf5ef;
+    border-color: #d8beaa;
+    color: #632d10;
+}
+
 

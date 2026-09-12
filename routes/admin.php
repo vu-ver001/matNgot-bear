@@ -67,6 +67,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
     Route::resource('vouchers', VoucherController::class)->except(['show']);
 
     // 7. PHẦN CỦA KHÁNH VÂN: Quản lý Sản phẩm (Trang riêng)
+    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::resource('products', ProductController::class);
 
     // 8. PHẦN CỦA KHÁNH VÂN: Quản lý Danh mục (Trang riêng)

@@ -193,21 +193,38 @@
     box-shadow: 0 4px 16px rgba(92, 50, 25, 0.04);
 }
 
+.voucher-toolbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
 /* Tabs Group */
 .voucher-tabs-group {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    max-width: 100%;
+}
+.voucher-tabs-group::-webkit-scrollbar {
+    display: none;
 }
 
 .voucher-tab-link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 14px;
+    gap: 5px;
+    padding: 6.5px 12px;
     border-radius: 12px;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
@@ -215,6 +232,8 @@
     border: 1px solid transparent;
     user-select: none;
     line-height: 1.2;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .voucher-tab-icon {
@@ -401,12 +420,21 @@
 }
 
 /* ==========================================================================
-   Cute Search Bar
+   Cute Search Bar & Right Controls
    ========================================================================== */
+.voucher-right-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+}
+
 .voucher-search-form {
     display: inline-flex;
     align-items: center;
     margin: 0;
+    flex-shrink: 0;
 }
 .voucher-search-box {
     position: relative;
@@ -416,8 +444,9 @@
     border: 1.5px solid #EBDDCD;
     border-radius: 9999px;
     padding: 3px 4px 3px 10px;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     box-shadow: 0 2px 6px rgba(92, 50, 25, 0.03);
+    flex-shrink: 0;
 }
 .voucher-search-box:hover {
     border-color: #DF8F30;
@@ -426,32 +455,51 @@
 .voucher-search-box:focus-within {
     border-color: #E08A1E;
     background: #FFFFFF;
-    box-shadow: 0 0 0 3px rgba(224, 138, 30, 0.15), 0 4px 12px rgba(224, 138, 30, 0.08);
+    box-shadow: 0 0 0 3px rgba(224, 138, 30, 0.15), 0 2px 8px rgba(224, 138, 30, 0.08);
 }
 
 .voucher-search-icon-wrapper {
     color: #D97706;
-    font-size: 12.5px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-right: 6px;
     pointer-events: none;
+    flex-shrink: 0;
 }
 
 .voucher-search-input {
-    border: none;
-    background: transparent;
+    border: none !important;
+    background: transparent !important;
     font-size: 12px;
     color: #2B1810;
-    width: 155px;
-    outline: none;
+    width: 145px;
+    outline: none !important;
+    box-shadow: none !important;
     padding: 3px 0;
-    transition: width 0.25s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    /* Cố định chiều rộng, không co giãn khi focus để tránh nhảy dòng */
 }
-.voucher-search-box:focus-within .voucher-search-input {
-    width: 195px;
+
+/* Triệt tiêu hoàn toàn viền xanh mặc định của trình duyệt và Tailwind ring */
+.voucher-search-input:focus,
+.voucher-search-input:focus-visible,
+.voucher-search-input:active {
+    outline: none !important;
+    outline-width: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    -webkit-box-shadow: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: none !important;
+    --tw-shadow: none !important;
+    --tw-ring-offset-width: 0px !important;
+    --tw-ring-offset-shadow: none !important;
 }
+
 .voucher-search-input::placeholder {
     color: #A8988B;
     font-style: italic;
@@ -492,6 +540,7 @@
     justify-content: center;
     transition: all 0.15s ease;
     box-shadow: 0 1px 3px rgba(224, 138, 30, 0.25);
+    flex-shrink: 0;
 }
 .voucher-search-btn:hover {
     background: linear-gradient(135deg, #C2751D 0%, #A05908 100%);
@@ -499,6 +548,11 @@
 }
 
 @media (max-width: 639px) {
+    .voucher-toolbar-inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
     .voucher-ticket-card {
         flex-direction: column;
         height: auto;
@@ -517,6 +571,24 @@
     .voucher-body {
         height: auto;
         padding: 12px;
+    }
+    .voucher-right-controls {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .voucher-type-switch {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .voucher-type-pill {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+    }
+    .voucher-search-form {
+        width: 100%;
     }
     .voucher-search-box {
         width: 100%;

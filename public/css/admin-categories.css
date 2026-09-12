@@ -321,7 +321,10 @@
 /* Data Table */
 .table-container {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     background: var(--bg-card);

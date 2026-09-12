@@ -2220,10 +2220,13 @@
 
                 getInapplicableReason(v) {
                     if (!v) return '';
+                    if (v.is_user_exhausted || (v.user_remaining !== undefined && v.user_remaining <= 0)) {
+                        return 'Bạn đã hết lượt dùng';
+                    }
                     if (v.inapplicable_reason) return v.inapplicable_reason;
                     const status = this.getVoucherStatus(v);
+                    if (status.key === 'EXHAUSTED_USER') return 'Bạn đã hết lượt dùng';
                     if (status.key === 'EXHAUSTED') return 'Mã đã hết lượt dùng toàn shop';
-                    if (status.key === 'EXHAUSTED_USER') return 'Bạn đã dùng hết lượt mã này';
                     if (status.key === 'EXPIRED') return 'Mã đã hết hạn hoặc tạm ngưng';
                     if (status.key === 'UPCOMING') return `Chưa mở (từ ${this.formatDate(v.start_date)})`;
                     const checkAmount = (v.eligible_subtotal !== undefined && v.eligible_subtotal !== null)

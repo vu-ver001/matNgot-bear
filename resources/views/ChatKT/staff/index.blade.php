@@ -11,8 +11,8 @@
         data-poll-url="{{ route($routePrefix . '.poll', $selectedCase) }}"
     @endif
 >
-    {{-- BỐ CỤC 3 CỘT THEO MOCKUP ẢNH 1 --}}
-    <div class="staff-support-grid">
+    {{-- BỐ CỤC 3 CỘT THEO MOCKUP (2 CỘT KHI CHƯA CHỌN CASE ĐỂ TRẢI NGHIỆM THOÁNG VÀ ĐẸP MẮT) --}}
+    <div class="staff-support-grid {{ $selectedCase ? 'has-selected-case' : 'is-empty-selection' }}">
         {{-- ==========================================
              CỘT 1: DANH SÁCH CASE (BÊN TRÁI)
              ========================================== --}}
@@ -78,6 +78,7 @@
                         $isActive = ! $isLockedOther && $selectedCase && (int) $selectedCase->id === (int) $c->id;
                         $unreadCount = app(\App\Services\ChatKT\ChatService::class)->countUnreadMessagesForStaff($c);
                         $lastMsg = $c->latestMessage ?? $c->messages?->first() ?? $c->conversation?->lastMessage;
+                        $displayMsg = app(\App\Services\ChatKT\ChatService::class)->getCasePreviewMessage($c, $lastMsg);
                         $lastMsgTime = $lastMsg?->sent_at ?? $lastMsg?->created_at ?? $c->created_at;
                         $timeAgo = $lastMsgTime ? $lastMsgTime->diffForHumans(null, true) : '';
                         $isUnread = $unreadCount > 0;
@@ -137,7 +138,7 @@
 
                             <div class="staff-support-case-middle">
                                 <p class="staff-support-case-preview">
-                                    {{ $lastMsg?->content ?? 'Chưa có tin nhắn' }}
+                                    {{ $displayMsg?->content ?: ($displayMsg?->image_url ? '📷 [Hình ảnh]' : 'Chưa có tin nhắn') }}
                                 </p>
                                 @if ($unreadCount > 0)
                                     <span class="staff-support-case-unread">{{ $unreadCount }}</span>
@@ -179,7 +180,7 @@
                     $isClosed = $selectedCase->isClosed();
                     $isHandler = $isInProgress && (int) $selectedCase->assigned_staff_id === (int) $user->id;
                     $handlerStaff = $selectedCase->assignedStaff;
-                    $handlerName = $handlerStaff?->full_name ?? $handlerStaff?->name ?? 'Chưa có';
+                    $handlerName = $handlerStaff?->full_name ?? $handlerStaff?->name ?? ($isClosed ? 'Hệ thống tự động' : 'Chưa có');
                 @endphp
 
                 {{-- TOP BAR KHÁCH HÀNG & NÚT THAO TÁC (KIỂU MESSENGER FB) --}}
@@ -381,11 +382,14 @@
                 {{-- NỘI DUNG CUỘC TRÒ CHUYỆN --}}
                 <div class="staff-support-chat-stream" data-staff-chat-stream>
                     @php
-                        $groupedMsgs = $selectedCase->conversation->messages()
+                        $allMsgs = $selectedCase->conversation->messages()
                             ->with('sender')
                             ->orderBy('id', 'asc')
-                            ->get()
-                            ->groupBy(fn ($m) => $m->sent_at ? $m->sent_at->format('d/m/Y') : now()->format('d/m/Y'));
+                            ->get();
+                        $lastMsg = $allMsgs->last();
+                        $lastMsgId = $lastMsg?->id;
+                        $isLastMsgSelf = $lastMsg && ((int) $lastMsg->sender_id !== (int) $selectedCase->customer_id);
+                        $groupedMsgs = $allMsgs->groupBy(fn ($m) => $m->sent_at ? $m->sent_at->format('d/m/Y') : now()->format('d/m/Y'));
                     @endphp
 
                     @foreach ($groupedMsgs as $dateStr => $msgs)
@@ -399,84 +403,146 @@
                             </span>
                         </div>
 
-                        @foreach ($msgs as $msg)
+                        @php
+                            $msgs = $msgs->values();
+                            $totalInDate = $msgs->count();
+                        @endphp
+
+                        @foreach ($msgs as $idx => $msg)
                             @php
                                 $isCustomer = (int) $msg->sender_id === (int) $selectedCase->customer_id;
+                                $prevMsg = $idx > 0 ? $msgs[$idx - 1] : null;
+                                $nextMsg = $idx < $totalInDate - 1 ? $msgs[$idx + 1] : null;
+
+                                $isPrevSame = $prevMsg
+                                    && (int) $prevMsg->sender_id === (int) $msg->sender_id
+                                    && $msg->sent_at && $prevMsg->sent_at
+                                    && abs($msg->sent_at->diffInMinutes($prevMsg->sent_at)) <= 10;
+
+                                $isNextSame = $nextMsg
+                                    && (int) $nextMsg->sender_id === (int) $msg->sender_id
+                                    && $msg->sent_at && $nextMsg->sent_at
+                                    && abs($nextMsg->sent_at->diffInMinutes($msg->sent_at)) <= 10;
+
+                                if (! $isPrevSame && ! $isNextSame) {
+                                    $groupPos = 'pos-single';
+                                } elseif (! $isPrevSame && $isNextSame) {
+                                    $groupPos = 'pos-first';
+                                } elseif ($isPrevSame && $isNextSame) {
+                                    $groupPos = 'pos-middle';
+                                } else {
+                                    $groupPos = 'pos-last';
+                                }
+
+                                $showAvatar = ($groupPos === 'pos-last' || $groupPos === 'pos-single');
+                                $showTime = ($groupPos === 'pos-last' || $groupPos === 'pos-single');
                             @endphp
                             <div
-                                class="staff-chat-msg-row {{ $isCustomer ? 'is-customer' : 'is-staff' }}"
+                                class="staff-chat-msg-row {{ $isCustomer ? 'is-customer' : 'is-staff' }} {{ $groupPos }} {{ ! empty($msg->image_urls) ? 'has-gallery' : '' }}"
                                 data-msg-id="{{ $msg->id }}"
+                                data-sender-id="{{ $msg->sender_id }}"
+                                data-is-customer="{{ $isCustomer ? '1' : '0' }}"
+                                data-timestamp="{{ $msg->sent_at ? $msg->sent_at->timestamp : '' }}"
                             >
                                 @if ($isCustomer)
-                                    <div class="staff-chat-msg-avatar">
-                                        @if ($selectedCase->customer?->avatar_url)
-                                            <img
-                                                src="{{ $selectedCase->customer->avatar_url }}"
-                                                alt="{{ $selectedCase->customer?->full_name ?? 'Khách hàng' }}"
-                                                onerror="this.remove()"
-                                            >
-                                        @endif
-                                        <span>{{ mb_strtoupper(mb_substr(trim($selectedCase->customer?->full_name ?? $selectedCase->customer?->name ?? 'K'), 0, 1, 'UTF-8')) }}</span>
-                                    </div>
+                                    @if ($showAvatar)
+                                        <div class="staff-chat-msg-avatar">
+                                            @if ($selectedCase->customer?->avatar_url)
+                                                <img
+                                                    src="{{ $selectedCase->customer->avatar_url }}"
+                                                    alt="{{ $selectedCase->customer?->full_name ?? 'Khách hàng' }}"
+                                                    onerror="this.remove()"
+                                                >
+                                            @endif
+                                            <span>{{ mb_strtoupper(mb_substr(trim($selectedCase->customer?->full_name ?? $selectedCase->customer?->name ?? 'K'), 0, 1, 'UTF-8')) }}</span>
+                                        </div>
+                                    @else
+                                        <div class="staff-chat-msg-avatar is-spacer" aria-hidden="true"></div>
+                                    @endif
                                 @endif
                                 <div class="staff-chat-msg-wrap">
-                                    <div class="staff-chat-bubble">
-                                        @if (str_contains($msg->content, '📦 [ĐƠN HÀNG #'))
-                                            @php
-                                                preg_match('/#([A-Z0-9\-]+)/', $msg->content, $orderCodeMatches);
-                                                $parsedOrderCode = $orderCodeMatches[1] ?? null;
-                                                $bubbleOrder = $parsedOrderCode ? \App\Models\Order::with('details.product')->where('order_code', $parsedOrderCode)->first() : null;
-                                            @endphp
-                                            @if ($bubbleOrder)
+                                    @php
+                                        $msgImages = $msg->image_urls;
+                                    @endphp
+                                    @if (! empty($msgImages))
+                                        <div class="chat-msg-gallery {{ count($msgImages) === 1 ? 'is-single' : (count($msgImages) === 2 ? 'is-double' : 'is-grid') }}">
+                                            @foreach ($msgImages as $imgUrl)
+                                                <div class="chat-msg-image-wrap">
+                                                    <img src="{{ $imgUrl }}" alt="Hình ảnh đính kèm" class="chat-msg-image" loading="lazy" onclick="window.open(this.src, '_blank')">
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @if ($msg->content)
+                                        <div class="staff-chat-bubble" title="{{ $msg->sent_at ? $msg->sent_at->format('H:i, d/m/Y') : '' }}">
+                                            @if (str_contains($msg->content, '📦 [ĐƠN HÀNG #'))
                                                 @php
-                                                    $bubbleDetail = $bubbleOrder->details->first();
-                                                    $bubbleProduct = $bubbleDetail?->product;
-                                                    $bubbleImg = $bubbleProduct?->primary_image_url ?? $bubbleProduct?->image_url ?? asset('images/auth/bear-hero.png');
-                                                    $bubbleOthers = $bubbleOrder->details->count() - 1;
-                                                    $bubbleUrl = str_starts_with($routePrefix ?? '', 'admin.') ? route('admin.orders.show', $bubbleOrder) : route('staff.orders.show', $bubbleOrder);
+                                                    preg_match('/#([A-Z0-9\-]+)/', $msg->content, $orderCodeMatches);
+                                                    $parsedOrderCode = $orderCodeMatches[1] ?? null;
+                                                    $bubbleOrder = $parsedOrderCode ? \App\Models\Order::with('details.product')->where('order_code', $parsedOrderCode)->first() : null;
                                                 @endphp
-                                                <div class="chat-order-card">
-                                                    <div class="chat-order-card__header">
-                                                        <span class="chat-order-card__tag">
-                                                            <i class="fa-solid fa-box"></i> Đơn hàng #{{ $bubbleOrder->order_code }}
-                                                        </span>
-                                                        <span class="chat-order-card__status">{{ $bubbleOrder->order_status }}</span>
-                                                    </div>
-                                                    <div class="chat-order-card__body">
-                                                        <img src="{{ $bubbleImg }}" alt="{{ $bubbleOrder->order_code }}" class="chat-order-card__img" onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'">
-                                                        <div class="chat-order-card__info">
-                                                            <div class="chat-order-card__pname">{{ $bubbleDetail?->product_name ?? 'Đơn hàng' }}</div>
-                                                            @if ($bubbleOthers > 0)
-                                                                <div class="chat-order-card__other">+{{ $bubbleOthers }} sản phẩm khác</div>
-                                                            @endif
-                                                            <div class="chat-order-card__total">Tổng tiền: <strong>{{ number_format($bubbleOrder->total_amount, 0, ',', '.') }} đ</strong></div>
+                                                @if ($bubbleOrder)
+                                                    @php
+                                                        $bubbleDetail = $bubbleOrder->details->first();
+                                                        $bubbleProduct = $bubbleDetail?->product;
+                                                        $bubbleImg = $bubbleProduct?->primary_image_url ?? $bubbleProduct?->image_url ?? asset('images/auth/bear-hero.png');
+                                                        $bubbleOthers = $bubbleOrder->details->count() - 1;
+                                                        $bubbleUrl = str_starts_with($routePrefix ?? '', 'admin.') ? route('admin.orders.show', $bubbleOrder) : route('staff.orders.show', $bubbleOrder);
+                                                    @endphp
+                                                    <div class="chat-order-card">
+                                                        <div class="chat-order-card__header">
+                                                            <span class="chat-order-card__tag">
+                                                                <i class="fa-solid fa-box"></i> #{{ $bubbleOrder->order_code }}
+                                                            </span>
+                                                            <span class="chat-order-card__status">{{ $bubbleOrder->order_status }}</span>
+                                                        </div>
+                                                        <div class="chat-order-card__body">
+                                                            <img src="{{ $bubbleImg }}" alt="{{ $bubbleOrder->order_code }}" class="chat-order-card__img" onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'">
+                                                            <div class="chat-order-card__info">
+                                                                <div class="chat-order-card__pname">{{ $bubbleDetail?->product_name ?? 'Đơn hàng' }}</div>
+                                                                @if ($bubbleOthers > 0)
+                                                                    <div class="chat-order-card__other">+{{ $bubbleOthers }} sản phẩm khác</div>
+                                                                @endif
+                                                                <div class="chat-order-card__total">Tổng tiền: <strong>{{ number_format($bubbleOrder->total_amount, 0, ',', '.') }} đ</strong></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="chat-order-card__footer">
+                                                            <a href="{{ $bubbleUrl }}" class="chat-order-card__link">
+                                                                <span>Xem chi tiết đơn hàng</span>
+                                                                <i class="fa-solid fa-chevron-right"></i>
+                                                            </a>
                                                         </div>
                                                     </div>
-                                                    <div class="chat-order-card__footer">
-                                                        <a href="{{ $bubbleUrl }}" class="chat-order-card__link">
-                                                            <span>Xem chi tiết đơn hàng</span>
-                                                            <i class="fa-solid fa-chevron-right"></i>
-                                                        </a>
-                                                    </div>
-                                                </div>
+                                                @else
+                                                    {!! nl2br(e($msg->content)) !!}
+                                                @endif
                                             @else
                                                 {!! nl2br(e($msg->content)) !!}
                                             @endif
-                                        @else
-                                            {!! nl2br(e($msg->content)) !!}
-                                        @endif
-                                    </div>
-                                    <div class="staff-chat-meta">
-                                        <span>{{ $msg->sent_at ? $msg->sent_at->format('H:i') : '' }}</span>
-                                        @if (! $isCustomer)
-                                            <span style="color: #10b981;">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
-                                                    <path d="M18 6 7 17l-5-5"/>
-                                                    <path d="m22 10-7.5 7.5L13 16"/>
-                                                </svg>
-                                            </span>
-                                        @endif
-                                    </div>
+                                            @if ($showTime && $msg->sent_at)
+                                                <div class="staff-chat-time">
+                                                    <span>{{ $msg->sent_at->format('H:i') }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif (empty($msgImages))
+                                        <div class="staff-chat-bubble" title="{{ $msg->sent_at ? $msg->sent_at->format('H:i, d/m/Y') : '' }}">
+                                            @if ($showTime && $msg->sent_at)
+                                                <div class="staff-chat-time">
+                                                    <span>{{ $msg->sent_at->format('H:i') }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif ($showTime && $msg->sent_at)
+                                        <div class="staff-chat-time is-outside">
+                                            <span>{{ $msg->sent_at->format('H:i') }}</span>
+                                        </div>
+                                    @endif
+                                    @if ($isLastMsgSelf && $msg->id === $lastMsgId)
+                                        <div class="chat-msg-status staff-chat-status" data-status="{{ $msg->is_read ? 'seen' : 'sent' }}">
+                                            {{ $msg->is_read ? 'Đã xem' : 'Đã gửi' }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -559,39 +625,36 @@
                             method="POST"
                             class="staff-support-chat-form"
                             data-staff-chat-form
+                            enctype="multipart/form-data"
                         >
                             @csrf
-                            <div class="staff-support-chat-input-wrap">
-                                <button type="button" class="customer-chat-btn-icon" title="Gửi ảnh">
+                            <div class="chat-image-preview-container" data-chat-image-preview style="display: none;"></div>
+
+                            <div class="staff-support-chat-form-row">
+                                <button type="button" class="chat-btn-image customer-chat-btn-icon" data-chat-btn-image title="Đính kèm hình ảnh" aria-label="Đính kèm hình ảnh">
                                     <i class="fa-regular fa-image"></i>
                                 </button>
-                                <button type="button" class="customer-chat-btn-icon" title="Đính kèm tệp">
-                                    <i class="fa-solid fa-paperclip"></i>
-                                </button>
-                                <button type="button" class="customer-chat-btn-icon" title="Emoji">
-                                    <i class="fa-regular fa-face-smile"></i>
-                                </button>
+                                <input type="file" name="images[]" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display: none;" data-chat-file-input>
 
                                 <input
                                     type="text"
                                     name="content"
                                     class="staff-support-chat-input"
                                     placeholder="Nhập tin nhắn gửi cho khách hàng..."
-                                    required
                                     maxlength="2000"
                                     autocomplete="off"
                                     data-staff-chat-input
                                 >
-                            </div>
 
-                            <button
-                                type="submit"
-                                class="staff-support-btn-send"
-                                data-staff-chat-submit
-                            >
-                                <i class="fa-solid fa-paper-plane"></i>
-                                <span>Gửi</span>
-                            </button>
+                                <button
+                                    type="submit"
+                                    class="staff-support-btn-send"
+                                    data-staff-chat-submit
+                                >
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    <span>Gửi</span>
+                                </button>
+                            </div>
                         </form>
                     @elseif ($isWaiting)
                         @if ($isAdmin)
@@ -605,39 +668,36 @@
                                 method="POST"
                                 class="staff-support-chat-form"
                                 data-staff-chat-form
+                                enctype="multipart/form-data"
                             >
                                 @csrf
-                                <div class="staff-support-chat-input-wrap">
-                                    <button type="button" class="customer-chat-btn-icon" title="Gửi ảnh">
+                                <div class="chat-image-preview-container" data-chat-image-preview style="display: none;"></div>
+
+                                <div class="staff-support-chat-form-row">
+                                    <button type="button" class="chat-btn-image customer-chat-btn-icon" data-chat-btn-image title="Đính kèm hình ảnh" aria-label="Đính kèm hình ảnh">
                                         <i class="fa-regular fa-image"></i>
                                     </button>
-                                    <button type="button" class="customer-chat-btn-icon" title="Đính kèm tệp">
-                                        <i class="fa-solid fa-paperclip"></i>
-                                    </button>
-                                    <button type="button" class="customer-chat-btn-icon" title="Emoji">
-                                        <i class="fa-regular fa-face-smile"></i>
-                                    </button>
+                                    <input type="file" name="images[]" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display: none;" data-chat-file-input>
 
                                     <input
                                         type="text"
                                         name="content"
                                         class="staff-support-chat-input"
                                         placeholder="Nhập phản hồi cho khách hàng..."
-                                        required
                                         maxlength="2000"
                                         autocomplete="off"
                                         data-staff-chat-input
                                     >
-                                </div>
 
-                                <button
-                                    type="submit"
-                                    class="staff-support-btn-send"
-                                    data-staff-chat-submit
-                                >
-                                    <i class="fa-solid fa-paper-plane"></i>
-                                    <span>Gửi</span>
-                                </button>
+                                    <button
+                                        type="submit"
+                                        class="staff-support-btn-send"
+                                        data-staff-chat-submit
+                                    >
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                        <span>Gửi</span>
+                                    </button>
+                                </div>
                             </form>
                         @else
                             <div class="staff-support-chat-notice is-waiting-notice">
@@ -658,39 +718,36 @@
                                 method="POST"
                                 class="staff-support-chat-form"
                                 data-staff-chat-form
+                                enctype="multipart/form-data"
                             >
                                 @csrf
-                                <div class="staff-support-chat-input-wrap">
-                                    <button type="button" class="customer-chat-btn-icon" title="Gửi ảnh">
+                                <div class="chat-image-preview-container" data-chat-image-preview style="display: none;"></div>
+
+                                <div class="staff-support-chat-form-row">
+                                    <button type="button" class="chat-btn-image customer-chat-btn-icon" data-chat-btn-image title="Đính kèm hình ảnh" aria-label="Đính kèm hình ảnh">
                                         <i class="fa-regular fa-image"></i>
                                     </button>
-                                    <button type="button" class="customer-chat-btn-icon" title="Đính kèm tệp">
-                                        <i class="fa-solid fa-paperclip"></i>
-                                    </button>
-                                    <button type="button" class="customer-chat-btn-icon" title="Emoji">
-                                        <i class="fa-regular fa-face-smile"></i>
-                                    </button>
+                                    <input type="file" name="images[]" multiple accept="image/png,image/jpeg,image/webp,image/gif" style="display: none;" data-chat-file-input>
 
                                     <input
                                         type="text"
                                         name="content"
                                         class="staff-support-chat-input"
                                         placeholder="Nhập phản hồi cho khách hàng..."
-                                        required
                                         maxlength="2000"
                                         autocomplete="off"
                                         data-staff-chat-input
                                     >
-                                </div>
 
-                                <button
-                                    type="submit"
-                                    class="staff-support-btn-send"
-                                    data-staff-chat-submit
-                                >
-                                    <i class="fa-solid fa-paper-plane"></i>
-                                    <span>Gửi</span>
-                                </button>
+                                    <button
+                                        type="submit"
+                                        class="staff-support-btn-send"
+                                        data-staff-chat-submit
+                                    >
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                        <span>Gửi</span>
+                                    </button>
+                                </div>
                             </form>
                         @else
                             <div class="staff-support-chat-notice is-assigned-other">
@@ -701,9 +758,127 @@
                     @endif
                 </div>
             @else
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #8c7667;">
-                    <img src="{{ asset('images/auth/bear-hero.png') }}" alt="Mật Ngọt Bear" style="width: 80px; opacity: 0.6; margin-bottom: 12px;">
-                    <p style="font-size: 14px; font-weight: 600;">Vui lòng chọn một cuộc hỗ trợ từ danh sách bên trái để xem nội dung.</p>
+                <div class="staff-support-empty-state">
+                    <div class="staff-support-empty-card">
+                        {{-- MASCOT VISUAL WITH HALO & FLOATING BADGES --}}
+                        <div class="staff-empty-mascot-wrapper">
+                            <div class="staff-empty-mascot-halo"></div>
+                            <div class="staff-empty-mascot-circle">
+                                <img
+                                    src="{{ asset('images/auth/bear-hero.png') }}"
+                                    alt="Mật Ngọt Bear Support"
+                                    class="staff-empty-mascot-img"
+                                    onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'"
+                                >
+                            </div>
+                            <div class="staff-empty-floating-badge is-top" title="Trung tâm hỗ trợ Mật Ngọt Bear">
+                                <i class="fa-solid fa-headset"></i>
+                            </div>
+                            <div class="staff-empty-floating-badge is-bottom" title="Sẵn sàng phản hồi">
+                                <i class="fa-solid fa-sparkles"></i>
+                            </div>
+                        </div>
+
+                        {{-- GREETING & HEADLINE --}}
+                        <div class="staff-empty-header-block">
+                            <span class="staff-empty-badge">
+                                <i class="fa-solid fa-shield-heart"></i>
+                                <span>Cổng Hỗ Trợ Khách Hàng</span>
+                            </span>
+                            <h2 class="staff-empty-title">Xin chào, {{ $user->full_name ?? $user->name ?? 'bạn' }}! 👋</h2>
+                            <p class="staff-empty-desc">
+                                Vui lòng chọn một cuộc hỗ trợ từ danh sách bên trái để xem nội dung.
+                            </p>
+                        </div>
+
+                        {{-- QUICK METRIC PILLS / STAT CARDS --}}
+                        <div class="staff-empty-stats-row">
+                            <a href="{{ route($routePrefix . '.index', ['tab' => 'waiting']) }}" class="staff-empty-stat-item is-waiting" title="Xem danh sách ca chưa xử lý">
+                                <div class="staff-empty-stat-icon-wrap">
+                                    <i class="fa-solid fa-clock"></i>
+                                </div>
+                                <div class="staff-empty-stat-content">
+                                    <span class="staff-empty-stat-value">{{ $counts['waiting'] ?? 0 }}</span>
+                                    <span class="staff-empty-stat-name">Chưa xử lý</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right staff-empty-stat-arrow"></i>
+                            </a>
+
+                            <a href="{{ route($routePrefix . '.index', ['tab' => 'in_progress']) }}" class="staff-empty-stat-item is-in-progress" title="Xem danh sách ca đang xử lý">
+                                <div class="staff-empty-stat-icon-wrap">
+                                    <i class="fa-solid fa-comments"></i>
+                                </div>
+                                <div class="staff-empty-stat-content">
+                                    <span class="staff-empty-stat-value">{{ $counts['in_progress'] ?? 0 }}</span>
+                                    <span class="staff-empty-stat-name">Đang xử lý</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right staff-empty-stat-arrow"></i>
+                            </a>
+
+                            <a href="{{ route($routePrefix . '.index', ['tab' => 'closed']) }}" class="staff-empty-stat-item is-closed" title="Xem danh sách ca đã kết thúc">
+                                <div class="staff-empty-stat-icon-wrap">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <div class="staff-empty-stat-content">
+                                    <span class="staff-empty-stat-value">{{ $counts['closed'] ?? 0 }}</span>
+                                    <span class="staff-empty-stat-name">Đã hoàn thành</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right staff-empty-stat-arrow"></i>
+                            </a>
+                        </div>
+
+                        {{-- CTA ACTION BUTTON NẾU CÓ CA TRONG DANH SÁCH --}}
+                        @php
+                            $firstWaitingCase = $cases->first(fn ($c) => $c->isWaiting());
+                            $firstAvailableCase = $firstWaitingCase ?? $cases->first();
+                        @endphp
+                        @if ($firstAvailableCase)
+                            <div class="staff-empty-action-wrap">
+                                <a
+                                    href="{{ route($routePrefix . '.index', ['case_id' => $firstAvailableCase->id, 'tab' => $statusTab]) }}"
+                                    class="staff-empty-btn-cta"
+                                >
+                                    <i class="fa-solid fa-bolt-lightning"></i>
+                                    <span>{{ $firstWaitingCase ? 'Tiếp nhận ca chờ gần nhất (#' . $firstWaitingCase->case_code . ')' : 'Mở cuộc trò chuyện gần nhất' }}</span>
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </a>
+                            </div>
+                        @endif
+
+                        {{-- WORKFLOW GUIDE / TIPS SECTION --}}
+                        <div class="staff-empty-guide-card">
+                            <div class="staff-empty-guide-header">
+                                <i class="fa-solid fa-lightbulb"></i>
+                                <span>Hướng dẫn thao tác nhanh cho nhân viên</span>
+                            </div>
+                            <div class="staff-empty-guide-grid">
+                                <div class="staff-empty-guide-item">
+                                    <span class="staff-empty-guide-bullet">1</span>
+                                    <div class="staff-empty-guide-text">
+                                        <strong>Tiếp nhận ca:</strong> Chọn ca ở tab <em>Chưa xử lý</em> rồi bấm <em>Nhận xử lý</em> để mở ô chat.
+                                    </div>
+                                </div>
+                                <div class="staff-empty-guide-item">
+                                    <span class="staff-empty-guide-bullet">2</span>
+                                    <div class="staff-empty-guide-text">
+                                        <strong>Hồ sơ & Đơn hàng:</strong> Bảng bên phải hiển thị toàn bộ lịch sử đơn hàng và thông tin khách liên quan.
+                                    </div>
+                                </div>
+                                <div class="staff-empty-guide-item">
+                                    <span class="staff-empty-guide-bullet">3</span>
+                                    <div class="staff-empty-guide-text">
+                                        <strong>Gửi kèm hình ảnh:</strong> Hỗ trợ tải lên cùng lúc tối đa 10 hình ảnh để tư vấn trực quan cho khách.
+                                    </div>
+                                </div>
+                                <div class="staff-empty-guide-item">
+                                    <span class="staff-empty-guide-bullet">4</span>
+                                    <div class="staff-empty-guide-text">
+                                        <strong>Phím tắt nhanh:</strong> Nhấn <kbd>Enter</kbd> để gửi tin nhắn, <kbd>Shift + Enter</kbd> để xuống dòng.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>
