@@ -14,16 +14,39 @@ class Message extends Model
         'support_case_id',
         'sender_id',
         'content',
+        'image_url',
+        'images',
         'is_read',
         'read_at',
         'sent_at',
     ];
 
     protected $casts = [
+        'images' => 'array',
         'is_read' => 'boolean',
         'read_at' => 'datetime',
         'sent_at' => 'datetime',
     ];
+
+    /**
+     * Lấy danh sách URL tất cả hình ảnh đính kèm (dạng mảng).
+     *
+     * @return array<string>
+     */
+    public function getImageUrlsAttribute(): array
+    {
+        if (! empty($this->images) && is_array($this->images)) {
+            return $this->images;
+        }
+        if (! empty($this->image_url)) {
+            $decoded = json_decode($this->image_url, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+            return [$this->image_url];
+        }
+        return [];
+    }
 
     public function conversation(): BelongsTo
     {
