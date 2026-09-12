@@ -889,12 +889,12 @@
 
                 // Giá
                 const price = Number(qvProduct.price || 0);
-                const salePrice = qvProduct.sale_price ? Number(qvProduct.sale_price) : null;
+                const salePrice = (qvProduct.sale_price !== null && qvProduct.sale_price !== '' && qvProduct.sale_price !== undefined) ? Number(qvProduct.sale_price) : null;
                 const isOnSale = qvProduct.is_on_sale !== undefined ? Boolean(qvProduct.is_on_sale) : (salePrice !== null && salePrice < price);
                 const curPriceEl = document.getElementById('qv-price-cur');
                 const oldPriceEl = document.getElementById('qv-price-old');
 
-                if (isOnSale && salePrice) {
+                if (isOnSale && salePrice !== null) {
                     curPriceEl.innerText = salePrice.toLocaleString('vi-VN') + ' đ';
                     oldPriceEl.innerText = price.toLocaleString('vi-VN') + ' đ';
                     oldPriceEl.style.display = 'inline-block';

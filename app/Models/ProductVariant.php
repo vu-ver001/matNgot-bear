@@ -57,7 +57,7 @@ class ProductVariant extends Model
      */
     public function getIsOnSaleAttribute(): bool
     {
-        if (empty($this->sale_price) || $this->sale_price >= $this->price) {
+        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price >= (float)$this->price) {
             return false;
         }
 
@@ -79,7 +79,7 @@ class ProductVariant extends Model
      */
     public function getIsSaleUpcomingAttribute(): bool
     {
-        if (empty($this->sale_price) || $this->sale_price >= $this->price) {
+        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price >= (float)$this->price) {
             return false;
         }
 
@@ -92,8 +92,8 @@ class ProductVariant extends Model
      */
     public function getDiscountPercentAttribute(): int
     {
-        if ($this->price > 0 && $this->sale_price && $this->sale_price < $this->price) {
-            return (int) round((($this->price - $this->sale_price) / $this->price) * 100);
+        if ($this->price > 0 && $this->sale_price !== null && $this->sale_price !== '' && (float)$this->sale_price < (float)$this->price) {
+            return (int) round((((float)$this->price - (float)$this->sale_price) / (float)$this->price) * 100);
         }
         return 0;
     }

@@ -85,9 +85,9 @@
     // Trạng thái giá ban đầu: lấy giá thấp nhất từ sản phẩm con hoặc giá cha
     $initialPrice = (float) $product->lowest_price;
     $initialSalePrice = $product->lowest_sale_price;
-    $initialIsOnSale = !empty($initialSalePrice) && (float)$initialSalePrice < $initialPrice;
+    $initialIsOnSale = ($initialSalePrice !== null && $initialSalePrice !== '' && is_numeric($initialSalePrice)) && (float)$initialSalePrice < $initialPrice;
     $initialIsUpcoming = false;
-    $initialDiscountPct = ($initialIsOnSale && $initialPrice > 0) ? round((($initialPrice - $initialSalePrice) / $initialPrice) * 100) : 0;
+    $initialDiscountPct = ($initialIsOnSale && $initialPrice > 0) ? round((($initialPrice - (float)$initialSalePrice) / $initialPrice) * 100) : 0;
     $initialEffectivePrice = $initialIsOnSale ? (float)$initialSalePrice : $initialPrice;
     $initialRemainingSec = 0;
 
@@ -659,7 +659,7 @@
     const productTotalStock = {{ (int) $product->stock_quantity }};
     const primaryImageUrl = "{{ $primaryUrl }}";
     const productBasePrice = {{ (float) $product->lowest_price }};
-    const productBaseSalePrice = {{ $product->lowest_sale_price ? (float)$product->lowest_sale_price : 'null' }};
+    const productBaseSalePrice = {{ ($product->lowest_sale_price !== null && $product->lowest_sale_price !== '') ? (float)$product->lowest_sale_price : 'null' }};
     const productVariants = @json($variants->values());
     const modalGalleryItems = @json($modalGalleryItems->values());
     const hasColorVariants = {{ $variantColors->count() > 0 ? 'true' : 'false' }};
@@ -1128,7 +1128,7 @@
                 if (priceBoxEl) priceBoxEl.classList.remove('has-countdown');
                 if (upcomingBarEl) upcomingBarEl.style.display = 'none';
 
-                if (sPrice && Number(sPrice) > 0 && Number(sPrice) < Number(regPrice)) {
+                if (sPrice !== null && sPrice !== '' && !isNaN(Number(sPrice)) && Number(sPrice) >= 0 && Number(sPrice) < Number(regPrice)) {
                     if (priceCurrentEl) {
                         priceCurrentEl.innerText = Number(sPrice).toLocaleString('vi-VN') + ' đ';
                         priceCurrentEl.style.color = '#D32F2F';
@@ -1213,7 +1213,7 @@
             syncGalleryThumbnail(primaryImageUrl);
 
             // Khôi phục giá gốc / sale thấp nhất của sản phẩm cha
-            const hasSale = (productBaseSalePrice && productBaseSalePrice < productBasePrice);
+            const hasSale = (productBaseSalePrice !== null && productBaseSalePrice !== '' && !isNaN(productBaseSalePrice) && productBaseSalePrice < productBasePrice);
             const discountPct = (hasSale && productBasePrice > 0) ? Math.round(((productBasePrice - productBaseSalePrice) / productBasePrice) * 100) : 0;
             renderPriceDisplay(productBasePrice, productBaseSalePrice, discountPct, false, false, null, 0);
 
@@ -1239,11 +1239,11 @@
             }
 
             // Giá thấp nhất của các biến thể màu này
-            const prices = colorVars.map(v => Number(v.price)).filter(p => p > 0);
-            const salePrices = colorVars.map(v => v.sale_price ? Number(v.sale_price) : null).filter(Boolean);
+            const prices = colorVars.map(v => Number(v.price)).filter(p => !isNaN(p) && p >= 0);
+            const salePrices = colorVars.map(v => (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null).filter(p => p !== null);
             const minPrice = prices.length > 0 ? Math.min(...prices) : productBasePrice;
             const minSalePrice = salePrices.length > 0 ? Math.min(...salePrices) : null;
-            const hasSale = (minSalePrice && minSalePrice < minPrice);
+            const hasSale = (minSalePrice !== null && minSalePrice < minPrice);
             const discountPct = (hasSale && minPrice > 0) ? Math.round(((minPrice - minSalePrice) / minPrice) * 100) : 0;
             renderPriceDisplay(minPrice, minSalePrice, discountPct, false, false, null, 0);
 
@@ -1269,11 +1269,11 @@
             }
 
             // Giá thấp nhất của các biến thể size này
-            const prices = sizeVars.map(v => Number(v.price)).filter(p => p > 0);
-            const salePrices = sizeVars.map(v => v.sale_price ? Number(v.sale_price) : null).filter(Boolean);
+            const prices = sizeVars.map(v => Number(v.price)).filter(p => !isNaN(p) && p >= 0);
+            const salePrices = sizeVars.map(v => (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null).filter(p => p !== null);
             const minPrice = prices.length > 0 ? Math.min(...prices) : productBasePrice;
             const minSalePrice = salePrices.length > 0 ? Math.min(...salePrices) : null;
-            const hasSale = (minSalePrice && minSalePrice < minPrice);
+            const hasSale = (minSalePrice !== null && minSalePrice < minPrice);
             const discountPct = (hasSale && minPrice > 0) ? Math.round(((minPrice - minSalePrice) / minPrice) * 100) : 0;
             renderPriceDisplay(minPrice, minSalePrice, discountPct, false, false, null, 0);
 
@@ -1300,7 +1300,7 @@
 
             // Khuyến mãi của biến thể con này
             const regularPrice = Number(matched.price);
-            const salePrice = matched.sale_price ? Number(matched.sale_price) : null;
+            const salePrice = (matched.sale_price !== null && matched.sale_price !== '' && !isNaN(Number(matched.sale_price))) ? Number(matched.sale_price) : null;
             const now = new Date();
             const startAt = matched.sale_start_at ? new Date(matched.sale_start_at) : null;
             const endAt = matched.sale_end_at ? new Date(matched.sale_end_at) : null;
@@ -1310,7 +1310,7 @@
             let discountPercent = 0;
             let remainingSeconds = 0;
 
-            if (salePrice && salePrice > 0 && salePrice < regularPrice) {
+            if (salePrice !== null && salePrice >= 0 && salePrice < regularPrice) {
                 discountPercent = Math.round(((regularPrice - salePrice) / regularPrice) * 100);
                 if (startAt && now < startAt) {
                     isUpcoming = true;

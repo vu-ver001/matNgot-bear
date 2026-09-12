@@ -176,7 +176,7 @@ class Product extends Model
             return $defaultVar ? $defaultVar->is_on_sale : false;
         }
 
-        if (empty($this->sale_price) || $this->sale_price >= $this->price) {
+        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price >= (float)$this->price) {
             return false;
         }
 
@@ -191,7 +191,7 @@ class Product extends Model
         $variants = $this->relationLoaded('variants') ? $this->variants : $this->variants()->where('status', 'ACTIVE')->get();
         if ($variants->isNotEmpty()) {
             $prices = $variants->pluck('price')
-                ->filter(fn($p) => is_numeric($p) && (float)$p > 0)
+                ->filter(fn($p) => is_numeric($p) && (float)$p >= 0)
                 ->map(fn($p) => (float)$p)
                 ->values()
                 ->all();
@@ -211,7 +211,7 @@ class Product extends Model
         $variants = $this->relationLoaded('variants') ? $this->variants : $this->variants()->where('status', 'ACTIVE')->get();
         if ($variants->isNotEmpty()) {
             $salePrices = $variants->pluck('sale_price')
-                ->filter(fn($sp) => is_numeric($sp) && (float)$sp > 0 && (float)$sp < $lowestPrice)
+                ->filter(fn($sp) => is_numeric($sp) && (float)$sp >= 0 && (float)$sp < $lowestPrice)
                 ->map(fn($sp) => (float)$sp)
                 ->values()
                 ->all();
@@ -219,7 +219,7 @@ class Product extends Model
                 return min($salePrices);
             }
         }
-        return ($this->sale_price && (float)$this->sale_price < $lowestPrice) ? (float)$this->sale_price : null;
+        return ($this->sale_price !== null && $this->sale_price !== '' && is_numeric($this->sale_price) && (float)$this->sale_price < $lowestPrice) ? (float)$this->sale_price : null;
     }
 
     /**
@@ -333,13 +333,13 @@ class Product extends Model
         // Biến thể có giá thấp nhất
         $cheapestVariant = $variants->sortBy('price')->first();
         $minSalePrice = null;
-        if ($cheapestVariant && !empty($cheapestVariant->sale_price) && (float)$cheapestVariant->sale_price < $minPrice) {
+        if ($cheapestVariant && $cheapestVariant->sale_price !== null && $cheapestVariant->sale_price !== '' && is_numeric($cheapestVariant->sale_price) && (float)$cheapestVariant->sale_price < $minPrice) {
             $minSalePrice = (float)$cheapestVariant->sale_price;
         }
 
         // Nếu có biến thể nào có giá sale hợp lệ còn thấp hơn nữa
         $validSalePrices = $variants->pluck('sale_price')
-            ->filter(fn($sp) => is_numeric($sp) && (float)$sp > 0 && (float)$sp < $minPrice)
+            ->filter(fn($sp) => is_numeric($sp) && (float)$sp >= 0 && (float)$sp < $minPrice)
             ->map(fn($sp) => (float)$sp)
             ->values()
             ->all();

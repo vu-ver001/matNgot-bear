@@ -149,7 +149,7 @@ class ProductRequest extends FormRequest
                 }
 
                 $price = isset($v['price']) && is_numeric($v['price']) ? (float) $v['price'] : null;
-                $salePrice = isset($v['sale_price']) && is_numeric($v['sale_price']) && (float) $v['sale_price'] > 0 
+                $salePrice = (isset($v['sale_price']) && $v['sale_price'] !== '' && $v['sale_price'] !== null && is_numeric($v['sale_price']) && (float) $v['sale_price'] >= 0) 
                              ? (float) $v['sale_price'] 
                              : null;
                 

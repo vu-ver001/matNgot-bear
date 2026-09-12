@@ -620,7 +620,7 @@
             let thumbSrc = hasVariantImg ? v.image_url : 'https://placehold.co/100x100/fdf6e2/8d6e63?text=%2B+%E1%BA%A2nh*';
 
             const formattedPrice = (v.price !== '' && v.price !== null && v.price !== undefined && !isNaN(v.price) && parseFloat(v.price) >= 0) ? formatCurrencyString(v.price) : '';
-            const formattedSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined && parseFloat(v.sale_price) > 0) ? formatCurrencyString(v.sale_price) : '';
+            const formattedSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined && !isNaN(v.sale_price) && parseFloat(v.sale_price) >= 0) ? formatCurrencyString(v.sale_price) : '';
             const formattedStock = (v.stock_quantity !== '' && v.stock_quantity !== null && v.stock_quantity !== undefined) ? v.stock_quantity : '';
             const isRowActive = (v.status === 'ACTIVE');
 
@@ -998,7 +998,7 @@
         const sp = spRaw ? parseCurrencyToNumber(spRaw) : '';
         const st = stRaw !== '' ? parseInt(stRaw) : '';
 
-        if (sp !== '' && parseFloat(sp) > 0) {
+        if (sp !== '' && sp !== null && !isNaN(parseFloat(sp)) && parseFloat(sp) >= 0) {
             if (p !== '' && parseFloat(sp) >= parseFloat(p)) {
                 Swal.fire('Giá sale không hợp lệ', 'Giá khuyến mãi phải nhỏ hơn giá gốc!', 'warning');
                 return;
@@ -1130,7 +1130,7 @@
             variantsList.forEach(v => {
                 if (p !== '') v.price = parseFloat(p);
                 if (sp !== '') {
-                    v.sale_price = sp ? parseFloat(sp) : null;
+                    v.sale_price = (sp !== '' && sp !== null && !isNaN(parseFloat(sp))) ? parseFloat(sp) : null;
                     if (start) v.sale_start_at = start;
                     if (end) v.sale_end_at = end;
                 }
@@ -1330,7 +1330,7 @@
                 return;
             }
             const vPrice = parseCurrencyToNumber(v.price);
-            const vSalePrice = v.sale_price ? parseCurrencyToNumber(v.sale_price) : null;
+            const vSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined) ? parseCurrencyToNumber(v.sale_price) : null;
 
             if (v.price === '' || v.price === null || v.price === undefined || isNaN(vPrice) || vPrice < 0) {
                 const priceEl = document.getElementById(`var-price-${i}`);
@@ -1342,7 +1342,7 @@
                 highlightAndNotify(stockEl, `Vui lòng nhập đầy đủ <b>Số lượng tồn kho</b> cho <b>${label}</b>!`);
                 return;
             }
-            if (vSalePrice && vSalePrice > 0) {
+            if (vSalePrice !== null && !isNaN(vSalePrice) && vSalePrice >= 0) {
                 if (vSalePrice >= vPrice) {
                     const salePriceEl = document.getElementById(`var-sale-price-${i}`);
                     highlightAndNotify(salePriceEl, `Giá khuyến mãi của <b>${label}</b> phải nhỏ hơn giá gốc!`, 'Thông tin chưa hợp lệ');
@@ -1391,7 +1391,7 @@
             formData.append(`variants[${idx}][size]`, v.size || '');
             formData.append(`variants[${idx}][color]`, v.color || '');
             formData.append(`variants[${idx}][price]`, parseCurrencyToNumber(v.price));
-            if (v.sale_price) formData.append(`variants[${idx}][sale_price]`, parseCurrencyToNumber(v.sale_price));
+            if (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined) formData.append(`variants[${idx}][sale_price]`, parseCurrencyToNumber(v.sale_price));
             if (v.sale_start_at) formData.append(`variants[${idx}][sale_start_at]`, v.sale_start_at);
             if (v.sale_end_at) formData.append(`variants[${idx}][sale_end_at]`, v.sale_end_at);
             formData.append(`variants[${idx}][stock_quantity]`, v.stock_quantity ?? 0);

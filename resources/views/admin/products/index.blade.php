@@ -434,9 +434,9 @@
             const imgCount = (p.images && p.images.length) || 0;
             const variantCount = (p.variants && p.variants.length) || 0;
 
-            const isOnSale = p.is_on_sale !== undefined ? Boolean(p.is_on_sale) : (p.sale_price && Number(p.sale_price) < Number(p.price));
+            const isOnSale = p.is_on_sale !== undefined ? Boolean(p.is_on_sale) : (p.sale_price !== null && p.sale_price !== '' && Number(p.sale_price) < Number(p.price));
             let discountPercent = 0;
-            if (isOnSale && p.price && p.sale_price) {
+            if (isOnSale && Number(p.price) > 0 && p.sale_price !== null && p.sale_price !== '') {
                 discountPercent = Math.round(((Number(p.price) - Number(p.sale_price)) / Number(p.price)) * 100);
             }
 
@@ -1535,7 +1535,7 @@
         const primaryImg = (product.images && product.images.find(img => img.is_primary)) || (product.images && product.images[0]) || { image_url: 'https://placehold.co/400x400/F7EFE9/5D4037?text=Gau+Bong' };
         const imagesList = product.images || [];
 
-        const isOnSale = product.is_on_sale !== undefined ? Boolean(product.is_on_sale) : (product.sale_price && Number(product.sale_price) < Number(product.price));
+        const isOnSale = product.is_on_sale !== undefined ? Boolean(product.is_on_sale) : (product.sale_price !== null && product.sale_price !== '' && Number(product.sale_price) < Number(product.price));
         const variants = product.variants || [];
 
         let modalBodyHtml = `
@@ -1605,14 +1605,17 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${variants.map(v => `
-                                        <tr>
-                                            <td><strong>${v.size || '—'}</strong></td>
-                                            <td>${v.color || '—'}</td>
-                                            <td>${Number(v.sale_price || v.price).toLocaleString('vi-VN')} đ</td>
-                                            <td><span style="font-weight: 700; ${v.stock_quantity <= 5 ? 'color: var(--mn-red);' : ''}">${v.stock_quantity}</span></td>
-                                        </tr>
-                                    `).join('')}
+                                    ${variants.map(v => {
+                                        const vSale = (v.sale_price !== null && v.sale_price !== '' && Number(v.sale_price) < Number(v.price)) ? Number(v.sale_price) : null;
+                                        return `
+                                            <tr>
+                                                <td><strong>${v.size || '—'}</strong></td>
+                                                <td>${v.color || '—'}</td>
+                                                <td>${Number(vSale !== null ? vSale : v.price).toLocaleString('vi-VN')} đ</td>
+                                                <td><span style="font-weight: 700; ${v.stock_quantity <= 5 ? 'color: var(--mn-red);' : ''}">${v.stock_quantity}</span></td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
                                 </tbody>
                             </table>
                         </div>
