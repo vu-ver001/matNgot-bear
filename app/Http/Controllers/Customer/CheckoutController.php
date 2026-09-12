@@ -41,13 +41,18 @@ class CheckoutController extends Controller
         $userId = auth()->id();
         $user = auth()->user();
 
-        // Support direct Buy Now via ?product_id=X&quantity=Y
+        // Support direct Buy Now via ?product_id=X&quantity=Y&variant_id=Z
         if ($request->filled('product_id')) {
             $productId = (int) $request->input('product_id');
             $quantity = max(1, (int) $request->input('quantity', 1));
+            $variantId = $request->filled('variant_id') ? (int) $request->input('variant_id') : null;
 
             $cartItem = CartItem::updateOrCreate(
-                ['user_id' => $userId, 'product_id' => $productId],
+                [
+                    'user_id' => $userId,
+                    'product_id' => $productId,
+                    'product_variant_id' => $variantId,
+                ],
                 ['quantity' => $quantity]
             );
             $cartItem->touch();
@@ -68,7 +73,7 @@ class CheckoutController extends Controller
 
         $cartItems = CartItem::where('user_id', $userId)
             ->whereIn('id', $selectedItemIds)
-            ->with(['product.images', 'product.category'])
+            ->with(['variant', 'product.images', 'product.category'])
             ->get();
 
         if ($cartItems->isEmpty()) {
@@ -77,8 +82,7 @@ class CheckoutController extends Controller
 
         // Calculate subtotal
         $subtotal = $cartItems->sum(function ($item) {
-            $price = $item->product->sale_price ?? $item->product->price;
-            return $price * $item->quantity;
+            return $item->effective_price * $item->quantity;
         });
 
         // Lấy danh sách các địa chỉ từng dùng trên các đơn hàng trước đó của khách hàng
@@ -443,7 +447,7 @@ class CheckoutController extends Controller
 
         $cartItems = CartItem::where('user_id', $userId)
             ->whereIn('id', $validated['selected_items'])
-            ->with(['product'])
+            ->with(['product', 'variant'])
             ->get();
 
         if ($cartItems->isEmpty()) {

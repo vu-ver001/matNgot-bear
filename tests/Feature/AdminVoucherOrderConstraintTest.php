@@ -67,7 +67,24 @@ class AdminVoucherOrderConstraintTest extends TestCase
     /**
      * Voucher đang diễn ra (ACTIVE và còn hạn/lượt) -> Không cho xóa
      */
-    public function test_cannot_delete_running_voucher(): void
+    public function test_cannot_delete_running_voucher_with_usage(): void
+    {
+        $voucher = $this->createSampleVoucher([
+            'status' => 'ACTIVE',
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addMonth(),
+            'usage_limit' => 50,
+            'used_count' => 5,
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->delete(route('admin.vouchers.destroy', $voucher));
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('vouchers', ['id' => $voucher->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_delete_running_voucher_with_zero_usage(): void
     {
         $voucher = $this->createSampleVoucher([
             'status' => 'ACTIVE',
@@ -80,8 +97,8 @@ class AdminVoucherOrderConstraintTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->delete(route('admin.vouchers.destroy', $voucher));
 
-        $response->assertSessionHas('error');
-        $this->assertDatabaseHas('vouchers', ['id' => $voucher->id, 'deleted_at' => null]);
+        $response->assertSessionHas('success');
+        $this->assertSoftDeleted('vouchers', ['id' => $voucher->id]);
     }
 
     /**
@@ -254,6 +271,37 @@ class AdminVoucherOrderConstraintTest extends TestCase
             ]);
 
         $responseCurrent->assertSessionHasErrors(['end_date']);
+    }
+
+    /**
+     * Có thể vô hiệu hóa / kích hoạt voucher mượt mà qua AJAX không cần reload trang
+     */
+    public function test_can_toggle_voucher_status_via_ajax_without_page_reload(): void
+    {
+        $voucher = $this->createSampleVoucher([
+            'status' => 'ACTIVE',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.vouchers.toggle', $voucher));
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'status' => 'INACTIVE',
+            ])
+            ->assertJsonStructure([
+                'success',
+                'status',
+                'is_expired',
+                'is_out_of_stock',
+                'is_upcoming',
+                'is_running',
+                'message',
+                'stats' => ['total', 'running', 'expired', 'inactive'],
+            ]);
+
+        $this->assertEquals('INACTIVE', $voucher->fresh()->status);
     }
 }
 

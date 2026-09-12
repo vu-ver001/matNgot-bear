@@ -27,7 +27,7 @@
                :value="formattedDisplayValue"
                placeholder="{{ $placeholder }}"
                {{ $required ? 'required' : '' }}
-               class="w-full rounded-xl border-[#EBDDCD] focus:border-[#DDA760] focus:ring-[#DDA760] text-xs sm:text-sm py-2.5 pl-10 pr-10 bg-white text-[#2E190E] font-semibold cursor-pointer shadow-xs select-none">
+               class="w-full rounded-xl border-[#E4D5C5] focus:border-[#E08A1E] focus:ring-3 focus:ring-[#E08A1E]/15 text-sm py-3 pl-11 pr-10 bg-[#FAF8F5] hover:bg-white focus:bg-white text-[#2C1408] font-bold cursor-pointer shadow-2xs transition select-none">
         
         <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5C3219] text-base select-none pointer-events-none">
             📅

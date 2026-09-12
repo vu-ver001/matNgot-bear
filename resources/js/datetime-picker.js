@@ -222,8 +222,9 @@ export function cuteDateTimePicker(config) {
                 });
             }
 
-            // Next month days to fill 42 cells grid (6 weeks)
-            const remaining = 42 - grid.length;
+            // Chỉ bù các ngày tháng sau cho vừa hết tuần hiện tại (tránh thừa một hàng thứ 6 toàn ngày mờ)
+            const targetLength = Math.ceil(grid.length / 7) * 7;
+            const remaining = targetLength - grid.length;
             for (let d = 1; d <= remaining; d++) {
                 const nextYear = month === 11 ? year + 1 : year;
                 const nextMonth = month === 11 ? 0 : month + 1;

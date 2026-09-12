@@ -574,9 +574,6 @@
                                 </div>
                                 <div class="product-card-footer">
                                     <span><i class="fa-solid fa-ruler"></i> {{ $rel->size ?? 'Free size' }}</span>
-                                    <button type="button" class="btn-add-cart-quick" onclick="addToCart({{ $rel->id }}, '{{ addslashes($rel->name) }}')" title="Thêm vào giỏ">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -666,6 +663,7 @@
     const hasSizeVariants = {{ $variantSizes->count() > 0 ? 'true' : 'false' }};
     let selectedSize = null;
     let selectedColor = null;
+    let currentMatchedVariant = null;
     let activeImageUrl = "{{ $primaryUrl }}";
     let currentModalIndex = 0;
 
@@ -1203,6 +1201,7 @@
 
         // TRƯỜNG HỢP 1: CẢ 2 ĐỀU ĐANG CHƯA CHỌN (TRẠNG THÁI GỐC BAN ĐẦU)
         if (!selectedColor && !selectedSize) {
+            currentMatchedVariant = null;
             if (specSize) specSize.innerText = '--';
             if (specColor) specColor.innerText = '--';
 
@@ -1224,6 +1223,7 @@
 
         // TRƯỜNG HỢP 2: CHỈ CÓ MÀU (CHƯA CHỌN SIZE)
         if (selectedColor && !selectedSize) {
+            currentMatchedVariant = null;
             if (specColor) specColor.innerText = selectedColor;
             if (specSize) specSize.innerText = '--';
 
@@ -1255,6 +1255,7 @@
 
         // TRƯỜNG HỢP 3: CHỈ CÓ SIZE (CHƯA CHỌN MÀU)
         if (!selectedColor && selectedSize) {
+            currentMatchedVariant = null;
             if (specSize) specSize.innerText = selectedSize;
             if (specColor) specColor.innerText = '--';
 
@@ -1285,6 +1286,7 @@
 
         // TRƯỜNG HỢP 4: CÓ CẢ MÀU VÀ SIZE (KHỚP CHÍNH XÁC BIẾN THỂ)
         const matched = activeVariants.find(v => v.color === selectedColor && v.size === selectedSize);
+        currentMatchedVariant = matched || null;
         if (matched) {
             if (specSize) specSize.innerText = matched.size;
             if (specColor) specColor.innerText = matched.color;
@@ -1364,13 +1366,18 @@
             return;
         }
         const qty = parseInt(document.getElementById('detail-quantity').value) || 1;
-        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty);
+        const variantId = currentMatchedVariant ? currentMatchedVariant.id : null;
+        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, false, variantId);
     }
 
     function handleBuyNow() {
         if (!window.isCustomerAuthenticated) {
             const qty = parseInt(document.getElementById('detail-quantity')?.value) || 1;
-            const targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id={{ $product->id }}&quantity=" + qty;
+            const variantId = currentMatchedVariant ? currentMatchedVariant.id : null;
+            let targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id={{ $product->id }}&quantity=" + qty;
+            if (variantId) {
+                targetCheckoutUrl += "&variant_id=" + variantId;
+            }
             openAuthModal(targetCheckoutUrl, 'Đăng nhập để Mua ngay', 'Vui lòng đăng nhập hoặc đăng ký tài khoản Mật Ngọt Bear để tiến hành mua hàng ngay bạn nhé!');
             return;
         }
@@ -1399,7 +1406,8 @@
             return;
         }
         const qty = parseInt(document.getElementById('detail-quantity').value) || 1;
-        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, 'checkout');
+        const variantId = currentMatchedVariant ? currentMatchedVariant.id : null;
+        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, 'checkout', variantId);
     }
 
     // Modal Lightbox xem ảnh review phóng to

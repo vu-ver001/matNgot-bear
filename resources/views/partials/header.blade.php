@@ -69,7 +69,7 @@
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
             @endguest
                 <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
-                <span class="badge-count" id="wishlist-count">0</span>
+                <span class="badge-count" id="wishlist-count" style="display: {{ (auth()->check() && ($realWishlistCount ?? 0) > 0) ? 'flex' : 'none' }};">{{ (int) ($realWishlistCount ?? 0) > 99 ? '99+' : (int) ($realWishlistCount ?? 0) }}</span>
             </a>
 
             <!-- Cart (Giỏ hàng) -->
@@ -80,7 +80,7 @@
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.cart') }}', 'Đăng nhập xem Giỏ hàng', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem giỏ hàng và thanh toán nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.cart')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.cart*') ? 'active' : '' }}" title="Giỏ hàng">
             @endguest
                 <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
-                <span class="badge-count" id="cart-count">{{ (int) ($realCartCount ?? 0) > 99 ? '99+' : (int) ($realCartCount ?? 0) }}</span>
+                <span class="badge-count" id="cart-count" style="display: {{ (auth()->check() && ($realCartCount ?? 0) > 0) ? 'flex' : 'none' }};">{{ (int) ($realCartCount ?? 0) > 99 ? '99+' : (int) ($realCartCount ?? 0) }}</span>
             </a>
         @endif
 

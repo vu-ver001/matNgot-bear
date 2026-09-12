@@ -356,5 +356,10 @@ class Product extends Model
 
         return $this->save();
     }
+
+    public function syncVariantsStats(): bool
+    {
+        return $this->syncLowestPriceFromVariants();
+    }
 }
 

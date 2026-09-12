@@ -21,24 +21,49 @@ class OrderService
             foreach ($cartItems as $cartItem) {
                 $product = Product::lockForUpdate()->find($cartItem->product_id);
 
-                if (! $product || $product->stock_quantity < $cartItem->quantity) {
-                    $productName = $product->name ?? 'không xác định';
-                    throw new \Exception("Sản phẩm '{$productName}' không đủ tồn kho.");
+                if (! $product) {
+                    throw new \Exception("Sản phẩm không tồn tại hoặc đã bị xóa.");
                 }
 
-                $price = $product->sale_price ?? $product->price;
+                $variant = null;
+                if (! empty($cartItem->product_variant_id)) {
+                    $variant = \App\Models\ProductVariant::lockForUpdate()->find($cartItem->product_variant_id);
+
+                    if (! $variant || $variant->status !== 'ACTIVE') {
+                        throw new \Exception("Phân loại sản phẩm của '{$product->name}' không hợp lệ hoặc đã ngừng kinh doanh.");
+                    }
+
+                    if ($variant->stock_quantity < $cartItem->quantity) {
+                        throw new \Exception("Phân loại '{$variant->color} · {$variant->size}' của sản phẩm '{$product->name}' không đủ tồn kho (chỉ còn {$variant->stock_quantity}).");
+                    }
+                }
+
+                if ($product->stock_quantity < $cartItem->quantity) {
+                    throw new \Exception("Sản phẩm '{$product->name}' không đủ tồn kho (chỉ còn {$product->stock_quantity}).");
+                }
+
+                $price = $variant ? $variant->effective_price : ($product->sale_price ?? $product->price);
                 $lineTotal = $price * $cartItem->quantity;
                 $subtotal += $lineTotal;
 
+                $variantName = $variant ? "{$variant->color} · {$variant->size}" : null;
+
                 $orderDetails[] = [
                     'product_id' => $product->id,
+                    'product_variant_id' => $variant?->id,
+                    'variant_name' => $variantName,
                     'product_name' => $product->name,
                     'product_price' => $price,
                     'quantity' => $cartItem->quantity,
                     'line_total' => $lineTotal,
                 ];
 
-                $product->decrement('stock_quantity', $cartItem->quantity);
+                if ($variant) {
+                    $variant->decrement('stock_quantity', $cartItem->quantity);
+                    $product->syncVariantsStats();
+                } else {
+                    $product->decrement('stock_quantity', $cartItem->quantity);
+                }
             }
 
             $shippingFee = isset($data['shipping_fee']) ? (float) $data['shipping_fee'] : 30000;
@@ -173,16 +198,9 @@ class OrderService
 
             if (! $currentOrder->stock_restored) {
                 $this->restoreStock($currentOrder);
+                $this->restoreVoucherUsage($currentOrder);
                 $currentOrder->update(['stock_restored' => true]);
                 $order->stock_restored = true;
-            }
-
-            // Hoàn lại lượt dùng voucher
-            if ($order->discount_amount > 0 && ! empty($order->voucher_id)) {
-                Voucher::where('id', $order->voucher_id)->where('used_count', '>', 0)->decrement('used_count');
-            }
-            if ($order->shipping_discount_amount > 0 && ! empty($order->shipping_voucher_id)) {
-                Voucher::where('id', $order->shipping_voucher_id)->where('used_count', '>', 0)->decrement('used_count');
             }
 
             return $order->fresh();
@@ -382,15 +400,8 @@ class OrderService
 
             if (! $order->stock_restored) {
                 $this->restoreStock($order);
+                $this->restoreVoucherUsage($order);
                 $order->update(['stock_restored' => true]);
-            }
-
-            // Hoàn lại lượt dùng voucher
-            if ($order->discount_amount > 0 && ! empty($order->voucher_id)) {
-                Voucher::where('id', $order->voucher_id)->where('used_count', '>', 0)->decrement('used_count');
-            }
-            if ($order->shipping_discount_amount > 0 && ! empty($order->shipping_voucher_id)) {
-                Voucher::where('id', $order->shipping_voucher_id)->where('used_count', '>', 0)->decrement('used_count');
             }
 
             return $order->fresh();
@@ -469,6 +480,10 @@ class OrderService
                     $this->refundPayment($paidPayment);
                 }
             } elseif ($newStatus === 'RETURNED') {
+                if ($order->hasPendingReturnRequest()) {
+                    $updateData['return_request_status'] = 'APPROVED';
+                }
+
                 $paidPayment = $order->payments->firstWhere('status', 'PAID');
 
                 if ($paidPayment) {
@@ -491,9 +506,16 @@ class OrderService
                 'changed_at' => now(),
             ]);
 
-            if ($newStatus === 'CANCELLED' && ! $order->stock_restored) {
+            if (in_array($newStatus, ['CANCELLED', 'RETURNED']) && ! $order->stock_restored) {
                 $this->restoreStock($order);
+                $this->restoreVoucherUsage($order);
                 $order->update(['stock_restored' => true]);
+            }
+
+            if ($newStatus === 'RETURNED' && $oldStatus === 'COMPLETED') {
+                foreach ($order->details as $detail) {
+                    $detail->product()->withTrashed()->first()?->where('sold_count', '>=', $detail->quantity)->decrement('sold_count', $detail->quantity);
+                }
             }
 
             if ($newStatus === 'COMPLETED') {
@@ -509,7 +531,26 @@ class OrderService
     public function restoreStock(Order $order): void
     {
         foreach ($order->details as $detail) {
-            $detail->product()->withTrashed()->first()?->increment('stock_quantity', $detail->quantity);
+            if (! empty($detail->product_variant_id)) {
+                $variant = $detail->variant()->withTrashed()->first();
+                if ($variant) {
+                    $variant->increment('stock_quantity', $detail->quantity);
+                    $variant->product?->syncVariantsStats();
+                }
+            } else {
+                $detail->product()->withTrashed()->first()?->increment('stock_quantity', $detail->quantity);
+            }
+        }
+    }
+
+    public function restoreVoucherUsage(Order $order): void
+    {
+        if ($order->discount_amount > 0 && ! empty($order->voucher_id)) {
+            Voucher::where('id', $order->voucher_id)->where('used_count', '>', 0)->decrement('used_count');
+        }
+
+        if ($order->shipping_discount_amount > 0 && ! empty($order->shipping_voucher_id)) {
+            Voucher::where('id', $order->shipping_voucher_id)->where('used_count', '>', 0)->decrement('used_count');
         }
     }
 

@@ -137,10 +137,10 @@ export function vouchersList() {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     title: 'Xóa voucher?',
-                    html: `Bạn có chắc muốn xóa voucher <strong style="color: #5C3219;">[${code}]</strong>?<br><span style="font-size: 13px; color: #786B61; margin-top: 6px; display: inline-block;">Voucher sẽ được chuyển sang trạng thái xóa mềm để lưu vết lịch sử hóa đơn. Bạn có thể khôi phục lại bất kỳ lúc nào.</span>`,
+                    html: `Bạn có chắc muốn xóa voucher <strong style="color: #5C3219;">[${code}]</strong>?<br><span style="font-size: 13px; color: #786B61; margin-top: 6px; display: inline-block;">Hệ thống sẽ <strong>xóa mềm</strong> (lưu vết CSDL) để bảo toàn nguyên vẹn lịch sử đơn hàng và đối soát của khách hàng.</span>`,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'Xác nhận xóa',
+                    confirmButtonText: 'Xác nhận xóa mềm',
                     cancelButtonText: 'Hủy bỏ',
                     confirmButtonColor: '#DC2626',
                     cancelButtonColor: '#8E8076',
@@ -158,7 +158,7 @@ export function vouchersList() {
                     }
                 });
             } else {
-                if (confirm(`Bạn có chắc chắn muốn xóa mềm voucher [${code}]?`)) {
+                if (confirm(`Bạn có chắc chắn muốn xóa mềm voucher [${code}]? Dữ liệu lịch sử khách hàng sẽ được bảo toàn nguyên vẹn.`)) {
                     const form = document.getElementById(formId);
                     if (form) form.submit();
                 }
@@ -229,6 +229,161 @@ export function vouchersList() {
             }
         },
 
+        async toggleVoucherStatus(voucherId, toggleUrl, code, usedCount) {
+            const btn = document.getElementById(`toggle-btn-${voucherId}`);
+            if (!btn || btn.disabled) return;
+
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+
+            try {
+                const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+                const tokenInput = document.querySelector('input[name="_token"]');
+                const csrfToken = tokenMeta ? tokenMeta.getAttribute('content') : (tokenInput ? tokenInput.value : '');
+
+                const response = await fetch(toggleUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        _method: 'PATCH'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const isNowActive = data.status === 'ACTIVE';
+
+                    // 1. Cập nhật toggle switch class & title
+                    if (isNowActive) {
+                        btn.classList.remove('is-inactive');
+                        btn.classList.add('is-active');
+                        btn.setAttribute('title', 'Bấm để vô hiệu hóa');
+                    } else {
+                        btn.classList.remove('is-active');
+                        btn.classList.add('is-inactive');
+                        btn.setAttribute('title', 'Bấm để kích hoạt');
+                    }
+
+                    // 2. Cập nhật Badge Trạng Thái
+                    const badgeContainer = document.getElementById(`voucher-badge-${voucherId}`);
+                    if (badgeContainer) {
+                        if (!isNowActive) {
+                            badgeContainer.innerHTML = `
+                                <span class="bg-[#F1F5F9] text-[#64748B] text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap transition-all duration-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#64748B] shrink-0"></span> Vô hiệu hóa
+                                </span>
+                            `;
+                        } else if (data.is_expired || data.is_out_of_stock) {
+                            badgeContainer.innerHTML = `
+                                <span class="bg-[#FFEBEE] text-[#C62828] text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap transition-all duration-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C62828] shrink-0"></span> Đã hết hạn
+                                </span>
+                            `;
+                        } else if (data.is_upcoming) {
+                            badgeContainer.innerHTML = `
+                                <span class="bg-[#FFF3E0] text-[#EF6C00] text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap transition-all duration-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#EF6C00] shrink-0"></span> Sắp diễn ra
+                                </span>
+                            `;
+                        } else {
+                            badgeContainer.innerHTML = `
+                                <span class="bg-[#E8F5E9] text-[#2E7D32] text-xs font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 whitespace-nowrap transition-all duration-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#2E7D32] shrink-0"></span> Đang diễn ra
+                                </span>
+                            `;
+                        }
+                    }
+
+                    // 3. Cập nhật nút xóa trong cột thao tác nếu có
+                    const deleteContainer = document.getElementById(`voucher-actions-delete-${voucherId}`);
+                    if (deleteContainer && usedCount > 0) {
+                        const activeOrders = parseInt(deleteContainer.getAttribute('data-active-orders') || '0');
+                        if (activeOrders === 0) {
+                            const self = this;
+                            if (isNowActive && data.is_running) {
+                                deleteContainer.innerHTML = `
+                                    <button type="button"
+                                        class="text-gray-300 hover:text-gray-400 p-1.5 rounded-lg hover:bg-gray-100 transition cursor-not-allowed"
+                                        title="Không thể xóa: Voucher đang diễn ra và đã có ${usedCount} lượt dùng. Vui lòng chuyển công tắc sang 'Vô hiệu hóa' trước khi xóa">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                `;
+                                const btnCannot = deleteContainer.querySelector('button');
+                                if (btnCannot) {
+                                    btnCannot.addEventListener('click', () => self.alertCannotDeleteRunning(code, usedCount));
+                                }
+                            } else {
+                                deleteContainer.innerHTML = `
+                                    <button type="button"
+                                        class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                                        title="Xóa voucher (xóa mềm bảo toàn dữ liệu)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                `;
+                                const btnCanDelete = deleteContainer.querySelector('button');
+                                if (btnCanDelete) {
+                                    btnCanDelete.addEventListener('click', () => self.confirmSoftDelete(code, `delete-form-${voucherId}`));
+                                }
+                            }
+                        }
+                    }
+
+                    // 4. Cập nhật thẻ thống kê (Stats Cards)
+                    if (data.stats) {
+                        const elRunning = document.getElementById('stat-running');
+                        if (elRunning) elRunning.textContent = data.stats.running;
+                        const elInactive = document.getElementById('stat-inactive');
+                        if (elInactive) elInactive.textContent = data.stats.inactive;
+                        const elExpired = document.getElementById('stat-expired');
+                        if (elExpired) elExpired.textContent = data.stats.expired;
+                        const elTotal = document.getElementById('stat-total');
+                        if (elTotal) elTotal.textContent = data.stats.total;
+                    }
+
+                    // 5. Bắn thông báo Toast mượt mà ở góc trên bên phải
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: {
+                            type: isNowActive ? 'success' : 'warning',
+                            title: isNowActive ? 'Kích hoạt thành công' : 'Đã vô hiệu hóa',
+                            message: data.message
+                        }
+                    }));
+                }
+            } catch (err) {
+                console.error('Error toggling voucher status:', err);
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: {
+                        type: 'error',
+                        title: 'Lỗi',
+                        message: 'Không thể cập nhật trạng thái voucher. Vui lòng thử lại!'
+                    }
+                }));
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }
+        },
+
         toggleStatus(toggleUrl, formId) {
             const form = document.getElementById(formId);
             if (form) {
@@ -238,11 +393,12 @@ export function vouchersList() {
             }
         },
 
-        alertCannotDeleteRunning(code) {
+        alertCannotDeleteRunning(code, usedCount) {
+            const countText = usedCount ? ` và đã có <strong>${usedCount} lượt dùng</strong>` : '';
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    title: 'Không thể xóa voucher đang diễn ra',
-                    html: `Voucher <strong style="color: #5C3219;">[${code}]</strong> hiện đang trong thời gian áp dụng (Đang diễn ra).<br><span style="font-size: 13px; color: #786B61; margin-top: 6px; display: inline-block;">Để xóa mềm voucher này, bạn vui lòng chuyển công tắc trạng thái sang <strong>"Vô hiệu hóa"</strong> trước khi xóa.</span>`,
+                    title: 'Chưa thể xóa voucher đang diễn ra',
+                    html: `Voucher <strong style="color: #5C3219;">[${code}]</strong> hiện đang trong thời gian diễn ra${countText}.<br><span style="font-size: 13px; color: #786B61; margin-top: 6px; display: inline-block;">Để xóa mềm mã này, bạn vui lòng gạt công tắc trạng thái sang <strong>"Vô hiệu hóa"</strong> trước khi xóa.</span>`,
                     icon: 'warning',
                     confirmButtonText: 'Đã hiểu',
                     confirmButtonColor: '#E08A1E',
@@ -254,7 +410,7 @@ export function vouchersList() {
                     }
                 });
             } else {
-                alert(`Không thể xóa voucher [${code}] khi đang diễn ra. Vui lòng chuyển trạng thái sang Vô hiệu hóa trước khi xóa!`);
+                alert(`Không thể xóa voucher [${code}] khi đang diễn ra và đã có lượt dùng. Vui lòng chuyển trạng thái sang Vô hiệu hóa trước khi xóa!`);
             }
         },
 

@@ -24,13 +24,8 @@ class VoucherController extends Controller
         $status = $request->input('status');
         $now = Carbon::now();
 
-        // Mặc định: KHÔNG hiển thị voucher đã xóa mềm trên trang chính
-        // Chỉ hiển thị voucher đã xóa mềm khi người dùng chọn xem Thùng rác (status=TRASHED)
-        if ($status === 'TRASHED') {
-            $query = Voucher::onlyTrashed()->with(['categories', 'products']);
-        } else {
-            $query = Voucher::with(['categories', 'products']);
-        }
+        // Luôn chỉ hiển thị voucher chưa bị xóa mềm (SoftDeletes)
+        $query = Voucher::with(['categories', 'products']);
 
         $query->withCount([
             'orders',
@@ -45,7 +40,7 @@ class VoucherController extends Controller
         }
 
         // Filter by real status
-        if ($request->filled('status') && $status !== 'TRASHED') {
+        if ($request->filled('status')) {
             if ($status === 'RUNNING') {
                 $query->where('status', 'ACTIVE')
                       ->where('start_date', '<=', $now)
@@ -62,6 +57,8 @@ class VoucherController extends Controller
                 $query->where('status', 'INACTIVE');
             } elseif ($status === 'ACTIVE') {
                 $query->where('status', 'ACTIVE');
+            } elseif ($status === 'TRASHED') {
+                $query->onlyTrashed();
             }
         }
 
@@ -90,7 +87,6 @@ class VoucherController extends Controller
                 ->orWhereColumn('used_count', '>=', 'usage_limit')
                 ->count(),
             'inactive' => Voucher::where('status', 'INACTIVE')->count(),
-            'trashed' => Voucher::onlyTrashed()->count(),
             'order_vouchers' => Voucher::where('voucher_type', 'ORDER')->count(),
             'shipping_vouchers' => Voucher::where('voucher_type', 'SHIPPING')->count(),
         ];
@@ -322,10 +318,39 @@ class VoucherController extends Controller
         $statusText = $newStatus === 'ACTIVE' ? 'kích hoạt sang Đang áp dụng' : 'chuyển sang Vô hiệu hóa';
 
         if ($request->wantsJson()) {
+            $now = Carbon::now();
+            $isExpired = $voucher->end_date && $voucher->end_date->isPast();
+            $isOutOfStock = $voucher->usage_limit !== null && $voucher->used_count >= $voucher->usage_limit;
+            $isUpcoming = $voucher->start_date && $voucher->start_date->isFuture();
+            $isRunning = $newStatus === 'ACTIVE' && !$isExpired && !$isOutOfStock && !$isUpcoming;
+
+            $stats = [
+                'total' => Voucher::count(),
+                'running' => Voucher::where('status', 'ACTIVE')
+                    ->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now)
+                    ->whereColumn('used_count', '<', 'usage_limit')
+                    ->count(),
+                'upcoming' => Voucher::where('status', 'ACTIVE')
+                    ->where('start_date', '>', $now)
+                    ->count(),
+                'expired' => Voucher::where('end_date', '<', $now)
+                    ->orWhereColumn('used_count', '>=', 'usage_limit')
+                    ->count(),
+                'inactive' => Voucher::where('status', 'INACTIVE')->count(),
+            ];
+
             return response()->json([
                 'success' => true,
                 'status' => $newStatus,
-                'message' => "Đã {$statusText} voucher [{$voucher->code}]!",
+                'is_expired' => $isExpired,
+                'is_out_of_stock' => $isOutOfStock,
+                'is_upcoming' => $isUpcoming,
+                'is_running' => $isRunning,
+                'used_count' => (int) $voucher->used_count,
+                'code' => $voucher->code,
+                'message' => "Đã {$statusText} voucher [{$voucher->code}] thành công!",
+                'stats' => $stats,
             ]);
         }
 
@@ -340,13 +365,13 @@ class VoucherController extends Controller
     {
         $now = Carbon::now();
         $isExpired = $voucher->end_date && $voucher->end_date->isPast();
-        $isOutOfStock = $voucher->used_count >= $voucher->usage_limit;
+        $isOutOfStock = $voucher->usage_limit !== null && $voucher->used_count >= $voucher->usage_limit;
         $isUpcoming = $voucher->start_date && $voucher->start_date->isFuture();
         $isRunning = $voucher->status === 'ACTIVE' && !$isExpired && !$isOutOfStock && !$isUpcoming;
 
-        // Nếu voucher đang diễn ra -> Chặn không cho xóa, yêu cầu chuyển sang vô hiệu hóa trước
-        if ($isRunning) {
-            return back()->with('error', "Không thể xóa voucher [{$voucher->code}] khi đang diễn ra. Vui lòng chuyển trạng thái voucher sang 'Vô hiệu hóa' trước khi chuyển vào thùng rác!");
+        // Nếu voucher đang diễn ra VÀ đã có lượt dùng -> Yêu cầu chuyển sang vô hiệu hóa trước để tránh ảnh hưởng khách hàng
+        if ($isRunning && $voucher->used_count > 0) {
+            return back()->with('error', "Không thể xóa voucher [{$voucher->code}] khi đang diễn ra và đã có lượt sử dụng ({$voucher->used_count} lượt). Vui lòng chuyển trạng thái voucher sang 'Vô hiệu hóa' trước khi xóa!");
         }
 
         $activeOrdersCount = $voucher->getActiveOrdersCount();
@@ -356,16 +381,15 @@ class VoucherController extends Controller
             return back()->with('error', "Không thể xóa voucher [{$voucher->code}] vì đang có {$activeOrdersCount} đơn hàng chưa hoàn tất đang áp dụng mã này!");
         }
 
-        // Tất cả đều chuyển sang trạng thái xóa mềm (cột deleted_at trong csdl)
+        // Xóa mềm voucher (cột deleted_at trong CSDL) để bảo toàn dữ liệu lịch sử đơn hàng của khách hàng
         $code = $voucher->code;
         $voucher->delete();
 
-        return redirect()->route('admin.vouchers.index')->with('success', "Đã chuyển voucher [{$code}] vào thùng rác (xóa mềm) thành công!");
+        return redirect()->route('admin.vouchers.index')->with('success', "Đã xóa voucher [{$code}] thành công (xóa mềm để bảo toàn lịch sử dữ liệu đơn hàng)!");
     }
 
     /**
-     * Restore the specified voucher and optionally extend end_date or usage_limit.
-     * Áp dụng cho cả voucher đã xóa mềm lẫn voucher đã hết hạn chưa xóa mềm.
+     * Gia hạn thêm thời gian sử dụng hoặc lượt dùng cho voucher.
      */
     public function restore(Request $request, int $id): RedirectResponse
     {
@@ -384,7 +408,7 @@ class VoucherController extends Controller
         }
 
         $validated = $request->validate($rules, [
-            'end_date.after' => 'Thời gian kết thúc mới phải ở tương lai (sau thời điểm hiện tại). Không được chọn thời gian trong quá khứ hoặc hiện tại.',
+            'end_date.after' => 'Thời gian kết thúc gia hạn phải ở tương lai (sau thời điểm hiện tại). Không được chọn thời gian trong quá khứ hoặc hiện tại.',
             'usage_limit.min' => "Tổng số lượt dùng mới không thể nhỏ hơn số lượt đã sử dụng ({$voucher->used_count} lượt).",
         ]);
 
@@ -420,9 +444,9 @@ class VoucherController extends Controller
             $details[] = "Lượt dùng mới: {$updates['usage_limit']}";
         }
 
-        $msg = "Đã khôi phục voucher [{$code}] thành công!";
+        $msg = "Đã gia hạn voucher [{$code}] thành công!";
         if (!empty($details)) {
-            $msg = "Đã khôi phục voucher [{$code}] thành công (" . implode(', ', $details) . ")!";
+            $msg = "Đã gia hạn voucher [{$code}] thành công (" . implode(', ', $details) . ")!";
         }
 
         return back()->with('success', $msg);
