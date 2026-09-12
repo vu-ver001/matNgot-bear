@@ -619,7 +619,7 @@
             const hasVariantImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
             let thumbSrc = hasVariantImg ? v.image_url : 'https://placehold.co/100x100/fdf6e2/8d6e63?text=%2B+%E1%BA%A2nh*';
 
-            const formattedPrice = (v.price !== '' && v.price !== null && v.price !== undefined && parseFloat(v.price) > 0) ? formatCurrencyString(v.price) : '';
+            const formattedPrice = (v.price !== '' && v.price !== null && v.price !== undefined && !isNaN(v.price) && parseFloat(v.price) >= 0) ? formatCurrencyString(v.price) : '';
             const formattedSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined && parseFloat(v.sale_price) > 0) ? formatCurrencyString(v.sale_price) : '';
             const formattedStock = (v.stock_quantity !== '' && v.stock_quantity !== null && v.stock_quantity !== undefined) ? v.stock_quantity : '';
             const isRowActive = (v.status === 'ACTIVE');
@@ -847,7 +847,7 @@
     function updateSummaryStats() {
         document.getElementById('sum-count').innerText = `${variantsList.length} phân loại`;
 
-        const prices = variantsList.map(v => parseFloat(v.price) || 0).filter(p => p > 0);
+        const prices = variantsList.map(v => (v.price !== '' && v.price !== null && v.price !== undefined) ? parseFloat(v.price) : NaN).filter(p => !isNaN(p) && p >= 0);
         if (prices.length > 0) {
             const minP = Math.min(...prices);
             const maxP = Math.max(...prices);
@@ -1332,7 +1332,7 @@
             const vPrice = parseCurrencyToNumber(v.price);
             const vSalePrice = v.sale_price ? parseCurrencyToNumber(v.sale_price) : null;
 
-            if (vPrice <= 0) {
+            if (v.price === '' || v.price === null || v.price === undefined || isNaN(vPrice) || vPrice < 0) {
                 const priceEl = document.getElementById(`var-price-${i}`);
                 highlightAndNotify(priceEl, `Vui lòng nhập đầy đủ <b>Giá gốc</b> hợp lệ cho <b>${label}</b>!`);
                 return;
