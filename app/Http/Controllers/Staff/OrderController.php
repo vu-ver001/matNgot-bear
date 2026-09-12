@@ -15,7 +15,7 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $query = Order::with(['customer', 'latestPayment', 'details.product.images']);
+        $query = Order::with(['customer', 'latestPayment', 'details.product.images', 'details.productVariant']);
 
         // Lọc theo tab Yêu cầu hủy hoặc Cần hoàn tiền
         if ($request->query('tab') === 'cancel_requests') {
@@ -64,7 +64,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'order_ids' => 'required|array|min:1',
             'order_ids.*' => 'required|integer|exists:orders,id',
-            'target_status' => 'nullable|in:SHIPPING',
+            'target_status' => 'nullable|in:CONFIRMED,PREPARING,SHIPPING',
         ]);
 
         $targetStatus = $validated['target_status'] ?? 'SHIPPING';
@@ -102,7 +102,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'details.product', 'payments', 'statusHistories.changedByUser', 'voucher']);
+        $order->load(['customer', 'details.product', 'details.productVariant', 'payments', 'statusHistories.changedByUser', 'voucher']);
 
         return view('staff.orders.show', compact('order'));
     }

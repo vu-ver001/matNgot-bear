@@ -12,14 +12,21 @@ class OrderDetail extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'product_variant_id',
         'product_name',
+        'variant_sku',
+        'variant_size',
+        'variant_color',
+        'variant_image_url',
         'product_price',
+        'original_unit_price',
         'quantity',
         'line_total',
     ];
 
     protected $casts = [
         'product_price' => 'decimal:2',
+        'original_unit_price' => 'decimal:2',
         'quantity' => 'integer',
         'line_total' => 'decimal:2',
     ];
@@ -32,5 +39,10 @@ class OrderDetail extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productVariant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class)->withTrashed();
     }
 }

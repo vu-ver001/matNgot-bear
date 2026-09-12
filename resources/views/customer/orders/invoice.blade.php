@@ -245,8 +245,9 @@
                             @php
                                 $product = $detail->product;
                                 $specs = [];
-                                if (!empty($product?->size)) { $specs[] = $product->size; }
-                                if (!empty($product?->color)) { $specs[] = $product->color; }
+                                if (!empty($detail->variant_size ?: $product?->size)) { $specs[] = $detail->variant_size ?: $product->size; }
+                                if (!empty($detail->variant_color ?: $product?->color)) { $specs[] = $detail->variant_color ?: $product->color; }
+                                if (!empty($detail->variant_sku)) { $specs[] = 'SKU: '.$detail->variant_sku; }
                                 $specsText = !empty($specs) ? implode(' · ', $specs) : ($product?->category?->name ?? 'Chuẩn');
                             @endphp
                             <tr class="hover:bg-amber-50/30 transition">

@@ -35,8 +35,9 @@ class CustomerOrderPresenter
         $products = $order->details->map(function (OrderDetail $detail) {
             $product = $detail->product;
 
-            $rawImg = $product?->images?->where('is_primary', true)->first()?->image_url
-                ?? $product?->images?->first()?->image_url;
+            $rawImg = $detail->variant_image_url
+                ?: ($product?->images?->where('is_primary', true)->first()?->image_url
+                    ?? $product?->images?->first()?->image_url);
 
             $imageUrl = '';
             if ($rawImg) {
@@ -46,18 +47,24 @@ class CustomerOrderPresenter
             }
 
             $variationParts = [];
-            if ($product && ! empty($product->size)) {
-                $variationParts[] = 'Size: '.$product->size;
+            $size = $detail->variant_size ?: $product?->size;
+            $color = $detail->variant_color ?: $product?->color;
+            if (! empty($size)) {
+                $variationParts[] = 'Size: '.$size;
             }
-            if ($product && ! empty($product->color)) {
-                $variationParts[] = 'Màu: '.$product->color;
+            if (! empty($color)) {
+                $variationParts[] = 'Màu: '.$color;
+            }
+            if (! empty($detail->variant_sku)) {
+                $variationParts[] = 'SKU: '.$detail->variant_sku;
             }
             $variation = ! empty($variationParts) ? implode(', ', $variationParts) : 'Phân loại tiêu chuẩn';
 
             $currentPrice = (float) $detail->product_price;
-            $originalPrice = ($product && $product->price > $currentPrice)
-                ? (float) $product->price
-                : $currentPrice;
+            $snapshotOriginalPrice = (float) ($detail->original_unit_price ?? 0);
+            $originalPrice = $snapshotOriginalPrice > $currentPrice
+                ? $snapshotOriginalPrice
+                : (($product && $product->price > $currentPrice) ? (float) $product->price : $currentPrice);
 
             $productUrl = $detail->product_id
                 ? route('products.show', $detail->product_id)
