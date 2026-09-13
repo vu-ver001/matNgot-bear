@@ -221,23 +221,61 @@ class CategoryController extends Controller
     }
 
     /**
-     * Xóa danh mục (kiểm tra nếu có sản phẩm con).
+     * Xóa danh mục theo chuẩn sàn TMĐT (Shopee / TikTok Shop):
+     *  1. Không được xóa danh mục đang ghim trên Header.
+     *  2. Không được xóa khi còn sản phẩm đang kinh doanh (ACTIVE).
+     *  3. Không được xóa khi còn sản phẩm đã ẩn (INACTIVE) — tránh mất dữ liệu lịch sử.
+     *  4. Không được xóa khi có voucher đang áp dụng cho danh mục này.
+     *  5. Thỏa hết → soft-delete danh mục.
      */
     public function destroy(Category $category): JsonResponse
     {
-        // Kiểm tra nếu danh mục đang có sản phẩm
-        if ($category->products()->count() > 0) {
+        // ── Ràng buộc 1: Đang ghim trên Header ───────────────────────────────
+        if ($category->is_pinned) {
             return response()->json([
                 'success' => false,
-                'message' => 'Không thể xóa danh mục đang có sản phẩm!',
-            ], 400);
+                'code'    => 'CATEGORY_PINNED',
+                'message' => "Danh mục \"{$category->name}\" đang được ghim trên Header. Vui lòng bỏ ghim trước khi xóa.",
+            ], 422);
         }
 
+        // ── Ràng buộc 2: Còn sản phẩm đang kinh doanh (ACTIVE) ──────────────
+        $activeCount = $category->products()->where('status', 'ACTIVE')->count();
+        if ($activeCount > 0) {
+            return response()->json([
+                'success' => false,
+                'code'    => 'CATEGORY_HAS_ACTIVE_PRODUCTS',
+                'message' => "Không thể xóa danh mục \"{$category->name}\" đang có {$activeCount} sản phẩm đang kinh doanh. Vui lòng chuyển hoặc xóa sản phẩm trước.",
+            ], 422);
+        }
+
+        // ── Ràng buộc 3: Còn sản phẩm đã ẩn (INACTIVE) ─────────────────────
+        $inactiveCount = $category->products()->where('status', 'INACTIVE')->count();
+        if ($inactiveCount > 0) {
+            return response()->json([
+                'success' => false,
+                'code'    => 'CATEGORY_HAS_INACTIVE_PRODUCTS',
+                'message' => "Không thể xóa danh mục \"{$category->name}\" đang có {$inactiveCount} sản phẩm đã ẩn. Vui lòng chuyển hoặc xóa toàn bộ sản phẩm trước.",
+            ], 422);
+        }
+
+        // ── Ràng buộc 4: Đang được gắn với voucher ───────────────────────────
+        $voucherCount = $category->vouchers()->count();
+        if ($voucherCount > 0) {
+            return response()->json([
+                'success' => false,
+                'code'    => 'CATEGORY_HAS_VOUCHERS',
+                'message' => "Không thể xóa danh mục \"{$category->name}\" đang được áp dụng trong {$voucherCount} chương trình khuyến mãi. Vui lòng gỡ danh mục khỏi các voucher trước.",
+            ], 422);
+        }
+
+        // ── Tất cả ràng buộc thỏa → soft-delete ─────────────────────────────
         $category->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Xóa danh mục thành công.',
+            'message' => "Xóa danh mục \"{$category->name}\" thành công.",
         ]);
     }
 }
+
