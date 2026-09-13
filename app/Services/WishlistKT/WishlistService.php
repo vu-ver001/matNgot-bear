@@ -13,10 +13,12 @@ class WishlistService
     {
         $query = WishlistItem::query()
             ->where('user_id', $user->id)
+            ->whereHas('product')
             ->with([
                 'product' => fn ($query) => $query
                     ->withAvg('reviews', 'rating')
                     ->withCount('reviews'),
+                'product.category',
                 'product.images' => fn ($query) => $query
                     ->orderByDesc('is_primary')
                     ->orderBy('sort_order'),
@@ -63,15 +65,17 @@ class WishlistService
             'wishlist_item_id' => $item->id,
             'product_id' => $product->id,
             'product_name' => $product->name,
+            'category_name' => $product->category?->name ?? 'Gấu bông',
             'price' => $product->price,
             'sale_price' => $product->sale_price,
-            'primary_image' => $product->images->first()?->image_url,
+            'primary_image' => $product->images->firstWhere('is_primary', true)?->image_url ?? $product->images->first()?->image_url,
             'stock_quantity' => $product->stock_quantity,
             'status' => $product->status,
             'average_rating' => $product->reviews_avg_rating !== null
                 ? round((float) $product->reviews_avg_rating, 1)
                 : null,
             'reviews_count' => (int) $product->reviews_count,
+            'sold_count' => (int) ($product->sold_count ?? 0),
             'created_at' => $item->created_at?->toISOString(),
         ];
     }
