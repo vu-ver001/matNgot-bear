@@ -205,22 +205,6 @@
     overflow-wrap: anywhere;
 }
 
-.register-demo-note {
-    padding: 8px 10px;
-    border: 1px dashed #e7c79f;
-    border-radius: 10px;
-    color: #8b6c54;
-    background: #fffaf4;
-    font-size: clamp(9px, calc(0.83vmin + 3px), 14px);
-    line-height: 1.45;
-    text-align: center;
-}
-
-.register-demo-note--warning {
-    margin-top: -3px;
-    color: #9a5a29;
-    background: #fff6ea;
-}
 
 .register-back,
 .register-resend {
@@ -733,23 +717,6 @@
     margin-left: 0;
 }
 
-.password-recovery__hint {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-top: -3px;
-    color: var(--bear-muted);
-    font-size: clamp(10px, calc(0.92vmin + 3px), 14px);
-    line-height: 1.55;
-}
-
-.password-recovery__hint .auth-icon {
-    width: 17px;
-    height: 17px;
-    flex: 0 0 17px;
-    margin-top: 2px;
-    color: #b66a30;
-}
 
 .auth-hero {
     position: relative;

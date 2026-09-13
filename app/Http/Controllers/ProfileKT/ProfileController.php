@@ -70,10 +70,6 @@ class ProfileController extends Controller
                 ->with('profile-editing', true);
         }
 
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
         try {
             $user->save();
         } catch (\Throwable $exception) {

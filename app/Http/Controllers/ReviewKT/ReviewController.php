@@ -87,7 +87,17 @@ class ReviewController extends Controller
 
         $primaryImage = $product->images->firstWhere('is_primary', true)?->image_url
             ?? $product->images->first()?->image_url
-            ?? asset('images/customer/product-placeholder.png');
+            ?? 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
+
+        $variantText = null;
+        if (!empty($check['order_id'])) {
+            $order = Order::with(['details.variant'])->find($check['order_id']);
+            $detail = $order?->details->firstWhere('product_id', $product->id);
+            if ($detail) {
+                $primaryImage = ReviewService::resolveItemImageUrl($detail);
+                $variantText = ReviewService::resolveVariantText($detail);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -99,6 +109,7 @@ class ReviewController extends Controller
                     'id' => $product->id,
                     'name' => $product->name,
                     'primary_image' => $primaryImage,
+                    'variant_text' => $variantText,
                 ],
                 'existing_review' => $check['existing_review'],
             ],

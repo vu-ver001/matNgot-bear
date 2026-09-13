@@ -153,13 +153,13 @@
                                             @php
                                                 preg_match('/#([A-Z0-9\-]+)/', $msg->content, $custCodeMatches);
                                                 $custParsedCode = $custCodeMatches[1] ?? null;
-                                                $custOrder = $custParsedCode ? \App\Models\Order::with('details.product')->where('order_code', $custParsedCode)->first() : null;
+                                                $custOrder = $custParsedCode ? \App\Models\Order::with(['details.product.images', 'details.variant'])->where('order_code', $custParsedCode)->first() : null;
                                             @endphp
                                             @if ($custOrder)
                                                 @php
                                                     $custDetail = $custOrder->details->first();
-                                                    $custProd = $custDetail?->product;
-                                                    $custImg = $custProd?->primary_image_url ?? $custProd?->image_url ?? asset('images/auth/bear-hero.png');
+                                                    $custImg = \App\Services\ReviewKT\ReviewService::resolveItemImageUrl($custDetail);
+                                                    $custVariantText = \App\Services\ReviewKT\ReviewService::resolveVariantText($custDetail);
                                                     $custOthers = $custOrder->details->count() - 1;
                                                 @endphp
                                                 <div class="chat-order-card">
@@ -170,9 +170,12 @@
                                                         <span class="chat-order-card__status">{{ $custOrder->order_status }}</span>
                                                     </div>
                                                     <div class="chat-order-card__body">
-                                                        <img src="{{ $custImg }}" alt="{{ $custOrder->order_code }}" class="chat-order-card__img" onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'">
+                                                        <img src="{{ $custImg }}" alt="{{ $custOrder->order_code }}" class="chat-order-card__img" onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';">
                                                         <div class="chat-order-card__info">
                                                             <div class="chat-order-card__pname">{{ $custDetail?->product_name ?? 'Đơn hàng' }}</div>
+                                                            @if ($custVariantText)
+                                                                <div class="chat-order-card__variant">Phân loại: {{ $custVariantText }}</div>
+                                                            @endif
                                                             @if ($custOthers > 0)
                                                                 <div class="chat-order-card__other">+{{ $custOthers }} sản phẩm khác</div>
                                                             @endif
@@ -257,8 +260,8 @@
             @if (isset($suggestedOrder) && $suggestedOrder)
                 @php
                     $suggDetail = $suggestedOrder->details->first();
-                    $suggProduct = $suggDetail?->product;
-                    $suggImg = $suggProduct?->primary_image_url ?? $suggProduct?->image_url ?? asset('images/auth/bear-hero.png');
+                    $suggImg = \App\Services\ReviewKT\ReviewService::resolveItemImageUrl($suggDetail);
+                    $suggVariantText = \App\Services\ReviewKT\ReviewService::resolveVariantText($suggDetail);
                     $suggOtherCount = $suggestedOrder->details->count() - 1;
                 @endphp
                 <div class="staff-support-order-suggestion" data-order-suggestion>
@@ -281,7 +284,7 @@
                             src="{{ $suggImg }}"
                             alt="{{ $suggestedOrder->order_code }}"
                             class="staff-support-order-suggestion__thumb"
-                            onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'"
+                            onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';"
                         >
                         <div class="staff-support-order-suggestion__info">
                             <div class="staff-support-order-suggestion__code-row">
@@ -294,6 +297,11 @@
                                     <span style="color: #8c7667; font-weight: normal;">(+{{ $suggOtherCount }} sản phẩm khác)</span>
                                 @endif
                             </div>
+                            @if ($suggVariantText)
+                                <div class="staff-support-order-suggestion__variant">
+                                    Phân loại: {{ $suggVariantText }}
+                                </div>
+                            @endif
                             <div class="staff-support-order-suggestion__total">
                                 Tổng tiền: <strong>{{ number_format($suggestedOrder->total_amount, 0, ',', '.') }} đ</strong>
                             </div>
@@ -307,6 +315,8 @@
                             data-order-total="{{ number_format($suggestedOrder->total_amount, 0, ',', '.') }} đ"
                             data-order-status="{{ $suggestedOrder->order_status }}"
                             data-product-name="{{ $suggDetail?->product_name ?? 'Sản phẩm' }}{{ $suggOtherCount > 0 ? ' (+' . $suggOtherCount . ' sản phẩm khác)' : '' }}"
+                            data-variant-text="{{ $suggVariantText ?? '' }}"
+                            data-product-image="{{ $suggImg }}"
                             data-order-url="{{ route('customer.orders.show', $suggestedOrder) }}"
                         >
                             <i class="fa-solid fa-paper-plane"></i>

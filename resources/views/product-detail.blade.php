@@ -561,9 +561,15 @@
                         @endif
 
                         <div class="review-item-footer">
-                            <div class="review-variant-tag">
-                                <i class="fa-solid fa-paw" style="color: var(--honey);"></i> Phân loại: {{ $product->size ?? 'Size tiêu chuẩn' }} - {{ $product->color ?? 'Màu tự nhiên' }}
-                            </div>
+                            @php
+                                $revDetail = $review->order?->details?->firstWhere('product_id', $product->id);
+                                $revVText = \App\Services\ReviewKT\ReviewService::resolveVariantText($revDetail, ' - ');
+                            @endphp
+                            @if($revVText)
+                                <div class="review-variant-tag">
+                                    <i class="fa-solid fa-paw" style="color: var(--honey);"></i> Phân loại: {{ $revVText }}
+                                </div>
+                            @endif
                             <button type="button" class="btn-helpful-like" onclick="this.classList.toggle('liked'); const countSpan = this.querySelector('span'); if(countSpan) { let n = parseInt(countSpan.innerText) || 0; countSpan.innerText = this.classList.contains('liked') ? n + 1 : Math.max(0, n - 1); }">
                                 <i class="fa-regular fa-thumbs-up"></i> Hữu ích (<span>0</span>)
                             </button>

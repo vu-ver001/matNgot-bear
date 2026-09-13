@@ -11,7 +11,6 @@
 }
 
 .account-input,
-.account-select,
 .account-textarea {
     width: 100%;
     border: 1px solid var(--account-border);
@@ -24,17 +23,10 @@
 }
 
 .account-input:focus,
-.account-select:focus,
 .account-textarea:focus {
     border-color: var(--account-caramel);
     outline: none;
     box-shadow: 0 0 0 3px rgba(215, 139, 44, 0.14);
-}
-
-.account-input:disabled,
-.account-textarea:disabled {
-    background: #faf8f6;
-    color: #8c837e;
 }
 
 .account-field-error {
@@ -49,9 +41,6 @@
     color: var(--account-text);
 }
 
-.profile-page.uses-default-layout {
-    padding: 34px;
-}
 
 .profile-card-grid {
     display: grid;
@@ -457,11 +446,6 @@ body.profile-avatar-editor-open {
     font-size: 13px;
 }
 
-.profile-form-row .account-input.is-readonly {
-    background: #faf7f4;
-    color: #756a64;
-    cursor: not-allowed;
-}
 
 .profile-detail-form .account-input[readonly],
 .profile-detail-form .account-textarea[readonly] {
@@ -749,9 +733,6 @@ body.profile-avatar-editor-open {
 }
 
 @media (max-width: 767px) {
-    .profile-page.uses-default-layout {
-        padding: 20px 12px;
-    }
 
     .profile-avatar-editor {
         align-items: end;
