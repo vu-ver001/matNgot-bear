@@ -1345,7 +1345,8 @@
                                     @php
                                         $unitPrice = $item->effective_price;
                                         $lineTotal = $unitPrice * $item->quantity;
-                                        $imageUrl = $item->effective_image;
+                                        $rawImg = $item->effective_image;
+                                        $imageUrl = (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:') || str_starts_with($rawImg, '/')) ? $rawImg : asset($rawImg);
                                         
                                         if ($item->variant) {
                                             $specsText = "Phân loại: {$item->variant->color} · {$item->variant->size}";
