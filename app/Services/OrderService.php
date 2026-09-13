@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Voucher;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class OrderService
@@ -221,7 +222,7 @@ class OrderService
                 throw new \Exception('Bạn chỉ có thể hủy đơn hàng đang chờ xác nhận.');
             }
 
-            $reason = !empty($reason) ? $reason : 'Khách hàng hủy đơn';
+            $reason = ! empty($reason) ? $reason : 'Khách hàng hủy đơn';
 
             $oldStatus = $currentOrder->order_status;
 
@@ -286,6 +287,7 @@ class OrderService
                 null,
                 'Hệ thống tự động hủy do quá thời hạn thanh toán 24 giờ'
             );
+
             return true;
         }
 
@@ -315,7 +317,7 @@ class OrderService
                 );
                 $count++;
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error("Lỗi khi tự động hủy đơn hàng #{$order->order_code}: " . $e->getMessage());
+                Log::error("Lỗi khi tự động hủy đơn hàng #{$order->order_code}: ".$e->getMessage());
             }
         }
 
@@ -323,9 +325,9 @@ class OrderService
     }
 
     /**
-     * Nhân viên xác nhận đã chuyển tiền hoàn lại cho khách hàng
+     * Admin xác nhận đã chuyển tiền hoàn lại cho khách hàng
      */
-    public function confirmRefundOrder(Order $order, int $adminId, ?string $refundNote = null): Order
+     public function confirmRefundOrder(Order $order, int $adminId, ?string $refundNote = null): Order
     {
         return DB::transaction(function () use ($order, $adminId, $refundNote) {
             $paidPayment = $order->payments->firstWhere('status', 'PAID');
@@ -338,12 +340,21 @@ class OrderService
                 'refund_note' => $refundNote,
             ]);
 
+            \App\Models\PaymentRefundRequest::where('order_id', $order->id)
+                ->where('status', 'PENDING')
+                ->update([
+                    'status' => 'APPROVED',
+                    'approved_by' => $adminId,
+                    'approved_at' => now(),
+                    'admin_note' => $refundNote ?? 'Admin đã duyệt và chuyển tiền hoàn',
+                ]);
+
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'from_status' => $order->order_status,
                 'to_status' => $order->order_status,
                 'changed_by' => $adminId,
-                'note' => 'Nhân viên đã xác nhận chuyển tiền hoàn cho khách.' . ($refundNote ? ' Ghi chú: ' . $refundNote : ''),
+                'note' => 'Admin đã xác nhận chuyển tiền hoàn cho khách.'.($refundNote ? ' Ghi chú: '.$refundNote : ''),
                 'changed_at' => now(),
             ]);
 
@@ -382,7 +393,7 @@ class OrderService
                 'from_status' => $order->order_status,
                 'to_status' => $order->order_status,
                 'changed_by' => $customerId,
-                'note' => 'Khách hàng gửi yêu cầu hủy đơn: ' . $data['reason'] . $isPaidNotice,
+                'note' => 'Khách hàng gửi yêu cầu hủy đơn: '.$data['reason'].$isPaidNotice,
                 'changed_at' => now(),
             ]);
 
@@ -450,7 +461,7 @@ class OrderService
                 'refund_note' => $refundNote,
             ]);
 
-            $historyNote = 'Nhân viên đã duyệt yêu cầu hủy đơn hàng.' . ($refundNote ? ' Ghi chú hoàn tiền: ' . $refundNote : '');
+            $historyNote = 'Nhân viên đã duyệt yêu cầu hủy đơn hàng.'.($refundNote ? ' Ghi chú hoàn tiền: '.$refundNote : '');
 
             OrderStatusHistory::create([
                 'order_id' => $order->id,
@@ -495,7 +506,7 @@ class OrderService
                 'from_status' => $order->order_status,
                 'to_status' => $order->order_status,
                 'changed_by' => $adminId,
-                'note' => 'Nhân viên từ chối yêu cầu hủy đơn. Lý do: ' . $rejectionReason,
+                'note' => 'Nhân viên từ chối yêu cầu hủy đơn. Lý do: '.$rejectionReason,
                 'changed_at' => now(),
             ]);
 
@@ -509,8 +520,7 @@ class OrderService
         ?int $changedBy = null,
         ?string $note = null,
         bool $stockReturned = false
-    ): Order
-    {
+    ): Order {
         return DB::transaction(function () use ($order, $newStatus, $changedBy, $note, $stockReturned) {
             $order->setRawAttributes(Order::lockForUpdate()->findOrFail($order->id)->getAttributes(), true);
             $order->unsetRelations();
@@ -617,6 +627,7 @@ class OrderService
             if ($variant) {
                 $variant->increment('stock_quantity', $quantity);
                 $product->syncLowestPriceFromVariants();
+
                 continue;
             }
 
@@ -683,10 +694,7 @@ class OrderService
     /**
      * Cập nhật trạng thái hàng loạt (Giao hàng loạt / Xác nhận hàng loạt).
      *
-     * @param array<int> $orderIds
-     * @param string $targetStatus
-     * @param int|null $changedBy
-     * @param string|null $note
+     * @param  array<int>  $orderIds
      * @return array{updated: int, skipped: int, target_status: string}
      */
     public function bulkUpdateStatus(array $orderIds, string $targetStatus = 'SHIPPING', ?int $changedBy = null, ?string $note = null): array
@@ -699,6 +707,7 @@ class OrderService
             foreach ($orders as $order) {
                 if (! in_array($targetStatus, $order->allowedNextStatuses(), true)) {
                     $skipped++;
+
                     continue;
                 }
 
@@ -719,8 +728,7 @@ class OrderService
         string $newStatus,
         ?string $note = null,
         bool $stockReturned = false
-    ): void
-    {
+    ): void {
         $allowedTransitions = Order::STATUS_TRANSITIONS;
         $oldStatus = $order->order_status;
 

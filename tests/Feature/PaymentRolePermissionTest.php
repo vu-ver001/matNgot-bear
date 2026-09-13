@@ -353,4 +353,71 @@ class PaymentRolePermissionTest extends TestCase
             'recipient_address' => 'Số 99 Lê Lợi, Phường Lê Lợi, Hải Phòng',
         ]);
     }
+
+    /**
+     * Quy định phân quyền: Nhân viên không thể tự xác nhận hoàn tiền trực tiếp, chỉ có thể gửi yêu cầu lên Admin
+     */
+    public function test_staff_cannot_confirm_refund_directly_and_must_request_refund()
+    {
+        $order = Order::create([
+            'order_code' => 'TEST_REFUND_'.strtoupper(uniqid()),
+            'customer_id' => $this->customer->id,
+            'recipient_name' => 'Người Nhận Test',
+            'recipient_phone' => '0987654321',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 200000,
+            'shipping_fee' => 30000,
+            'total_amount' => 230000,
+            'order_status' => 'CANCELLED',
+            'payment_method' => 'BANK_TRANSFER',
+            'payment_status' => 'PAID',
+            'refund_bank_name' => 'Techcombank',
+            'refund_bank_account' => '19035555555',
+            'refund_account_holder' => 'NGUYEN VAN A',
+        ]);
+
+        Payment::create([
+            'order_id' => $order->id,
+            'method' => 'BANK_TRANSFER',
+            'status' => 'PAID',
+            'amount' => 230000,
+            'paid_at' => now(),
+        ]);
+
+        // 1. Nhân viên gửi yêu cầu hoàn tiền lên Admin
+        $response = $this->actingAs($this->staff)->post(route('staff.orders.request_refund', $order->id), [
+            'amount' => 230000,
+            'bank_name' => 'Techcombank',
+            'bank_account' => '19035555555',
+            'account_holder' => 'NGUYEN VAN A',
+            'reason' => 'Đơn hàng online đã hủy, đề xuất hoàn tiền lại cho khách',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('payment_refund_requests', [
+            'order_id' => $order->id,
+            'requested_by' => $this->staff->id,
+            'amount' => 230000,
+            'status' => 'PENDING',
+        ]);
+
+        // 2. Đơn hàng vẫn ở trạng thái PAID (chưa bị staff tự ý chuyển sang REFUNDED)
+        $order->refresh();
+        $this->assertEquals('PAID', $order->payment_status);
+
+        // 3. Admin phê duyệt hoàn tiền
+        $refundReq = $order->latestRefundRequest;
+        $this->assertNotNull($refundReq);
+
+        $adminResponse = $this->actingAs($this->admin)->post(route('admin.payments.approveRefund', $refundReq->id), [
+            'admin_note' => 'Admin đã chuyển khoản hoàn tiền xong',
+        ]);
+
+        $adminResponse->assertRedirect();
+        $order->refresh();
+        $refundReq->refresh();
+
+        $this->assertEquals('APPROVED', $refundReq->status);
+        $this->assertEquals('REFUNDED', $order->payment_status);
+    }
 }
