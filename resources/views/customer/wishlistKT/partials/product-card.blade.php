@@ -4,7 +4,7 @@
     $hasSale = !empty($salePrice) && $salePrice < $regularPrice;
     $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - $salePrice) / $regularPrice) * 100) : 0;
     $rawImage = $item['primary_image'] ?? null;
-    $imgUrl = $rawImage && \Illuminate\Support\Str::startsWith($rawImage, ['http://', 'https://', '//'])
+    $imgUrl = $rawImage && \Illuminate\Support\Str::startsWith($rawImage, ['http://', 'https://', '//', 'data:'])
         ? $rawImage
         : ($rawImage ? asset(ltrim($rawImage, '/')) : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($item['product_name']));
     $isInactive = ($item['status'] ?? 'ACTIVE') !== 'ACTIVE';

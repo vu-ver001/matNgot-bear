@@ -296,7 +296,7 @@ class ProductController extends Controller
                     ProductVariant::create([
                         'product_id'     => $product->id,
                         'sku'            => $sku,
-                        'size'           => $vData['size'] ?? null,
+                        'size'           => !empty($vData['size']) ? preg_replace('/\s+/', '', mb_strtolower(trim($vData['size']), 'UTF-8')) : null,
                         'color'          => $formattedColor,
                         'price'          => $vData['price'] ?? $product->price,
                         'sale_price'     => $hasValidSale ? $vData['sale_price'] : null,
@@ -462,7 +462,7 @@ class ProductController extends Controller
 
                     $vFields = [
                         'sku'            => $sku,
-                        'size'           => $vData['size'] ?? null,
+                        'size'           => !empty($vData['size']) ? preg_replace('/\s+/', '', mb_strtolower(trim($vData['size']), 'UTF-8')) : null,
                         'color'          => $formattedColor,
                         'price'          => $vData['price'] ?? $product->price,
                         'sale_price'     => $hasValidSale ? $vData['sale_price'] : null,
@@ -715,7 +715,9 @@ class ProductController extends Controller
 
     /**
      * Chuyển đổi trạng thái kinh doanh của sản phẩm (ACTIVE <-> INACTIVE).
-     * Ràng buộc: Khi sản phẩm cha tạm dừng kinh doanh (INACTIVE), tự động tắt toàn bộ sản phẩm con.
+     * Ràng buộc: 
+     * - Khi sản phẩm cha tạm dừng kinh doanh (INACTIVE), tự động tắt toàn bộ sản phẩm con.
+     * - Khi sản phẩm cha mở bán trở lại (ACTIVE), tự động bật lại toàn bộ sản phẩm con.
      */
     public function toggleStatus(Product $product): JsonResponse
     {
@@ -724,12 +726,17 @@ class ProductController extends Controller
 
         if ($newStatus === 'INACTIVE') {
             $product->variants()->update(['status' => 'INACTIVE']);
+        } else {
+            $product->variants()->update(['status' => 'ACTIVE']);
         }
+
+        // Đồng bộ lại giá bán / khuyến mãi theo các sản phẩm con
+        $product->syncLowestPriceFromVariants();
 
         return response()->json([
             'success' => true,
             'message' => $newStatus === 'ACTIVE' 
-                ? 'Đã kích hoạt sản phẩm mở bán trở lại!' 
+                ? 'Đã kích hoạt sản phẩm mở bán trở lại và tự động bật lại toàn bộ sản phẩm con!' 
                 : 'Đã chuyển sản phẩm sang ngừng kinh doanh và tự động tắt toàn bộ chi tiết sản phẩm con!',
             'status'  => $newStatus,
             'data'    => $product->fresh(['variants']),

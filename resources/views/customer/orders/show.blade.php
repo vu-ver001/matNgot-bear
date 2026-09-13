@@ -649,7 +649,7 @@
                                                 $rawImg = $detail->variant?->image_url
                                                     ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
                                                     ?? $detail->product?->images?->first()?->image_url;
-                                                $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+                                                 $primaryImg = $rawImg ? ((str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg)) : '';
                                             @endphp
                                             <tr>
                                                 <td class="px-4 py-4 text-sm font-medium text-[#4E342E]">

@@ -1171,7 +1171,7 @@
 
         const result = await Swal.fire({
             title: `Xác nhận ${actionText}?`,
-            html: `Bạn có chắc muốn ${actionText} sản phẩm <strong>${productName || '#' + id}</strong>?<br><small style="color:#795548;">${isCurrentlyActive ? 'Sản phẩm sẽ tạm ẩn khỏi cửa hàng và <strong>tự động tắt toàn bộ chi tiết sản phẩm con</strong>.' : 'Sản phẩm sẽ hiển thị lại cho khách hàng đặt mua.'}</small>`,
+            html: `Bạn có chắc muốn ${actionText} sản phẩm <strong>${productName || '#' + id}</strong>?<br><small style="color:#795548;">${isCurrentlyActive ? 'Sản phẩm sẽ tạm ẩn khỏi cửa hàng và <strong>tự động tắt toàn bộ chi tiết sản phẩm con</strong>.' : 'Sản phẩm sẽ hiển thị lại cho khách hàng đặt mua và <strong>tự động bật lại toàn bộ chi tiết sản phẩm con</strong>.'}</small>`,
             icon: isCurrentlyActive ? 'warning' : 'question',
             showCancelButton: true,
             confirmButtonColor: confirmColor,

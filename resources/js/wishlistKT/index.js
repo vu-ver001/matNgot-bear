@@ -68,8 +68,28 @@ if (wishlistRoot) {
             }
 
             card.classList.add('is-removing');
-            totalItems = Math.max(0, totalItems - 1);
+            const newCount = (typeof result.wishlist_count !== 'undefined')
+                ? Number(result.wishlist_count)
+                : Math.max(0, totalItems - 1);
+            totalItems = newCount;
             updateTotal();
+
+            if (typeof window.setWishlistCount === 'function') {
+                window.setWishlistCount(newCount);
+            } else {
+                window.wishlistCount = newCount;
+                if (typeof window.updateWishlistBadge === 'function') {
+                    window.updateWishlistBadge();
+                }
+            }
+
+            if (Array.isArray(window.dbWishlistProductIds) && result.data?.product_id) {
+                const idx = window.dbWishlistProductIds.indexOf(Number(result.data.product_id));
+                if (idx > -1) {
+                    window.dbWishlistProductIds.splice(idx, 1);
+                }
+            }
+
             showToast(result.message);
 
             window.setTimeout(() => {

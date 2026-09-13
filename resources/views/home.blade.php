@@ -74,9 +74,6 @@
                                 <a href="{{ route('products.index') }}" class="btn-hero-primary">
                                     <i class="fa-solid fa-bag-shopping"></i> KHÁM PHÁ CỬA HÀNG
                                 </a>
-                                <a href="{{ route('products.index', ['sort' => 'best_seller']) }}" class="btn-hero-secondary">
-                                    <i class="fa-solid fa-circle-play"></i> BÁN CHẠY NHẤT
-                                </a>
                             </div>
                             <div class="hero-bottom-doodle">
                                 <span class="doodle-bear">🧸</span>
@@ -125,8 +122,15 @@
                                     <div class="feature-sub">vạn người mê</div>
                                 </div>
                             </div>
+                            @php
+                                $butterBearCategory = $categories->first(function($c) {
+                                    $n = mb_strtoupper($c->name, 'UTF-8');
+                                    return str_contains($n, 'BUTTER') || str_contains($n, 'BƠ');
+                                });
+                                $butterBearCatId = $butterBearCategory ? $butterBearCategory->id : 9;
+                            @endphp
                             <div class="hero-btn-actions">
-                                <a href="{{ route('products.index', ['search' => 'Butter Bear']) }}" class="btn-hero-primary">
+                                <a href="{{ route('products.index', ['category_id' => $butterBearCatId]) }}#catalog-layout" class="btn-hero-primary">
                                     <i class="fa-solid fa-bag-shopping"></i> BỘ SƯU TẬP BƠ
                                 </a>
                                 <a href="{{ route('products.index', ['sort' => 'latest']) }}" class="btn-hero-secondary">
@@ -499,7 +503,7 @@
                 <div class="product-card">
                     <div class="product-card-img-wrap">
                         @if($hasSale)
-                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> FLASH SALE</span>
+                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
                             @if($discountPct > 0)
                                 <span class="card-badge-sale">-{{ $discountPct }}%</span>
                             @endif
@@ -588,7 +592,7 @@
                 <div class="product-card">
                     <div class="product-card-img-wrap">
                         @if($hasSale)
-                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> FLASH SALE</span>
+                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
                             @if($discountPct > 0)
                                 <span class="card-badge-sale">-{{ $discountPct }}%</span>
                             @endif
