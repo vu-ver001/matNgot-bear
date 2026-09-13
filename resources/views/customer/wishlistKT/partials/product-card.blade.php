@@ -9,7 +9,7 @@
         : ($rawImage ? asset(ltrim($rawImage, '/')) : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($item['product_name']));
     $isInactive = ($item['status'] ?? 'ACTIVE') !== 'ACTIVE';
     $isOutOfStock = ((int) ($item['stock_quantity'] ?? 0)) <= 0;
-    $rating = !empty($item['average_rating']) ? (float) $item['average_rating'] : 5.0;
+    $rating = isset($item['average_rating']) && $item['average_rating'] !== null ? (float) $item['average_rating'] : 5.0;
     $soldCount = $item['sold_count'] ?? 0;
     $categoryName = $item['category_name'] ?? 'Gấu bông';
 @endphp

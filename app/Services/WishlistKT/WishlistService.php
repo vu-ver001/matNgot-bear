@@ -16,8 +16,8 @@ class WishlistService
             ->whereHas('product')
             ->with([
                 'product' => fn ($query) => $query
-                    ->withAvg('reviews', 'rating')
-                    ->withCount('reviews'),
+                    ->withAvg(['reviews as reviews_avg_rating' => fn ($q) => $q->where('is_hidden', false)], 'rating')
+                    ->withCount(['reviews' => fn ($q) => $q->where('is_hidden', false)]),
                 'product.category',
                 'product.images' => fn ($query) => $query
                     ->orderByDesc('is_primary')
