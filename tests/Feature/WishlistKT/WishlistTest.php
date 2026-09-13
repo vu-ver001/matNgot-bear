@@ -4,8 +4,10 @@ namespace Tests\Feature\WishlistKT;
 
 use App\Models\CartItem;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\Review;
 use App\Models\User;
 use App\Models\WishlistItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -326,6 +328,148 @@ class WishlistTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 1,
         ]);
+    }
+
+    public function test_wishlist_rating_excludes_hidden_reviews(): void
+    {
+        $customer = User::factory()->create();
+        $reviewer1 = User::factory()->create();
+        $reviewer2 = User::factory()->create();
+        $product = $this->createProduct();
+
+        ProductImage::query()->create([
+            'product_id' => $product->id,
+            'image_url' => '/images/bear.jpg',
+            'is_primary' => true,
+            'sort_order' => 0,
+        ]);
+
+        WishlistItem::query()->create([
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+        ]);
+
+        $order1 = Order::query()->create([
+            'order_code' => 'ORD-1-'.uniqid(),
+            'customer_id' => $reviewer1->id,
+            'recipient_name' => 'Reviewer 1',
+            'recipient_phone' => '0987654321',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 250000,
+            'shipping_fee' => 30000,
+            'total_amount' => 280000,
+            'order_status' => 'COMPLETED',
+            'payment_method' => 'COD',
+            'payment_status' => 'PAID',
+            'completed_at' => now(),
+        ]);
+
+        $order2 = Order::query()->create([
+            'order_code' => 'ORD-2-'.uniqid(),
+            'customer_id' => $reviewer2->id,
+            'recipient_name' => 'Reviewer 2',
+            'recipient_phone' => '0987654322',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 250000,
+            'shipping_fee' => 30000,
+            'total_amount' => 280000,
+            'order_status' => 'COMPLETED',
+            'payment_method' => 'COD',
+            'payment_status' => 'PAID',
+            'completed_at' => now(),
+        ]);
+
+        // Review 1: visible 4 stars
+        Review::query()->create([
+            'user_id' => $reviewer1->id,
+            'product_id' => $product->id,
+            'order_id' => $order1->id,
+            'rating' => 4,
+            'comment' => 'Visible review',
+            'is_hidden' => false,
+        ]);
+
+        // Review 2: hidden 1 star
+        Review::query()->create([
+            'user_id' => $reviewer2->id,
+            'product_id' => $product->id,
+            'order_id' => $order2->id,
+            'rating' => 1,
+            'comment' => 'Hidden review',
+            'is_hidden' => true,
+        ]);
+
+        // Test API/JSON response
+        $this->actingAs($customer)
+            ->getJson(route('customer.wishlist.index'))
+            ->assertOk()
+            ->assertJsonPath('data.items.0.average_rating', 4)
+            ->assertJsonPath('data.items.0.reviews_count', 1);
+
+        // Test rendered HTML page
+        $response = $this->actingAs($customer)
+            ->get(route('customer.wishlist.index'))
+            ->assertOk();
+
+        $response->assertSee('4.0');
+    }
+
+    public function test_wishlist_rating_falls_back_when_all_reviews_are_hidden(): void
+    {
+        $customer = User::factory()->create();
+        $reviewer = User::factory()->create();
+        $product = $this->createProduct();
+
+        ProductImage::query()->create([
+            'product_id' => $product->id,
+            'image_url' => '/images/bear.jpg',
+            'is_primary' => true,
+            'sort_order' => 0,
+        ]);
+
+        WishlistItem::query()->create([
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+        ]);
+
+        $order = Order::query()->create([
+            'order_code' => 'ORD-3-'.uniqid(),
+            'customer_id' => $reviewer->id,
+            'recipient_name' => 'Reviewer 3',
+            'recipient_phone' => '0987654323',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 250000,
+            'shipping_fee' => 30000,
+            'total_amount' => 280000,
+            'order_status' => 'COMPLETED',
+            'payment_method' => 'COD',
+            'payment_status' => 'PAID',
+            'completed_at' => now(),
+        ]);
+
+        // Only one hidden review with 1 star
+        Review::query()->create([
+            'user_id' => $reviewer->id,
+            'product_id' => $product->id,
+            'order_id' => $order->id,
+            'rating' => 1,
+            'comment' => 'Hidden review only',
+            'is_hidden' => true,
+        ]);
+
+        // Test API/JSON response: average_rating is null, reviews_count is 0
+        $this->actingAs($customer)
+            ->getJson(route('customer.wishlist.index'))
+            ->assertOk()
+            ->assertJsonPath('data.items.0.average_rating', null)
+            ->assertJsonPath('data.items.0.reviews_count', 0);
+
+        // Test rendered HTML page: falls back to default 5.0
+        $response = $this->actingAs($customer)
+            ->get(route('customer.wishlist.index'))
+            ->assertOk();
+
+        $response->assertSee('5.0');
     }
 
     /**
