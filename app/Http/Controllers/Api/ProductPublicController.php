@@ -114,7 +114,7 @@ class ProductPublicController extends Controller
 
                 // HOẶC thỏa mãn theo giá của bất kỳ biến thể con (product_variants) nào
                 $q->orWhereHas('variants', function ($vq) use ($minPrice, $maxPrice) {
-                    $variantEffectivePrice = 'CASE WHEN sale_price IS NOT NULL AND sale_price >= 0 AND sale_price < price THEN sale_price ELSE price END';
+                    $variantEffectivePrice = 'CASE WHEN sale_price IS NOT NULL AND sale_price >= 0 AND sale_price < price AND (sale_start_at IS NULL OR sale_start_at <= NOW()) AND (sale_end_at IS NULL OR sale_end_at >= NOW()) THEN sale_price ELSE price END';
                     if ($minPrice !== null) {
                         $vq->whereRaw("({$variantEffectivePrice}) >= ?", [$minPrice]);
                     }

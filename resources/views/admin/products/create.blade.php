@@ -724,13 +724,16 @@
             let timeBtnLabel = '<i class="fa-regular fa-clock"></i> Lịch sale';
             let timeBtnClass = '';
 
-            // Chỉ hiển thị trạng thái Đang sale / Sắp sale khi đã có giá sale hợp lệ và có thời gian sale
+            // Chỉ hiển thị trạng thái Đang sale / Sắp sale / Đã hết hạn khi đã có giá sale hợp lệ và có thời gian sale
             if (hasSalePrice && (v.sale_start_at || v.sale_end_at)) {
                 const now = new Date();
                 const start = v.sale_start_at ? new Date(v.sale_start_at) : null;
                 const end = v.sale_end_at ? new Date(v.sale_end_at) : null;
 
-                if (start && now < start) {
+                if (end && now > end) {
+                    timeBtnClass = 'expired';
+                    timeBtnLabel = '<i class="fa-solid fa-clock-rotate-left"></i> Đã hết hạn';
+                } else if (start && now < start) {
                     timeBtnClass = 'upcoming';
                     timeBtnLabel = '<i class="fa-solid fa-bolt"></i> Sắp sale';
                 } else if ((!start || now >= start) && (!end || now <= end)) {
@@ -1445,6 +1448,11 @@
 
             if (endDate <= startDate) {
                 Swal.fire('Thời gian không hợp lệ', 'Ngày & Giờ kết thúc sale phải diễn ra sau ngày bắt đầu!', 'warning');
+                return;
+            }
+
+            if (endDate < nowBuffer) {
+                Swal.fire('Thời gian không hợp lệ', 'Ngày & Giờ kết thúc sale không được ở trong quá khứ! Vui lòng chọn thời gian kết thúc ở tương lai để khuyến mãi có hiệu lực.', 'warning');
                 return;
             }
         }
