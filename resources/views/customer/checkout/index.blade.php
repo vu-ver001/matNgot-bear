@@ -1361,7 +1361,7 @@
                                         <div class="mn-product-thumb">
                                             <img src="{{ $imageUrl }}" 
                                                  alt="{{ $item->product->name }}" 
-                                                 onerror="this.src='{{ asset('images/products/butterbear-chef.jpg') }}'">
+                                                 onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'">
                                         </div>
 
                                         {{-- Details --}}

@@ -254,6 +254,17 @@
                                     <div x-show="matchesProduct({{ $prod->id }}, '{{ strtolower(addslashes($prod->name)) }}', {{ $prod->category_id ?? 0 }})"
                                         class="transition">
                                         @php
+                                            $primaryImg = $prod->images->firstWhere('is_primary', true) ?? $prod->images->first();
+                                            $imgUrl = $primaryImg?->image_url;
+                                            if ($imgUrl && (str_starts_with($imgUrl, 'http') || str_starts_with($imgUrl, 'data:'))) {
+                                                // Keep as is
+                                            } elseif ($imgUrl && (str_starts_with($imgUrl, 'storage/') || str_starts_with($imgUrl, '/'))) {
+                                                $imgUrl = asset($imgUrl);
+                                            } elseif ($imgUrl) {
+                                                $imgUrl = asset('storage/' . $imgUrl);
+                                            } else {
+                                                $imgUrl = 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
+                                            }
                                             $prodVariantIds = json_encode($prod->variants->pluck('id')->values()->toArray());
                                         @endphp
                                         <div class="flex items-center justify-between p-2.5 hover:bg-white transition">

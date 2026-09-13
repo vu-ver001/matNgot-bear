@@ -537,7 +537,7 @@
 
 /* Gift Promo Banner (Butter Bear Theme) */
 .gift-promo-banner {
-    background: #FCEBD7 url('../images/butter-bear-promo-banner.png?v=2') no-repeat right bottom / cover;
+    background: #FCEBD7 url('../images/dashboard/butter-bear-promo-banner.png?v=2') no-repeat right bottom / cover;
     border-radius: 28px;
     padding: 3.5rem 4rem;
     display: flex;
@@ -665,7 +665,7 @@
     .gift-promo-banner { 
         padding: 3rem 2.5rem; 
         min-height: 440px; 
-        background: #FAF6F0 url('../images/butter-bear-promo-banner.png?v=2') no-repeat right center / cover; 
+        background: #FAF6F0 url('../images/dashboard/butter-bear-promo-banner.png?v=2') no-repeat right center / cover; 
     }
     .gift-promo-content { 
         max-width: 520px; 
