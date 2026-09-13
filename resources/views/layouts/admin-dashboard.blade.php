@@ -18,17 +18,18 @@
             Swal.fire = function(...args) {
                 let options = {};
                 if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
-                    options = Object.assign({ heightAuto: false, scrollbarPadding: false }, args[0]);
+                    options = Object.assign({ heightAuto: false, scrollbarPadding: false, returnFocus: false }, args[0]);
                 } else if (args.length >= 2) {
                     options = {
                         title: args[0],
                         text: args[1],
                         icon: args[2] || undefined,
                         heightAuto: false,
-                        scrollbarPadding: false
+                        scrollbarPadding: false,
+                        returnFocus: false
                     };
                 } else {
-                    options = { heightAuto: false, scrollbarPadding: false };
+                    options = { heightAuto: false, scrollbarPadding: false, returnFocus: false };
                 }
 
                 const promise = _origSwalFire.call(this, options);

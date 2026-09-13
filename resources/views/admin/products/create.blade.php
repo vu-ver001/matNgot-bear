@@ -140,7 +140,7 @@
                                 <th style="width: 15%; text-align: left;">Giá Gốc <span style="color:#C62828;">*</span></th>
                                 <th style="width: 18%; text-align: left;">Giá Sale &amp; Hẹn Giờ</th>
                                 <th style="width: 14%; text-align: left;">Tồn Kho <span style="color:#C62828;">*</span></th>
-                                <th style="width: 76px; text-align: center;">Trạng thái</th>
+                                <th style="width: 76px; text-align: center;">Trạng thái <span style="color:#C62828;">*</span></th>
                                 <th style="width: 32px; text-align: center;">Xóa</th>
                             </tr>
                         </thead>
@@ -317,7 +317,7 @@
                 <label class="form-label">
                     <i class="fa-solid fa-ruler-combined" style="color: #8D6E63;"></i> Danh sách Kích thước (phẩy cách nhau)
                 </label>
-                <input type="text" id="comb-sizes" class="input-control" placeholder="30cm, 40cm, 80cm...">
+                <input type="text" id="comb-sizes" class="input-control" placeholder="30cm, 40cm, 80cm..." onkeydown="handleCombSizesKeydown(event, this)" onblur="formatCombSizesInput(this)">
             </div>
 
             <!-- 2. Danh sách Màu sắc -->
@@ -325,7 +325,7 @@
                 <label class="form-label">
                     <i class="fa-solid fa-palette" style="color: #8D6E63;"></i> Danh sách Màu sắc (phẩy cách nhau)
                 </label>
-                <input type="text" id="comb-colors" class="input-control" placeholder="Nâu socola, Vàng bơ, Trắng kem...">
+                <input type="text" id="comb-colors" class="input-control" placeholder="Nâu socola, Vàng bơ, Trắng kem..." onkeydown="handleCombColorsKeydown(event, this)" onblur="formatCombColorsInput(this)">
             </div>
 
             <div style="border-top: 1px dashed var(--pf-beige-border); margin: 12px 0;"></div>
@@ -1013,7 +1013,11 @@
     function updateSummaryStats() {
         document.getElementById('sum-count').innerText = `${variantsList.length} phân loại`;
 
-        const prices = variantsList.map(v => (v.price !== '' && v.price !== null && v.price !== undefined) ? parseFloat(v.price) : NaN).filter(p => !isNaN(p) && p >= 0);
+        // Ưu tiên tính khoảng giá trên các phân loại ĐANG CÒN HÀNG (tồn kho > 0 và trạng thái ACTIVE)
+        const inStockVariants = variantsList.filter(v => (parseInt(v.stock_quantity) || 0) > 0 && v.status !== 'INACTIVE');
+        const targetVariants = inStockVariants.length > 0 ? inStockVariants : variantsList;
+
+        const prices = targetVariants.map(v => (v.price !== '' && v.price !== null && v.price !== undefined) ? parseFloat(v.price) : NaN).filter(p => !isNaN(p) && p >= 0);
         if (prices.length > 0) {
             const minP = Math.min(...prices);
             const maxP = Math.max(...prices);
@@ -1142,6 +1146,44 @@
     // ==========================================
     // TẠO NHANH / ÁP DỤNG HÀNG LOẠT (POPUP KẾT HỢP)
     // ==========================================
+    function handleCombSizesKeydown(e, input) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            formatCombSizesInput(input);
+            input.blur();
+        }
+    }
+
+    function formatCombSizesInput(input) {
+        if (!input || !input.value.trim()) return;
+        const parts = input.value.split(',');
+        const formatted = parts.map(p => {
+            const trimmed = p.trim();
+            if (!trimmed) return '';
+            return formatSizeString(trimmed);
+        }).filter(Boolean).join(', ');
+        input.value = formatted;
+    }
+
+    function handleCombColorsKeydown(e, input) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            formatCombColorsInput(input);
+            input.blur();
+        }
+    }
+
+    function formatCombColorsInput(input) {
+        if (!input || !input.value.trim()) return;
+        const parts = input.value.split(',');
+        const formatted = parts.map(p => {
+            const trimmed = p.trim();
+            if (!trimmed) return '';
+            return capitalizeColor(trimmed);
+        }).filter(Boolean).join(', ');
+        input.value = formatted;
+    }
+
     function openCombinedBulkModal() {
         syncVariantsFromDom();
         const m = document.getElementById('combined-bulk-modal');
