@@ -42,43 +42,7 @@ if (wishlistRoot) {
         showToast(toast.dataset.initialMessage, toast.dataset.initialError === 'true');
     }
 
-    wishlistRoot.querySelectorAll('[data-product-image]').forEach((image) => {
-        image.addEventListener('error', () => image.remove(), { once: true });
-    });
-
     wishlistRoot.addEventListener('submit', async (event) => {
-        const cartForm = event.target.closest('[data-wishlist-cart-form]');
-
-        if (cartForm) {
-            event.preventDefault();
-
-            const button = cartForm.querySelector('button[type="submit"]');
-            button.disabled = true;
-
-            try {
-                const response = await fetch(cartForm.action, {
-                    method: 'POST',
-                    headers: {
-                        Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                });
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Không thể thêm sản phẩm vào giỏ hàng.');
-                }
-
-                showToast(result.message);
-            } catch (error) {
-                showToast(error.message, true);
-            } finally {
-                button.disabled = false;
-            }
-
-            return;
-        }
-
         const form = event.target.closest('[data-wishlist-remove-form]');
 
         if (!form) return;

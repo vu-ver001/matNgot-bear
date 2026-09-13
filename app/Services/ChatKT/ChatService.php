@@ -840,7 +840,8 @@ class ChatService
             ->with([
                 'customer',
                 'assignedStaff',
-                'order',
+                'order.details.product.images',
+                'order.details.variant',
                 'latestMessage',
                 'conversation.lastMessage',
                 'messages' => fn ($mq) => $mq->latest('id')->limit(1),

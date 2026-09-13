@@ -195,20 +195,8 @@
                                             @php
                                                 $firstItem = $itemsInOrder->first();
                                                 $firstProd = $firstItem->product;
-                                                $firstImg = $firstProd?->images?->firstWhere('is_primary', true)?->image_url
-                                                    ?? $firstProd?->images?->first()?->image_url
-                                                    ?? asset('images/customer/product-placeholder.png');
-                                                $variantParts = [];
-                                                if (!empty($firstProd?->color)) {
-                                                    $variantParts[] = 'Màu ' . $firstProd->color;
-                                                }
-                                                if (!empty($firstProd?->size)) {
-                                                    $variantParts[] = 'Size ' . $firstProd->size;
-                                                }
-                                                if (empty($variantParts) && !empty($firstProd?->material)) {
-                                                    $variantParts[] = $firstProd->material;
-                                                }
-                                                $variantText = !empty($variantParts) ? implode(' / ', $variantParts) : null;
+                                                $firstImg = \App\Services\ReviewKT\ReviewService::resolveItemImageUrl($firstItem);
+                                                $variantText = \App\Services\ReviewKT\ReviewService::resolveVariantText($firstItem);
                                             @endphp
                                             <div class="my-reviews-order-item__product">
                                                 <img
@@ -216,6 +204,7 @@
                                                     alt="{{ $firstItem->product_name ?? $firstProd?->name ?? 'Sản phẩm' }}"
                                                     class="my-reviews-order-item__img"
                                                     loading="lazy"
+                                                    onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';"
                                                 >
                                                 <div class="my-reviews-order-item__info">
                                                     <h4 class="my-reviews-order-item__name">
@@ -245,20 +234,8 @@
                                                     @foreach ($itemsInOrder->slice(1) as $subItem)
                                                         @php
                                                             $subProd = $subItem->product;
-                                                            $subImg = $subProd?->images?->firstWhere('is_primary', true)?->image_url
-                                                                ?? $subProd?->images?->first()?->image_url
-                                                                ?? asset('images/customer/product-placeholder.png');
-                                                            $subVariantParts = [];
-                                                            if (!empty($subProd?->color)) {
-                                                                $subVariantParts[] = 'Màu ' . $subProd->color;
-                                                            }
-                                                            if (!empty($subProd?->size)) {
-                                                                $subVariantParts[] = 'Size ' . $subProd->size;
-                                                            }
-                                                            if (empty($subVariantParts) && !empty($subProd?->material)) {
-                                                                $subVariantParts[] = $subProd->material;
-                                                            }
-                                                            $subVariantText = !empty($subVariantParts) ? implode(' / ', $subVariantParts) : null;
+                                                            $subImg = \App\Services\ReviewKT\ReviewService::resolveItemImageUrl($subItem);
+                                                            $subVariantText = \App\Services\ReviewKT\ReviewService::resolveVariantText($subItem);
                                                         @endphp
                                                         <div class="my-reviews-order-subproduct">
                                                             <img
@@ -266,6 +243,7 @@
                                                                 alt="{{ $subItem->product_name ?? $subProd?->name ?? 'Sản phẩm' }}"
                                                                 class="my-reviews-order-item__img"
                                                                 loading="lazy"
+                                                                onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';"
                                                             >
                                                             <div class="my-reviews-order-item__info">
                                                                 <h4 class="my-reviews-order-item__name">
@@ -393,20 +371,11 @@
                         @foreach ($reviews as $review)
                             @php
                                 $prod = $review->product;
-                                $img = $prod?->images?->firstWhere('is_primary', true)?->image_url
-                                    ?? $prod?->images?->first()?->image_url
-                                    ?? asset('images/customer/product-placeholder.png');
-                                $variantParts = [];
-                                if (!empty($prod?->color)) {
-                                    $variantParts[] = 'Màu ' . $prod->color;
-                                }
-                                if (!empty($prod?->size)) {
-                                    $variantParts[] = 'Size ' . $prod->size;
-                                }
-                                if (empty($variantParts) && !empty($prod?->material)) {
-                                    $variantParts[] = $prod->material;
-                                }
-                                $variantText = !empty($variantParts) ? implode(' / ', $variantParts) : null;
+                                $orderDetail = $review->order?->details?->firstWhere('product_id', $review->product_id);
+                                $img = $orderDetail
+                                    ? \App\Services\ReviewKT\ReviewService::resolveItemImageUrl($orderDetail)
+                                    : ($prod?->images?->firstWhere('is_primary', true)?->image_url ?? $prod?->images?->first()?->image_url ?? 'https://placehold.co/120x120/fef3c7/78350f?text=Bear');
+                                $variantText = \App\Services\ReviewKT\ReviewService::resolveVariantText($orderDetail);
                             @endphp
                             <article class="my-reviews-reviewed-card">
                                 {{-- Body hàng ngang: Trái là Ảnh + Chi tiết & Nhận xét, Phải là Nút Sửa đánh giá --}}
@@ -417,10 +386,10 @@
                                         <div class="my-reviews-reviewed-card__img-wrap">
                                             @if ($prod)
                                                 <a href="{{ route('products.show', $prod->id) }}" title="{{ $prod->name }}">
-                                                    <img src="{{ $img }}" alt="{{ $prod->name }}" class="my-reviews-reviewed-card__img" loading="lazy">
+                                                    <img src="{{ $img }}" alt="{{ $prod->name }}" class="my-reviews-reviewed-card__img" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';">
                                                 </a>
                                             @else
-                                                <img src="{{ $img }}" alt="Sản phẩm" class="my-reviews-reviewed-card__img" loading="lazy">
+                                                <img src="{{ $img }}" alt="Sản phẩm" class="my-reviews-reviewed-card__img" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';">
                                             @endif
                                         </div>
 
@@ -535,6 +504,7 @@
                                                 data-order-code="{{ $review->order?->order_code ?? '' }}"
                                                 data-product-name="{{ $prod?->name ?? 'Sản phẩm' }}"
                                                 data-product-image="{{ $img }}"
+                                                data-variant-text="{{ $variantText ?? '' }}"
                                                 data-rating="{{ $review->rating }}"
                                                 data-comment="{{ $review->comment }}"
                                                 data-images="{{ json_encode($review->images ?? []) }}"
