@@ -151,6 +151,33 @@ class ProductRequest extends FormRequest
             // Cho phép trừ 2 phút buffer đề phòng chênh lệch thời gian mạng khi client gửi request
             $nowBuffer = now()->subMinutes(2);
 
+            // ── Ràng buộc: Không được có 2 phân loại cùng Màu sắc + Kích thước ──────
+            // Logic chuẩn sàn TMĐT: Màu giống nhau → bắt buộc phải khác kích thước.
+            $seen = [];
+            foreach ($variants as $idx => $v) {
+                $colorKey = mb_strtolower(trim($v['color'] ?? ''));
+                $sizeKey  = mb_strtolower(trim($v['size']  ?? ''));
+
+                if ($colorKey === '' || $sizeKey === '') {
+                    continue; // Bỏ qua nếu chưa nhập (sẽ bị bắt bởi required_with)
+                }
+
+                $pairKey = "{$colorKey}|||{$sizeKey}";
+
+                if (isset($seen[$pairKey])) {
+                    $num   = $idx + 1;
+                    $label = "Phân loại #{$num} ({$v['size']} - {$v['color']})";
+                    $validator->errors()->add(
+                        "variants.{$idx}.size",
+                        "{$label}: Đã tồn tại phân loại cùng màu \"{$v['color']}\" và kích thước \"{$v['size']}\". "
+                        . 'Vui lòng chọn kích thước khác hoặc đổi màu sắc.'
+                    );
+                } else {
+                    $seen[$pairKey] = $idx;
+                }
+            }
+            // ─────────────────────────────────────────────────────────────────────────
+
             // Thu thập các nhóm màu đã có ảnh tải lên hoặc có sẵn image_url hợp lệ
             $colorHasImage = [];
             foreach ($variants as $idx => $v) {
