@@ -102,7 +102,10 @@ class VoucherController extends Controller
     public function create(): View
     {
         $categories = Category::where('is_active', true)->orderBy('name')->get();
-        $products = Product::where('status', 'ACTIVE')->orderBy('name')->get();
+        $products = Product::where('status', 'ACTIVE')
+            ->with(['category', 'variants', 'images' => fn($q) => $q->orderBy('is_primary', 'desc')])
+            ->orderBy('name')
+            ->get();
 
         return view('admin.vouchers.create', compact('categories', 'products'));
     }
@@ -131,6 +134,8 @@ class VoucherController extends Controller
             'category_ids.*' => 'exists:categories,id',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
+            'variant_ids' => 'nullable|array',
+            'variant_ids.*' => 'exists:product_variants,id',
             'discount_type' => 'required|in:PERCENTAGE,FIXED',
             'discount_value' => [
                 'required',
@@ -144,10 +149,10 @@ class VoucherController extends Controller
             ],
             'min_order_value' => 'nullable|numeric|min:0',
             'max_discount_value' => 'nullable|numeric|min:0',
-            'start_date' => 'required|date|after_or_equal:' . now()->subMinutes(5)->toDateTimeString(),
+            'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'usage_limit' => 'required|integer|min:1',
-            'usage_limit_per_user' => 'required|integer|min:1|lte:usage_limit',
+            'usage_limit_per_user' => 'nullable|integer|min:1|lte:usage_limit',
             'status' => 'nullable|in:ACTIVE,INACTIVE',
         ], [
             'code.required' => 'Vui lòng nhập mã voucher.',
@@ -158,12 +163,10 @@ class VoucherController extends Controller
             'discount_value.required' => 'Vui lòng nhập giá trị giảm.',
             'discount_value.min' => 'Giá trị giảm phải lớn hơn 0.',
             'start_date.required' => 'Vui lòng chọn ngày bắt đầu.',
-            'start_date.after_or_equal' => 'Thời gian bắt đầu voucher phải lớn hơn hoặc bằng thời điểm hiện tại.',
             'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
             'end_date.after' => 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu voucher.',
             'usage_limit.required' => 'Vui lòng nhập số lượt sử dụng tối đa.',
             'usage_limit.min' => 'Số lượt sử dụng tối đa phải từ 1 trở lên.',
-            'usage_limit_per_user.required' => 'Vui lòng nhập số lượt sử dụng tối đa cho mỗi khách hàng.',
             'usage_limit_per_user.min' => 'Số lượt sử dụng cho mỗi khách hàng phải từ 1 trở lên.',
             'usage_limit_per_user.lte' => 'Số lượt dùng của mỗi khách hàng không được vượt quá tổng số lượt dùng của voucher (:value lượt).',
         ]);
@@ -173,13 +176,14 @@ class VoucherController extends Controller
             return back()->withInput()->withErrors(['category_ids' => 'Vui lòng chọn ít nhất 1 danh mục áp dụng.']);
         }
 
-        if ($validated['apply_scope'] === 'PRODUCT' && empty($request->input('product_ids'))) {
+        if ($validated['apply_scope'] === 'PRODUCT' && empty($request->input('product_ids')) && empty($request->input('variant_ids'))) {
             return back()->withInput()->withErrors(['product_ids' => 'Vui lòng chọn ít nhất 1 sản phẩm áp dụng.']);
         }
 
         $validated['code'] = strtoupper(trim($validated['code']));
         $validated['min_order_value'] = $validated['min_order_value'] ?? 0;
         $validated['status'] = $validated['status'] ?? 'ACTIVE';
+        $validated['usage_limit_per_user'] = !empty($validated['usage_limit_per_user']) ? (int) $validated['usage_limit_per_user'] : null;
         
         // If FIXED, clear max_discount_value
         if ($validated['discount_type'] === 'FIXED') {
@@ -192,7 +196,14 @@ class VoucherController extends Controller
         if ($validated['apply_scope'] === 'CATEGORY') {
             $voucher->categories()->sync($request->input('category_ids', []));
         } elseif ($validated['apply_scope'] === 'PRODUCT') {
-            $voucher->products()->sync($request->input('product_ids', []));
+            $productIds = $request->input('product_ids', []);
+            $variantIds = $request->input('variant_ids', []);
+            if (!empty($variantIds)) {
+                $variantProductIds = \App\Models\ProductVariant::whereIn('id', $variantIds)->pluck('product_id')->toArray();
+                $productIds = array_unique(array_merge($productIds, $variantProductIds));
+            }
+            $voucher->products()->sync($productIds);
+            $voucher->productVariants()->sync($variantIds);
         }
 
         return redirect()->route('admin.vouchers.index')->with('success', "Đã tạo voucher [{$validated['code']}] thành công!");
@@ -203,9 +214,12 @@ class VoucherController extends Controller
      */
     public function edit(Voucher $voucher): View
     {
-        $voucher->load(['categories', 'products']);
+        $voucher->load(['categories', 'products', 'productVariants']);
         $categories = Category::where('is_active', true)->withCount('products')->orderBy('name')->get();
-        $products = Product::where('status', 'ACTIVE')->with(['category', 'images' => fn($q) => $q->orderBy('is_primary', 'desc')])->orderBy('name')->get();
+        $products = Product::where('status', 'ACTIVE')
+            ->with(['category', 'variants', 'images' => fn($q) => $q->orderBy('is_primary', 'desc')])
+            ->orderBy('name')
+            ->get();
 
         return view('admin.vouchers.edit', compact('voucher', 'categories', 'products'));
     }
@@ -240,6 +254,8 @@ class VoucherController extends Controller
             'category_ids.*' => 'exists:categories,id',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
+            'variant_ids' => 'nullable|array',
+            'variant_ids.*' => 'exists:product_variants,id',
             'discount_type' => 'required|in:PERCENTAGE,FIXED',
             'discount_value' => [
                 'required',
@@ -256,7 +272,7 @@ class VoucherController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'usage_limit' => "required|integer|min:{$voucher->used_count}",
-            'usage_limit_per_user' => 'required|integer|min:1|lte:usage_limit',
+            'usage_limit_per_user' => 'nullable|integer|min:1|lte:usage_limit',
             'status' => 'nullable|in:ACTIVE,INACTIVE',
         ], [
             'code.required' => 'Vui lòng nhập mã voucher.',
@@ -268,7 +284,6 @@ class VoucherController extends Controller
             'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
             'end_date.after' => 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu voucher.',
             'usage_limit.min' => "Số lượt sử dụng tối đa không thể nhỏ hơn số lượt đã dùng ({$voucher->used_count} lượt).",
-            'usage_limit_per_user.required' => 'Vui lòng nhập số lượt sử dụng tối đa cho mỗi khách hàng.',
             'usage_limit_per_user.min' => 'Số lượt sử dụng cho mỗi khách hàng phải từ 1 trở lên.',
             'usage_limit_per_user.lte' => 'Số lượt dùng của mỗi khách hàng không được vượt quá tổng số lượt dùng của voucher (:value lượt).',
         ]);
@@ -278,13 +293,14 @@ class VoucherController extends Controller
             return back()->withInput()->withErrors(['category_ids' => 'Vui lòng chọn ít nhất 1 danh mục áp dụng.']);
         }
 
-        if ($validated['apply_scope'] === 'PRODUCT' && empty($request->input('product_ids'))) {
+        if ($validated['apply_scope'] === 'PRODUCT' && empty($request->input('product_ids')) && empty($request->input('variant_ids'))) {
             return back()->withInput()->withErrors(['product_ids' => 'Vui lòng chọn ít nhất 1 sản phẩm áp dụng.']);
         }
 
         $validated['code'] = strtoupper(trim($validated['code']));
         $validated['min_order_value'] = $validated['min_order_value'] ?? 0;
         $validated['status'] = $validated['status'] ?? $voucher->status;
+        $validated['usage_limit_per_user'] = !empty($validated['usage_limit_per_user']) ? (int) $validated['usage_limit_per_user'] : null;
 
         if ($validated['discount_type'] === 'FIXED') {
             $validated['max_discount_value'] = null;
@@ -296,12 +312,21 @@ class VoucherController extends Controller
         if ($validated['apply_scope'] === 'CATEGORY') {
             $voucher->categories()->sync($request->input('category_ids', []));
             $voucher->products()->detach();
+            $voucher->productVariants()->detach();
         } elseif ($validated['apply_scope'] === 'PRODUCT') {
-            $voucher->products()->sync($request->input('product_ids', []));
+            $productIds = $request->input('product_ids', []);
+            $variantIds = $request->input('variant_ids', []);
+            if (!empty($variantIds)) {
+                $variantProductIds = \App\Models\ProductVariant::whereIn('id', $variantIds)->pluck('product_id')->toArray();
+                $productIds = array_unique(array_merge($productIds, $variantProductIds));
+            }
+            $voucher->products()->sync($productIds);
+            $voucher->productVariants()->sync($variantIds);
             $voucher->categories()->detach();
         } else {
             $voucher->categories()->detach();
             $voucher->products()->detach();
+            $voucher->productVariants()->detach();
         }
 
         return redirect()->route('admin.vouchers.index')->with('success', "Đã cập nhật voucher [{$voucher->code}] thành công!");
@@ -469,6 +494,7 @@ class VoucherController extends Controller
         // Detach pivot relations
         $voucher->categories()->detach();
         $voucher->products()->detach();
+        $voucher->productVariants()->detach();
         $voucher->forceDelete();
 
         return back()->with('success', "Đã xóa vĩnh viễn voucher [{$code}] khỏi hệ thống!");

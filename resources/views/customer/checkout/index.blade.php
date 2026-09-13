@@ -2303,7 +2303,7 @@
 
                 getInapplicableReason(v) {
                     if (!v) return '';
-                    if (v.is_user_exhausted || (v.user_remaining !== undefined && v.user_remaining <= 0)) {
+                    if (v.is_user_exhausted || (v.user_remaining !== null && v.user_remaining !== undefined && v.user_remaining <= 0)) {
                         return 'Bạn đã hết lượt dùng';
                     }
                     if (v.inapplicable_reason) return v.inapplicable_reason;
@@ -2355,7 +2355,7 @@
                     if (v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining !== undefined && v.global_remaining <= 0) || (v.usage_limit && parseInt(v.used_count || 0) >= parseInt(v.usage_limit))) {
                         return { key: 'EXHAUSTED', label: '🔴 Hết lượt toàn shop', badgeClass: 'bg-[#FDECEB] text-[#E04B4B] border-[#F8BDB8]', btnText: 'Hết lượt' };
                     }
-                    if (v.is_user_exhausted || (v.user_remaining !== undefined && v.user_remaining <= 0)) {
+                    if (v.is_user_exhausted || (v.user_remaining !== null && v.user_remaining !== undefined && v.user_remaining <= 0)) {
                         return { key: 'EXHAUSTED_USER', label: '🔴 Bạn đã hết lượt', badgeClass: 'bg-[#FFF1F0] text-[#E04B4B] border-[#FFA39E]', btnText: 'Hết lượt' };
                     }
                     if (v.start_date && new Date(v.start_date) > now) {

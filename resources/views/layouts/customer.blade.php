@@ -556,7 +556,17 @@
                 return false;
             }
 
-            // 2. Nếu khách đã đăng nhập: Lưu vào CSDL
+            // 2. Nếu là Mua Ngay (redirectMode === 'checkout'): Chuyển thẳng đến trang thanh toán với đúng số lượng vừa chọn
+            if (redirectMode === 'checkout' || redirectMode === true) {
+                let targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id=" + productId + "&quantity=" + qty;
+                if (variantId) {
+                    targetCheckoutUrl += "&variant_id=" + variantId;
+                }
+                window.location.href = targetCheckoutUrl;
+                return false;
+            }
+
+            // 3. Nếu khách thêm vào giỏ hàng thông thường: Lưu vào CSDL
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             return fetch('{{ route('customer.cart.store') }}', {

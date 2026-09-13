@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -61,6 +62,11 @@ class ProductVariant extends Model
     public function orderDetails(): HasMany
     {
         return $this->hasMany(OrderDetail::class, 'product_variant_id');
+    }
+
+    public function vouchers(): BelongsToMany
+    {
+        return $this->belongsToMany(Voucher::class, 'voucher_product_variants');
     }
 
     /**
