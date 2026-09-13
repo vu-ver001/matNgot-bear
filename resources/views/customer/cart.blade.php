@@ -188,7 +188,9 @@
                             @foreach($suggestedProducts as $prod)
                                 @php
                                     $pImg = $prod->images->firstWhere('is_primary', true) ?? $prod->images->first();
-                                    $pImgUrl = $pImg ? asset($pImg->image_url) : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
+                                    $pImgUrl = $pImg 
+                                        ? ((str_starts_with($pImg->image_url, 'data:') || str_starts_with($pImg->image_url, 'http')) ? $pImg->image_url : asset($pImg->image_url)) 
+                                        : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
                                     $pPrice = $prod->sale_price ?? $prod->price;
                                     $pHasDiscount = !empty($prod->sale_price) && $prod->sale_price < $prod->price;
                                     $pDiscount = $pHasDiscount && $prod->price > 0 ? round((($prod->price - $prod->sale_price) / $prod->price) * 100) : 0;

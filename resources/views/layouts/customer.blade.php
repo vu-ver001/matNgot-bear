@@ -556,7 +556,17 @@
                 return false;
             }
 
-            // 2. Nếu khách đã đăng nhập: Lưu vào CSDL
+            // 2. Nếu là Mua Ngay (redirectMode === 'checkout'): Chuyển thẳng đến trang thanh toán với đúng số lượng vừa chọn
+            if (redirectMode === 'checkout' || redirectMode === true) {
+                let targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id=" + productId + "&quantity=" + qty;
+                if (variantId) {
+                    targetCheckoutUrl += "&variant_id=" + variantId;
+                }
+                window.location.href = targetCheckoutUrl;
+                return false;
+            }
+
+            // 3. Nếu khách thêm vào giỏ hàng thông thường: Lưu vào CSDL
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             return fetch('{{ route('customer.cart.store') }}', {
@@ -915,7 +925,9 @@
                 }
 
                 qvProduct = json.data;
-                qvMaxStock = qvProduct.stock_quantity || 1;
+                qvMaxStock = (qvProduct.variants && qvProduct.variants.length > 0)
+                    ? qvProduct.variants.reduce((sum, v) => sum + (Number(v.stock_quantity) || 0), 0)
+                    : (Number(qvProduct.stock_quantity) || 0);
 
                 // Ảnh
                 const primaryImg = (qvProduct.images && qvProduct.images.find(i => i.is_primary)) || (qvProduct.images && qvProduct.images[0]) || null;
@@ -928,12 +940,12 @@
 
                 // Giá
                 const price = Number(qvProduct.price || 0);
-                const salePrice = qvProduct.sale_price ? Number(qvProduct.sale_price) : null;
+                const salePrice = (qvProduct.sale_price !== null && qvProduct.sale_price !== '' && qvProduct.sale_price !== undefined) ? Number(qvProduct.sale_price) : null;
                 const isOnSale = qvProduct.is_on_sale !== undefined ? Boolean(qvProduct.is_on_sale) : (salePrice !== null && salePrice < price);
                 const curPriceEl = document.getElementById('qv-price-cur');
                 const oldPriceEl = document.getElementById('qv-price-old');
 
-                if (isOnSale && salePrice) {
+                if (isOnSale && salePrice !== null) {
                     curPriceEl.innerText = salePrice.toLocaleString('vi-VN') + ' đ';
                     oldPriceEl.innerText = price.toLocaleString('vi-VN') + ' đ';
                     oldPriceEl.style.display = 'inline-block';

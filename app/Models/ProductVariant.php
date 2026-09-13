@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -23,7 +24,6 @@ class ProductVariant extends Model
         'sale_end_at',
         'stock_quantity',
         'image_url',
-        'is_default',
         'status',
     ];
 
@@ -33,7 +33,6 @@ class ProductVariant extends Model
         'sale_start_at' => 'datetime',
         'sale_end_at' => 'datetime',
         'stock_quantity' => 'integer',
-        'is_default' => 'boolean',
     ];
 
     protected $appends = [
@@ -44,6 +43,21 @@ class ProductVariant extends Model
         'discount_percent',
         'sale_remaining_seconds',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (ProductVariant $variant) {
+            $variant->product?->syncLowestPriceFromVariants();
+        });
+
+        static::deleted(function (ProductVariant $variant) {
+            $variant->product?->syncLowestPriceFromVariants();
+        });
+
+        static::restored(function (ProductVariant $variant) {
+            $variant->product?->syncLowestPriceFromVariants();
+        });
+    }
 
     /**
      * Sản phẩm cha sở hữu biến thể này.
@@ -63,12 +77,17 @@ class ProductVariant extends Model
         return $this->hasMany(OrderDetail::class, 'product_variant_id');
     }
 
+    public function vouchers(): BelongsToMany
+    {
+        return $this->belongsToMany(Voucher::class, 'voucher_product_variants');
+    }
+
     /**
      * Kiểm tra xem biến thể có đang trong thời gian sale hợp lệ hay không.
      */
     public function getIsOnSaleAttribute(): bool
     {
-        if (empty($this->sale_price) || $this->sale_price >= $this->price) {
+        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price < 0 || (float)$this->sale_price >= (float)$this->price) {
             return false;
         }
 
@@ -90,7 +109,7 @@ class ProductVariant extends Model
      */
     public function getIsSaleUpcomingAttribute(): bool
     {
-        if (empty($this->sale_price) || $this->sale_price >= $this->price) {
+        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price < 0 || (float)$this->sale_price >= (float)$this->price) {
             return false;
         }
 
@@ -103,8 +122,8 @@ class ProductVariant extends Model
      */
     public function getDiscountPercentAttribute(): int
     {
-        if ($this->price > 0 && $this->sale_price && $this->sale_price < $this->price) {
-            return (int) round((($this->price - $this->sale_price) / $this->price) * 100);
+        if ($this->price > 0 && $this->sale_price !== null && $this->sale_price !== '' && (float)$this->sale_price >= 0 && (float)$this->sale_price < (float)$this->price) {
+            return (int) round((((float)$this->price - (float)$this->sale_price) / (float)$this->price) * 100);
         }
         return 0;
     }

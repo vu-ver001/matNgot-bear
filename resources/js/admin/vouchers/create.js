@@ -9,6 +9,8 @@ export function voucherForm(initialData = {}) {
         apply_scope: initialData.apply_scope || 'ALL',
         selectedCategories: initialData.selectedCategories || [],
         selectedProducts: initialData.selectedProducts || [],
+        selectedVariants: initialData.selectedVariants || [],
+        expandedProduct: null,
         discount_type: initialData.discount_type || 'PERCENTAGE',
         discount_value: initialData.discount_value || '',
         min_order_value: initialData.min_order_value !== undefined ? initialData.min_order_value : '0',
@@ -54,6 +56,40 @@ export function voucherForm(initialData = {}) {
                 }
             } else {
                 this.generateRandomCode();
+            }
+        },
+
+        handleParentProductChange(productId, variantIds = [], isChecked) {
+            const pId = String(productId);
+            const strVariantIds = variantIds.map(String);
+
+            if (isChecked) {
+                if (!this.selectedProducts.map(String).includes(pId)) {
+                    this.selectedProducts.push(pId);
+                }
+                strVariantIds.forEach(vid => {
+                    if (!this.selectedVariants.map(String).includes(vid)) {
+                        this.selectedVariants.push(vid);
+                    }
+                });
+            } else {
+                this.selectedProducts = this.selectedProducts.filter(id => String(id) !== pId);
+                this.selectedVariants = this.selectedVariants.filter(vid => !strVariantIds.includes(String(vid)));
+            }
+        },
+
+        handleChildVariantChange(productId, variantIds = []) {
+            const pId = String(productId);
+            const strVariantIds = variantIds.map(String);
+
+            const hasAnyVariantSelected = strVariantIds.some(vid => this.selectedVariants.map(String).includes(vid));
+
+            if (hasAnyVariantSelected) {
+                if (!this.selectedProducts.map(String).includes(pId)) {
+                    this.selectedProducts.push(pId);
+                }
+            } else {
+                this.selectedProducts = this.selectedProducts.filter(id => String(id) !== pId);
             }
         },
 
@@ -159,7 +195,11 @@ export function voucherForm(initialData = {}) {
             }
             if (this.apply_scope === 'PRODUCT') {
                 const count = this.selectedProducts.length;
-                return count > 0 ? `📦 ${count} Sản phẩm được chọn` : '📦 Áp dụng sản phẩm cụ thể';
+                const vCount = this.selectedVariants.length;
+                if (vCount > 0) {
+                    return `📦 ${count} sản phẩm • ${vCount} phân loại`;
+                }
+                return count > 0 ? `📦 ${count} sản phẩm được chọn` : '📦 Áp dụng sản phẩm cụ thể';
             }
             if (this.voucher_type === 'SHIPPING') {
                 return '🚚 Toàn đơn hàng (Phí ship)';

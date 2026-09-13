@@ -1769,15 +1769,18 @@
 
                 // Stock Badge
                 let stockBadge = '';
-                if (p.stock_quantity === 0) {
+                const stockQty = (p.variants && p.variants.length > 0)
+                    ? p.variants.reduce((sum, v) => sum + (Number(v.stock_quantity) || 0), 0)
+                    : (Number(p.stock_quantity) || 0);
+                if (stockQty === 0) {
                     stockBadge =
                         `<span class="badge badge-stock-out"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</span>`;
-                } else if (p.stock_quantity <= 5) {
+                } else if (stockQty <= 5) {
                     stockBadge =
-                        `<span class="badge badge-stock-low"><i class="fa-solid fa-triangle-exclamation"></i> Còn ${p.stock_quantity}</span>`;
+                        `<span class="badge badge-stock-low"><i class="fa-solid fa-triangle-exclamation"></i> Còn ${stockQty}</span>`;
                 } else {
                     stockBadge =
-                        `<span class="badge badge-stock-normal"><i class="fa-solid fa-check"></i> ${p.stock_quantity}</span>`;
+                        `<span class="badge badge-stock-normal"><i class="fa-solid fa-check"></i> ${stockQty}</span>`;
                 }
 
                 // Price display

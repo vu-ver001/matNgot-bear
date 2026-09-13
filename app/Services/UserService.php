@@ -48,7 +48,7 @@ class UserService
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'address' => $data['address'] ?? null,
-            'role' => $data['role'],
+            'role' => $data['role'] ?? $user->role,
         ];
 
         if (! empty($data['password'])) {

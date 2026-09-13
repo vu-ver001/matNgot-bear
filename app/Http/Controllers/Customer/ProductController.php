@@ -29,6 +29,8 @@ class ProductController extends Controller
                 'images' => fn($q) => $q->orderByDesc('is_primary')->orderBy('sort_order', 'asc'),
                 'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ])
+            ->withAvg(['reviews as avg_rating' => fn($q) => $q->where('is_hidden', false)], 'rating')
+            ->withCount(['reviews' => fn($q) => $q->where('is_hidden', false)])
             ->orderByDesc('sold_count')
             ->take(8)
             ->get();
@@ -40,6 +42,8 @@ class ProductController extends Controller
                 'images' => fn($q) => $q->orderByDesc('is_primary')->orderBy('sort_order', 'asc'),
                 'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ])
+            ->withAvg(['reviews as avg_rating' => fn($q) => $q->where('is_hidden', false)], 'rating')
+            ->withCount(['reviews' => fn($q) => $q->where('is_hidden', false)])
             ->orderByDesc('created_at')
             ->take(8)
             ->get();
@@ -112,6 +116,7 @@ class ProductController extends Controller
             ->with([
                 'category:id,name',
                 'images' => fn($q) => $q->orderByDesc('is_primary')->orderBy('sort_order', 'asc'),
+                'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ])
             ->take(4)
             ->get();

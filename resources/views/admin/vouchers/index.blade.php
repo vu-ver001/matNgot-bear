@@ -295,7 +295,11 @@
                                                     style="width: {{ $usagePercent }}%;"></div>
                                             </div>
                                             <span class="text-[11px] text-[#A8988B] font-medium block mt-1 whitespace-nowrap">
-                                                Tối đa {{ $voucher->usage_limit_per_user ?? 1 }} lượt/khách
+                                                @if($voucher->usage_limit_per_user)
+                                                    Tối đa {{ $voucher->usage_limit_per_user }} lượt/khách
+                                                @else
+                                                    Không giới hạn lượt/khách
+                                                @endif
                                             </span>
                                             @if($isOutOfStock)
                                                 <span class="text-[10px] text-rose-500 font-bold mt-0.5 block">

@@ -49,6 +49,11 @@ class Voucher extends Model
         return $this->belongsToMany(Product::class, 'voucher_products');
     }
 
+    public function productVariants(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductVariant::class, 'voucher_product_variants');
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class, 'voucher_id');
@@ -112,7 +117,11 @@ class Voucher extends Model
      */
     public function isUsedByCustomer(int $userId): bool
     {
-        $limit = max(1, (int) ($this->usage_limit_per_user ?? 1));
+        if ($this->usage_limit_per_user === null || (int) $this->usage_limit_per_user <= 0) {
+            return false;
+        }
+
+        $limit = (int) $this->usage_limit_per_user;
         return $this->countUsedByCustomer($userId) >= $limit;
     }
 
@@ -157,14 +166,16 @@ class Voucher extends Model
             ];
         }
 
-        // 4. Kiểm tra giới hạn lượt dùng của mỗi khách hàng
-        $limitPerUser = max(1, (int) ($this->usage_limit_per_user ?? 1));
-        $timesUsed = $this->countUsedByCustomer($userId);
-        if ($timesUsed >= $limitPerUser) {
-            return [
-                'valid' => false,
-                'message' => 'Bạn đã hết lượt dùng',
-            ];
+        // 4. Kiểm tra giới hạn lượt dùng của mỗi khách hàng (nếu có cấu hình giới hạn)
+        if ($this->usage_limit_per_user !== null && (int) $this->usage_limit_per_user > 0) {
+            $limitPerUser = (int) $this->usage_limit_per_user;
+            $timesUsed = $this->countUsedByCustomer($userId);
+            if ($timesUsed >= $limitPerUser) {
+                return [
+                    'valid' => false,
+                    'message' => 'Bạn đã hết lượt dùng',
+                ];
+            }
         }
 
         // 5. Kiểm tra phạm vi áp dụng (Category / Product / All)
@@ -192,11 +203,26 @@ class Voucher extends Model
                 }
             } elseif ($this->apply_scope === 'PRODUCT') {
                 $allowedProductIds = $this->products->pluck('id')->toArray();
+                $allowedVariantIds = $this->productVariants->pluck('id')->toArray();
                 $hasMatchingProduct = false;
 
                 foreach ($cartItems as $item) {
                     $details = $this->resolveItemPriceAndDetails($item);
+                    $isItemEligible = false;
                     if ($details['product_id'] && in_array($details['product_id'], $allowedProductIds)) {
+                        $productVariantIds = $this->productVariants->where('product_id', $details['product_id'])->pluck('id')->toArray();
+                        if (!empty($productVariantIds)) {
+                            // Sản phẩm này có giới hạn phân loại biến thể cụ thể
+                            if ($details['variant_id'] && in_array($details['variant_id'], $productVariantIds)) {
+                                $isItemEligible = true;
+                            }
+                        } else {
+                            // Không có giới hạn biến thể cho sản phẩm này -> Áp dụng cho mọi phân loại
+                            $isItemEligible = true;
+                        }
+                    }
+
+                    if ($isItemEligible) {
                         $hasMatchingProduct = true;
                         $eligibleSubtotal += ($details['price'] * $details['quantity']);
                     }
@@ -205,7 +231,7 @@ class Voucher extends Model
                 if (!$hasMatchingProduct) {
                     return [
                         'valid' => false,
-                        'message' => "Mã giảm giá [{$this->code}] chỉ áp dụng cho một số sản phẩm nhất định trong chương trình khuyến mãi.",
+                        'message' => "Mã giảm giá [{$this->code}] chỉ áp dụng cho một số sản phẩm hoặc phân loại (màu sắc/kích thước) nhất định.",
                     ];
                 }
             } else {

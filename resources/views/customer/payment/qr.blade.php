@@ -82,7 +82,7 @@
                                     <img src="{{ $momoQrUrl }}" alt="MoMo QR Code" class="w-56 h-56 object-contain rounded-xl mx-auto border border-[#F5E6EC]">
                                     <div class="mt-2 text-center text-xs font-bold text-[#A50064] flex items-center justify-center gap-1.5">
                                         <span class="w-2 h-2 rounded-full bg-[#A50064] animate-ping"></span>
-                                        Quét bằng ứng dụng MoMo Test
+                                        Quét bằng ứng dụng Ví MoMo
                                     </div>
                                 @elseif($order->payment_method === 'CARD')
                                     <img src="{{ $vnpayQrUrl }}" alt="VNPAY QR Code" class="w-56 h-56 object-contain rounded-xl">
@@ -104,7 +104,7 @@
                             @if($order->payment_method === 'CARD')
                                 Mở ứng dụng <strong>Mobile Banking</strong> (VCB, BIDV, VietinBank, MB, Agribank, Techcombank...) hoặc <strong>Ví VNPAY</strong> để quét mã.
                             @elseif($order->payment_method === 'E_WALLET')
-                                Mở ứng dụng <strong>MoMo Test (Sandbox)</strong> trên điện thoại để quét mã thanh toán tự động.
+                                Mở ứng dụng <strong>Ví MoMo</strong> trên điện thoại để quét mã chuyển tiền nhanh 24/7.
                             @else
                                 Mở ứng dụng ngân hàng bất kỳ để quét mã <strong>VietQR Napas 24/7</strong> nhanh chóng.
                             @endif
@@ -172,14 +172,15 @@
                                     <span class="font-bold text-[#2C1408]">{{ $paymentConfig['momo_name'] }}</span>
                                 </div>
                                 <div class="pt-2 space-y-2">
-                                    <a href="{{ route('customer.payment.momo.redirect', $order->id) }}" 
-                                       class="w-full bg-gradient-to-r from-[#A50064] to-[#C2185B] hover:from-[#880052] hover:to-[#AD1457] text-white font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md shadow-[#A50064]/25 tracking-wide">
-                                        <span>MỞ CỔNG THANH TOÁN MOMO TEST (TRÌNH DUYỆT) ➔</span>
-                                    </a>
                                     <a href="momo://" 
+                                       class="w-full bg-gradient-to-r from-[#A50064] to-[#C2185B] hover:from-[#880052] hover:to-[#AD1457] text-white font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md shadow-[#A50064]/25 tracking-wide">
+                                        <i class="fa-solid fa-mobile-screen-button text-sm"></i>
+                                        <span>MỞ ỨNG DỤNG VÍ MOMO TRÊN ĐIỆN THOẠI ➔</span>
+                                    </a>
+                                    <a href="https://me.momo.vn/{{ preg_replace('/[^0-9]/', '', $paymentConfig['momo_phone']) }}" target="_blank"
                                        class="w-full bg-[#FFF0F5] hover:bg-[#FFE4EE] text-[#A50064] border border-[#FAD2E1] font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
-                                        <i class="fa-solid fa-mobile-screen-button"></i>
-                                        <span>Mở ứng dụng MoMo trên điện thoại</span>
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
+                                        <span>Trang chuyển tiền MoMo Me (me.momo.vn/{{ $paymentConfig['momo_phone'] }})</span>
                                     </a>
                                 </div>
                             @elseif($order->payment_method === 'CARD')

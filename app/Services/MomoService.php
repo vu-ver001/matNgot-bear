@@ -43,33 +43,35 @@ class MomoService
     }
 
     /**
-     * Generate standard MoMo QR Code URL.
-     * Uses official dynamic MoMo Sandbox QR so MoMo Test App can scan and recognize the order.
+     * Tạo mã QR MoMo cá nhân chuyển tiền trực tiếp (P2P).
+     * Quét bằng ứng dụng Ví MoMo thật trên điện thoại cá nhân.
      */
     public function generateQrUrl(Order $order): string
     {
-        try {
-            $gatewayRes = $this->createGatewayPayment($order, null, null, 'captureWallet');
-            if (!empty($gatewayRes['success']) && !empty($gatewayRes['qrCodeUrl'])) {
-                return "https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=8&data=" . urlencode($gatewayRes['qrCodeUrl']);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('MoMo QR sandbox generation failed, falling back to static payload', ['error' => $e->getMessage()]);
-        }
-
         $amount = (int) $order->total_amount;
         $orderCode = $order->order_code;
-        $momoPayload = "2|99|{$this->phone}|||0|0|{$amount}|{$orderCode}|transfer_myqr";
+        $phone = preg_replace('/[^0-9]/', '', $this->phone);
+        $name = trim($this->accountName);
+
+        // Chuẩn mã QR Ví MoMo P2P chuyển tiền cá nhân
+        // Cú pháp: 2|99|<sđt>|<tên>|<email>|0|0|<số tiền>|<lời nhắn>|transfer_myqr
+        $momoPayload = "2|99|{$phone}|{$name}||0|0|{$amount}|{$orderCode}|transfer_myqr";
 
         return "https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=8&data=" . urlencode($momoPayload);
     }
 
     /**
-     * Get direct MoMo app deep link or web link
+     * Link trang MoMo cá nhân hoặc deep link mở app
      */
     public function getMomoDeepLink(Order $order): string
     {
         return "momo://";
+    }
+
+    public function getMomoMeUrl(Order $order): string
+    {
+        $phone = preg_replace('/[^0-9]/', '', $this->phone);
+        return "https://me.momo.vn/{$phone}";
     }
 
     /**
