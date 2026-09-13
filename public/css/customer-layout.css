@@ -1000,6 +1000,24 @@ html {
         z-index: 2;
     }
 
+    .card-badge-flashsale {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #FF1744 0%, #D50000 100%);
+        color: #FFFFFF;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 4px 8px;
+        border-radius: 999px;
+        box-shadow: 0 2px 10px rgba(213, 0, 0, 0.4);
+        z-index: 2;
+        letter-spacing: 0.3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
     .product-card-body {
         padding: 1.25rem;
         display: flex;

@@ -824,13 +824,16 @@
             let timeBtnLabel = '<i class="fa-regular fa-clock"></i> Lịch sale';
             let timeBtnClass = '';
 
-            // Chỉ hiển thị trạng thái Đang sale / Sắp sale khi đã có giá sale hợp lệ và có thời gian sale
+            // Chỉ hiển thị trạng thái Đang sale / Sắp sale / Đã hết hạn khi đã có giá sale hợp lệ và có thời gian sale
             if (hasSalePrice && (v.sale_start_at || v.sale_end_at)) {
                 const now = new Date();
                 const start = v.sale_start_at ? new Date(v.sale_start_at) : null;
                 const end = v.sale_end_at ? new Date(v.sale_end_at) : null;
 
-                if (start && now < start) {
+                if (end && now > end) {
+                    timeBtnClass = 'expired';
+                    timeBtnLabel = '<i class="fa-solid fa-clock-rotate-left"></i> Đã hết hạn';
+                } else if (start && now < start) {
                     timeBtnClass = 'upcoming';
                     timeBtnLabel = '<i class="fa-solid fa-bolt"></i> Sắp sale';
                 } else if ((!start || now >= start) && (!end || now <= end)) {
@@ -1317,6 +1320,8 @@
                         sale_price: (sp !== '' && sp !== null && !isNaN(parseFloat(sp))) ? parseFloat(sp) : null,
                         sale_start_at: start || '',
                         sale_end_at: end || '',
+                        original_sale_start_at: '',
+                        original_sale_end_at: '',
                         stock_quantity: st !== '' ? parseInt(st) : '',
                         image_url: '',
                         file: null,
@@ -1508,10 +1513,14 @@
             const endDate = new Date(end);
             const nowBuffer = new Date(Date.now() - 60000);
 
-            // Kiểm tra xem ngày bắt đầu có bị thay đổi so với giá trị ban đầu trong CSDL hay không
+            // Kiểm tra xem ngày bắt đầu và kết thúc có bị thay đổi so với giá trị ban đầu trong CSDL hay không
             const origStart = (v.original_sale_start_at || '').slice(0, 16);
             const curStart = (start || '').slice(0, 16);
-            const isStartChanged = (curStart !== origStart);
+            const isStartChanged = (!v.original_sale_start_at || curStart !== origStart);
+
+            const origEnd = (v.original_sale_end_at || '').slice(0, 16);
+            const curEnd = (end || '').slice(0, 16);
+            const isEndChanged = (!v.original_sale_end_at || curEnd !== origEnd);
 
             if (isStartChanged && startDate < nowBuffer) {
                 Swal.fire('Thời gian không hợp lệ', 'Ngày & Giờ bắt đầu sale đã được thay đổi, do đó phải từ thời điểm hiện tại trở đi đến tương lai (không chọn thời gian trong quá khứ)!', 'warning');
@@ -1520,6 +1529,11 @@
 
             if (endDate <= startDate) {
                 Swal.fire('Thời gian không hợp lệ', 'Ngày & Giờ kết thúc sale phải diễn ra sau ngày bắt đầu!', 'warning');
+                return;
+            }
+
+            if (isEndChanged && endDate < nowBuffer) {
+                Swal.fire('Thời gian không hợp lệ', 'Ngày & Giờ kết thúc sale đã được thay đổi, do đó không được ở trong quá khứ! Vui lòng chọn thời gian kết thúc ở tương lai để khuyến mãi có hiệu lực.', 'warning');
                 return;
             }
         }
@@ -1708,11 +1722,20 @@
                 const end = new Date(v.sale_end_at);
                 const origStart = (v.original_sale_start_at || '').slice(0, 16);
                 const curStart = (v.sale_start_at || '').slice(0, 16);
-                const isStartChanged = (curStart !== origStart);
+                const isStartChanged = (!v.original_sale_start_at || curStart !== origStart);
+
+                const origEnd = (v.original_sale_end_at || '').slice(0, 16);
+                const curEnd = (v.sale_end_at || '').slice(0, 16);
+                const isEndChanged = (!v.original_sale_end_at || curEnd !== origEnd);
 
                 if (isStartChanged && start < nowBuffer) {
                     const salePriceEl = document.getElementById(`var-sale-price-${i}`);
                     highlightAndNotify(salePriceEl, `Ngày bắt đầu sale của <b>${label}</b> đã được thay đổi, do đó phải từ thời điểm hiện tại trở đi!`, 'Thông tin chưa hợp lệ');
+                    return;
+                }
+                if (isEndChanged && end < nowBuffer) {
+                    const salePriceEl = document.getElementById(`var-sale-price-${i}`);
+                    highlightAndNotify(salePriceEl, `Ngày kết thúc sale của <b>${label}</b> đã được thay đổi, do đó không được ở trong quá khứ, phải từ thời điểm hiện tại trở đi!`, 'Thông tin chưa hợp lệ');
                     return;
                 }
                 if (end <= start) {

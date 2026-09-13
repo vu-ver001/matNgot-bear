@@ -28,7 +28,8 @@ class CategoryController extends Controller
             $query->where('is_active', $isActive);
         }
 
-        $categories = $query->orderBy('name')->get();
+        // Sắp xếp theo mới nhất (danh mục vừa thêm luôn hiển thị ở trên cùng)
+        $categories = $query->orderByDesc('id')->get();
 
         return response()->json([
             'success' => true,

@@ -257,23 +257,45 @@ class ProductRequest extends FormRequest
                         $validator->errors()->add("variants.{$idx}.sale_end_at", "{$label}: Ngày giờ kết thúc sale phải diễn ra sau ngày giờ bắt đầu!");
                     }
 
-                    // Khi thêm mới: Ngày bắt đầu phải từ hiện tại trở đi (không được trong quá khứ)
-                    if ($isCreate && $startAt->lt($nowBuffer)) {
-                        $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi, không được chọn thời gian trong quá khứ!");
-                    }
-
-                    // Khi chỉnh sửa:
-                    if (!$isCreate) {
+                    // Khi thêm mới sản phẩm:
+                    if ($isCreate) {
+                        if ($endAt->lt($nowBuffer)) {
+                            $validator->errors()->add("variants.{$idx}.sale_end_at", "{$label}: Ngày giờ kết thúc sale không được ở trong quá khứ, phải từ thời điểm hiện tại trở đi!");
+                        }
+                        if ($startAt->lt($nowBuffer)) {
+                            $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi, không được chọn thời gian trong quá khứ!");
+                        }
+                    } else {
+                        // Khi chỉnh sửa sản phẩm:
                         $varId = $v['id'] ?? null;
                         $origVar = $varId ? \App\Models\ProductVariant::find($varId) : null;
-                        $origStartStr = ($origVar && $origVar->sale_start_at) ? $origVar->sale_start_at->format('Y-m-d\TH:i') : null;
 
-                        // Nếu không có id (phân loại mới thêm trong lúc sửa) hoặc ngày bắt đầu đã bị thay đổi so với CSDL
-                        $currentStartFormatted = $startAt->format('Y-m-d\TH:i');
-                        $isStartChanged = (!$origVar || $origStartStr !== $currentStartFormatted);
+                        if (!$origVar) {
+                            // Biến thể mới thêm trong lúc chỉnh sửa
+                            if ($endAt->lt($nowBuffer)) {
+                                $validator->errors()->add("variants.{$idx}.sale_end_at", "{$label}: Ngày giờ kết thúc sale không được ở trong quá khứ, phải từ thời điểm hiện tại trở đi!");
+                            }
+                            if ($startAt->lt($nowBuffer)) {
+                                $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi, không được chọn thời gian trong quá khứ!");
+                            }
+                        } else {
+                            $origStartStr = ($origVar && $origVar->sale_start_at) ? $origVar->sale_start_at->format('Y-m-d\TH:i') : null;
+                            $currentStartFormatted = $startAt->format('Y-m-d\TH:i');
+                            $isStartChanged = (!$origStartStr || $origStartStr !== $currentStartFormatted);
 
-                        if ($isStartChanged && $startAt->lt($nowBuffer)) {
-                            $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Bạn đã thay đổi ngày bắt đầu sale, thời gian mới phải từ thời điểm hiện tại trở đi!");
+                            $origEndStr = ($origVar && $origVar->sale_end_at) ? $origVar->sale_end_at->format('Y-m-d\TH:i') : null;
+                            $currentEndFormatted = $endAt->format('Y-m-d\TH:i');
+                            $isEndChanged = (!$origEndStr || $origEndStr !== $currentEndFormatted);
+
+                            // CHỈ hiển thị thông báo lỗi khi người dùng CÓ THAY ĐỔI ngày bắt đầu và chọn thời gian trong quá khứ
+                            if ($isStartChanged && $startAt->lt($nowBuffer)) {
+                                $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi, không được chọn thời gian trong quá khứ!");
+                            }
+
+                            // CHỈ hiển thị thông báo lỗi khi người dùng CÓ THAY ĐỔI ngày kết thúc và chọn thời gian trong quá khứ
+                            if ($isEndChanged && $endAt->lt($nowBuffer)) {
+                                $validator->errors()->add("variants.{$idx}.sale_end_at", "{$label}: Ngày giờ kết thúc sale không được ở trong quá khứ, phải từ thời điểm hiện tại trở đi!");
+                            }
                         }
                     }
                 }

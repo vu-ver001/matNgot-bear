@@ -48,9 +48,7 @@ class ProductController extends Controller
         // Lọc theo trạng thái
         if ($request->filled('status')) {
             $statusVal = $request->input('status');
-            if ($statusVal === 'TRASHED') {
-                $query->onlyTrashed();
-            } else {
+            if (in_array($statusVal, ['ACTIVE', 'INACTIVE'])) {
                 $query->where('status', $statusVal);
             }
         }
