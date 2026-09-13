@@ -543,7 +543,7 @@
                     <div class="product-grid-item">
                         <div class="product-photo-wrap">
                             ${isOnSale ? `
-                                <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> FLASH SALE</span>
+                                <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
                                 ${discountPct > 0 ? `<span class="card-badge-sale">-${discountPct}%</span>` : ''}
                             ` : ''}
                             <button type="button" class="btn-wishlist-card" data-product-id="${p.id}" onclick="toggleWishlist({ id: ${p.id}, name: '${nameEscaped}', price: ${price}, sale_price: ${(salePrice !== null && !isNaN(salePrice)) ? salePrice : 'null'}, image_url: '${imgUrl}' }, event)" title="Lưu vào yêu thích">

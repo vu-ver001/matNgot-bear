@@ -49,14 +49,19 @@ class Product extends Model
     ];
 
     /**
-     * Ràng buộc nghiệp vụ: Khi sản phẩm cha chuyển sang tạm dừng kinh doanh (INACTIVE),
-     * tự động tắt toàn bộ trạng thái của các sản phẩm con (variants).
+     * Ràng buộc nghiệp vụ: 
+     * - Khi sản phẩm cha chuyển sang tạm dừng kinh doanh (INACTIVE), tự động tắt toàn bộ trạng thái của các sản phẩm con (variants).
+     * - Khi sản phẩm cha chuyển sang mở bán lại (ACTIVE), tự động bật lại toàn bộ trạng thái của các sản phẩm con (variants).
      */
     protected static function booted(): void
     {
         static::saved(function (Product $product) {
-            if ($product->status === self::STATUS_INACTIVE && $product->wasChanged('status')) {
-                $product->variants()->update(['status' => 'INACTIVE']);
+            if ($product->wasChanged('status')) {
+                if ($product->status === self::STATUS_INACTIVE) {
+                    $product->variants()->update(['status' => 'INACTIVE']);
+                } elseif ($product->status === self::STATUS_ACTIVE) {
+                    $product->variants()->update(['status' => 'ACTIVE']);
+                }
             }
         });
 

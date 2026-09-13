@@ -605,8 +605,11 @@
                     @endphp
                     <div class="product-card">
                         <div class="product-card-img-wrap">
-                            @if($relSale && $relDiscountPct > 0)
-                                <span class="card-badge-sale">-{{ $relDiscountPct }}%</span>
+                            @if($relSale)
+                                <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
+                                @if($relDiscountPct > 0)
+                                    <span class="card-badge-sale">-{{ $relDiscountPct }}%</span>
+                                @endif
                             @endif
                             <button type="button" class="btn-wishlist-card" data-product-id="{{ $rel->id }}" onclick="toggleWishlist({ id: {{ $rel->id }}, name: '{{ addslashes($rel->name) }}', price: {{ $relRegularPrice }}, sale_price: {{ ($relSalePrice !== null) ? (float)$relSalePrice : 'null' }}, image_url: '{{ $relImgUrl }}' }, event)" title="Lưu vào yêu thích">
                                 <i class="fa-regular fa-heart"></i>

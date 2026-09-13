@@ -503,7 +503,7 @@
                 <div class="product-card">
                     <div class="product-card-img-wrap">
                         @if($hasSale)
-                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> FLASH SALE</span>
+                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
                             @if($discountPct > 0)
                                 <span class="card-badge-sale">-{{ $discountPct }}%</span>
                             @endif
@@ -592,7 +592,7 @@
                 <div class="product-card">
                     <div class="product-card-img-wrap">
                         @if($hasSale)
-                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> FLASH SALE</span>
+                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
                             @if($discountPct > 0)
                                 <span class="card-badge-sale">-{{ $discountPct }}%</span>
                             @endif
