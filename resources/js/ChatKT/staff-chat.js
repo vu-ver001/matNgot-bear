@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnHandover = supportWrapper.querySelector('[data-btn-handover]');
     const btnClose = supportWrapper.querySelector('[data-btn-close]');
     const btnReopen = supportWrapper.querySelector('[data-btn-reopen]');
-    const btnTakeover = supportWrapper.querySelector('[data-btn-takeover]');
     const btnRevoke = supportWrapper.querySelector('[data-btn-revoke]');
     const btnOpenAssign = supportWrapper.querySelector('[data-btn-open-assign]');
     const assignModal = document.getElementById('assignStaffModal');
@@ -46,6 +45,79 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML.replace(/\n/g, '<br>');
+    };
+
+    // =========================================================
+    // ĐỊNH DẠNG THỜI GIAN TƯƠNG ĐỐI REALTIME (CHUẨN diffForHumans)
+    // Tự động cập nhật thời gian từng giây / phút mà không cần reload trang
+    // =========================================================
+    const formatTimeAgo = (timestampSec) => {
+        if (!timestampSec) return '';
+        const nowSec = Math.floor(Date.now() / 1000);
+        const diff = Math.max(0, nowSec - timestampSec);
+
+        if (diff < 60) {
+            return diff === 1 ? '1 second' : `${diff} seconds`;
+        }
+        const diffMinutes = Math.floor(diff / 60);
+        if (diffMinutes < 60) {
+            return diffMinutes === 1 ? '1 minute' : `${diffMinutes} minutes`;
+        }
+        const diffHours = Math.floor(diff / 3600);
+        if (diffHours < 24) {
+            return diffHours === 1 ? '1 hour' : `${diffHours} hours`;
+        }
+        const diffDays = Math.floor(diff / 86400);
+        if (diffDays < 30) {
+            return diffDays === 1 ? '1 day' : `${diffDays} days`;
+        }
+        const diffMonths = Math.floor(diffDays / 30);
+        if (diffMonths < 12) {
+            return diffMonths === 1 ? '1 month' : `${diffMonths} months`;
+        }
+        const diffYears = Math.floor(diffDays / 365);
+        return diffYears === 1 ? '1 year' : `${diffYears} years`;
+    };
+
+    // Tự động cập nhật thời gian hiển thị của tất cả case trong danh sách bên trái
+    const updateAllCaseTimes = () => {
+        const timeEls = supportWrapper.querySelectorAll('.staff-support-case-time[data-timestamp]');
+        timeEls.forEach((el) => {
+            const ts = parseInt(el.dataset.timestamp, 10);
+            if (ts) {
+                el.textContent = formatTimeAgo(ts);
+            }
+        });
+    };
+
+    // Chạy cập nhật ngay khi trang tải xong và lặp lại mỗi 1 giây để nhảy số realtime
+    updateAllCaseTimes();
+    setInterval(updateAllCaseTimes, 1000);
+
+    // Cập nhật timestamp & preview của một case trên sidebar ngay lập tức khi có tin nhắn mới
+    const touchCaseSidebarItem = (caseId, previewText = '') => {
+        if (!caseId) return;
+        const item = supportWrapper.querySelector(`.staff-support-case-item[data-case-id="${caseId}"]`);
+        if (!item) return;
+
+        const timeEl = item.querySelector('.staff-support-case-time');
+        if (timeEl) {
+            const nowSec = Math.floor(Date.now() / 1000);
+            timeEl.dataset.timestamp = String(nowSec);
+            timeEl.textContent = '0 seconds';
+        }
+
+        if (previewText) {
+            const previewEl = item.querySelector('.staff-support-case-preview');
+            if (previewEl) {
+                previewEl.textContent = previewText.includes('📦 [ĐƠN HÀNG #') ? '📦 [Đơn hàng]' : previewText;
+            }
+        }
+
+        const list = item.parentElement;
+        if (list && list.firstElementChild !== item) {
+            list.prepend(item);
+        }
     };
 
     // Tạo HTML cho tin nhắn trong chat stream
@@ -82,8 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 let prodName = '';
                 let total = '';
                 let status = '';
+                let variantText = '';
                 lines.forEach(line => {
                     if (line.includes('Sản phẩm:')) prodName = line.replace(/^[•\s\-\*]*Sản phẩm:\s*/, '').trim();
+                    if (line.includes('Phân loại:')) variantText = line.replace(/^[•\s\-\*]*Phân loại:\s*/, '').trim();
                     if (line.includes('Tổng tiền:')) total = line.replace(/^[•\s\-\*]*Tổng tiền:\s*/, '').trim();
                     if (line.includes('Trạng thái:')) status = line.replace(/^[•\s\-\*]*Trạng thái:\s*/, '').trim();
                 });
@@ -99,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="chat-order-card__body">
                             <div class="chat-order-card__info">
                                 ${prodName ? `<div class="chat-order-card__pname">${escapeHtml(prodName)}</div>` : ''}
+                                ${variantText ? `<div class="chat-order-card__variant">Phân loại: ${escapeHtml(variantText)}</div>` : ''}
                                 ${total ? `<div class="chat-order-card__total">Tổng tiền: <strong>${escapeHtml(total)}</strong></div>` : ''}
                             </div>
                         </div>
@@ -426,53 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Tiếp quản case (Takeover - dành cho Admin)
-    btnTakeover?.addEventListener('click', async () => {
-        const actionUrl = btnTakeover.dataset.takeoverUrl;
-        if (!actionUrl) return;
-
-        const confirmAction = async () => {
-            btnTakeover.disabled = true;
-            try {
-                const res = await fetch(actionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                    },
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    alert(data.message || 'Không thể tiếp quản cuộc hỗ trợ.');
-                    return;
-                }
-                window.location.reload();
-            } catch (err) {
-                console.error('Lỗi tiếp quản:', err);
-            } finally {
-                btnTakeover.disabled = false;
-            }
-        };
-
-        if (window.Swal) {
-            Swal.fire({
-                title: 'Tiếp quản cuộc hỗ trợ?',
-                text: 'Bạn sẽ trở thành người phụ trách chính và có thể trực tiếp chat với khách hàng.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#2563eb',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Đồng ý tiếp quản',
-                cancelButtonText: 'Hủy',
-            }).then((res) => {
-                if (res.isConfirmed) confirmAction();
-            });
-        } else if (confirm('Bạn có chắc muốn tiếp quản cuộc hỗ trợ này?')) {
-            confirmAction();
-        }
-    });
-
     // Thu hồi case về WAITING (Revoke - dành cho Admin)
     btnRevoke?.addEventListener('click', async () => {
         const actionUrl = btnRevoke.dataset.revokeUrl;
@@ -771,6 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (fileInput) fileInput.value = '';
 
                 scrollToBottom(true);
+                touchCaseSidebarItem(currentCaseId, newMsg.content || '📷 [Hình ảnh]');
             }
         } catch (err) {
             console.error('Lỗi gửi tin nhắn:', err);
@@ -807,8 +836,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const orderTotal = btnSendSuggestedOrder.dataset.orderTotal || '';
             const orderStatus = btnSendSuggestedOrder.dataset.orderStatus || '';
             const productName = btnSendSuggestedOrder.dataset.productName || '';
+            const variantText = btnSendSuggestedOrder.dataset.variantText || '';
 
-            const content = `📦 [ĐƠN HÀNG #${orderCode}]\n• Sản phẩm: ${productName}\n• Tổng tiền: ${orderTotal}\n• Trạng thái: ${orderStatus}\n• Mã đơn hàng: #${orderCode}`;
+            let content = `📦 [ĐƠN HÀNG #${orderCode}]\n• Sản phẩm: ${productName}`;
+            if (variantText) {
+                content += `\n• Phân loại: ${variantText}`;
+            }
+            content += `\n• Tổng tiền: ${orderTotal}\n• Trạng thái: ${orderStatus}\n• Mã đơn hàng: #${orderCode}`;
 
             btnSendSuggestedOrder.disabled = true;
             btnSendSuggestedOrder.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang gửi...</span>';
@@ -898,6 +932,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     appendStaffMessage(newMsg);
                     scrollToBottom(true);
+                    touchCaseSidebarItem(currentCaseId, '📦 [Đơn hàng]');
 
                     // Xóa bỏ các notice trạng thái cũ (waiting / closed / assigned-other) nếu có
                     // để khi nhân viên gõ tiếp tin nhắn tiếp theo, form không reload trang gây gián đoạn
@@ -957,6 +992,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (hasNew) {
                             scrollToBottom(true);
+                            const lastNewMsg = json.data[json.data.length - 1];
+                            touchCaseSidebarItem(currentCaseId, lastNewMsg?.content || '📷 [Hình ảnh]');
                         }
                     }
 
@@ -1003,6 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const res = await fetch(url.toString(), {
                     headers: {
+                        'Accept': 'text/html',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
                 });
@@ -1013,8 +1051,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const doc = parser.parseFromString(html, 'text/html');
 
                 const serverCaseList = doc.querySelector('.staff-support-case-list');
-                if (serverCaseList && caseListEl.innerHTML !== serverCaseList.innerHTML) {
-                    caseListEl.innerHTML = serverCaseList.innerHTML;
+                if (serverCaseList) {
+                    const serverItems = Array.from(serverCaseList.querySelectorAll('.staff-support-case-item'));
+                    const currentItems = Array.from(caseListEl.querySelectorAll('.staff-support-case-item'));
+
+                    const serverSignature = serverItems.map(it => it.dataset.caseId + ':' + (it.classList.contains('is-unread') ? 'u' : 'r') + ':' + (it.querySelector('.staff-support-case-unread')?.textContent || '') + ':' + (it.querySelector('.staff-support-case-time')?.dataset.timestamp || '')).join('|');
+                    const currentSignature = currentItems.map(it => it.dataset.caseId + ':' + (it.classList.contains('is-unread') ? 'u' : 'r') + ':' + (it.querySelector('.staff-support-case-unread')?.textContent || '') + ':' + (it.querySelector('.staff-support-case-time')?.dataset.timestamp || '')).join('|');
+
+                    if (serverSignature !== currentSignature) {
+                        caseListEl.innerHTML = serverCaseList.innerHTML;
+                        updateAllCaseTimes();
+                    }
                 }
 
                 // Cập nhật số đếm badge các tab

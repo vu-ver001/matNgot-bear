@@ -39,7 +39,7 @@ class ChatController extends Controller
 
         $suggestedOrder = null;
         if ($request->filled('order_id')) {
-            $suggestedOrder = \App\Models\Order::with(['details.product'])
+            $suggestedOrder = \App\Models\Order::with(['details.product.images', 'details.variant'])
                 ->where('customer_id', $customer->id)
                 ->find((int) $request->query('order_id'));
         }

@@ -98,10 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const code = codeMatch ? codeMatch[1] : '';
                 const lines = content.split('\n');
                 let prodName = '';
+                let variantText = '';
                 let total = '';
                 let status = '';
                 lines.forEach(line => {
                     if (line.includes('Sản phẩm:')) prodName = line.replace(/^[•\s\-\*]*Sản phẩm:\s*/, '').trim();
+                    if (line.includes('Phân loại:')) variantText = line.replace(/^[•\s\-\*]*Phân loại:\s*/, '').trim();
                     if (line.includes('Tổng tiền:')) total = line.replace(/^[•\s\-\*]*Tổng tiền:\s*/, '').trim();
                     if (line.includes('Trạng thái:')) status = line.replace(/^[•\s\-\*]*Trạng thái:\s*/, '').trim();
                 });
@@ -117,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="chat-order-card__body">
                             <div class="chat-order-card__info">
                                 ${prodName ? `<div class="chat-order-card__pname">${escapeHtml(prodName)}</div>` : ''}
+                                ${variantText ? `<div class="chat-order-card__variant">Phân loại: ${escapeHtml(variantText)}</div>` : ''}
                                 ${total ? `<div class="chat-order-card__total">Tổng tiền: <strong>${escapeHtml(total)}</strong></div>` : ''}
                             </div>
                         </div>
@@ -448,8 +451,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const orderTotal = btnSendSuggestedOrder.dataset.orderTotal || '';
             const orderStatus = btnSendSuggestedOrder.dataset.orderStatus || '';
             const productName = btnSendSuggestedOrder.dataset.productName || '';
+            const variantText = btnSendSuggestedOrder.dataset.variantText || '';
 
-            const content = `📦 [ĐƠN HÀNG #${orderCode}]\n• Sản phẩm: ${productName}\n• Tổng tiền: ${orderTotal}\n• Trạng thái: ${orderStatus}\n• Mã đơn hàng: #${orderCode}`;
+            let content = `📦 [ĐƠN HÀNG #${orderCode}]\n• Sản phẩm: ${productName}`;
+            if (variantText) {
+                content += `\n• Phân loại: ${variantText}`;
+            }
+            content += `\n• Tổng tiền: ${orderTotal}\n• Trạng thái: ${orderStatus}\n• Mã đơn hàng: #${orderCode}`;
 
             btnSendSuggestedOrder.disabled = true;
             btnSendSuggestedOrder.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang gửi...</span>';

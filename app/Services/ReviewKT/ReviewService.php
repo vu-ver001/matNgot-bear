@@ -332,13 +332,13 @@ class ReviewService
             ]);
         }
 
-        $order->load(['details.product.images', 'reviews']);
+        $order->load(['details.product.images', 'details.variant', 'reviews']);
 
         $items = $order->details->map(function ($detail) use ($order, $user) {
             $product = $detail->product;
-            $primaryImage = $product?->images?->firstWhere('is_primary', true)?->image_url
-                ?? $product?->images?->first()?->image_url
-                ?? asset('images/customer/product-placeholder.png');
+            $productImage = self::resolveItemImageUrl($detail);
+
+            $variantText = self::resolveVariantText($detail);
 
             $review = $order->reviews
                 ->where('user_id', $user->id)
@@ -347,8 +347,10 @@ class ReviewService
 
             return [
                 'product_id' => $detail->product_id,
-                'product_name' => $detail->product_name,
-                'product_image' => $primaryImage,
+                'product_name' => $detail->product_name ?? $product?->name ?? 'Sản phẩm',
+                'product_image' => $productImage,
+                'variant_text' => $variantText,
+                'variant_sku' => $detail->variant_sku ?? $detail->variant?->sku,
                 'price' => (float) $detail->product_price,
                 'quantity' => (int) $detail->quantity,
                 'review' => $review ? [
@@ -503,7 +505,7 @@ class ReviewService
                   ->where('reviews.user_id', $user->id)
                   ->whereNull('reviews.deleted_at');
             })
-            ->with(['product.images', 'order']);
+            ->with(['product.images', 'order', 'variant']);
 
         if ($sort === 'oldest') {
             $query->orderBy('id', 'asc');
@@ -535,7 +537,7 @@ class ReviewService
     public function getUserReviews(User $user, int $perPage = 9, string $sort = 'latest')
     {
         $query = Review::query()
-            ->with(['product.images', 'order'])
+            ->with(['product.images', 'order.details.variant'])
             ->where('user_id', $user->id);
 
         match ($sort) {
@@ -557,4 +559,91 @@ class ReviewService
             ->where('user_id', $user->id)
             ->count();
     }
+
+    /**
+     * Xác định ảnh hiển thị cho sản phẩm / phân loại con chuẩn theo trang Đơn hàng:
+     * - Nếu sản phẩm có phân loại biến thể: Ưu tiên lấy ảnh biến thể nếu file thực sự tồn tại.
+     *   Nếu biến thể không có ảnh riêng hoặc ảnh lỗi, fallback về placeholder Bear như bên Đơn hàng
+     *   (không lấy ảnh của phân loại khác tránh gây hiểu nhầm).
+     * - Nếu sản phẩm thường không có phân loại: Lấy ảnh chính của sản phẩm đó.
+     */
+    public static function resolveItemImageUrl($detail): string
+    {
+        $placeholder = 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
+        if (! $detail) {
+            return $placeholder;
+        }
+
+        $product = $detail->product ?? null;
+        $hasVariant = ! empty($detail->product_variant_id)
+            || ! empty($detail->variant_sku)
+            || ! empty($detail->variant_name)
+            || ! empty($detail->variant_color)
+            || ! empty($detail->variant_size);
+
+        if ($hasVariant) {
+            $variantUrl = $detail->variant_image_url ?? $detail->variant?->image_url;
+            if (! empty($variantUrl)) {
+                $path = parse_url($variantUrl, PHP_URL_PATH);
+                if ($path && str_contains($path, '/uploads/')) {
+                    if (file_exists(public_path(ltrim($path, '/')))) {
+                        return $variantUrl;
+                    }
+                    // File biến thể không tồn tại trên đĩa -> dùng placeholder Bear như bên Đơn hàng
+                    return $placeholder;
+                }
+                return $variantUrl;
+            }
+            // Biến thể không có ảnh riêng -> không lấy ảnh của phân loại khác, hiển thị placeholder Bear
+            return $placeholder;
+        }
+
+        // Sản phẩm thường không có phân loại biến thể
+        $primaryUrl = $product?->images?->firstWhere('is_primary', true)?->image_url
+            ?? $product?->images?->first()?->image_url;
+
+        if (! empty($primaryUrl)) {
+            $path = parse_url($primaryUrl, PHP_URL_PATH);
+            if ($path && str_contains($path, '/uploads/')) {
+                if (file_exists(public_path(ltrim($path, '/')))) {
+                    return $primaryUrl;
+                }
+                return $placeholder;
+            }
+            return $primaryUrl;
+        }
+
+        return $placeholder;
+    }
+
+    /**
+     * Trích xuất chuỗi hiển thị phân loại sản phẩm con (VD: "Màu Nâu / Size 1m")
+     */
+    public static function resolveVariantText($detail, string $separator = ' / '): ?string
+    {
+        if (! $detail) {
+            return null;
+        }
+
+        $product = $detail->product ?? null;
+        $variantParts = [];
+        $color = $detail->variant_color ?? $detail->variant?->color ?? $product?->color;
+        $size = $detail->variant_size ?? $detail->variant?->size ?? $product?->size;
+
+        if (! empty($color)) {
+            $variantParts[] = 'Màu ' . $color;
+        }
+        if (! empty($size)) {
+            $variantParts[] = 'Size ' . $size;
+        }
+        if (empty($variantParts) && ! empty($detail->variant_name)) {
+            $variantParts[] = $detail->variant_name;
+        }
+        if (empty($variantParts) && ! empty($product?->material)) {
+            $variantParts[] = $product->material;
+        }
+
+        return ! empty($variantParts) ? implode($separator, $variantParts) : null;
+    }
 }
+

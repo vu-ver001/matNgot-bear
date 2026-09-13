@@ -69,7 +69,7 @@ class StaffChatController extends Controller
             ? User::where('role', User::ROLE_STAFF)->where('status', User::STATUS_ACTIVE)->orderBy('full_name')->get()
             : collect();
 
-        if ($request->expectsJson() && ! $request->hasHeader('X-Inertia')) {
+        if ($request->expectsJson() && ! $request->hasHeader('X-Inertia') && ! $request->boolean('bg_sync')) {
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -84,7 +84,7 @@ class StaffChatController extends Controller
         // Đơn hàng gợi ý gửi cho khách (khi nhấn "Nhắn tin cho khách" từ trang chi tiết đơn hàng)
         $suggestedOrder = null;
         if ($request->filled('order_id')) {
-            $suggestedOrder = Order::with(['details.product'])->find((int) $request->query('order_id'));
+            $suggestedOrder = Order::with(['details.product.images', 'details.variant'])->find((int) $request->query('order_id'));
             if ($suggestedOrder && $selectedCase && (int) $suggestedOrder->customer_id !== (int) $selectedCase->customer_id) {
                 $suggestedOrder = null;
             }
@@ -93,7 +93,8 @@ class StaffChatController extends Controller
         // Danh sách tất cả đơn hàng của khách hàng trong case đang mở
         $customerOrders = collect();
         if ($selectedCase && $selectedCase->customer_id) {
-            $customerOrders = Order::where('customer_id', $selectedCase->customer_id)
+            $customerOrders = Order::with(['details.product.images', 'details.variant'])
+                ->where('customer_id', $selectedCase->customer_id)
                 ->latest()
                 ->get();
         }

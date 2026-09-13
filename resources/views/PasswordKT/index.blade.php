@@ -19,7 +19,7 @@
 
 <x-dynamic-component :component="$layout" title="Đổi mật khẩu" :flush="true">
     <div
-        class="password-page {{ !in_array($user->role, [\App\Models\User::ROLE_CUSTOMER, \App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_STAFF]) ? 'uses-default-layout' : '' }}"
+        class="password-page"
         data-password-page
         data-reset-modal-open="{{ $resetModalOpen ? 'true' : 'false' }}"
     >

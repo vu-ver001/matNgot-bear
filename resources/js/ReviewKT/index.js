@@ -416,9 +416,27 @@ export const openOrderReviewModal = async (orderId) => {
 
                 if (pIdInput) pIdInput.value = item.product_id;
                 if (nameEl) nameEl.textContent = item.product_name;
-                if (imgEl && item.product_image) {
-                    imgEl.src = item.product_image;
-                    imgEl.alt = item.product_name;
+                if (imgEl) {
+                    imgEl.onerror = function () {
+                        this.onerror = null;
+                        this.src = 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
+                    };
+                    if (item.product_image) {
+                        imgEl.src = item.product_image;
+                        imgEl.alt = item.product_name || 'Sản phẩm';
+                    }
+                }
+
+                // Hiển thị phân loại sản phẩm con (size, màu) nếu có
+                const variantEl = itemNode.querySelector('[data-item-variant]');
+                const variantValEl = itemNode.querySelector('[data-item-variant-val]');
+                if (variantEl && variantValEl) {
+                    if (item.variant_text) {
+                        variantValEl.textContent = item.variant_text;
+                        variantEl.hidden = false;
+                    } else {
+                        variantEl.hidden = true;
+                    }
                 }
 
                 // Hiển thị mã đơn hàng trên card sản phẩm
@@ -521,6 +539,7 @@ export const openReviewModal = (options = {}) => {
         product_id = '1',
         product_name = 'Gấu Teddy Mật Ong 45cm',
         product_image = '/images/auth/bear-hero.png',
+        variant_text = '',
         order_id = '',
         order_code = '',
         rating = 5,
@@ -583,10 +602,29 @@ export const openReviewModal = (options = {}) => {
         if (rIdInput) rIdInput.value = review_id;
         if (ratingInput) ratingInput.value = rating;
         if (nameEl) nameEl.textContent = product_name;
-        if (imgEl && product_image) {
-            imgEl.src = product_image;
-            imgEl.alt = product_name;
+        if (imgEl) {
+            imgEl.onerror = function () {
+                this.onerror = null;
+                this.src = 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
+            };
+            if (product_image) {
+                imgEl.src = product_image;
+                imgEl.alt = product_name || 'Sản phẩm';
+            }
         }
+
+        // Hiển thị phân loại sản phẩm con nếu có
+        const variantEl = itemNode.querySelector('[data-item-variant]');
+        const variantValEl = itemNode.querySelector('[data-item-variant-val]');
+        if (variantEl && variantValEl) {
+            if (variant_text) {
+                variantValEl.textContent = variant_text;
+                variantEl.hidden = false;
+            } else {
+                variantEl.hidden = true;
+            }
+        }
+
         if (textarea) textarea.value = comment;
         if (counter) counter.textContent = comment.length;
 
@@ -782,6 +820,7 @@ export const initReviewModal = () => {
                 product_id: singleTrigger.dataset.productId || '1',
                 product_name: singleTrigger.dataset.productName || 'Gấu Teddy Mật Ong 45cm',
                 product_image: singleTrigger.dataset.productImage || '',
+                variant_text: singleTrigger.dataset.variantText || '',
                 order_id: singleTrigger.dataset.orderId,
                 order_code: singleTrigger.dataset.orderCode || '',
                 rating: singleTrigger.dataset.rating ? parseInt(singleTrigger.dataset.rating, 10) : 5,

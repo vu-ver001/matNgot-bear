@@ -88,7 +88,7 @@ class ProductController extends Controller
                 'category',
                 'images' => fn($q) => $q->orderBy('sort_order', 'asc'),
                 'variants' => fn($q) => $q->where('status', 'ACTIVE')->orderBy('price', 'asc'),
-                'reviews' => fn($q) => $q->where('is_hidden', false)->with('user:id,full_name,email')->latest(),
+                'reviews' => fn($q) => $q->where('is_hidden', false)->with(['user:id,full_name,email', 'order.details.variant'])->latest(),
             ])
             ->withAvg(['reviews as avg_rating' => fn($q) => $q->where('is_hidden', false)], 'rating')
             ->withCount(['reviews' => fn($q) => $q->where('is_hidden', false)])

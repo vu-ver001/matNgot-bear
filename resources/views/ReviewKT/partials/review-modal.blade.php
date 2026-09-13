@@ -49,14 +49,19 @@
                     <div class="review-modal__product-card">
                         <div class="review-modal__product-image-wrap">
                             <img
-                                src="{{ asset('images/auth/bear-hero.png') }}"
-                                alt="Gấu Teddy Mật Ong 45cm"
+                                src="https://placehold.co/120x120/fef3c7/78350f?text=Bear"
+                                alt="Sản phẩm"
                                 class="review-modal__product-img"
                                 data-item-image
+                                onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';"
                             >
                         </div>
                         <div class="review-modal__product-info">
                             <h3 class="review-modal__product-name" data-item-name>Gấu Teddy Mật Ong 45cm</h3>
+                            <div class="review-modal__product-variant" data-item-variant hidden>
+                                <span class="review-modal__variant-label">Phân loại:</span>
+                                <span class="review-modal__variant-val" data-item-variant-val></span>
+                            </div>
                             <div class="review-modal__product-meta">
                                 <span class="review-modal__status-text">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -202,10 +207,14 @@
 
             <div class="review-modal__product-card">
                 <div class="review-modal__product-image-wrap">
-                    <img src="" alt="" class="review-modal__product-img" data-item-image>
+                    <img src="" alt="" class="review-modal__product-img" data-item-image onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';">
                 </div>
                 <div class="review-modal__product-info">
                     <h3 class="review-modal__product-name" data-item-name></h3>
+                    <div class="review-modal__product-variant" data-item-variant hidden>
+                        <span class="review-modal__variant-label">Phân loại:</span>
+                        <span class="review-modal__variant-val" data-item-variant-val></span>
+                    </div>
                     <div class="review-modal__product-meta">
                         <span class="review-modal__status-text">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -4,10 +4,6 @@
     font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
 }
 
-.password-page.uses-default-layout {
-    padding: 30px 24px;
-}
-
 /* ==========================================
    1. HERO BANNER
    ========================================== */
@@ -746,10 +742,6 @@ body.has-password-modal {
 }
 
 @media (max-width: 640px) {
-    .password-page.uses-default-layout {
-        padding: 20px 14px;
-    }
-
     .password-banner {
         height: 135px;
         border-radius: 16px;
