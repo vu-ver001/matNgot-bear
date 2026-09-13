@@ -213,7 +213,7 @@
                                 $currentMethodInfo = match ($order->payment_method) {
                                     'CARD' => ['name' => 'Cổng thanh toán VNPAY', 'desc' => 'Thẻ ATM nội địa, Visa, Mastercard, VNPAY-QR', 'icon' => '💳'],
                                     'E_WALLET' => ['name' => 'Ví điện tử MoMo', 'desc' => 'Thanh toán tức thì qua App MoMo', 'icon' => '👛'],
-                                    default => ['name' => 'Chuyển khoản VietQR (MB Bank)', 'desc' => 'Quét mã QR qua mọi app ngân hàng 24/7', 'icon' => '🏦'],
+                                    default => ['name' => 'Chuyển khoản VietQR', 'desc' => 'Quét mã QR qua mọi app ngân hàng 24/7', 'icon' => '🏦'],
                                 };
                             @endphp
 
@@ -522,7 +522,7 @@
             @endif
 
             <div class="mb-6 bg-white rounded-2xl border border-amber-100 shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Tiến trình đơn hàng</h3>
+                <h3 class="text-lg font-bold text-[#4E342E] mb-4">Tiến trình đơn hàng</h3>
                 <x-order-timeline :status="$order->order_status" />
             </div>
 
@@ -531,7 +531,7 @@
                     <div class="bg-white rounded-2xl border border-amber-100 shadow-sm" x-data="{ showEditAddressModal: false }">
                         <div class="p-6">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-[#1E293B]">Thông tin nhận hàng</h3>
+                                <h3 class="text-lg font-bold text-[#4E342E]">Thông tin nhận hàng</h3>
                                 @if($order->order_status === 'PENDING')
                                     <button type="button" @click="showEditAddressModal = true"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer">
@@ -542,31 +542,31 @@
                             </div>
                             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <dt class="text-[#64748B]">Người nhận</dt>
-                                    <dd class="font-medium text-[#1E293B]">{{ $order->recipient_name }}</dd>
+                                    <dt class="text-[#8E8076]">Người nhận</dt>
+                                    <dd class="font-semibold text-[#4E342E]">{{ $order->recipient_name }}</dd>
                                 </div>
                                 <div>
-                                    <dt class="text-[#64748B]">Số điện thoại</dt>
-                                    <dd class="font-medium text-[#1E293B]">{{ $order->recipient_phone }}</dd>
+                                    <dt class="text-[#8E8076]">Số điện thoại</dt>
+                                    <dd class="font-semibold text-[#4E342E]">{{ $order->recipient_phone }}</dd>
                                 </div>
                                 <div class="sm:col-span-2">
-                                    <dt class="text-[#64748B]">Địa chỉ</dt>
-                                    <dd class="font-medium text-[#1E293B]">{{ $order->recipient_address }}</dd>
+                                    <dt class="text-[#8E8076]">Địa chỉ</dt>
+                                    <dd class="font-semibold text-[#4E342E]">{{ $order->recipient_address }}</dd>
                                 </div>
                                 <div>
-                                    <dt class="text-[#64748B]">Hình thức giao hàng</dt>
-                                    <dd class="font-medium text-[#1E293B]">{{ $order->shipping_method_label }}</dd>
+                                    <dt class="text-[#8E8076]">Hình thức giao hàng</dt>
+                                    <dd class="font-semibold text-[#4E342E]">{{ $order->shipping_method_label }}</dd>
                                 </div>
                                 @if ($order->shipped_at)
                                     <div>
-                                        <dt class="text-[#64748B]">Bắt đầu giao</dt>
-                                        <dd class="font-medium text-[#1E293B]">{{ $order->shipped_at->format('d/m/Y H:i') }}</dd>
+                                        <dt class="text-[#8E8076]">Bắt đầu giao</dt>
+                                        <dd class="font-semibold text-[#4E342E]">{{ $order->shipped_at->format('d/m/Y H:i') }}</dd>
                                     </div>
                                 @endif
                                 @if ($order->note)
                                     <div class="sm:col-span-2">
-                                        <dt class="text-[#64748B]">Ghi chú</dt>
-                                        <dd class="font-medium text-[#1E293B]">{{ $order->note }}</dd>
+                                        <dt class="text-[#8E8076]">Ghi chú</dt>
+                                        <dd class="font-semibold text-[#4E342E]">{{ $order->note }}</dd>
                                     </div>
                                 @endif
                             </dl>
@@ -642,7 +642,7 @@
 
                     <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
                         <div class="p-6">
-                            <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Sản phẩm đã đặt</h3>
+                            <h3 class="text-lg font-bold text-[#4E342E] mb-4">Sản phẩm đã đặt</h3>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-amber-50">
@@ -662,7 +662,7 @@
                                                 $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
                                             @endphp
                                             <tr>
-                                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B]">
+                                                <td class="px-4 py-4 text-sm font-medium text-[#4E342E]">
                                                     <div class="flex items-center gap-3">
                                                         @if ($primaryImg)
                                                             <img src="{{ $primaryImg }}" alt="{{ $detail->product_name }}"
@@ -674,7 +674,7 @@
                                                             </div>
                                                         @endif
                                                         <div class="min-w-0">
-                                                            <div class="font-bold text-[#1E293B]">{{ $detail->product_name }}</div>
+                                                            <div class="font-bold text-[#4E342E]">{{ $detail->product_name }}</div>
                                                             @php
                                                                 $variantLabel = $detail->variant_display;
                                                                 if (empty($variantLabel) || $variantLabel === 'Phân loại tiêu chuẩn') {
@@ -700,9 +700,9 @@
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-4 text-sm text-[#64748B] text-right">{{ number_format($detail->product_price, 0, ',', '.') }} đ</td>
-                                                <td class="px-4 py-4 text-sm text-[#64748B] text-right">{{ $detail->quantity }}</td>
-                                                <td class="px-4 py-4 text-sm font-medium text-[#1E293B] text-right">{{ number_format($detail->line_total, 0, ',', '.') }} đ</td>
+                                                <td class="px-4 py-4 text-sm text-[#8E8076] text-right">{{ number_format($detail->product_price, 0, ',', '.') }} đ</td>
+                                                <td class="px-4 py-4 text-sm text-[#8E8076] text-right">{{ $detail->quantity }}</td>
+                                                <td class="px-4 py-4 text-sm font-semibold text-[#4E342E] text-right">{{ number_format($detail->line_total, 0, ',', '.') }} đ</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -711,27 +711,27 @@
 
                             <dl class="mt-6 space-y-2 text-sm border-t border-amber-100 pt-4">
                                 <div class="flex justify-between">
-                                    <dt class="text-[#64748B]">Tạm tính</dt>
-                                    <dd class="font-medium text-[#1E293B]">{{ number_format($order->subtotal, 0, ',', '.') }} đ</dd>
+                                    <dt class="text-[#8E8076]">Tạm tính</dt>
+                                    <dd class="font-semibold text-[#4E342E]">{{ number_format($order->subtotal, 0, ',', '.') }} đ</dd>
                                 </div>
                                 <div class="flex justify-between">
-                                    <dt class="text-[#64748B]">Phí vận chuyển</dt>
-                                    <dd class="font-medium text-[#1E293B]">{{ number_format($order->shipping_fee, 0, ',', '.') }} đ</dd>
+                                    <dt class="text-[#8E8076]">Phí vận chuyển</dt>
+                                    <dd class="font-semibold text-[#4E342E]">{{ number_format($order->shipping_fee, 0, ',', '.') }} đ</dd>
                                 </div>
                                 @if (($order->shipping_discount_amount ?? 0) > 0)
                                     <div class="flex justify-between">
-                                        <dt class="text-[#64748B]">Giảm phí vận chuyển {{ $order->shippingVoucher?->code ? "({$order->shippingVoucher->code})" : '' }}</dt>
+                                        <dt class="text-[#8E8076]">Giảm phí vận chuyển {{ $order->shippingVoucher?->code ? "({$order->shippingVoucher->code})" : '' }}</dt>
                                         <dd class="font-medium text-teal-600">-{{ number_format($order->shipping_discount_amount, 0, ',', '.') }} đ</dd>
                                     </div>
                                 @endif
                                 @if ($order->discount_amount > 0)
                                     <div class="flex justify-between">
-                                        <dt class="text-[#64748B]">Giảm giá voucher {{ $order->voucher?->code ? "({$order->voucher->code})" : '' }}</dt>
+                                        <dt class="text-[#8E8076]">Giảm giá voucher {{ $order->voucher?->code ? "({$order->voucher->code})" : '' }}</dt>
                                         <dd class="font-medium text-rose-600">-{{ number_format($order->discount_amount, 0, ',', '.') }} đ</dd>
                                     </div>
                                 @endif
                                 <div class="flex justify-between text-base pt-2 border-t border-amber-100">
-                                    <dt class="font-semibold text-[#1E293B]">Tổng cộng</dt>
+                                    <dt class="font-bold text-[#4E342E]">Tổng cộng</dt>
                                     <dd class="font-bold text-amber-600">{{ number_format($order->total_amount, 0, ',', '.') }} đ</dd>
                                 </div>
                                 <div class="pt-3 mt-3 border-t border-dashed border-amber-200/80 flex items-center justify-between">
@@ -751,11 +751,11 @@
 
                     <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
                         <div class="p-6">
-                            <h3 class="text-lg font-semibold text-[#1E293B] mb-4">Thanh toán</h3>
+                            <h3 class="text-lg font-bold text-[#4E342E] mb-4">Thanh toán</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <dt class="text-[#64748B]">Phương thức</dt>
-                                    <dd class="font-medium text-[#1E293B]">
+                                    <dt class="text-[#8E8076]">Phương thức</dt>
+                                    <dd class="font-semibold text-[#4E342E]">
                                         {{ match ($order->payment_method) {
                                             'COD' => 'Thanh toán khi nhận hàng (COD)',
                                             'BANK_TRANSFER' => 'Chuyển khoản ngân hàng',
@@ -766,7 +766,7 @@
                                     </dd>
                                 </div>
                                 <div>
-                                    <dt class="text-[#64748B]">Trạng thái thanh toán</dt>
+                                    <dt class="text-[#8E8076]">Trạng thái thanh toán</dt>
                                     <dd><x-payment-status-badge :status="$order->payment_status" /></dd>
                                 </div>
                             </div>
@@ -800,7 +800,7 @@
                     <div class="bg-white rounded-2xl border border-amber-100 shadow-sm">
                         <div class="p-6">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-[#1E293B]">Lịch sử trạng thái</h3>
+                                <h3 class="text-lg font-bold text-[#4E342E] mb-4">Lịch sử trạng thái</h3>
                                 <x-order-status-badge :order="$order" />
                             </div>
                             <ol class="relative border-l border-amber-200 ml-3 space-y-6">

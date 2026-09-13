@@ -34,7 +34,7 @@ class CustomerOrderPresenter
 
         $products = $order->details->map(function (OrderDetail $detail) {
             $product = $detail->product;
-            $variant = $detail->variant;
+            $variant = $detail->productVariant;
 
             $rawImg = $detail->variant_image_url
                 ?: ($product?->images?->where('is_primary', true)->first()?->image_url
@@ -66,10 +66,9 @@ class CustomerOrderPresenter
             }
 
             $currentPrice = (float) $detail->product_price;
-            $snapshotOriginalPrice = (float) ($detail->original_unit_price ?? 0);
             $basePrice = $variant ? (float) $variant->price : ($product ? (float) $product->price : $currentPrice);
-            $originalPrice = $snapshotOriginalPrice > $currentPrice
-                ? $snapshotOriginalPrice
+            $originalPrice = $detail->original_unit_price !== null
+                ? (float) $detail->original_unit_price
                 : ($basePrice > $currentPrice ? $basePrice : $currentPrice);
 
             $productUrl = $detail->product_id

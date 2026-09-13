@@ -274,6 +274,23 @@
                 </button>
             </div>
 
+            @if($order->latestRefundRequest)
+                @php
+                    $rf = $order->latestRefundRequest;
+                @endphp
+                <div class="mt-3 p-3 bg-purple-50 rounded-xl border border-purple-200 text-xs text-purple-950 flex items-start gap-2.5">
+                    <i class="fa-solid fa-paper-plane text-purple-600 mt-0.5"></i>
+                    <div>
+                        <strong>Yêu cầu từ nhân viên {{ $rf->requestedByUser?->full_name ?? 'CSKH' }}:</strong>
+                        <span>{{ $rf->reason }}</span>
+                        <span class="text-[11px] text-[#7D6B5D] ml-1 font-mono">({{ $rf->created_at->format('d/m/Y H:i') }})</span>
+                        <a href="{{ route('admin.payments.index', ['tab' => 'refund_requests']) }}" class="ml-2 font-bold text-purple-700 hover:underline inline-flex items-center gap-1">
+                            <i class="fa-solid fa-qrcode"></i> Xem mã VietQR
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             @if($order->refund_bank_account || $order->refund_bank_name)
                 <div class="mt-4 p-3.5 bg-white rounded-xl border border-amber-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div>
