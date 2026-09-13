@@ -1008,7 +1008,7 @@
         } else {
             renderVariantsTable();
         }
-
+    }
 
     function updateSummaryStats() {
         document.getElementById('sum-count').innerText = `${variantsList.length} phân loại`;
