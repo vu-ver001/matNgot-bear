@@ -9,7 +9,9 @@
         : ($rawImage ? asset(ltrim($rawImage, '/')) : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($item['product_name']));
     $isInactive = ($item['status'] ?? 'ACTIVE') !== 'ACTIVE';
     $isOutOfStock = ((int) ($item['stock_quantity'] ?? 0)) <= 0;
-    $rating = isset($item['average_rating']) && $item['average_rating'] !== null ? (float) $item['average_rating'] : 5.0;
+    $rating = isset($item['average_rating']) && $item['average_rating'] !== null ? (float) $item['average_rating'] : null;
+    $reviewCount = (int) ($item['review_count'] ?? $item['reviews_count'] ?? 0);
+    $hasReviews = $reviewCount > 0 && $rating !== null;
     $soldCount = $item['sold_count'] ?? 0;
     $categoryName = $item['category_name'] ?? 'Gấu bông';
 @endphp
@@ -65,9 +67,15 @@
             </div>
             <div class="product-card-footer">
                 <div class="product-card-meta">
-                    <span class="rating-badge-pill" title="Đánh giá {{ number_format($rating, 1) }} sao">
-                        <i class="fa-solid fa-star"></i> {{ number_format($rating, 1) }}
-                    </span>
+                    @if($hasReviews)
+                        <span class="rating-badge-pill" title="Đánh giá {{ number_format($rating, 1) }} sao">
+                            <i class="fa-solid fa-star"></i> {{ number_format($rating, 1) }}
+                        </span>
+                    @else
+                        <span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                            <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                        </span>
+                    @endif
                     <span class="sold-count-text">Đã bán {{ $soldCount }}</span>
                 </div>
             </div>
