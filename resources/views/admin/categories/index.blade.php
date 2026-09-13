@@ -747,8 +747,22 @@
             let productSlotsHtml = '';
             for (let slot = 0; slot < 3; slot++) {
                 const curItem = items[slot] || null;
-                const curPId = curItem ? curItem.product_id : '';
-                const curCustomName = curItem ? (curItem.name || '') : '';
+                let curPId = curItem ? curItem.product_id : '';
+                let curCustomName = curItem ? (curItem.name || '') : '';
+
+                // Nếu sản phẩm trong config đã bị xóa/không còn active, treat slot này là trống
+                // (xóa cả ô dropdown lẫn ô tên tùy chỉnh phía dưới)
+                if (curPId) {
+                    const stillExists = currentCategoryProducts.some(p => p.id == curPId);
+                    if (!stillExists) {
+                        curPId = '';
+                        curCustomName = '';
+                        // Cập nhật lại data trong bộ nhớ để khi lưu không còn product_id đã bị xóa
+                        if (currentHeaderColumns[cIdx] && currentHeaderColumns[cIdx].items) {
+                            currentHeaderColumns[cIdx].items[slot] = null;
+                        }
+                    }
+                }
 
                 let optionsHtml = `<option value="">-- Chọn sản phẩm (${slot + 1}/3) --</option>`;
                 currentCategoryProducts.forEach(p => {
@@ -756,11 +770,13 @@
                     optionsHtml += `<option value="${p.id}" ${selected}>${p.name} (#${p.id})</option>`;
                 });
 
+                const isSlotFilled = !!curPId;
+
                 productSlotsHtml += `
                     <div style="background: #FAF7F2; padding: 10px; border-radius: 8px; border: 1px solid #EFE6DC; margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #8D6E63; margin-bottom: 4px;">
                             <span><i class="fa-solid fa-paw" style="color: #E59819;"></i> Sản phẩm ${slot + 1}</span>
-                            ${curItem ? `<span style="color: #2E7D32;"><i class="fa-solid fa-check"></i> Đã chọn</span>` : `<span style="color: #BDBDBD;">Trống</span>`}
+                            ${isSlotFilled ? `<span style="color: #2E7D32;"><i class="fa-solid fa-check"></i> Đã chọn</span>` : `<span style="color: #BDBDBD;">Trống</span>`}
                         </div>
                         <select class="select-control" style="font-size: 12px; padding: 6px 10px; margin-bottom: 4px; background: #FFFFFF;" onchange="updateProductSlot(${cIdx}, ${slot}, this.value)">
                             ${optionsHtml}
@@ -769,6 +785,7 @@
                     </div>
                 `;
             }
+
 
             return `
                 <div class="megamenu-column-card" style="background: #FFFFFF; border-radius: 12px; border: 1.5px solid #F6D89B; padding: 14px; box-shadow: 0 4px 14px rgba(229, 152, 25, 0.1); display: flex; flex-direction: column;">
