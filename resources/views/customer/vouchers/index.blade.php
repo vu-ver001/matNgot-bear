@@ -294,7 +294,7 @@
                             'usage_limit' => $voucher->usage_limit,
                             'used_count' => (int) $voucher->used_count,
                             'remaining_count' => $voucher->usage_limit !== null ? max(0, $voucher->usage_limit - $voucher->used_count) : null,
-                            'limit_per_user' => (int) ($voucher->limit_per_user ?? 1),
+                            'limit_per_user' => $voucher->limit_per_user !== null ? (int) $voucher->limit_per_user : null,
                             'apply_scope' => $voucher->apply_scope,
                             'apply_scope_label' => match($voucher->apply_scope) {
                                 'CATEGORY' => 'Danh mục chỉ định',
@@ -303,6 +303,14 @@
                             },
                             'categories' => $voucher->categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values(),
                             'products' => $voucher->products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'price' => number_format($p->price, 0, ',', '.') . 'đ'])->values(),
+                            'variants' => $voucher->productVariants->map(fn($v) => [
+                                'id' => $v->id,
+                                'product_id' => $v->product_id,
+                                'product_name' => $v->product?->name,
+                                'color' => $v->color,
+                                'size' => $v->size,
+                                'price' => number_format($v->effective_price ?? ($v->sale_price ?? $v->price), 0, ',', '.') . 'đ',
+                            ])->values(),
                             'copy_url' => route('products.index', ['voucher' => $voucher->code]),
                         ];
                     @endphp
@@ -467,11 +475,17 @@
                                     <div class="flex items-center gap-1.5 text-[10.5px] text-[#7D6B5D] flex-wrap">
                                         <span class="flex items-center gap-1">
                                             <i class="fa-solid fa-user-check text-[9px] {{ ($isAuthenticated && $voucher->customer_reached_limit) ? 'text-rose-500' : 'text-[#8C7A6B]' }}"></i>
-                                            <span>Lượt dùng: <strong class="text-[#2B1810]">{{ $voucher->limit_per_user }} lượt</strong></span>
+                                            <span>Lượt dùng: <strong class="text-[#2B1810]">{{ $voucher->limit_per_user ? ($voucher->limit_per_user . ' lượt') : 'Không giới hạn' }}</strong></span>
                                         </span>
                                         @if($isAuthenticated)
                                             <span class="px-1.5 py-0.5 rounded text-[9.5px] font-semibold {{ $voucher->customer_reached_limit ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200' }}">
-                                                {{ $voucher->customer_reached_limit ? 'Bạn đã hết lượt' : 'Bạn còn ' . max(0, $voucher->limit_per_user - $voucher->customer_used_count) . ' lượt' }}
+                                                @if($voucher->limit_per_user === null)
+                                                    Không giới hạn
+                                                @elseif($voucher->customer_reached_limit)
+                                                    Bạn đã hết lượt
+                                                @else
+                                                    Bạn còn {{ max(0, $voucher->limit_per_user - $voucher->customer_used_count) }} lượt
+                                                @endif
                                             </span>
                                         @endif
                                     </div>
@@ -688,7 +702,7 @@
                                     <i class="fa-solid fa-user-tag text-[#E08A1E] w-4"></i>
                                     <span>Lượt dùng mỗi khách:</span>
                                 </span>
-                                <span class="font-semibold text-[#2B1810]" x-text="detailVoucher.limit_per_user + ' lượt/khách hàng'"></span>
+                                <span class="font-semibold text-[#2B1810]" x-text="detailVoucher.limit_per_user ? (detailVoucher.limit_per_user + ' lượt/khách hàng') : 'Không giới hạn lượt/khách hàng'"></span>
                             </div>
 
                             {{-- Row: Phạm vi áp dụng --}}
@@ -713,8 +727,25 @@
                                     </div>
                                 </template>
 
-                                {{-- Products list if apply_scope === 'PRODUCT' --}}
-                                <template x-if="detailVoucher.apply_scope === 'PRODUCT' && detailVoucher.products && detailVoucher.products.length > 0">
+                                {{-- Variants list if specified --}}
+                                <template x-if="detailVoucher.apply_scope === 'PRODUCT' && detailVoucher.variants && detailVoucher.variants.length > 0">
+                                    <div class="pt-1.5 space-y-1.5 pl-5 max-h-40 overflow-y-auto">
+                                        <div class="text-[11px] text-[#7D6B5D] font-medium italic">Áp dụng cho các phân loại:</div>
+                                        <template x-for="v in detailVoucher.variants" :key="v.id">
+                                            <div class="flex items-center justify-between py-1 border-b border-[#F5E8D8]/50 text-[11.5px]">
+                                                <div class="text-[#2B1810] font-medium truncate flex items-center gap-1.5 min-w-0">
+                                                    <span class="truncate" x-text="v.product_name"></span>
+                                                    <span class="px-1.5 py-0.2 rounded bg-[#FAF6EE] border border-[#EBDDCD] text-[10px] text-[#5D4037] font-semibold shrink-0"
+                                                          x-text="[v.color ? 'Màu: ' + v.color : '', v.size ? 'Size ' + v.size : ''].filter(Boolean).join(' - ')"></span>
+                                                </div>
+                                                <span class="text-[#E08A1E] font-mono font-bold shrink-0 ml-2" x-text="v.price"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                {{-- Products list if apply_scope === 'PRODUCT' and no specific variants --}}
+                                <template x-if="detailVoucher.apply_scope === 'PRODUCT' && (!detailVoucher.variants || detailVoucher.variants.length === 0) && detailVoucher.products && detailVoucher.products.length > 0">
                                     <div class="pt-1 space-y-1 pl-5 max-h-36 overflow-y-auto">
                                         <template x-for="prod in detailVoucher.products" :key="prod.id">
                                             <div class="flex items-center justify-between py-1 border-b border-[#F5E8D8]/50 text-[11.5px]">

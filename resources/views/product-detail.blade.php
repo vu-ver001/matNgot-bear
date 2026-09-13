@@ -1371,9 +1371,26 @@
     }
 
     function handleBuyNow() {
+        if (window.userRole === 'STAFF' || window.userRole === 'ADMIN') {
+            const roleName = window.userRole === 'ADMIN' ? 'Quản Trị Viên (Admin)' : 'Nhân Viên (Staff)';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Không khả dụng cho ' + roleName,
+                    html: `Tài khoản <strong>${roleName}</strong> chỉ dùng để quản lý hệ thống, không có chức năng mua hàng.<br><br>Vui lòng chuyển sang tài khoản <strong>Khách hàng</strong> để trải nghiệm mua sắm!`,
+                    confirmButtonColor: '#E08A1E',
+                    confirmButtonText: 'Đã hiểu'
+                });
+            } else {
+                alert(`Tài khoản ${roleName} không có chức năng mua hàng.`);
+            }
+            return;
+        }
+
+        const qty = parseInt(document.getElementById('detail-quantity')?.value) || 1;
+        const variantId = currentMatchedVariant ? currentMatchedVariant.id : null;
+
         if (!window.isCustomerAuthenticated) {
-            const qty = parseInt(document.getElementById('detail-quantity')?.value) || 1;
-            const variantId = currentMatchedVariant ? currentMatchedVariant.id : null;
             let targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id={{ $product->id }}&quantity=" + qty;
             if (variantId) {
                 targetCheckoutUrl += "&variant_id=" + variantId;
@@ -1381,6 +1398,7 @@
             openAuthModal(targetCheckoutUrl, 'Đăng nhập để Mua ngay', 'Vui lòng đăng nhập hoặc đăng ký tài khoản Mật Ngọt Bear để tiến hành mua hàng ngay bạn nhé!');
             return;
         }
+
         if (hasColorVariants && !selectedColor) {
             if (typeof Toast !== 'undefined') {
                 Toast.fire({ icon: 'warning', title: 'Vui lòng chọn phân loại màu sắc!' });
@@ -1389,6 +1407,7 @@
             }
             return;
         }
+
         if (hasSizeVariants && !selectedSize) {
             if (typeof Toast !== 'undefined') {
                 Toast.fire({ icon: 'warning', title: 'Vui lòng chọn kích thước (size)!' });
@@ -1397,6 +1416,7 @@
             }
             return;
         }
+
         if (maxStock <= 0) {
             if (typeof Toast !== 'undefined') {
                 Toast.fire({ icon: 'warning', title: 'Sản phẩm hoặc phân loại này hiện đang tạm hết hàng.' });
@@ -1405,9 +1425,13 @@
             }
             return;
         }
-        const qty = parseInt(document.getElementById('detail-quantity').value) || 1;
-        const variantId = currentMatchedVariant ? currentMatchedVariant.id : null;
-        addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', qty, 'checkout', variantId);
+
+        // Chuyển hướng trực tiếp tới trang thanh toán với đúng số lượng và phân loại khách hàng vừa chọn ở trang chi tiết
+        let targetCheckoutUrl = "{{ route('customer.checkout.index') }}?product_id={{ $product->id }}&quantity=" + qty;
+        if (variantId) {
+            targetCheckoutUrl += "&variant_id=" + variantId;
+        }
+        window.location.href = targetCheckoutUrl;
     }
 
     // Modal Lightbox xem ảnh review phóng to

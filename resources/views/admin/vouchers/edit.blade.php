@@ -51,6 +51,7 @@
                 apply_scope: '{{ old('apply_scope', $voucher->apply_scope) }}',
                 selectedCategories: {{ json_encode(old('category_ids', $voucher->categories->pluck('id')->toArray())) }},
                 selectedProducts: {{ json_encode(old('product_ids', $voucher->products->pluck('id')->toArray())) }},
+                selectedVariants: {{ json_encode(old('variant_ids', $voucher->productVariants->pluck('id')->toArray())) }},
                 discount_type: '{{ old('discount_type', $voucher->discount_type) }}',
                 discount_value: '{{ old('discount_value', (float) $voucher->discount_value) }}',
                 min_order_value: '{{ old('min_order_value', (float) $voucher->min_order_value) }}',
@@ -58,7 +59,7 @@
                 start_date: '{{ old('start_date', $voucher->start_date?->format('Y-m-d H:i')) }}',
                 end_date: '{{ old('end_date', $voucher->end_date?->format('Y-m-d H:i')) }}',
                 usage_limit: '{{ old('usage_limit', $voucher->usage_limit) }}',
-                usage_limit_per_user: '{{ old('usage_limit_per_user', $voucher->usage_limit_per_user ?? 1) }}',
+                usage_limit_per_user: '{{ old('usage_limit_per_user', $voucher->usage_limit_per_user ?? '') }}',
                 status: '{{ old('status', $voucher->status) }}',
             })"
                 class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -259,35 +260,91 @@
                             <input type="text" x-model="searchProduct" placeholder="Tìm kiếm sản phẩm..."
                                 class="w-full bg-white border border-[#EBDDCD] rounded-xl px-3 py-2 text-xs focus:border-[#E08A1E] focus:ring-0">
 
-                            <div class="max-h-56 overflow-y-auto border border-[#EBDDCD] rounded-xl bg-[#FAF8F5] divide-y divide-[#EBDDCD]">
+                            <div class="max-h-72 overflow-y-auto border border-[#EBDDCD] rounded-xl bg-[#FAF8F5] divide-y divide-[#EBDDCD]">
                                 @foreach ($products as $prod)
-                                    <label x-show="matchesProduct({{ $prod->id }}, '{{ strtolower(addslashes($prod->name)) }}', {{ $prod->category_id ?? 0 }})"
-                                        class="flex items-center gap-3 p-2.5 hover:bg-white cursor-pointer transition">
-                                        <input type="checkbox" name="product_ids[]" value="{{ $prod->id }}"
-                                            x-model="selectedProducts"
-                                            class="rounded text-[#E08A1E] focus:ring-[#E08A1E] border-[#EBDDCD]">
+                                    <div x-show="matchesProduct({{ $prod->id }}, '{{ strtolower(addslashes($prod->name)) }}', {{ $prod->category_id ?? 0 }})"
+                                        class="transition">
                                         @php
-                                            $primaryImg = $prod->images->firstWhere('is_primary', true) ?? $prod->images->first();
-                                            $imgUrl = $primaryImg?->image_url;
-                                            if ($imgUrl && !str_starts_with($imgUrl, 'http') && !str_starts_with($imgUrl, '/') && !str_starts_with($imgUrl, 'storage/')) {
-                                                $imgUrl = asset('storage/' . $imgUrl);
-                                            } elseif ($imgUrl && (str_starts_with($imgUrl, 'storage/') || str_starts_with($imgUrl, '/'))) {
-                                                $imgUrl = asset($imgUrl);
-                                            } else {
-                                                $imgUrl = $imgUrl ?: 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
-                                            }
+                                            $prodVariantIds = json_encode($prod->variants->pluck('id')->values()->toArray());
                                         @endphp
-                                        <img src="{{ $imgUrl }}"
-                                            class="w-9 h-9 rounded-lg object-cover border border-[#EBDDCD] shrink-0 bg-white"
-                                            alt="{{ $prod->name }}"
-                                            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';">
-                                        <div class="flex-1 min-w-0">
-                                            <div class="text-xs font-bold text-[#2C1408] truncate">{{ $prod->name }}</div>
-                                            <div class="text-[11px] text-[#E08A1E] font-semibold">
-                                                {{ number_format($prod->sale_price ?? $prod->price, 0, ',', '.') }}đ
-                                            </div>
+                                        <div class="flex items-center justify-between p-2.5 hover:bg-white transition">
+                                            <label class="flex items-center gap-3 flex-1 cursor-pointer min-w-0">
+                                                <input type="checkbox" name="product_ids[]" value="{{ $prod->id }}"
+                                                    x-model="selectedProducts"
+                                                    @change="handleParentProductChange({{ $prod->id }}, {{ $prodVariantIds }}, $event.target.checked)"
+                                                    class="rounded text-[#E08A1E] focus:ring-[#E08A1E] border-[#EBDDCD]">
+                                                @php
+                                                    $primaryImg = $prod->images->firstWhere('is_primary', true) ?? $prod->images->first();
+                                                    $imgUrl = $primaryImg?->image_url;
+                                                    if ($imgUrl && !str_starts_with($imgUrl, 'http') && !str_starts_with($imgUrl, '/') && !str_starts_with($imgUrl, 'storage/')) {
+                                                        $imgUrl = asset('storage/' . $imgUrl);
+                                                    } elseif ($imgUrl && (str_starts_with($imgUrl, 'storage/') || str_starts_with($imgUrl, '/'))) {
+                                                        $imgUrl = asset($imgUrl);
+                                                    } else {
+                                                        $imgUrl = $imgUrl ?: 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
+                                                    }
+                                                @endphp
+                                                <img src="{{ $imgUrl }}"
+                                                    class="w-9 h-9 rounded-lg object-cover border border-[#EBDDCD] shrink-0 bg-white"
+                                                    alt="{{ $prod->name }}"
+                                                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="text-xs font-bold text-[#2C1408] truncate">{{ $prod->name }}</div>
+                                                    <div class="text-[11px] text-[#E08A1E] font-semibold flex items-center gap-1.5 flex-wrap">
+                                                        <span>{{ number_format($prod->sale_price ?? $prod->price, 0, ',', '.') }}đ</span>
+                                                        @if($prod->variants->count() > 0)
+                                                            <span class="text-[10px] text-[#786B61] font-normal">({{ $prod->variants->count() }} phân loại)</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </label>
+                                            @if($prod->variants->count() > 0)
+                                                <button type="button" @click="expandedProduct === {{ $prod->id }} ? expandedProduct = null : expandedProduct = {{ $prod->id }}"
+                                                    class="text-[10px] font-bold px-2 py-1 rounded-lg border border-[#E08A1E]/30 text-[#E08A1E] bg-[#FFF5E6] hover:bg-[#E08A1E] hover:text-white transition shrink-0 ml-2">
+                                                    <span x-show="expandedProduct !== {{ $prod->id }}">Phân loại ▼</span>
+                                                    <span x-show="expandedProduct === {{ $prod->id }}">Đóng ▲</span>
+                                                </button>
+                                            @endif
                                         </div>
-                                    </label>
+
+                                        {{-- Sub-list of variants (Color / Size) --}}
+                                        @if($prod->variants->count() > 0)
+                                            <div x-show="expandedProduct === {{ $prod->id }}" x-transition
+                                                class="bg-white px-4 py-2.5 border-t border-[#EBDDCD]/60 space-y-1.5">
+                                                <div class="text-[10px] font-bold uppercase tracking-wider text-[#786B61] flex items-center justify-between">
+                                                    <span>Chọn phân loại áp dụng (Màu sắc / Kích cỡ):</span>
+                                                    <span class="text-[9.5px] text-[#E08A1E] font-medium italic lowercase">Tự động đồng bộ theo ô sản phẩm cha</span>
+                                                </div>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                                    @foreach($prod->variants as $variant)
+                                                        <label class="flex items-center gap-2 p-1.5 rounded-lg border border-[#EBDDCD] bg-[#FAF8F5] hover:bg-[#FFF5E6] cursor-pointer transition text-xs">
+                                                            <input type="checkbox" name="variant_ids[]" value="{{ $variant->id }}"
+                                                                x-model="selectedVariants"
+                                                                @change="handleChildVariantChange({{ $prod->id }}, {{ $prodVariantIds }})"
+                                                                class="rounded text-[#E08A1E] focus:ring-[#E08A1E] border-[#EBDDCD]">
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="font-bold text-[#2C1408] text-[11px] truncate flex items-center gap-1">
+                                                                    @if($variant->color)
+                                                                        <span class="px-1.5 py-0.5 rounded bg-[#EBDDCD]/50 text-[#5C3219] font-medium text-[10px]">{{ $variant->color }}</span>
+                                                                    @endif
+                                                                    @if($variant->size)
+                                                                        <span class="px-1.5 py-0.5 rounded bg-[#EBDDCD]/50 text-[#5C3219] font-medium text-[10px]">Size {{ $variant->size }}</span>
+                                                                    @endif
+                                                                    @if(!$variant->color && !$variant->size)
+                                                                        <span>{{ $variant->sku ?: 'Mặc định' }}</span>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="text-[10px] text-[#786B61]">
+                                                                    {{ number_format($variant->effective_price ?? ($variant->sale_price ?? $variant->price), 0, ',', '.') }}đ
+                                                                    • Kho: {{ $variant->stock_quantity }}
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
                                 @endforeach
                             </div>
                             @error('product_ids')
@@ -415,7 +472,7 @@
                                     <span class="text-xs text-[#E08A1E] font-bold">Đã dùng: {{ $voucher->used_count }}</span>
                                 </div>
                                 <input type="number" name="usage_limit" x-model="usage_limit" min="{{ max(1, $voucher->used_count) }}" required
-                                    @input="if (Number(usage_limit_per_user) > Number(usage_limit)) usage_limit_per_user = usage_limit"
+                                    @input="if (usage_limit_per_user && Number(usage_limit_per_user) > Number(usage_limit)) usage_limit_per_user = usage_limit"
                                     class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 text-sm font-bold text-[#2C1408] focus:border-[#E08A1E] focus:ring-0">
                                 <p class="text-xs text-[#9CA3AF] mt-1">Tối thiểu: {{ $voucher->used_count }} lượt.</p>
                                 @error('usage_limit')
@@ -425,13 +482,17 @@
 
                             <div>
                                 <label class="block text-xs font-bold text-[#2C1408] mb-1.5">
-                                    Lượt Dùng / Khách Hàng <span class="text-rose-500">*</span>
+                                    Lượt Dùng / Khách Hàng <span class="text-[11px] font-normal text-[#786B61]">(để trống = không giới hạn)</span>
                                 </label>
-                                <input type="number" name="usage_limit_per_user" x-model="usage_limit_per_user" min="1" :max="usage_limit" required
-                                    @input="if (Number(usage_limit_per_user) > Number(usage_limit)) usage_limit_per_user = usage_limit; if (Number(usage_limit_per_user) < 1) usage_limit_per_user = 1;"
+                                <input type="number" name="usage_limit_per_user" x-model="usage_limit_per_user" min="1" :max="usage_limit"
+                                    placeholder="Không giới hạn"
+                                    @input="if (usage_limit && usage_limit_per_user && Number(usage_limit_per_user) > Number(usage_limit)) usage_limit_per_user = usage_limit; if (usage_limit_per_user !== '' && Number(usage_limit_per_user) < 1) usage_limit_per_user = 1;"
                                     class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 text-sm font-bold text-[#2C1408] focus:border-[#E08A1E] focus:ring-0">
-                                <p class="text-xs text-[#9CA3AF] mt-1">
+                                <p class="text-xs text-[#9CA3AF] mt-1" x-show="usage_limit_per_user">
                                     Từ 1 đến tối đa <span class="font-bold text-[#E08A1E]" x-text="usage_limit || 1"></span> lượt/khách.
+                                </p>
+                                <p class="text-xs text-[#10B981] mt-1 font-medium" x-show="!usage_limit_per_user">
+                                    Khách hàng có thể dùng thoải mái, không giới hạn lượt.
                                 </p>
                                 @error('usage_limit_per_user')
                                     <p class="text-xs text-rose-500 font-bold mt-1">{{ $message }}</p>
@@ -595,8 +656,8 @@
                                 <div class="text-white font-bold text-sm sm:text-base mt-0.5">
                                     <span x-text="usage_limit">100</span> lượt
                                 </div>
-                                <span class="text-[10px] text-[#D1C4B5] block mt-0.5" x-text="'Tối đa ' + usage_limit_per_user + ' lượt/khách'">
-                                    Tối đa 1 lượt/khách
+                                <span class="text-[10px] text-[#D1C4B5] block mt-0.5" x-text="usage_limit_per_user ? ('Tối đa ' + usage_limit_per_user + ' lượt/khách') : 'Không giới hạn lượt/khách'">
+                                    Không giới hạn lượt/khách
                                 </span>
                             </div>
                         </div>
