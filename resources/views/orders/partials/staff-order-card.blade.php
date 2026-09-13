@@ -17,8 +17,8 @@
             @php
                 $isActionable = isset($bulkActionableOrderIds) 
                     ? in_array($order->id, $bulkActionableOrderIds, true) 
-                    : ($order->canTransitionTo('SHIPPING') || $order->canTransitionTo('CONFIRMED'));
-                $checkboxTitle = $order->canTransitionTo('SHIPPING') ? 'Chọn đơn để giao hàng' : 'Chọn đơn để xác nhận';
+                    : ($order->canTransitionTo('SHIPPING') || $order->canTransitionTo('CONFIRMED') || $order->canTransitionTo('COMPLETED'));
+                $checkboxTitle = $order->canTransitionTo('COMPLETED') ? 'Chọn đơn để hoàn thành' : ($order->canTransitionTo('SHIPPING') ? 'Chọn đơn để giao hàng' : 'Chọn đơn để xác nhận');
             @endphp
             <!-- Checkbox chọn đơn -->
             @if($isActionable)
