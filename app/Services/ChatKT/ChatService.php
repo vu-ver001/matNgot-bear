@@ -1322,4 +1322,57 @@ class ChatService
         $faqAnswers = array_column($this->getFaqData(), 'answer');
         return in_array($lastMsg->content, $faqAnswers, true);
     }
+
+    /**
+     * Format dữ liệu thẻ đơn hàng (Shopee style) cho tin nhắn gửi kèm đơn hàng.
+     */
+    public function formatOrderCardData(?string $content, string $role = 'customer'): ?array
+    {
+        if (! $content || ! str_contains($content, '📦 [ĐƠN HÀNG #')) {
+            return null;
+        }
+
+        if (! preg_match('/#([A-Za-z0-9\-_]+)/', $content, $matches)) {
+            return null;
+        }
+
+        $orderCode = $matches[1];
+        static $orderCardCache = [];
+        $cacheKey = $orderCode . '_' . $role;
+
+        if (array_key_exists($cacheKey, $orderCardCache)) {
+            return $orderCardCache[$cacheKey];
+        }
+
+        $order = Order::with(['details.product.images', 'details.variant'])
+            ->where('order_code', $orderCode)
+            ->first();
+
+        if (! $order) {
+            return $orderCardCache[$cacheKey] = null;
+        }
+
+        $detail = $order->details->first();
+        $imgUrl = \App\Services\ReviewKT\ReviewService::resolveItemImageUrl($detail) ?: 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
+        $variantText = \App\Services\ReviewKT\ReviewService::resolveVariantText($detail);
+        $otherCount = max(0, $order->details->count() - 1);
+
+        $orderUrl = match ($role) {
+            'admin' => route('admin.orders.show', $order),
+            'staff' => route('staff.orders.show', $order),
+            default => route('customer.orders.show', $order),
+        };
+
+        return $orderCardCache[$cacheKey] = [
+            'order_id' => $order->id,
+            'order_code' => $order->order_code,
+            'order_status' => $order->order_status,
+            'product_name' => $detail?->product_name ?? 'Đơn hàng',
+            'variant_text' => $variantText,
+            'image_url' => $imgUrl,
+            'other_count' => $otherCount,
+            'total_amount' => number_format($order->total_amount, 0, ',', '.') . ' đ',
+            'order_url' => $orderUrl,
+        ];
+    }
 }
