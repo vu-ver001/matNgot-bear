@@ -296,7 +296,7 @@ class ProductController extends Controller
                     ProductVariant::create([
                         'product_id'     => $product->id,
                         'sku'            => $sku,
-                        'size'           => $vData['size'] ?? null,
+                        'size'           => !empty($vData['size']) ? preg_replace('/\s+/', '', mb_strtolower(trim($vData['size']), 'UTF-8')) : null,
                         'color'          => $formattedColor,
                         'price'          => $vData['price'] ?? $product->price,
                         'sale_price'     => $hasValidSale ? $vData['sale_price'] : null,
@@ -462,7 +462,7 @@ class ProductController extends Controller
 
                     $vFields = [
                         'sku'            => $sku,
-                        'size'           => $vData['size'] ?? null,
+                        'size'           => !empty($vData['size']) ? preg_replace('/\s+/', '', mb_strtolower(trim($vData['size']), 'UTF-8')) : null,
                         'color'          => $formattedColor,
                         'price'          => $vData['price'] ?? $product->price,
                         'sale_price'     => $hasValidSale ? $vData['sale_price'] : null,
