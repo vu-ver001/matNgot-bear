@@ -98,7 +98,7 @@ class ProductPublicController extends Controller
         // 3. Lọc theo khoảng giá bán thực tế (Ăn khớp cả sản phẩm cha lẫn từng sản phẩm con variants)
         $minPrice = $request->filled('min_price') ? (float) $request->input('min_price') : null;
         $maxPrice = $request->filled('max_price') ? (float) $request->input('max_price') : null;
-        $effectivePriceSql = 'CASE WHEN sale_price IS NOT NULL AND sale_price > 0 AND sale_price < price THEN sale_price ELSE price END';
+        $effectivePriceSql = 'CASE WHEN sale_price IS NOT NULL AND sale_price >= 0 AND sale_price < price THEN sale_price ELSE price END';
 
         if ($minPrice !== null || $maxPrice !== null) {
             $query->where(function ($q) use ($minPrice, $maxPrice, $effectivePriceSql) {
@@ -114,7 +114,7 @@ class ProductPublicController extends Controller
 
                 // HOẶC thỏa mãn theo giá của bất kỳ biến thể con (product_variants) nào
                 $q->orWhereHas('variants', function ($vq) use ($minPrice, $maxPrice) {
-                    $variantEffectivePrice = 'CASE WHEN sale_price IS NOT NULL AND sale_price > 0 AND sale_price < price THEN sale_price ELSE price END';
+                    $variantEffectivePrice = 'CASE WHEN sale_price IS NOT NULL AND sale_price >= 0 AND sale_price < price THEN sale_price ELSE price END';
                     if ($minPrice !== null) {
                         $vq->whereRaw("({$variantEffectivePrice}) >= ?", [$minPrice]);
                     }
@@ -198,7 +198,13 @@ class ProductPublicController extends Controller
 
         // 7. Lọc còn hàng (in_stock)
         if ($request->boolean('in_stock')) {
-            $query->where('stock_quantity', '>', 0);
+            $query->where(function ($q) {
+                $q->whereHas('variants', function ($vq) {
+                    $vq->where('status', 'ACTIVE')->where('stock_quantity', '>', 0);
+                })->orWhere(function ($pq) {
+                    $pq->doesntHave('variants')->where('stock_quantity', '>', 0);
+                });
+            });
         }
 
         // 8. Sắp xếp (Sort)
@@ -393,8 +399,8 @@ class ProductPublicController extends Controller
         $results = $matched->map(function ($p) {
             $primaryImg = $p->images->firstWhere('is_primary', true) ?? $p->images->first();
             $regPrice = (float) $p->lowest_price;
-            $sPrice = $p->lowest_sale_price ? (float) $p->lowest_sale_price : null;
-            $effectivePrice = ($sPrice && $sPrice > 0 && $sPrice < $regPrice) ? $sPrice : $regPrice;
+            $sPrice = ($p->lowest_sale_price !== null) ? (float) $p->lowest_sale_price : null;
+            $effectivePrice = ($sPrice !== null && $sPrice >= 0 && $sPrice < $regPrice) ? $sPrice : $regPrice;
             
             return [
                 'id'              => $p->id,

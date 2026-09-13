@@ -111,10 +111,10 @@
                             <div class="form-section-icon-wrap" style="background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%); border-color: #FFCC80; color: #E65100;">
                                 <i class="fa-solid fa-layer-group"></i>
                             </div>
-                            <span>Chi Tiết Các Sản Phẩm Con (Biến Thể Phân Loại)</span>
+                            <span>Chi Tiết Các Sản Phẩm Con</span>
                         </div>
                         <div class="variants-header-desc">
-                            Mỗi sản phẩm con đại diện cho 1 phân loại (Kích thước &amp; Màu sắc) có giá bán, kho và ảnh tương ứng.
+                            Mỗi sản phẩm con đại diện cho 1 phân loại (Kích thước &amp; Màu sắc)
                         </div>
                     </div>
 
@@ -134,14 +134,13 @@
                     <table class="variants-table">
                         <thead>
                             <tr>
-                                <th style="width: 44px; text-align: center;">Ảnh <span style="color:#C62828;">*</span></th>
+                                <th style="width: 48px; text-align: center;" title="Mỗi nhóm màu chỉ cần ít nhất 1 ảnh (các size cùng màu tự nhận chung ảnh)">Ảnh <span style="color:#C62828;">*</span></th>
                                 <th style="width: 17%; text-align: left;">Kích Thước <span style="color:#C62828;">*</span></th>
                                 <th style="width: 18%; text-align: left;">Màu Sắc <span style="color:#C62828;">*</span></th>
                                 <th style="width: 15%; text-align: left;">Giá Gốc <span style="color:#C62828;">*</span></th>
                                 <th style="width: 18%; text-align: left;">Giá Sale &amp; Hẹn Giờ</th>
                                 <th style="width: 14%; text-align: left;">Tồn Kho <span style="color:#C62828;">*</span></th>
                                 <th style="width: 76px; text-align: center;">Trạng thái</th>
-                                <th style="width: 48px; text-align: center;">Mặc Định</th>
                                 <th style="width: 32px; text-align: center;">Xóa</th>
                             </tr>
                         </thead>
@@ -171,7 +170,7 @@
 
         <!-- CỘT PHẢI: BỘ SƯU TẬP ẢNH CHUNG & HOÀN TẤT LƯU -->
         <div>
-            <!-- 3. BỘ SƯU TẬP ẢNH SẢN PHẨM CHUNG (TỐI ĐA 6 ẢNH) -->
+            <!-- 3. BỘ SƯU TẬP ẢNH SẢN PHẨM CHÍNH (TỐI ĐA 9 ẢNH) -->
             <div class="form-card">
                 <div class="form-section-title">
                     <div class="form-section-title-left">
@@ -179,12 +178,11 @@
                             <i class="fa-solid fa-images"></i>
                         </div>
                         <div>
-                            <div class="form-section-title-text">Bộ Ảnh Chung</div>
-                            <div class="form-hint" style="margin-top: 2px;">Ảnh đại diện &amp; thư viện ngoài shop</div>
+                            <div class="form-section-title-text">Bộ Sản Phẩm Chính <span style="color: #E53935; font-weight: 800;">*</span></div>
                         </div>
                     </div>
                     <span id="gallery-counter-badge" class="form-section-badge">
-                        0 / 6 ảnh
+                        0 / 9 ảnh
                     </span>
                 </div>
 
@@ -198,7 +196,7 @@
                         Bấm để chọn ảnh từ máy tính
                     </div>
                     <div style="font-size: 11.5px; color: var(--pf-brown-subtle); line-height: 1.4;">
-                        Tối đa 6 ảnh (JPG, PNG, WEBP, GIF)<br>Ảnh đầu tiên sẽ là <strong>Ảnh đại diện</strong> chính.
+                        Tối thiểu 1 ảnh bìa, tối đa 9 ảnh (JPG, PNG, WEBP, GIF)<br>Bao gồm 1 ảnh bìa đại diện và 8 ảnh chi tiết khác.
                     </div>
                 </div>
 
@@ -232,7 +230,7 @@
             <div class="info-tip-card">
                 <h4><i class="fa-solid fa-lightbulb" style="color: var(--pf-gold-dark);"></i> Mẹo Quản Trị Chuẩn</h4>
                 <ul>
-                    <li><i class="fa-solid fa-check"></i> Ảnh có gắn sao "Ảnh chính" sẽ hiển thị ngoài danh mục và trang chủ.</li>
+                    <li><i class="fa-solid fa-check"></i> Ảnh có gắn sao "Bìa" của Bộ ảnh chính sẽ hiển thị làm ảnh đại diện trên trang chủ và danh mục.</li>
                     <li><i class="fa-solid fa-check"></i> Khoảng giá và tổng tồn kho của sản phẩm cha sẽ tự động tính toán đồng bộ theo các sản phẩm con.</li>
                     <li><i class="fa-solid fa-check"></i> Có thể dùng tính năng "Tạo nhanh" để tự động kết hợp các size và màu sắc thành ma trận.</li>
                 </ul>
@@ -390,7 +388,7 @@
     // ==========================================
     // STATE MANAGEMENT
     // ==========================================
-    const MAX_GENERAL_IMAGES = 6;
+    const MAX_GENERAL_IMAGES = 9;
     let generalFiles = []; // Array of { file, previewUrl, is_primary }
     
     // Mảng chứa các sản phẩm con (biến thể)
@@ -422,7 +420,7 @@
     });
 
     // ==========================================
-    // GENERAL IMAGES GALLERY (TỐI ĐA 6 ẢNH)
+    // GENERAL IMAGES GALLERY (TỐI ĐA 9 ẢNH)
     // ==========================================
     function handleGeneralFiles(e) {
         const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
@@ -431,7 +429,7 @@
         const total = generalFiles.length + files.length;
         if (total > MAX_GENERAL_IMAGES) {
             const slots = MAX_GENERAL_IMAGES - generalFiles.length;
-            Swal.fire('Giới hạn ảnh', `Tối đa chỉ được tải 6 ảnh cho mỗi sản phẩm (còn trống ${Math.max(0, slots)} ảnh).`, 'warning');
+            Swal.fire('Giới hạn ảnh', `Tối đa chỉ được tải 9 ảnh cho Bộ ảnh sản phẩm chính (còn trống ${Math.max(0, slots)} ảnh).`, 'warning');
             return;
         }
 
@@ -454,7 +452,7 @@
         badge.innerText = `${generalFiles.length} / ${MAX_GENERAL_IMAGES} ảnh`;
 
         if (!generalFiles.length) {
-            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-light); font-size: 11.5px; padding: 1rem; border: 1px dashed var(--border); border-radius: 8px;">Chưa chọn ảnh nào</div>`;
+            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-light); font-size: 11.5px; padding: 1rem; border: 1px dashed var(--border); border-radius: 8px;">Chưa chọn ảnh nào (Bắt buộc tối thiểu 1 ảnh bìa)</div>`;
             return;
         }
 
@@ -465,8 +463,8 @@
                     <button type="button" class="btn-badge-primary" onclick="setPrimaryGeneral(${idx})">
                         ${item.is_primary ? '<i class="fa-solid fa-star"></i> Bìa' : 'Chọn bìa'}
                     </button>
-                    <button type="button" class="${item.sourceVariantUid ? 'btn-lock-thumb' : 'btn-del-thumb'}" onclick="removeGeneralImage(${idx})" title="${item.sourceVariantUid ? 'Ảnh của sản phẩm con (không thể xóa tại đây)' : 'Xóa ảnh'}">
-                        <i class="${item.sourceVariantUid ? 'fa-solid fa-lock' : 'fa-solid fa-trash-can'}"></i>
+                    <button type="button" class="btn-del-thumb" onclick="removeGeneralImage(${idx})" title="Xóa ảnh này khỏi bộ ảnh chính">
+                        <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
             </div>
@@ -479,16 +477,6 @@
     }
 
     function removeGeneralImage(idx) {
-        const item = generalFiles[idx];
-        if (item && item.sourceVariantUid) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Thông báo',
-                html: 'Không thể xóa vì đây là ảnh của sản phẩm con bạn đã thêm!<br><span style="font-size: 12.5px; color: #8D6E63;">(Bạn chỉ xóa được những ảnh vừa thêm tại mục Bộ Ảnh Chung thôi nha)</span>',
-                confirmButtonColor: '#8D6E63'
-            });
-            return;
-        }
         const wasPrimary = generalFiles[idx].is_primary;
         generalFiles.splice(idx, 1);
         if (wasPrimary && generalFiles.length > 0) {
@@ -503,15 +491,19 @@
     // ==========================================
     function formatCurrencyString(val) {
         if (val === null || val === undefined || val === '') return '';
-        const digits = String(val).replace(/\D/g, '');
+        const str = String(val).trim();
+        if (str === '0' || val === 0) return '0';
+        const digits = str.replace(/\D/g, '');
         if (!digits) return '';
         return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
     function parseCurrencyToNumber(val) {
-        if (val === null || val === undefined || val === '') return 0;
-        const digits = String(val).replace(/\D/g, '');
-        return digits ? parseFloat(digits) : 0;
+        if (val === null || val === undefined || val === '') return null;
+        const str = String(val).trim();
+        if (str === '0' || val === 0) return 0;
+        const digits = str.replace(/\D/g, '');
+        return digits ? parseFloat(digits) : null;
     }
 
     function handleSizeBlur(idx, input) {
@@ -543,11 +535,25 @@
         const raw = input.value.trim();
         if (!raw) {
             input.value = '';
-            variantsList[idx][field] = (field === 'sale_price' ? null : 0);
+            variantsList[idx][field] = (field === 'sale_price' ? null : '');
+            if (field === 'sale_price') {
+                variantsList[idx].sale_start_at = '';
+                variantsList[idx].sale_end_at = '';
+                renderVariantsTable();
+            }
         } else {
-            const num = parseCurrencyToNumber(raw);
-            input.value = formatCurrencyString(num);
-            variantsList[idx][field] = num;
+            const digits = raw.replace(/\D/g, '');
+            if (digits === '0') {
+                input.value = '0';
+                variantsList[idx][field] = 0;
+            } else {
+                const num = parseCurrencyToNumber(raw);
+                input.value = formatCurrencyString(num);
+                variantsList[idx][field] = num;
+            }
+            if (field === 'sale_price') {
+                renderVariantsTable();
+            }
         }
         updateSummaryStats();
     }
@@ -571,6 +577,7 @@
     }
 
     function toggleVariantStatusRow(idx) {
+        syncVariantsFromDom();
         if (!variantsList[idx]) return;
         variantsList[idx].status = (variantsList[idx].status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE');
         renderVariantsTable();
@@ -579,6 +586,124 @@
     // ==========================================
     // VARIANTS TABLE RENDERING & ACTIONS
     // ==========================================
+    const PLACEHOLDER_THUMB = 'https://placehold.co/100x100/fdf6e2/8d6e63?text=%2B+%E1%BA%A2nh*';
+
+    function capitalizeColor(str) {
+        if (!str) return '';
+        return str.trim().split(/\s+/).map(w => {
+            if (!w) return '';
+            return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        }).join(' ');
+    }
+
+    function refreshVariantThumb(idx) {
+        const v = variantsList[idx];
+        if (!v) return;
+
+        const thumbWrap = document.getElementById(`var-thumb-${idx}`);
+        const imgPreview = document.getElementById(`var-img-preview-${idx}`);
+        if (!thumbWrap || !imgPreview) return;
+
+        const isInherited = !!v.inheritedFromColor;
+        const hasImg = !!(v.image_url && !v.image_url.includes('placehold.co'));
+
+        if (hasImg) {
+            imgPreview.src = v.image_url;
+            if (isInherited) {
+                thumbWrap.style.border = '1.5px solid #2E7D32';
+                thumbWrap.style.background = '#F1F8E9';
+                thumbWrap.title = 'Đang dùng chung ảnh theo màu ' + escapeHtml(v.color || '') + ' (Bấm để chọn ảnh riêng)';
+                
+                let badge = thumbWrap.querySelector('.inherited-badge');
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'inherited-badge';
+                    badge.title = 'Tự động kế thừa ảnh theo màu';
+                    badge.style.cssText = 'position:absolute; bottom:2px; right:2px; background:#2E7D32; color:#fff; font-size:8px; padding:1px 3px; border-radius:3px; font-weight:800; z-index:2;';
+                    badge.innerHTML = '<i class="fa-solid fa-link"></i>';
+                    thumbWrap.appendChild(badge);
+                }
+            } else {
+                thumbWrap.style.border = '';
+                thumbWrap.style.background = '';
+                thumbWrap.title = 'Bấm để đổi ảnh riêng cho phân loại này';
+                const badge = thumbWrap.querySelector('.inherited-badge');
+                if (badge) badge.remove();
+            }
+        } else {
+            imgPreview.src = PLACEHOLDER_THUMB;
+            thumbWrap.style.border = '1.5px dashed #E53935';
+            thumbWrap.style.background = '#FFEBEE';
+            thumbWrap.title = 'Bắt buộc: Bấm để chọn ảnh cho nhóm màu này';
+            const badge = thumbWrap.querySelector('.inherited-badge');
+            if (badge) badge.remove();
+        }
+    }
+
+    function syncAllColorInheritance() {
+        // 1. Bản đồ ảnh đại diện cho từng nhóm màu (chỉ lấy từ dòng có ảnh và màu còn khớp với color_origin)
+        const colorOwnerMap = {};
+        variantsList.forEach((v, idx) => {
+            const cKey = (v.color || '').trim().toLowerCase();
+            const hasValidImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
+            const matchesOrigin = (!v.color_origin || v.color_origin === cKey);
+
+            if (cKey && hasValidImg && matchesOrigin && !v.inheritedFromColor && !colorOwnerMap[cKey]) {
+                colorOwnerMap[cKey] = {
+                    file: v.file,
+                    image_url: v.image_url,
+                    ownerIdx: idx
+                };
+            }
+        });
+
+        // 2. Cập nhật trạng thái kế thừa ảnh cho từng dòng biến thể
+        variantsList.forEach((v, idx) => {
+            const cKey = (v.color || '').trim().toLowerCase();
+            const hasValidImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
+            const matchesOrigin = (!v.color_origin || v.color_origin === cKey);
+
+            if (hasValidImg && matchesOrigin && !v.inheritedFromColor) {
+                // Giữ nguyên ảnh tự tải lên của biến thể khi màu vẫn khớp
+                v.inheritedFromColor = false;
+            } else if (cKey && colorOwnerMap[cKey] && colorOwnerMap[cKey].ownerIdx !== idx) {
+                // Trùng khớp chính xác 100% màu sắc với dòng có ảnh gốc
+                v.file = colorOwnerMap[cKey].file;
+                v.image_url = colorOwnerMap[cKey].image_url;
+                v.inheritedFromColor = true;
+                v.color_origin = cKey;
+            } else {
+                // Khác màu hoặc thêm/bớt bất kỳ ký tự nào -> XÓA ẢNH VỀ ẢNH TRỐNG NGAY LẬP TỨC!
+                v.file = null;
+                v.image_url = '';
+                v.inheritedFromColor = false;
+            }
+
+            refreshVariantThumb(idx);
+        });
+    }
+
+    function handleColorInput(idx, val) {
+        if (!variantsList[idx]) return;
+        variantsList[idx].color = val;
+        syncAllColorInheritance();
+    }
+
+    function handleColorKeydown(e, idx, input) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            input.blur();
+        }
+    }
+
+    function handleColorBlur(idx, input) {
+        if (!variantsList[idx]) return;
+        const formatted = capitalizeColor(input.value);
+        input.value = formatted;
+        variantsList[idx].color = formatted;
+        syncAllColorInheritance();
+    }
+
     function renderVariantsTable() {
         const tbody = document.getElementById('variants-tbody');
         if (!variantsList.length) {
@@ -595,11 +720,12 @@
         }
 
         tbody.innerHTML = variantsList.map((v, idx) => {
-            const hasSale = v.sale_price && parseFloat(v.sale_price) > 0;
+        const hasSalePrice = (v.sale_price !== null && v.sale_price !== '' && v.sale_price !== undefined && !isNaN(parseFloat(v.sale_price)));
             let timeBtnLabel = '<i class="fa-regular fa-clock"></i> Lịch sale';
             let timeBtnClass = '';
 
-            if (v.sale_start_at || v.sale_end_at) {
+            // Chỉ hiển thị trạng thái Đang sale / Sắp sale khi đã có giá sale hợp lệ và có thời gian sale
+            if (hasSalePrice && (v.sale_start_at || v.sale_end_at)) {
                 const now = new Date();
                 const start = v.sale_start_at ? new Date(v.sale_start_at) : null;
                 const end = v.sale_end_at ? new Date(v.sale_end_at) : null;
@@ -611,25 +737,65 @@
                     timeBtnClass = 'active';
                     timeBtnLabel = '<i class="fa-solid fa-fire"></i> Đang sale';
                 } else {
+                    timeBtnClass = 'active';
                     timeBtnLabel = '<i class="fa-solid fa-check"></i> Đã cài đặt';
                 }
             }
 
-            // Thumbnail display
-            const hasVariantImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
-            let thumbSrc = hasVariantImg ? v.image_url : 'https://placehold.co/100x100/fdf6e2/8d6e63?text=%2B+%E1%BA%A2nh*';
+            // Thumbnail display & Color Inheritance
+            const curColor = (v.color || '').trim().toLowerCase();
+            let isInherited = !!v.inheritedFromColor;
+            let thumbSrc = PLACEHOLDER_THUMB;
+            const hasValidImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
+            const matchesOrigin = (!v.color_origin || v.color_origin === curColor);
 
-            const formattedPrice = (v.price !== '' && v.price !== null && v.price !== undefined && !isNaN(v.price) && parseFloat(v.price) >= 0) ? formatCurrencyString(v.price) : '';
-            const formattedSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined && !isNaN(v.sale_price) && parseFloat(v.sale_price) >= 0) ? formatCurrencyString(v.sale_price) : '';
+            if (hasValidImg && matchesOrigin) {
+                thumbSrc = v.image_url;
+            } else if (curColor) {
+                // Tìm dòng khác có cùng màu chính xác và có ảnh
+                const donor = variantsList.find((otherV, i) => 
+                    i !== idx && 
+                    (otherV.color || '').trim().toLowerCase() === curColor && 
+                    (otherV.file || (otherV.image_url && !otherV.image_url.includes('placehold.co')))
+                );
+                if (donor) {
+                    v.file = donor.file;
+                    v.image_url = donor.image_url;
+                    v.inheritedFromColor = true;
+                    v.color_origin = curColor;
+                    thumbSrc = donor.image_url;
+                    isInherited = true;
+                } else {
+                    v.file = null;
+                    v.image_url = '';
+                    v.inheritedFromColor = false;
+                    thumbSrc = PLACEHOLDER_THUMB;
+                    isInherited = false;
+                }
+            } else {
+                v.file = null;
+                v.image_url = '';
+                v.inheritedFromColor = false;
+                thumbSrc = PLACEHOLDER_THUMB;
+                isInherited = false;
+            }
+
+            const isImgCovered = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
+
+            const formattedPrice = (v.price !== '' && v.price !== null && v.price !== undefined && !isNaN(v.price)) ? formatCurrencyString(v.price) : '';
+            const formattedSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined && !isNaN(v.sale_price)) ? formatCurrencyString(v.sale_price) : '';
             const formattedStock = (v.stock_quantity !== '' && v.stock_quantity !== null && v.stock_quantity !== undefined) ? v.stock_quantity : '';
             const isRowActive = (v.status === 'ACTIVE');
 
             return `
-                <tr class="${v.is_default ? 'is-default-row' : ''}">
+                <tr>
                     <td style="text-align: center;">
                         <input type="file" id="var-file-${idx}" accept="image/*" style="display:none;" onchange="handleVariantFileSelect(${idx}, event)">
-                        <div class="variant-thumb-wrap" id="var-thumb-${idx}" onclick="triggerVariantFile(${idx})" title="${hasVariantImg ? 'Bấm để đổi ảnh riêng cho phân loại này' : 'Bắt buộc: Bấm để chọn ảnh cho phân loại này'}" style="${!hasVariantImg ? 'border: 1.5px dashed #E53935; background: #FFEBEE;' : ''}">
+                        <div class="variant-thumb-wrap" id="var-thumb-${idx}" onclick="triggerVariantFile(${idx})" 
+                             title="${isInherited ? 'Đang dùng chung ảnh theo màu ' + escapeHtml(v.color) + ' (Bấm để chọn ảnh riêng)' : (isImgCovered ? 'Bấm để đổi ảnh riêng cho phân loại này' : 'Bắt buộc: Bấm để chọn ảnh cho nhóm màu này')}" 
+                             style="${!isImgCovered ? 'border: 1.5px dashed #E53935; background: #FFEBEE;' : (isInherited ? 'border: 1.5px solid #2E7D32; background: #F1F8E9;' : '')}">
                             <img src="${thumbSrc}" class="variant-thumb-img" id="var-img-preview-${idx}">
+                            ${isInherited ? '<span class="inherited-badge" title="Tự động kế thừa ảnh theo màu" style="position:absolute; bottom:2px; right:2px; background:#2E7D32; color:#fff; font-size:8px; padding:1px 3px; border-radius:3px; font-weight:800; z-index:2;"><i class="fa-solid fa-link"></i></span>' : ''}
                             <div class="variant-thumb-overlay">
                                 <i class="fa-solid fa-camera"></i>
                             </div>
@@ -639,7 +805,7 @@
                         <input type="text" id="var-size-${idx}" class="v-input" value="${escapeHtml(v.size || '')}" placeholder="30cm, 40cm,..." onblur="handleSizeBlur(${idx}, this)" oninput="updateVariantField(${idx}, 'size', this.value)">
                     </td>
                     <td>
-                        <input type="text" id="var-color-${idx}" class="v-input" value="${escapeHtml(v.color || '')}" placeholder="Nâu socola, Vàng bơ,..." oninput="updateVariantField(${idx}, 'color', this.value)">
+                        <input type="text" id="var-color-${idx}" class="v-input" value="${escapeHtml(v.color || '')}" placeholder="Nâu socola, Vàng bơ,..." oninput="handleColorInput(${idx}, this.value)" onkeydown="handleColorKeydown(event, ${idx}, this)" onblur="handleColorBlur(${idx}, this)">
                     </td>
                     <td>
                         <input type="text" id="var-price-${idx}" inputmode="numeric" class="v-input v-input-num" value="${formattedPrice}" placeholder="550.000" onblur="handlePriceBlur(${idx}, 'price', this)" onkeydown="handlePriceKeydown(event, this)">
@@ -659,7 +825,7 @@
                         <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 4px;">
                             <div class="switch-toggle-box" onclick="toggleVariantStatusRow(${idx})" title="Bấm để ${isRowActive ? 'tạm tắt' : 'bật'} phân loại này">
                                 <div class="switch-toggle-track ${isRowActive ? 'active' : ''}">
-                                    <span class="switch-toggle-thumb"></span>
+                                     <span class="switch-toggle-thumb"></span>
                                 </div>
                             </div>
                             <span style="font-size: 11px; font-weight: 700; color: ${isRowActive ? '#10B981' : '#8D6E63'};">
@@ -668,13 +834,10 @@
                         </div>
                     </td>
                     <td style="text-align: center;">
-                        <input type="radio" name="default_variant" class="variant-radio-default" ${v.is_default ? 'checked' : ''} onchange="setDefaultVariant(${idx})" title="Chọn làm phân loại mặc định">
+                        <button type="button" class="btn-icon delete" style="width: 26px; height: 26px; border-radius: 5px;" onclick="removeVariantRow(${idx})" title="Xóa phân loại này">
+                            <i class="fa-solid fa-trash-can" style="font-size: 11px; pointer-events: none;"></i>
+                        </button>
                     </td>
-                    <td style="text-align: center;">
-                                <button type="button" class="btn-icon delete" style="width: 26px; height: 26px; border-radius: 5px;" onclick="removeVariantRow(${idx})" title="Xóa phân loại này">
-                                    <i class="fa-solid fa-trash-can" style="font-size: 11px; pointer-events: none;"></i>
-                                </button>
-                            </td>
                 </tr>
             `;
         }).join('');
@@ -696,25 +859,31 @@
                 inputEl.style.backgroundColor = '';
             }
         }
+        if (field === 'color') {
+            syncAllColorInheritance();
+        }
         if (field === 'price' || field === 'stock_quantity' || field === 'sale_price') {
             updateSummaryStats();
         }
     }
 
     function setDefaultVariant(idx) {
+        syncVariantsFromDom();
         variantsList.forEach((v, i) => v.is_default = (i === idx));
         renderVariantsTable();
     }
 
     function addNewVariantRow() {
+        syncVariantsFromDom();
         const prodName = document.getElementById('prod-name').value.trim();
         const nextIdx = variantsList.length + 1;
-        const prefix = prodName ? prodName.split(' ')[0].toUpperCase() : 'BEAR';
+        const prefix = prodName ? prodName.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '') : 'BEAR';
+        const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
 
         variantsList.push({
             id: null,
             _uid: 'var_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-            sku: `${prefix}-${nextIdx}`,
+            sku: `${prefix || 'BEAR'}-V${nextIdx}-${rand}`,
             size: '',
             color: '',
             price: '',
@@ -732,6 +901,7 @@
     }
 
     function removeVariantRow(idx) {
+        syncVariantsFromDom();
         if (variantsList.length <= 1) {
             Swal.fire('Cảnh báo', 'Mỗi sản phẩm phải có ít nhất một phân loại con!', 'warning');
             return;
@@ -742,14 +912,6 @@
         variantsList.splice(idx, 1);
         if (wasDefault && variantsList.length > 0) {
             variantsList[0].is_default = true;
-        }
-
-        // Tự động đồng bộ xóa ảnh tương ứng trong Bộ ảnh chung nếu có
-        if (vUid) {
-            const syncedGalleryIdx = generalFiles.findIndex(item => item.sourceVariantUid === vUid);
-            if (syncedGalleryIdx !== -1) {
-                removeGeneralImage(syncedGalleryIdx);
-            }
         }
 
         renderVariantsTable();
@@ -763,60 +925,65 @@
         const file = e.target.files[0];
         if (!file) return;
 
+        syncVariantsFromDom();
         const v = variantsList[idx];
         if (!v) return;
 
+        const curColor = (v.color || '').trim().toLowerCase();
+        const displayColor = v.color ? v.color.trim() : '';
+        const previewUrl = URL.createObjectURL(file);
+
         v._uid = v._uid || ('var_' + idx + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
         v.file = file;
-        const previewUrl = URL.createObjectURL(file);
         v.image_url = previewUrl;
+        v.inheritedFromColor = false;
+        v.color_origin = curColor;
 
-        const imgEl = document.getElementById(`var-img-preview-${idx}`);
-        if (imgEl) {
-            imgEl.src = previewUrl;
-            const thumbWrap = imgEl.closest('.variant-thumb-wrap');
-            if (thumbWrap) {
-                thumbWrap.style.border = '';
-                thumbWrap.style.background = '';
-            }
+        // Tìm các sản phẩm con khác CÙNG MÀU SẮC
+        const sameColorIndices = [];
+        if (curColor) {
+            variantsList.forEach((otherV, otherIdx) => {
+                if (otherIdx !== idx && (otherV.color || '').trim().toLowerCase() === curColor) {
+                    sameColorIndices.push(otherIdx);
+                }
+            });
         }
 
-        // YÊU CẦU 5: Tự động đưa ảnh vừa thêm vào "Bộ Ảnh Chung"
-        // Nếu thay ảnh sản phẩm con 1 thì nó cũng tự động đồng bộ sửa lại bộ ảnh chung, thay ảnh cũ là ảnh mới
-        const existingGalleryIdx = generalFiles.findIndex(item => item.sourceVariantUid === v._uid);
-        if (existingGalleryIdx !== -1) {
-            // Thay ảnh cũ thành ảnh mới vừa chọn
-            const wasPrimary = generalFiles[existingGalleryIdx].is_primary;
-            generalFiles[existingGalleryIdx] = {
-                file: file,
-                previewUrl: previewUrl,
-                is_primary: wasPrimary,
-                sourceVariantUid: v._uid
-            };
+        if (sameColorIndices.length > 0 && typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Đồng bộ ảnh màu sắc',
+                html: `Bạn có muốn đồng bộ ảnh cho các ảnh có cùng màu sắc: <b style="color: #D32F2F;">"${escapeHtml(displayColor)}"</b> không?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2E7D32',
+                cancelButtonColor: '#8D6E63',
+                confirmButtonText: '<i class="fa-solid fa-check"></i> Có, đồng bộ tất cả',
+                cancelButtonText: 'Không, chỉ áp dụng cho dòng này'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sameColorIndices.forEach(otherIdx => {
+                        const targetV = variantsList[otherIdx];
+                        targetV.file = file;
+                        targetV.image_url = previewUrl;
+                        targetV.inheritedFromColor = true;
+                        targetV.color_origin = curColor;
+                    });
+                    renderVariantsTable();
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: `Đã đồng bộ ảnh cho các sản phẩm con màu "${displayColor}"!`,
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                } else {
+                    renderVariantsTable();
+                }
+            });
         } else {
-            // Chưa có trong Bộ ảnh chung -> Thêm mới vào
-            if (generalFiles.length < MAX_GENERAL_IMAGES) {
-                const isFirst = (generalFiles.length === 0);
-                generalFiles.push({
-                    file: file,
-                    previewUrl: previewUrl,
-                    is_primary: isFirst,
-                    sourceVariantUid: v._uid
-                });
-            } else {
-                // Đã đủ 6 ảnh, thay thế ảnh cuối không phải là primary
-                let replaceIdx = generalFiles.findIndex(item => !item.is_primary);
-                if (replaceIdx === -1) replaceIdx = MAX_GENERAL_IMAGES - 1;
-                generalFiles[replaceIdx] = {
-                    file: file,
-                    previewUrl: previewUrl,
-                    is_primary: false,
-                    sourceVariantUid: v._uid
-                };
-            }
+            renderVariantsTable();
         }
-
-        renderGeneralGallery();
     }
 
     function handleSizeBlur(idx, input) {
@@ -867,12 +1034,13 @@
     function autoSuggestSKUs() {
         const prodName = document.getElementById('prod-name').value.trim();
         if (!prodName) return;
-        const words = prodName.split(/\s+/).map(w => w[0] ? w[0].toUpperCase() : '').join('').slice(0, 5);
+        const words = prodName.split(/\s+/).map(w => w[0] ? w[0].toUpperCase() : '').join('').slice(0, 5) || 'BEAR';
 
         variantsList.forEach((v, idx) => {
             if (!v.sku || v.sku.startsWith('BEAR') || v.sku.startsWith('PRD')) {
-                const s = v.size ? v.size.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() : idx + 1;
-                v.sku = `${words}-${s}`;
+                const s = v.size ? v.size.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() : (idx + 1);
+                const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+                v.sku = `${words}-${s}-${rand}`;
             }
         });
     }
@@ -933,7 +1101,7 @@
         const hasSize = !!(v.size && String(v.size).trim() !== '');
         const hasColor = !!(v.color && String(v.color).trim() !== '');
         const hasPrice = (v.price !== '' && v.price !== null && v.price !== undefined && parseFloat(v.price) > 0);
-        const hasSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined && parseFloat(v.sale_price) > 0);
+        const hasSalePrice = (v.sale_price !== null && v.sale_price !== '' && v.sale_price !== undefined && !isNaN(parseFloat(v.sale_price)));
         const hasStock = (v.stock_quantity !== '' && v.stock_quantity !== null && v.stock_quantity !== undefined && String(v.stock_quantity).trim() !== '');
         const hasImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
         const hasSaleTimes = !!(v.sale_start_at || v.sale_end_at);
@@ -946,7 +1114,11 @@
             if (sizeInput) v.size = sizeInput.value.trim();
 
             const colorInput = document.getElementById(`var-color-${idx}`);
-            if (colorInput) v.color = colorInput.value.trim();
+            if (colorInput) {
+                const formattedColor = capitalizeColor(colorInput.value);
+                colorInput.value = formattedColor;
+                v.color = formattedColor;
+            }
 
             const priceInput = document.getElementById(`var-price-${idx}`);
             if (priceInput) {
@@ -1025,7 +1197,7 @@
         }
 
         const sizes = sizesRaw ? sizesRaw.split(/[,;\n]/).map(s => s.trim()).filter(Boolean) : [];
-        const colors = colorsRaw ? colorsRaw.split(/[,;\n]/).map(c => c.trim()).filter(Boolean) : [];
+        const colors = colorsRaw ? colorsRaw.split(/[,;\n]/).map(c => capitalizeColor(c)).filter(Boolean) : [];
 
         // Validate định dạng cm viết liền cho toàn bộ kích thước
         if (sizes.length > 0) {
@@ -1056,11 +1228,12 @@
                 listColors.forEach(cl => {
                     const szCode = sz ? sz.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() : 'STD';
                     const clCode = cl ? cl.split(/\s+/).map(w => w[0] ? w[0].toUpperCase() : '').join('') : 'DEF';
+                    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
 
                     newVariants.push({
                         id: null,
                         _uid: 'var_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-                        sku: `${prefix}-${szCode}-${clCode}`,
+                        sku: `${prefix}-${szCode}-${clCode}-${rand}`,
                         size: sz,
                         color: cl,
                         price: p !== '' ? p : '',
@@ -1160,6 +1333,47 @@
     function openSaleTimeModal(idx) {
         currentSaleModalIndex = idx;
         const v = variantsList[idx];
+
+        // Đồng bộ từ DOM phòng trường hợp vừa nhập chưa kịp blur
+        const saleInput = document.getElementById(`var-sale-price-${idx}`);
+        if (saleInput) {
+            const rawVal = saleInput.value.trim();
+            v.sale_price = (rawVal !== '') ? parseCurrencyToNumber(rawVal) : null;
+        }
+        const priceInput = document.getElementById(`var-price-${idx}`);
+        if (priceInput) {
+            const rawP = priceInput.value.trim();
+            if (rawP !== '') v.price = parseCurrencyToNumber(rawP);
+        }
+
+        // Chỉ chặn khi ô giá sale để trống/null. 0đ là hợp lệ (tặng miễn phí)
+        const salePriceRaw = v.sale_price;
+        const isEmpty = (salePriceRaw === null || salePriceRaw === '' || salePriceRaw === undefined);
+
+        if (isEmpty) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Thiếu giá khuyến mãi',
+                html: 'Bạn chưa nhập <b>Giá Khuyến Mãi</b> cho phân loại này!<br><br>Vui lòng nhập giá khuyến mãi vào ô <b>"Giá Sale &amp; Hẹn Giờ"</b> trước khi cài lịch.<br><small style="color:#888">(Nhập 0 nếu muốn tặng miễn phí trong giờ sale)</small>',
+                confirmButtonColor: '#8D6E63'
+            });
+            currentSaleModalIndex = null;
+            return;
+        }
+
+        const vSalePrice = parseCurrencyToNumber(salePriceRaw);
+        const vPrice = parseCurrencyToNumber(v.price);
+        if (vPrice !== null && !isNaN(vPrice) && vPrice > 0 && vSalePrice !== null && !isNaN(vSalePrice) && vSalePrice >= vPrice) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Giá khuyến mãi không hợp lệ',
+                html: 'Giá khuyến mãi phải <b>nhỏ hơn giá gốc</b>!<br>Vui lòng nhập lại giá khuyến mãi hợp lệ trước khi cài lịch.',
+                confirmButtonColor: '#8D6E63'
+            });
+            currentSaleModalIndex = null;
+            return;
+        }
+
         document.getElementById('sale-modal-variant-title').innerText = `Phân loại: ${v.size || 'Size chuẩn'} - ${v.color || 'Màu sắc'}`;
         
         const now = new Date();
@@ -1177,6 +1391,7 @@
         m.classList.add('show');
     }
 
+
     function closeSaleTimeModal() {
         const m = document.getElementById('sale-time-modal');
         m.classList.remove('show');
@@ -1190,20 +1405,30 @@
         const v = variantsList[currentSaleModalIndex];
         const start = document.getElementById('modal-sale-start').value;
         const end = document.getElementById('modal-sale-end').value;
-        const hasSalePrice = v.sale_price && parseFloat(v.sale_price) > 0;
+        const hasSalePrice = (v.sale_price !== null && v.sale_price !== '' && v.sale_price !== undefined && !isNaN(parseFloat(v.sale_price)));
 
-        // Bắt buộc nhập cả hai ngày nếu đã có giá sale
-        if (hasSalePrice && (!start || !end)) {
-            Swal.fire('Thiếu thời gian khuyến mãi', 'Phân loại này đã có Giá Khuyến Mãi, BẮT BUỘC phải nhập cả Ngày bắt đầu và Ngày kết thúc sale!', 'warning');
+        // 1. Ràng buộc: Nếu chọn thời gian sale thì BẮT BUỘC phải nhập giá sale
+        if ((start || end) && !hasSalePrice) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Thiếu giá khuyến mãi',
+                html: 'Bạn đã chọn thời gian sale nhưng <b>chưa nhập Giá Khuyến Mãi</b> cho phân loại này!<br><br>Vui lòng nhập giá khuyến mãi vào ô <b>"Giá Sale & Hẹn Giờ"</b> trước khi cài đặt thời gian.',
+                confirmButtonColor: '#8D6E63'
+            });
             return;
         }
 
+        // 2. Ràng buộc: Bắt buộc chọn đầy đủ cả hai ngày
         if (start && !end) {
             Swal.fire('Thiếu ngày kết thúc', 'Vui lòng chọn ngày giờ kết thúc khuyến mãi!', 'warning');
             return;
         }
         if (!start && end) {
             Swal.fire('Thiếu ngày bắt đầu', 'Vui lòng chọn ngày giờ bắt đầu khuyến mãi!', 'warning');
+            return;
+        }
+        if (hasSalePrice && (!start || !end)) {
+            Swal.fire('Thiếu thời gian khuyến mãi', 'Phân loại này đã có Giá Khuyến Mãi, BẮT BUỘC phải chọn cả Ngày bắt đầu và Ngày kết thúc sale!', 'warning');
             return;
         }
 
@@ -1289,6 +1514,12 @@
             return;
         }
 
+        // Validate Bộ ảnh sản phẩm chính: Bắt buộc tối thiểu 1 ảnh để làm ảnh bìa
+        if (!generalFiles.length) {
+            highlightAndNotify(document.getElementById('general-gallery-grid'), 'Vui lòng chọn tối thiểu 1 ảnh cho <b>Bộ ảnh sản phẩm chính</b> để làm <b>Ảnh bìa</b> (tối đa 9 ảnh)!', 'Thiếu ảnh bìa sản phẩm');
+            return;
+        }
+
         if (!variantsList.length) {
             Swal.fire({
                 icon: 'warning',
@@ -1301,16 +1532,32 @@
 
         // Validate variants
         const nowBuffer = new Date(Date.now() - 60000);
+
+        // Thu thập các nhóm màu đã có ảnh tải lên hoặc có sẵn ảnh hợp lệ
+        const colorImagesMap = {};
+        variantsList.forEach(v => {
+            const cKey = (v.color || '').trim().toLowerCase();
+            const hasImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
+            if (hasImg && cKey) {
+                colorImagesMap[cKey] = true;
+            }
+        });
+
         for (let i = 0; i < variantsList.length; i++) {
             const v = variantsList[i];
             const num = i + 1;
             const label = `Phân loại #${num} (${v.size || 'Size'} - ${v.color || 'Màu'})`;
+            const cKey = (v.color || '').trim().toLowerCase();
 
-            // Ràng buộc Cột Ảnh bắt buộc
+            // Ràng buộc ảnh thông minh theo màu: Mỗi nhóm màu chỉ cần ít nhất 1 ảnh
             const hasImg = !!(v.file || (v.image_url && !v.image_url.includes('placehold.co')));
-            if (!hasImg) {
+            const colorCovered = !!(cKey && colorImagesMap[cKey]);
+            if (!hasImg && !colorCovered) {
                 const thumbEl = document.getElementById(`var-thumb-${i}`);
-                highlightAndNotify(thumbEl, `Vui lòng tải ảnh cho <b>${label}</b>!<br><span style="font-size: 12.5px; color: #8D6E63;">(Hãy bấm vào icon máy ảnh ở cột <b>Ảnh *</b> của phân loại này)</span>`);
+                const msg = v.color 
+                    ? `Nhóm màu <b>"${escapeHtml(v.color)}"</b> chưa có ảnh!<br><span style="font-size: 12.5px; color: #8D6E63;">(Vui lòng bấm vào icon máy ảnh để chọn ít nhất 1 ảnh cho màu này, các kích thước cùng màu sẽ tự động nhận chung ảnh)</span>`
+                    : `Vui lòng tải ảnh cho <b>${label}</b>!`;
+                highlightAndNotify(thumbEl, msg, 'Chưa có ảnh phân loại');
                 return;
             }
 
@@ -1330,9 +1577,9 @@
                 return;
             }
             const vPrice = parseCurrencyToNumber(v.price);
-            const vSalePrice = (v.sale_price !== '' && v.sale_price !== null && v.sale_price !== undefined) ? parseCurrencyToNumber(v.sale_price) : null;
+            const vSalePrice = parseCurrencyToNumber(v.sale_price);
 
-            if (v.price === '' || v.price === null || v.price === undefined || isNaN(vPrice) || vPrice < 0) {
+            if (v.price === '' || v.price === null || v.price === undefined || vPrice === null || isNaN(vPrice) || vPrice < 0) {
                 const priceEl = document.getElementById(`var-price-${i}`);
                 highlightAndNotify(priceEl, `Vui lòng nhập đầy đủ <b>Giá gốc</b> hợp lệ cho <b>${label}</b>!`);
                 return;
@@ -1342,7 +1589,13 @@
                 highlightAndNotify(stockEl, `Vui lòng nhập đầy đủ <b>Số lượng tồn kho</b> cho <b>${label}</b>!`);
                 return;
             }
-            if (vSalePrice !== null && !isNaN(vSalePrice) && vSalePrice >= 0) {
+
+            const hasSalePrice = (vSalePrice !== null && !isNaN(vSalePrice) && vSalePrice >= 0);
+            const hasSaleTime = !!(v.sale_start_at || v.sale_end_at);
+
+            // RÀNG BUỘC HAI CHIỀU GIỮA GIÁ SALE VÀ THỜI GIAN SALE:
+            // Chiều 1: Nếu đã nhập giá sale -> BẮT BUỘC phải cài đặt thời gian sale (cả bắt đầu và kết thúc)
+            if (hasSalePrice) {
                 if (vSalePrice >= vPrice) {
                     const salePriceEl = document.getElementById(`var-sale-price-${i}`);
                     highlightAndNotify(salePriceEl, `Giá khuyến mãi của <b>${label}</b> phải nhỏ hơn giá gốc!`, 'Thông tin chưa hợp lệ');
@@ -1350,10 +1603,25 @@
                 }
                 if (!v.sale_start_at || !v.sale_end_at) {
                     const salePriceEl = document.getElementById(`var-sale-price-${i}`);
-                    highlightAndNotify(salePriceEl, `<b>${label}</b> đã nhập giá khuyến mãi thì bạn nhớ cài đặt cả Ngày bắt đầu và Ngày kết thúc sale!`);
+                    highlightAndNotify(salePriceEl, `<b>${label}</b> đã nhập Giá khuyến mãi, BẮT BUỘC phải bấm nút <b>"Lịch sale"</b> để cài đặt cả Ngày bắt đầu và Ngày kết thúc!`, 'Thiếu thời gian sale');
                     return;
                 }
             }
+
+            // Chiều 2: Nếu đã cài đặt thời gian sale -> BẮT BUỘC phải nhập giá khuyến mãi
+            if (hasSaleTime) {
+                if (!hasSalePrice) {
+                    const salePriceEl = document.getElementById(`var-sale-price-${i}`);
+                    highlightAndNotify(salePriceEl, `<b>${label}</b> đã chọn thời gian sale, BẮT BUỘC phải nhập cả <b>Giá khuyến mãi</b> hợp lệ (>= 0 đ)!`, 'Thiếu giá khuyến mãi');
+                    return;
+                }
+                if (!v.sale_start_at || !v.sale_end_at) {
+                    const salePriceEl = document.getElementById(`var-sale-price-${i}`);
+                    highlightAndNotify(salePriceEl, `<b>${label}</b> phải chọn đầy đủ cả Ngày bắt đầu và Ngày kết thúc sale!`, 'Thiếu thời gian sale');
+                    return;
+                }
+            }
+
             if (v.sale_start_at && v.sale_end_at) {
                 const start = new Date(v.sale_start_at);
                 const end = new Date(v.sale_end_at);
@@ -1395,7 +1663,7 @@
             if (v.sale_start_at) formData.append(`variants[${idx}][sale_start_at]`, v.sale_start_at);
             if (v.sale_end_at) formData.append(`variants[${idx}][sale_end_at]`, v.sale_end_at);
             formData.append(`variants[${idx}][stock_quantity]`, v.stock_quantity ?? 0);
-            formData.append(`variants[${idx}][is_default]`, v.is_default ? '1' : '0');
+            formData.append(`variants[${idx}][is_default]`, (idx === 0) ? '1' : '0');
             formData.append(`variants[${idx}][status]`, v.status || 'ACTIVE');
 
             // File ảnh riêng của biến thể nếu có

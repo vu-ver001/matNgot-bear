@@ -67,7 +67,7 @@
                 $rawImg = $product?->images?->where('is_primary', true)->first()?->image_url
                     ?? $product?->images?->first()?->image_url;
                 $imageUrl = $rawImg
-                    ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg))
+                    ? ((str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg))
                     : 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
 
                 $variationParts = [];

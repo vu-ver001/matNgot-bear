@@ -60,27 +60,26 @@ class ProductRequest extends FormRequest
             'variants.*.sale_start_at' => ['nullable', 'date'],
             'variants.*.sale_end_at'   => ['nullable', 'date'],
             'variants.*.stock_quantity'=> ['required_with:variants', 'integer', 'min:0'],
-            'variants.*.image_url'     => ['nullable', 'string', 'max:500'],
-            'variants.*.is_default'    => ['nullable'],
+            'variants.*.image_url'     => ['nullable', 'string'],
             'variants.*.status'        => ['nullable', Rule::in(['ACTIVE', 'INACTIVE'])],
 
             // File ảnh riêng của từng biến thể (nếu tải lên từ máy tính)
             'variant_images'           => ['nullable', 'array'],
             'variant_images.*'         => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
 
-            // Validate file ảnh tải lên từ máy tính cho sản phẩm cha (tối đa 6 ảnh)
-            'image_files'         => ['nullable', 'array', 'max:6'],
+            // Validate file ảnh tải lên từ máy tính cho Bộ ảnh sản phẩm chính (tối đa 9 ảnh)
+            'image_files'         => ['nullable', 'array', 'max:9'],
             'image_files.*'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
-            'primary_index'       => ['nullable', 'integer', 'min:0', 'max:5'],
+            'primary_index'       => ['nullable', 'integer', 'min:0', 'max:8'],
 
-            // Quản lý ảnh cũ khi edit
-            'kept_image_ids'      => ['nullable', 'array', 'max:6'],
+            // Quản lý ảnh cũ khi edit (Bộ ảnh sản phẩm chính)
+            'kept_image_ids'      => ['nullable', 'array', 'max:9'],
             'kept_image_ids.*'    => ['integer'],
             'primary_type'        => ['nullable', 'string', 'in:existing,new'],
             'primary_id'          => ['nullable', 'integer'],
 
             // Hỗ trợ mảng images nếu gọi từ API
-            'images'              => ['nullable', 'array', 'max:6'],
+            'images'              => ['nullable', 'array', 'max:9'],
         ];
     }
 
@@ -112,11 +111,11 @@ class ProductRequest extends FormRequest
             'variants.*.stock_quantity.integer'=> 'Số lượng tồn kho sản phẩm con phải là số nguyên.',
             'variants.*.stock_quantity.min'    => 'Số lượng tồn kho sản phẩm con không được âm.',
 
-            'image_files.max'            => 'Chỉ được chọn tối đa 6 ảnh cho mỗi sản phẩm.',
+            'image_files.max'            => 'Bộ ảnh sản phẩm chính chỉ được chọn tối đa 9 ảnh.',
             'image_files.*.image'        => 'Tệp tải lên phải là hình ảnh hợp lệ.',
             'image_files.*.mimes'        => 'Ảnh phải có định dạng: jpeg, png, jpg, webp, gif.',
             'image_files.*.max'          => 'Kích thước mỗi ảnh không được vượt quá 5MB.',
-            'images.max'                 => 'Chỉ được chọn tối đa 6 ảnh cho mỗi sản phẩm.',
+            'images.max'                 => 'Bộ ảnh sản phẩm chính chỉ được chọn tối đa 9 ảnh.',
         ];
     }
 
@@ -126,26 +125,65 @@ class ProductRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            $isCreate = $this->isMethod('POST');
+
+            // 1. Ràng buộc Bộ ảnh sản phẩm chính: Bắt buộc tối thiểu 1 ảnh để làm ảnh bìa (Tối đa 9 ảnh)
+            if ($isCreate) {
+                $hasMainFile = $this->hasFile('image_files') && count($this->file('image_files')) > 0;
+                $hasApiImages = $this->has('images') && is_array($this->input('images')) && count($this->input('images')) > 0;
+                if (!$hasMainFile && !$hasApiImages) {
+                    $validator->errors()->add('image_files', 'Bộ ảnh sản phẩm chính bắt buộc phải có tối thiểu 1 ảnh để làm ảnh bìa đại diện.');
+                }
+            } else {
+                $newFilesCount = $this->hasFile('image_files') ? count($this->file('image_files')) : 0;
+                $keptIds = $this->input('kept_image_ids', []);
+                $imagesInput = $this->input('images', []);
+                $existingCount = is_array($keptIds) ? count($keptIds) : (is_array($imagesInput) ? count($imagesInput) : 0);
+                if (($newFilesCount + $existingCount) < 1) {
+                    $validator->errors()->add('image_files', 'Bộ ảnh sản phẩm chính bắt buộc phải có tối thiểu 1 ảnh để làm ảnh bìa đại diện.');
+                }
+            }
+
             $variants = $this->input('variants', []);
             if (is_string($variants)) {
                 $variants = json_decode($variants, true) ?: [];
             }
-
-            $isCreate = $this->isMethod('POST');
             // Cho phép trừ 2 phút buffer đề phòng chênh lệch thời gian mạng khi client gửi request
             $nowBuffer = now()->subMinutes(2);
+
+            // Thu thập các nhóm màu đã có ảnh tải lên hoặc có sẵn image_url hợp lệ
+            $colorHasImage = [];
+            foreach ($variants as $idx => $v) {
+                $cKey = mb_strtolower(trim($v['color'] ?? ''));
+                $hasImg = $this->hasFile("variant_images.{$idx}") || (!empty($v['image_url']) && !str_contains($v['image_url'], 'placehold.co'));
+                if ($hasImg && $cKey !== '') {
+                    $colorHasImage[$cKey] = true;
+                }
+            }
+
+            $reportedMissingColors = [];
 
             foreach ($variants as $idx => $v) {
                 $num = $idx + 1;
                 $size = $v['size'] ?? '';
-                $color = $v['color'] ?? '';
+                $color = trim($v['color'] ?? '');
+                $cKey = mb_strtolower($color);
                 $sizeColor = trim("{$size} {$color}");
                 $label = $sizeColor ? "Phân loại #{$num} ({$sizeColor})" : "Phân loại #{$num}";
 
-                // Ràng buộc Cột Ảnh bắt buộc cho từng sản phẩm con
+                // Ràng buộc ảnh thông minh: Mỗi nhóm màu chỉ cần ít nhất 1 ảnh (các kích thước cùng màu tự động kế thừa)
                 $hasVariantImg = $this->hasFile("variant_images.{$idx}") || (!empty($v['image_url']) && !str_contains($v['image_url'], 'placehold.co'));
-                if (!$hasVariantImg) {
-                    $validator->errors()->add("variants.{$idx}.image", "Vui lòng chọn ảnh cho {$label}.");
+                $isColorCovered = ($cKey !== '' && !empty($colorHasImage[$cKey]));
+
+                if (!$hasVariantImg && !$isColorCovered) {
+                    if ($cKey !== '') {
+                        if (!in_array($cKey, $reportedMissingColors, true)) {
+                            $validator->errors()->add("variants.{$idx}.image", "Nhóm màu '{$color}' chưa có ảnh. Vui lòng chọn ít nhất 1 ảnh cho nhóm màu này.");
+                            $reportedMissingColors[] = $cKey;
+                        }
+                    } else {
+                        $validator->errors()->add("variants.{$idx}.image", "Vui lòng chọn ảnh cho {$label}.");
+                    }
                 }
 
                 $price = isset($v['price']) && is_numeric($v['price']) ? (float) $v['price'] : null;
@@ -158,20 +196,34 @@ class ProductRequest extends FormRequest
                 $startAt = $startAtStr ? \Carbon\Carbon::parse($startAtStr) : null;
                 $endAt = $endAtStr ? \Carbon\Carbon::parse($endAtStr) : null;
 
-                // 1. RÀNG BUỘC KHI CÓ GIÁ KHUYẾN MÃI:
-                if ($salePrice !== null) {
+                $hasSalePrice = ($salePrice !== null && $salePrice >= 0);
+                $hasSaleTime = (!empty($startAtStr) || !empty($endAtStr));
+
+                // 1. RÀNG BUỘC HAI CHIỀU GIỮA GIÁ SALE VÀ THỜI GIAN SALE:
+                // Chiều 1: Nếu có giá sale -> BẮT BUỘC phải có thời gian sale (cả ngày bắt đầu và ngày kết thúc)
+                if ($hasSalePrice) {
                     // a) Giá sale phải nhỏ hơn giá gốc
                     if ($price !== null && $salePrice >= $price) {
                         $validator->errors()->add("variants.{$idx}.sale_price", "{$label}: Giá khuyến mãi (" . number_format($salePrice, 0, ',', '.') . " đ) phải nhỏ hơn giá gốc (" . number_format($price, 0, ',', '.') . " đ)!");
                     }
 
-                    // b) BẮT BUỘC phải nhập cả ngày bắt đầu và ngày kết thúc
+                    // b) Bắt buộc phải chọn đủ cả 2 ngày
                     if (!$startAt || !$endAt) {
-                        $validator->errors()->add("variants.{$idx}.sale_dates", "{$label}: Khi đã nhập giá khuyến mãi thì BẮT BUỘC phải nhập cả Ngày bắt đầu và Ngày kết thúc sale!");
+                        $validator->errors()->add("variants.{$idx}.sale_dates", "{$label}: Khi đã nhập giá khuyến mãi thì BẮT BUỘC phải chọn cả Ngày bắt đầu và Ngày kết thúc sale!");
                     }
                 }
 
-                // 2. RÀNG BUỘC VỀ THỜI GIAN SALE:
+                // Chiều 2: Nếu có chọn thời gian sale -> BẮT BUỘC phải có giá khuyến mãi hợp lệ
+                if ($hasSaleTime) {
+                    if (!$hasSalePrice) {
+                        $validator->errors()->add("variants.{$idx}.sale_price", "{$label}: Bạn đã chọn thời gian sale, BẮT BUỘC phải nhập cả Giá khuyến mãi hợp lệ (>= 0 đ)!");
+                    }
+                    if (!$startAt || !$endAt) {
+                        $validator->errors()->add("variants.{$idx}.sale_dates", "{$label}: BẮT BUỘC phải chọn đầy đủ cả Ngày bắt đầu và Ngày kết thúc sale!");
+                    }
+                }
+
+                // 2. RÀNG BUỘC TÍNH HỢP LỆ VỀ THỜI GIAN SALE:
                 if ($startAt && $endAt) {
                     // Ngày kết thúc phải sau ngày bắt đầu
                     if ($endAt->lte($startAt)) {

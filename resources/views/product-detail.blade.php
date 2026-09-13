@@ -12,52 +12,102 @@
     $primaryImg = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
     $primaryUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/800x800/f5e6ca/7c4a2d?text=' . urlencode($product->name);
 
-    // 1. Chỉ hiển thị ảnh trong "Bộ ảnh chung" ($product->images) vì bộ ảnh chung đã gồm cả ảnh của từng sản phẩm con
+    // 1. Bộ ảnh sản phẩm chính ($product->images, tối đa 9 ảnh)
     $galleryList = collect();
     $galleryFileHashes = [];
 
     foreach ($product->images as $pImg) {
         if (!empty($pImg->image_url) && !$galleryList->contains($pImg->image_url)) {
             $galleryList->push($pImg->image_url);
-            $localPath = public_path(ltrim(parse_url($pImg->image_url, PHP_URL_PATH) ?? '', '/'));
-            if (file_exists($localPath)) {
-                $galleryFileHashes[$pImg->image_url] = md5_file($localPath);
+            if (str_starts_with($pImg->image_url, 'data:')) {
+                $galleryFileHashes[$pImg->image_url] = md5($pImg->image_url);
+            } else {
+                $localPath = public_path(ltrim(parse_url($pImg->image_url, PHP_URL_PATH) ?? '', '/'));
+                if (file_exists($localPath)) {
+                    $galleryFileHashes[$pImg->image_url] = md5_file($localPath);
+                }
             }
         }
     }
 
-    // Fallback nếu sản phẩm chưa có ảnh trong Bộ ảnh chung
-    if ($galleryList->isEmpty()) {
-        foreach ($product->variants as $v) {
-            if (!empty($v->image_url) && !$galleryList->contains($v->image_url)) {
-                $galleryList->push($v->image_url);
-            }
-        }
-    }
-    if ($galleryList->isEmpty()) {
-        $galleryList->push($primaryUrl);
-    }
-
-    // Xử lý biến thể từ CSDL & Đồng bộ ảnh biến thể với Bộ ảnh chung
+    // 2. Thêm ảnh từ các phân loại (biến thể):
+    // Ràng buộc hiển thị chuẩn Shopee / TikTok Shop:
+    // - Nếu cùng màu mà vẫn để ảnh giống nhau thì chỉ hiển thị 1 ảnh đại diện cho màu đó để tránh trùng lặp.
+    // - Nếu sửa thành ảnh khác thì mới thêm vào hiển thị để khách hàng thấy các góc chụp/mẫu khác nhau!
     $variants = $product->variants;
+    $seenColorImages = []; // [cKey => [imgUrls]]
+
     foreach ($variants as $v) {
-        $matchedUrl = null;
-        if ($galleryList->contains($v->image_url)) {
-            $matchedUrl = $v->image_url;
-        } else if (!empty($v->image_url)) {
-            $vPath = public_path(ltrim(parse_url($v->image_url, PHP_URL_PATH) ?? '', '/'));
-            if (file_exists($vPath)) {
-                $vHash = md5_file($vPath);
-                foreach ($galleryFileHashes as $gUrl => $gHash) {
-                    if ($vHash === $gHash) {
-                        $matchedUrl = $gUrl;
-                        break;
+        if (empty($v->image_url) || str_contains($v->image_url, 'placehold.co')) continue;
+        $cKey = mb_strtolower(trim($v->color ?? 'default'));
+
+        // Kiểm tra xem ảnh này có trùng với ảnh nào đã có trong $galleryList không
+        $isDuplicate = $galleryList->contains($v->image_url);
+        if (!$isDuplicate && !empty($galleryFileHashes)) {
+            if (str_starts_with($v->image_url, 'data:')) {
+                $vHash = md5($v->image_url);
+                if (in_array($vHash, $galleryFileHashes, true)) {
+                    $isDuplicate = true;
+                }
+            } else {
+                $vPath = public_path(ltrim(parse_url($v->image_url, PHP_URL_PATH) ?? '', '/'));
+                if (file_exists($vPath)) {
+                    $vHash = md5_file($vPath);
+                    if (in_array($vHash, $galleryFileHashes, true)) {
+                        $isDuplicate = true;
                     }
                 }
             }
         }
-        if ($matchedUrl) {
-            $v->image_url = $matchedUrl;
+
+        if ($isDuplicate) {
+            $seenColorImages[$cKey][] = $v->image_url;
+            continue;
+        }
+
+        if (!isset($seenColorImages[$cKey])) {
+            $seenColorImages[$cKey] = [];
+        }
+
+        // Nếu nhóm màu này chưa có ảnh này thì thêm vào album
+        if (!in_array($v->image_url, $seenColorImages[$cKey], true)) {
+            $seenColorImages[$cKey][] = $v->image_url;
+            $galleryList->push($v->image_url);
+            if (str_starts_with($v->image_url, 'data:')) {
+                $galleryFileHashes[$v->image_url] = md5($v->image_url);
+            } else {
+                $localPath = public_path(ltrim(parse_url($v->image_url, PHP_URL_PATH) ?? '', '/'));
+                if (file_exists($localPath)) {
+                    $galleryFileHashes[$v->image_url] = md5_file($localPath);
+                }
+            }
+        }
+    }
+
+    if ($galleryList->isEmpty()) {
+        $galleryList->push($primaryUrl);
+    }
+
+    // Đồng bộ URL ảnh biến thể nếu khớp file hash với ảnh trong gallery
+    foreach ($variants as $v) {
+        if (!empty($v->image_url)) {
+            $vHash = null;
+            if (str_starts_with($v->image_url, 'data:')) {
+                $vHash = md5($v->image_url);
+            } else {
+                $vPath = public_path(ltrim(parse_url($v->image_url, PHP_URL_PATH) ?? '', '/'));
+                if (file_exists($vPath)) {
+                    $vHash = md5_file($vPath);
+                }
+            }
+            if ($vHash) {
+                foreach ($galleryFileHashes as $gUrl => $gHash) {
+                    if ($vHash === $gHash) {
+                        $v->image_url = $gUrl;
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -80,16 +130,17 @@
     $initialSize = null;
     $initialColor = null;
     $initialImg = $primaryUrl;
-    $initialStock = (int) $product->stock_quantity;
+    $initialStock = $variants->isNotEmpty() ? (int) $variants->sum('stock_quantity') : (int) $product->stock_quantity;
 
-    // Trạng thái giá ban đầu: lấy giá thấp nhất từ sản phẩm con hoặc giá cha
+    // Trạng thái giá ban đầu: lấy theo biến thể con có giá thực tế thấp nhất (Lowest Effective Variant)
     $initialPrice = (float) $product->lowest_price;
     $initialSalePrice = $product->lowest_sale_price;
-    $initialIsOnSale = ($initialSalePrice !== null && $initialSalePrice !== '' && is_numeric($initialSalePrice)) && (float)$initialSalePrice < $initialPrice;
+    $initialIsOnSale = ($initialSalePrice !== null && $initialSalePrice !== '' && is_numeric($initialSalePrice)) && (float)$initialSalePrice >= 0 && (float)$initialSalePrice < $initialPrice;
     $initialIsUpcoming = false;
     $initialDiscountPct = ($initialIsOnSale && $initialPrice > 0) ? round((($initialPrice - (float)$initialSalePrice) / $initialPrice) * 100) : 0;
     $initialEffectivePrice = $initialIsOnSale ? (float)$initialSalePrice : $initialPrice;
-    $initialRemainingSec = 0;
+    $initialRemainingSec = $initialIsOnSale ? $product->flash_sale_remaining_seconds : 0;
+    $initialSaleEndAt = $initialIsOnSale ? $product->flash_sale_end_at : null;
 
     // Chuẩn bị danh sách ảnh cho Lightbox Modal (chỉ từ bộ ảnh chung, không lặp ảnh)
     $modalGalleryItems = collect();
@@ -541,15 +592,17 @@
                     @php
                         $relImg = $rel->images->firstWhere('is_primary', true) ?? $rel->images->first();
                         $relImgUrl = $relImg ? $relImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($rel->name);
-                        $relSale = !empty($rel->sale_price) && $rel->sale_price < $rel->price;
-                        $relDiscountPct = ($relSale && $rel->price > 0) ? round((($rel->price - $rel->sale_price) / $rel->price) * 100) : 0;
+                        $relRegularPrice = (float) $rel->lowest_price;
+                        $relSalePrice = $rel->lowest_sale_price;
+                        $relSale = ($relSalePrice !== null && $relSalePrice !== '' && (float)$relSalePrice >= 0 && (float)$relSalePrice < $relRegularPrice);
+                        $relDiscountPct = ($relSale && $relRegularPrice > 0) ? round((($relRegularPrice - (float)$relSalePrice) / $relRegularPrice) * 100) : 0;
                     @endphp
                     <div class="product-card">
                         <div class="product-card-img-wrap">
                             @if($relSale && $relDiscountPct > 0)
                                 <span class="card-badge-sale">-{{ $relDiscountPct }}%</span>
                             @endif
-                            <button type="button" class="btn-wishlist-card" data-product-id="{{ $rel->id }}" onclick="toggleWishlist({ id: {{ $rel->id }}, name: '{{ addslashes($rel->name) }}', price: {{ $rel->price }}, sale_price: {{ $rel->sale_price ?? 'null' }}, image_url: '{{ $relImgUrl }}' }, event)" title="Lưu vào yêu thích">
+                            <button type="button" class="btn-wishlist-card" data-product-id="{{ $rel->id }}" onclick="toggleWishlist({ id: {{ $rel->id }}, name: '{{ addslashes($rel->name) }}', price: {{ $relRegularPrice }}, sale_price: {{ ($relSalePrice !== null) ? (float)$relSalePrice : 'null' }}, image_url: '{{ $relImgUrl }}' }, event)" title="Lưu vào yêu thích">
                                 <i class="fa-regular fa-heart"></i>
                             </button>
                             <a href="{{ route('products.show', $rel->id) }}">
@@ -566,10 +619,10 @@
                             <div>
                                 <div class="product-card-prices">
                                     @if($relSale)
-                                        <span class="price-current">{{ number_format($rel->sale_price, 0, ',', '.') }} đ</span>
-                                        <span class="price-old">{{ number_format($rel->price, 0, ',', '.') }} đ</span>
+                                        <span class="price-current">{{ number_format($relSalePrice, 0, ',', '.') }} đ</span>
+                                        <span class="price-old">{{ number_format($relRegularPrice, 0, ',', '.') }} đ</span>
                                     @else
-                                        <span class="price-current" style="color: var(--primary-dark);">{{ number_format($rel->price, 0, ',', '.') }} đ</span>
+                                        <span class="price-current" style="color: var(--primary-dark);">{{ number_format($relRegularPrice, 0, ',', '.') }} đ</span>
                                     @endif
                                 </div>
                                 <div class="product-card-footer">
@@ -655,11 +708,14 @@
 
 @section('scripts')
 <script>
-    let maxStock = {{ (int) $product->stock_quantity }};
-    const productTotalStock = {{ (int) $product->stock_quantity }};
+    let maxStock = {{ $variants->isNotEmpty() ? (int) $variants->sum('stock_quantity') : (int) $product->stock_quantity }};
+    const productTotalStock = {{ $variants->isNotEmpty() ? (int) $variants->sum('stock_quantity') : (int) $product->stock_quantity }};
     const primaryImageUrl = "{{ $primaryUrl }}";
     const productBasePrice = {{ (float) $product->lowest_price }};
-    const productBaseSalePrice = {{ ($product->lowest_sale_price !== null && $product->lowest_sale_price !== '') ? (float)$product->lowest_sale_price : 'null' }};
+    const productBaseSalePrice = {{ ($product->lowest_sale_price !== null && $product->lowest_sale_price !== '' && is_numeric($product->lowest_sale_price) && (float)$product->lowest_sale_price >= 0) ? (float)$product->lowest_sale_price : 'null' }};
+    const productBaseIsOnSale = {{ $initialIsOnSale ? 'true' : 'false' }};
+    const productBaseRemainingSec = {{ $initialRemainingSec }};
+    const productBaseDiscountPct = {{ $initialDiscountPct }};
     const productVariants = @json($variants->values());
     const modalGalleryItems = @json($modalGalleryItems->values());
     const hasColorVariants = {{ $variantColors->count() > 0 ? 'true' : 'false' }};
@@ -1212,10 +1268,8 @@
             activeImageUrl = primaryImageUrl;
             syncGalleryThumbnail(primaryImageUrl);
 
-            // Khôi phục giá gốc / sale thấp nhất của sản phẩm cha
-            const hasSale = (productBaseSalePrice !== null && productBaseSalePrice !== '' && !isNaN(productBaseSalePrice) && productBaseSalePrice < productBasePrice);
-            const discountPct = (hasSale && productBasePrice > 0) ? Math.round(((productBasePrice - productBaseSalePrice) / productBasePrice) * 100) : 0;
-            renderPriceDisplay(productBasePrice, productBaseSalePrice, discountPct, false, false, null, 0);
+            // Khôi phục giá gốc / sale thấp nhất của sản phẩm cha kèm Flash Sale countdown nếu có
+            renderPriceDisplay(productBasePrice, productBaseSalePrice, productBaseDiscountPct, productBaseIsOnSale, false, null, productBaseRemainingSec);
 
             // Tổng tồn kho toàn bộ sản phẩm
             renderStockAndButtons(productTotalStock);
@@ -1238,14 +1292,37 @@
                 syncGalleryThumbnail(newImg);
             }
 
-            // Giá thấp nhất của các biến thể màu này
-            const prices = colorVars.map(v => Number(v.price)).filter(p => !isNaN(p) && p >= 0);
-            const salePrices = colorVars.map(v => (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null).filter(p => p !== null);
-            const minPrice = prices.length > 0 ? Math.min(...prices) : productBasePrice;
-            const minSalePrice = salePrices.length > 0 ? Math.min(...salePrices) : null;
-            const hasSale = (minSalePrice !== null && minSalePrice < minPrice);
-            const discountPct = (hasSale && minPrice > 0) ? Math.round(((minPrice - minSalePrice) / minPrice) * 100) : 0;
-            renderPriceDisplay(minPrice, minSalePrice, discountPct, false, false, null, 0);
+            // Tìm variant có giá thực tế thấp nhất trong nhóm màu này
+            let bestVar = null;
+            let minEffPrice = Infinity;
+            const now = new Date();
+
+            colorVars.forEach(v => {
+                const regP = Number(v.price) || 0;
+                const sP = (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null;
+                const startAt = v.sale_start_at ? new Date(v.sale_start_at) : null;
+                const endAt = v.sale_end_at ? new Date(v.sale_end_at) : null;
+                
+                const isSale = (sP !== null && sP >= 0 && sP < regP && (!startAt || now >= startAt) && (!endAt || now <= endAt));
+                const eff = isSale ? sP : regP;
+
+                if (eff < minEffPrice || (eff === minEffPrice && isSale && bestVar && !bestVar.isOnSale)) {
+                    minEffPrice = eff;
+                    bestVar = {
+                        variant: v,
+                        regularPrice: regP,
+                        salePrice: sP,
+                        isOnSale: isSale,
+                        saleEndAt: endAt
+                    };
+                }
+            });
+
+            if (bestVar) {
+                const discountPct = (bestVar.isOnSale && bestVar.regularPrice > 0) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
+                const remSec = (bestVar.isOnSale && bestVar.saleEndAt) ? Math.max(0, Math.floor((bestVar.saleEndAt - now) / 1000)) : 0;
+                renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, bestVar.isOnSale, false, null, remSec);
+            }
 
             // Tổng tồn kho màu này
             const sumStock = colorVars.reduce((acc, v) => acc + (parseInt(v.stock_quantity) || 0), 0);
@@ -1268,14 +1345,37 @@
                 syncGalleryThumbnail(firstWithImg.image_url);
             }
 
-            // Giá thấp nhất của các biến thể size này
-            const prices = sizeVars.map(v => Number(v.price)).filter(p => !isNaN(p) && p >= 0);
-            const salePrices = sizeVars.map(v => (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null).filter(p => p !== null);
-            const minPrice = prices.length > 0 ? Math.min(...prices) : productBasePrice;
-            const minSalePrice = salePrices.length > 0 ? Math.min(...salePrices) : null;
-            const hasSale = (minSalePrice !== null && minSalePrice < minPrice);
-            const discountPct = (hasSale && minPrice > 0) ? Math.round(((minPrice - minSalePrice) / minPrice) * 100) : 0;
-            renderPriceDisplay(minPrice, minSalePrice, discountPct, false, false, null, 0);
+            // Tìm variant có giá thực tế thấp nhất trong nhóm size này
+            let bestVar = null;
+            let minEffPrice = Infinity;
+            const now = new Date();
+
+            sizeVars.forEach(v => {
+                const regP = Number(v.price) || 0;
+                const sP = (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null;
+                const startAt = v.sale_start_at ? new Date(v.sale_start_at) : null;
+                const endAt = v.sale_end_at ? new Date(v.sale_end_at) : null;
+                
+                const isSale = (sP !== null && sP >= 0 && sP < regP && (!startAt || now >= startAt) && (!endAt || now <= endAt));
+                const eff = isSale ? sP : regP;
+
+                if (eff < minEffPrice || (eff === minEffPrice && isSale && bestVar && !bestVar.isOnSale)) {
+                    minEffPrice = eff;
+                    bestVar = {
+                        variant: v,
+                        regularPrice: regP,
+                        salePrice: sP,
+                        isOnSale: isSale,
+                        saleEndAt: endAt
+                    };
+                }
+            });
+
+            if (bestVar) {
+                const discountPct = (bestVar.isOnSale && bestVar.regularPrice > 0) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
+                const remSec = (bestVar.isOnSale && bestVar.saleEndAt) ? Math.max(0, Math.floor((bestVar.saleEndAt - now) / 1000)) : 0;
+                renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, bestVar.isOnSale, false, null, remSec);
+            }
 
             // Tổng tồn kho size này
             const sumStock = sizeVars.reduce((acc, v) => acc + (parseInt(v.stock_quantity) || 0), 0);

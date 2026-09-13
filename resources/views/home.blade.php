@@ -32,7 +32,7 @@
                 <div class="hero-slides-wrapper" id="heroSlidesWrapper">
                     <!-- SLIDE 1: THẾ GIỚI GẤU BÔNG CLASSIC -->
                     <div class="hero-slide active" data-slide="0">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/home-hero-banner.png') }}?v={{ file_exists(public_path('images/home-hero-banner.png')) ? filemtime(public_path('images/home-hero-banner.png')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/home-hero-banner.png') }}?v={{ file_exists(public_path('images/dashboard/home-hero-banner.png')) ? filemtime(public_path('images/dashboard/home-hero-banner.png')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-fan"></i> BỘ SƯU TẬP MỚI 2026 <i class="fa-solid fa-fan"></i>
@@ -87,7 +87,7 @@
 
                     <!-- SLIDE 2: BUTTER BEAR ĐỘC QUYỀN -->
                     <div class="hero-slide" data-slide="1">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/hero-banner-2.jpg') }}?v={{ file_exists(public_path('images/hero-banner-2.jpg')) ? filemtime(public_path('images/hero-banner-2.jpg')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/hero-banner-2.jpg') }}?v={{ file_exists(public_path('images/dashboard/hero-banner-2.jpg')) ? filemtime(public_path('images/dashboard/hero-banner-2.jpg')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-sparkles"></i> BUTTER BEAR ĐỘC QUYỀN <i class="fa-solid fa-sparkles"></i>
@@ -142,7 +142,7 @@
 
                     <!-- SLIDE 3: TEDDY MR. BEAN VINTAGE -->
                     <div class="hero-slide" data-slide="2">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/hero-banner-3.jpg') }}?v={{ file_exists(public_path('images/hero-banner-3.jpg')) ? filemtime(public_path('images/hero-banner-3.jpg')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/hero-banner-3.jpg') }}?v={{ file_exists(public_path('images/dashboard/hero-banner-3.jpg')) ? filemtime(public_path('images/dashboard/hero-banner-3.jpg')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-coffee"></i> TEDDY MR. BEAN VINTAGE <i class="fa-solid fa-coffee"></i>
@@ -204,7 +204,7 @@
 
                     <!-- SLIDE 4: GẤU BÔNG COUPLE YÊU THƯƠNG -->
                     <div class="hero-slide" data-slide="3">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/hero-banner-4.jpg') }}?v={{ file_exists(public_path('images/hero-banner-4.jpg')) ? filemtime(public_path('images/hero-banner-4.jpg')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/hero-banner-4.jpg') }}?v={{ file_exists(public_path('images/dashboard/hero-banner-4.jpg')) ? filemtime(public_path('images/dashboard/hero-banner-4.jpg')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-heart-pulse"></i> QUÀ TẶNG TÌNH YÊU <i class="fa-solid fa-heart-pulse"></i>
@@ -257,7 +257,7 @@
 
                     <!-- SLIDE 5: TEDDY KHỔNG LỒ & GỐI ÔM -->
                     <div class="hero-slide" data-slide="4">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/hero-banner-5.jpg') }}?v={{ file_exists(public_path('images/hero-banner-5.jpg')) ? filemtime(public_path('images/hero-banner-5.jpg')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/hero-banner-5.jpg') }}?v={{ file_exists(public_path('images/dashboard/hero-banner-5.jpg')) ? filemtime(public_path('images/dashboard/hero-banner-5.jpg')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-moon"></i> TEDDY KHỔNG LỒ &amp; GỐI ÔM <i class="fa-solid fa-moon"></i>
@@ -493,8 +493,8 @@
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
                     $regularPrice = (float) $product->lowest_price;
                     $salePrice = $product->lowest_sale_price;
-                    $hasSale = !empty($salePrice) && (float)$salePrice < $regularPrice;
-                    $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - $salePrice) / $regularPrice) * 100) : 0;
+                    $hasSale = ($salePrice !== null && $salePrice !== '' && (float)$salePrice >= 0 && (float)$salePrice < $regularPrice);
+                    $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - (float)$salePrice) / $regularPrice) * 100) : 0;
                 @endphp
                 <div class="product-card">
                     <div class="product-card-img-wrap">
@@ -502,7 +502,7 @@
                             <span class="card-badge-sale">-{{ $discountPct }}%</span>
                         @endif
                         <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
-                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ $salePrice ?? 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
+                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
                             <i class="fa-regular fa-heart"></i>
                         </button>
                         <a href="{{ route('products.show', $product->id) }}">
@@ -587,15 +587,15 @@
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
                     $regularPrice = (float) $product->lowest_price;
                     $salePrice = $product->lowest_sale_price;
-                    $hasSale = !empty($salePrice) && (float)$salePrice < $regularPrice;
-                    $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - $salePrice) / $regularPrice) * 100) : 0;
+                    $hasSale = ($salePrice !== null && $salePrice !== '' && (float)$salePrice >= 0 && (float)$salePrice < $regularPrice);
+                    $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - (float)$salePrice) / $regularPrice) * 100) : 0;
                 @endphp
                 <div class="product-card">
                     <div class="product-card-img-wrap">
                         @if($hasSale && $discountPct > 0)
                             <span class="card-badge-sale">-{{ $discountPct }}%</span>
                         @endif
-                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ $salePrice ?? 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
+                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
                             <i class="fa-regular fa-heart"></i>
                         </button>
                         <a href="{{ route('products.show', $product->id) }}">

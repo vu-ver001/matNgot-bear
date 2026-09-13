@@ -876,7 +876,9 @@
                 }
 
                 qvProduct = json.data;
-                qvMaxStock = qvProduct.stock_quantity || 1;
+                qvMaxStock = (qvProduct.variants && qvProduct.variants.length > 0)
+                    ? qvProduct.variants.reduce((sum, v) => sum + (Number(v.stock_quantity) || 0), 0)
+                    : (Number(qvProduct.stock_quantity) || 0);
 
                 // Ảnh
                 const primaryImg = (qvProduct.images && qvProduct.images.find(i => i.is_primary)) || (qvProduct.images && qvProduct.images[0]) || null;

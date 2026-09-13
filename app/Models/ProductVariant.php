@@ -22,7 +22,6 @@ class ProductVariant extends Model
         'sale_end_at',
         'stock_quantity',
         'image_url',
-        'is_default',
         'status',
     ];
 
@@ -32,7 +31,6 @@ class ProductVariant extends Model
         'sale_start_at' => 'datetime',
         'sale_end_at' => 'datetime',
         'stock_quantity' => 'integer',
-        'is_default' => 'boolean',
     ];
 
     protected $appends = [
@@ -43,6 +41,21 @@ class ProductVariant extends Model
         'discount_percent',
         'sale_remaining_seconds',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (ProductVariant $variant) {
+            $variant->product?->syncLowestPriceFromVariants();
+        });
+
+        static::deleted(function (ProductVariant $variant) {
+            $variant->product?->syncLowestPriceFromVariants();
+        });
+
+        static::restored(function (ProductVariant $variant) {
+            $variant->product?->syncLowestPriceFromVariants();
+        });
+    }
 
     /**
      * Sản phẩm cha sở hữu biến thể này.
@@ -57,7 +70,7 @@ class ProductVariant extends Model
      */
     public function getIsOnSaleAttribute(): bool
     {
-        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price >= (float)$this->price) {
+        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price < 0 || (float)$this->sale_price >= (float)$this->price) {
             return false;
         }
 
@@ -79,7 +92,7 @@ class ProductVariant extends Model
      */
     public function getIsSaleUpcomingAttribute(): bool
     {
-        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price >= (float)$this->price) {
+        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price < 0 || (float)$this->sale_price >= (float)$this->price) {
             return false;
         }
 
@@ -92,7 +105,7 @@ class ProductVariant extends Model
      */
     public function getDiscountPercentAttribute(): int
     {
-        if ($this->price > 0 && $this->sale_price !== null && $this->sale_price !== '' && (float)$this->sale_price < (float)$this->price) {
+        if ($this->price > 0 && $this->sale_price !== null && $this->sale_price !== '' && (float)$this->sale_price >= 0 && (float)$this->sale_price < (float)$this->price) {
             return (int) round((((float)$this->price - (float)$this->sale_price) / (float)$this->price) * 100);
         }
         return 0;

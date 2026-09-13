@@ -47,7 +47,12 @@ class ProductController extends Controller
 
         // Lọc theo trạng thái
         if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+            $statusVal = $request->input('status');
+            if ($statusVal === 'TRASHED') {
+                $query->onlyTrashed();
+            } else {
+                $query->where('status', $statusVal);
+            }
         }
 
         // Lọc theo tình trạng tồn kho: Lọc ra sản phẩm cha có ít nhất 1 sản phẩm con thỏa mãn điều kiện
@@ -164,7 +169,8 @@ class ProductController extends Controller
      */
     public function store(ProductRequest $request): JsonResponse|RedirectResponse
     {
-        $product = DB::transaction(function () use ($request) {
+        try {
+            $product = DB::transaction(function () use ($request) {
             $validated = $request->validated();
             $parentData = array_diff_key($validated, array_flip([
                 'images', 'image_files', 'primary_index', 
@@ -186,12 +192,10 @@ class ProductController extends Controller
             if (!empty($variantsInput)) {
                 $numericPrices = array_filter(
                     array_map(fn($v) => isset($v['price']) && is_numeric($v['price']) ? (float)$v['price'] : null, $variantsInput),
-                    fn($p) => $p !== null && $p > 0
+                    fn($p) => $p !== null && $p >= 0
                 );
                 $lowestPrice = !empty($numericPrices) ? min($numericPrices) : 0;
-                
-                $stocks = array_column($variantsInput, 'stock_quantity');
-                $defaultStock = array_sum(array_map('intval', $stocks));
+                $defaultStock = array_sum(array_map(fn($v) => (int)($v['stock_quantity'] ?? 0), $variantsInput));
 
                 $firstVariant = $variantsInput[0] ?? [];
                 $defaultSize = $firstVariant['size'] ?? null;
@@ -200,23 +204,15 @@ class ProductController extends Controller
                 // Giá khuyến mãi thấp nhất hợp lệ
                 $salePrices = array_filter(
                     array_map(fn($v) => isset($v['sale_price']) && is_numeric($v['sale_price']) ? (float)$v['sale_price'] : null, $variantsInput),
-                    fn($sp) => $sp !== null && $sp > 0 && $sp < $lowestPrice
+                    fn($sp) => $sp !== null && $sp >= 0 && $sp < $lowestPrice
                 );
                 $lowestSalePrice = !empty($salePrices) ? min($salePrices) : null;
-
-                foreach ($variantsInput as $v) {
-                    if (!empty($v['is_default'])) {
-                        $defaultSize = $v['size'] ?? $defaultSize;
-                        $defaultColor = $v['color'] ?? $defaultColor;
-                        break;
-                    }
-                }
 
                 $parentData['price'] = $lowestPrice;
                 $parentData['sale_price'] = $lowestSalePrice;
                 $parentData['stock_quantity'] = $defaultStock;
                 $parentData['size'] = $defaultSize;
-                $parentData['color'] = $defaultColor;
+                $parentData['color'] = !empty($defaultColor) ? mb_convert_case(trim($defaultColor), MB_CASE_TITLE, "UTF-8") : null;
             } else {
                 if (!isset($parentData['price']) || $parentData['price'] === null) {
                     $parentData['price'] = 0;
@@ -226,21 +222,15 @@ class ProductController extends Controller
             // Tạo sản phẩm cha
             $product = Product::create($parentData);
 
-            // Xử lý các file ảnh cha được tải lên từ máy tính (tối đa 6 ảnh)
+            // Xử lý các file ảnh Bộ ảnh sản phẩm chính được tải lên từ máy tính (tối đa 9 ảnh)
             $primaryImageUrl = null;
             if ($request->hasFile('image_files')) {
-                $files = array_slice($request->file('image_files'), 0, 6);
+                $files = array_slice($request->file('image_files'), 0, 9);
                 $primaryIndex = (int) $request->input('primary_index', 0);
-                $uploadPath = public_path('uploads/products');
-
-                if (!file_exists($uploadPath)) {
-                    mkdir($uploadPath, 0755, true);
-                }
 
                 foreach ($files as $index => $file) {
-                    $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                    $file->move($uploadPath, $filename);
-                    $imageUrl = asset('uploads/products/' . $filename);
+                    $mime = $file->getMimeType() ?: 'image/jpeg';
+                    $imageUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
                     $isPrimary = ($index === $primaryIndex);
 
                     if ($isPrimary) {
@@ -255,61 +245,67 @@ class ProductController extends Controller
                     ]);
                 }
             } elseif ($request->has('images')) {
-                $images = array_slice($request->input('images'), 0, 6);
+                $images = array_slice($request->input('images'), 0, 9);
                 $this->syncImages($product, $images);
             }
 
-            // Đảm bảo luôn có 1 ảnh đại diện nếu có ảnh
-            if ($product->images()->count() > 0 && !$product->images()->where('is_primary', true)->exists()) {
-                $product->images()->first()?->update(['is_primary' => true]);
-            }
-            if (!$primaryImageUrl) {
-                $primaryImageUrl = $product->images()->where('is_primary', true)->value('image_url');
+            // Nếu không có ảnh cha nào được chỉ định từ file, lấy ảnh đầu tiên làm primary
+            if (!$primaryImageUrl && $product->images()->count() > 0) {
+                $primaryImageUrl = $product->images()->where('is_primary', true)->value('image_url')
+                    ?? $product->images()->first()?->image_url;
             }
 
-            // Xử lý tạo các sản phẩm con (biến thể)
+            // Xử lý các biến thể (sản phẩm con)
+            $hasDefaultVariant = false;
+            $usedSkusInBatch = [];
+
             if (!empty($variantsInput)) {
-                $hasDefaultVariant = false;
-                $variantUploadPath = public_path('uploads/products/variants');
-                if (!file_exists($variantUploadPath)) {
-                    mkdir($variantUploadPath, 0755, true);
+                // Bản đồ ảnh theo màu sắc để tự động kế thừa ảnh giữa các kích thước cùng màu
+                $colorImageMap = [];
+
+                // Bước 1: Lưu file tải lên dưới dạng base64 hoặc lưu URL ảnh hợp lệ cho từng dòng và từng nhóm màu
+                foreach ($variantsInput as $vIndex => $vData) {
+                    $cKey = mb_strtolower(trim($vData['color'] ?? ''));
+                    if ($request->hasFile("variant_images.{$vIndex}")) {
+                        $varFile = $request->file("variant_images.{$vIndex}");
+                        $mime = $varFile->getMimeType() ?: 'image/jpeg';
+                        $savedUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($varFile->getRealPath()));
+                        $colorImageMap[$vIndex] = $savedUrl;
+                        if ($cKey !== '' && !isset($colorImageMap[$cKey])) {
+                            $colorImageMap[$cKey] = $savedUrl;
+                        }
+                    } elseif (!empty($vData['image_url']) && !str_contains($vData['image_url'], 'placehold.co')) {
+                        $colorImageMap[$vIndex] = $vData['image_url'];
+                        if ($cKey !== '' && !isset($colorImageMap[$cKey])) {
+                            $colorImageMap[$cKey] = $vData['image_url'];
+                        }
+                    }
                 }
 
                 foreach ($variantsInput as $vIndex => $vData) {
-                    $variantImgUrl = $vData['image_url'] ?? null;
+                    $cKey = mb_strtolower(trim($vData['color'] ?? ''));
+                    $rawColor = trim($vData['color'] ?? '');
+                    $formattedColor = $rawColor !== '' ? mb_convert_case($rawColor, MB_CASE_TITLE, "UTF-8") : null;
 
-                    // Nếu có upload file ảnh riêng cho biến thể này
-                    if ($request->hasFile("variant_images.{$vIndex}")) {
-                        $varFile = $request->file("variant_images.{$vIndex}");
-                        $vFilename = time() . '_var_' . uniqid() . '.' . $varFile->getClientOriginalExtension();
-                        $varFile->move($variantUploadPath, $vFilename);
-                        $variantImgUrl = asset('uploads/products/variants/' . $vFilename);
-                    }
+                    $variantImgUrl = $colorImageMap[$vIndex] 
+                                    ?? ($cKey !== '' ? ($colorImageMap[$cKey] ?? null) : null) 
+                                    ?? (!empty($vData['image_url']) && !str_contains($vData['image_url'], 'placehold.co') ? $vData['image_url'] : null);
 
-                    if (empty($variantImgUrl)) {
-                        $variantImgUrl = $primaryImageUrl;
-                    }
-
-                    $isDef = !empty($vData['is_default']) || (!$hasDefaultVariant && $vIndex === 0);
-                    if ($isDef) {
-                        $hasDefaultVariant = true;
-                    }
-
-                    // Tự sinh SKU nếu chưa có
-                    $sku = !empty($vData['sku']) ? $vData['sku'] : ('PRD' . $product->id . '-' . strtoupper(substr(md5(($vData['size'] ?? '') . ($vData['color'] ?? '') . $vIndex), 0, 6)));
+                    // Tự sinh SKU duy nhất, chống xung đột trùng lặp tuyệt đối
+                    $sku = $this->generateUniqueSku($vData['sku'] ?? null, $product->id, $vIndex, null, $usedSkusInBatch);
+                    $hasValidSale = (isset($vData['sale_price']) && $vData['sale_price'] !== '' && $vData['sale_price'] !== null && (float)$vData['sale_price'] >= 0);
 
                     ProductVariant::create([
                         'product_id'     => $product->id,
                         'sku'            => $sku,
                         'size'           => $vData['size'] ?? null,
-                        'color'          => $vData['color'] ?? null,
+                        'color'          => $formattedColor,
                         'price'          => $vData['price'] ?? $product->price,
-                        'sale_price'     => (isset($vData['sale_price']) && $vData['sale_price'] !== '' && $vData['sale_price'] !== null) ? $vData['sale_price'] : null,
-                        'sale_start_at'  => !empty($vData['sale_start_at']) ? $vData['sale_start_at'] : null,
-                        'sale_end_at'    => !empty($vData['sale_end_at']) ? $vData['sale_end_at'] : null,
+                        'sale_price'     => $hasValidSale ? $vData['sale_price'] : null,
+                        'sale_start_at'  => ($hasValidSale && !empty($vData['sale_start_at'])) ? $vData['sale_start_at'] : null,
+                        'sale_end_at'    => ($hasValidSale && !empty($vData['sale_end_at'])) ? $vData['sale_end_at'] : null,
                         'stock_quantity' => (int) ($vData['stock_quantity'] ?? 0),
                         'image_url'      => $variantImgUrl,
-                        'is_default'     => $isDef,
                         'status'         => $vData['status'] ?? 'ACTIVE',
                     ]);
                 }
@@ -332,6 +328,16 @@ class ProductController extends Controller
             'message' => 'Tạo sản phẩm thành công.',
             'data'    => $product,
         ], 201);
+        } catch (\Throwable $e) {
+            \Log::error('Lỗi tạo sản phẩm: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi lưu sản phẩm: ' . $e->getMessage(),
+                ], 422);
+            }
+            return back()->withInput()->with('error', 'Lỗi lưu sản phẩm: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -357,7 +363,8 @@ class ProductController extends Controller
      */
     public function update(ProductRequest $request, Product $product): JsonResponse|RedirectResponse
     {
-        DB::transaction(function () use ($request, $product) {
+        try {
+            DB::transaction(function () use ($request, $product) {
             $validated = $request->validated();
             $parentData = array_diff_key($validated, array_flip([
                 'images', 'image_files', 'kept_image_ids', 
@@ -381,18 +388,12 @@ class ProductController extends Controller
 
             if ($request->hasFile('image_files')) {
                 $existingCount = $product->images()->count();
-                $remainingSlots = max(0, 6 - $existingCount);
+                $remainingSlots = max(0, 9 - $existingCount);
                 $files = array_slice($request->file('image_files'), 0, $remainingSlots);
 
-                $uploadPath = public_path('uploads/products');
-                if (!file_exists($uploadPath)) {
-                    mkdir($uploadPath, 0755, true);
-                }
-
                 foreach ($files as $index => $file) {
-                    $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                    $file->move($uploadPath, $filename);
-                    $imageUrl = asset('uploads/products/' . $filename);
+                    $mime = $file->getMimeType() ?: 'image/jpeg';
+                    $imageUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
 
                     $isPrimary = ($primaryType === 'new' && $index === $primaryIndex);
 
@@ -423,44 +424,54 @@ class ProductController extends Controller
                 // Xóa các biến thể không còn trong danh sách gửi lên
                 $product->variants()->whereNotIn('id', $submittedIds)->delete();
 
-                $hasDefault = false;
-                $variantUploadPath = public_path('uploads/products/variants');
-                if (!file_exists($variantUploadPath)) {
-                    mkdir($variantUploadPath, 0755, true);
+                $usedSkusInBatch = [];
+
+                // Bản đồ ảnh theo màu sắc để tự động kế thừa ảnh giữa các kích thước cùng màu
+                $colorImageMap = [];
+
+                // Bước 1: Lưu file tải lên dưới dạng base64 hoặc lấy URL ảnh hợp lệ cho từng dòng và từng nhóm màu
+                foreach ($variantsInput as $vIndex => $vData) {
+                    $cKey = mb_strtolower(trim($vData['color'] ?? ''));
+                    if ($request->hasFile("variant_images.{$vIndex}")) {
+                        $varFile = $request->file("variant_images.{$vIndex}");
+                        $mime = $varFile->getMimeType() ?: 'image/jpeg';
+                        $savedUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($varFile->getRealPath()));
+                        $colorImageMap[$vIndex] = $savedUrl;
+                        if ($cKey !== '' && !isset($colorImageMap[$cKey])) {
+                            $colorImageMap[$cKey] = $savedUrl;
+                        }
+                    } elseif (!empty($vData['image_url']) && !str_contains($vData['image_url'], 'placehold.co')) {
+                        $colorImageMap[$vIndex] = $vData['image_url'];
+                        if ($cKey !== '' && !isset($colorImageMap[$cKey])) {
+                            $colorImageMap[$cKey] = $vData['image_url'];
+                        }
+                    }
                 }
 
                 foreach ($variantsInput as $vIndex => $vData) {
                     $varId = !empty($vData['id']) ? (int)$vData['id'] : null;
-                    $variantImgUrl = $vData['image_url'] ?? null;
+                    $cKey = mb_strtolower(trim($vData['color'] ?? ''));
+                    $rawColor = trim($vData['color'] ?? '');
+                    $formattedColor = $rawColor !== '' ? mb_convert_case($rawColor, MB_CASE_TITLE, "UTF-8") : null;
 
-                    // Nếu có file upload cho biến thể này
-                    if ($request->hasFile("variant_images.{$vIndex}")) {
-                        $varFile = $request->file("variant_images.{$vIndex}");
-                        $vFilename = time() . '_var_' . uniqid() . '.' . $varFile->getClientOriginalExtension();
-                        $varFile->move($variantUploadPath, $vFilename);
-                        $variantImgUrl = asset('uploads/products/variants/' . $vFilename);
-                    }
+                    $variantImgUrl = $colorImageMap[$vIndex] 
+                                    ?? ($cKey !== '' ? ($colorImageMap[$cKey] ?? null) : null) 
+                                    ?? (!empty($vData['image_url']) && !str_contains($vData['image_url'], 'placehold.co') ? $vData['image_url'] : null);
 
-                    if (empty($variantImgUrl)) {
-                        $variantImgUrl = $primaryImageUrl;
-                    }
+                    $sku = $this->generateUniqueSku($vData['sku'] ?? null, $product->id, $vIndex, $varId, $usedSkusInBatch);
 
-                    $isDef = !empty($vData['is_default']);
-                    if ($isDef) {
-                        $hasDefault = true;
-                    }
+                    $hasValidSale = (isset($vData['sale_price']) && $vData['sale_price'] !== '' && $vData['sale_price'] !== null && (float)$vData['sale_price'] >= 0);
 
                     $vFields = [
-                        'sku'            => !empty($vData['sku']) ? $vData['sku'] : ('PRD' . $product->id . '-' . strtoupper(substr(md5(($vData['size'] ?? '') . ($vData['color'] ?? '') . $vIndex), 0, 6))),
+                        'sku'            => $sku,
                         'size'           => $vData['size'] ?? null,
-                        'color'          => $vData['color'] ?? null,
+                        'color'          => $formattedColor,
                         'price'          => $vData['price'] ?? $product->price,
-                        'sale_price'     => (isset($vData['sale_price']) && $vData['sale_price'] !== '' && $vData['sale_price'] !== null) ? $vData['sale_price'] : null,
-                        'sale_start_at'  => !empty($vData['sale_start_at']) ? $vData['sale_start_at'] : null,
-                        'sale_end_at'    => !empty($vData['sale_end_at']) ? $vData['sale_end_at'] : null,
+                        'sale_price'     => $hasValidSale ? $vData['sale_price'] : null,
+                        'sale_start_at'  => ($hasValidSale && !empty($vData['sale_start_at'])) ? $vData['sale_start_at'] : null,
+                        'sale_end_at'    => ($hasValidSale && !empty($vData['sale_end_at'])) ? $vData['sale_end_at'] : null,
                         'stock_quantity' => (int) ($vData['stock_quantity'] ?? 0),
                         'image_url'      => $variantImgUrl,
-                        'is_default'     => $isDef,
                         'status'         => $vData['status'] ?? 'ACTIVE',
                     ];
 
@@ -472,37 +483,27 @@ class ProductController extends Controller
                     }
                 }
 
-                // Nếu chưa có biến thể nào được set default, set biến thể đầu tiên
-                if (!$hasDefault) {
-                    $product->variants()->first()?->update(['is_default' => true]);
-                }
-
-                // Cập nhật lại tổng tồn kho và khoảng giá lên sản phẩm cha
+                // Tính lại giá cha từ variants (dùng is_on_sale thực tế)
                 $allVariants = $product->variants()->get();
-                $prices = $allVariants->pluck('price')->filter(fn($p) => is_numeric($p) && (float)$p > 0)->map(fn($p) => (float)$p)->values()->all();
+                $prices = $allVariants->pluck('price')->filter(fn($p) => is_numeric($p) && (float)$p >= 0)->map(fn($p) => (float)$p)->values()->all();
                 $minPrice = !empty($prices) ? min($prices) : (float)$product->price;
 
-                $cheapestVariant = $allVariants->sortBy('price')->first();
-                $minSalePrice = null;
-                if ($cheapestVariant && !empty($cheapestVariant->sale_price) && (float)$cheapestVariant->sale_price < $minPrice) {
-                    $minSalePrice = (float)$cheapestVariant->sale_price;
-                }
-                $validSalePrices = $allVariants->pluck('sale_price')
-                    ->filter(fn($sp) => is_numeric($sp) && (float)$sp > 0 && (float)$sp < $minPrice)
+                // Chỉ lấy sale_price từ variant ĐANG THỰC SỰ SALE (is_on_sale = true)
+                $activeSalePrices = $allVariants
+                    ->filter(fn($v) => $v->is_on_sale && $v->sale_price !== null && (float)$v->sale_price >= 0 && (float)$v->sale_price < $minPrice)
+                    ->pluck('sale_price')
                     ->map(fn($sp) => (float)$sp)
                     ->values()
                     ->all();
-                if (!empty($validSalePrices)) {
-                    $minSalePrice = min($validSalePrices);
-                }
+                $minSalePrice = !empty($activeSalePrices) ? min($activeSalePrices) : null;
 
-                $defaultVar = $allVariants->firstWhere('is_default', true) ?? $allVariants->first();
+                $defaultVar = $allVariants->first();
 
                 $parentData['price'] = $minPrice;
                 $parentData['sale_price'] = $minSalePrice;
                 $parentData['stock_quantity'] = (int) $allVariants->sum('stock_quantity');
                 $parentData['size'] = $defaultVar ? $defaultVar->size : $product->size;
-                $parentData['color'] = $defaultVar ? $defaultVar->color : $product->color;
+                $parentData['color'] = $defaultVar && !empty($defaultVar->color) ? mb_convert_case(trim($defaultVar->color), MB_CASE_TITLE, "UTF-8") : $product->color;
             }
 
             // Cập nhật sản phẩm cha
@@ -513,9 +514,11 @@ class ProductController extends Controller
                 $product->variants()->update(['status' => 'INACTIVE']);
             }
 
+            // Sync cuối cùng để đảm bảo nhất quán (is_on_sale có thể thay đổi sau update)
             if (!empty($variantsInput)) {
                 $product->syncLowestPriceFromVariants();
             }
+
         });
 
         $product->load(['category', 'images', 'variants']);
@@ -529,6 +532,16 @@ class ProductController extends Controller
             'message' => 'Cập nhật sản phẩm thành công.',
             'data'    => $product,
         ]);
+        } catch (\Throwable $e) {
+            \Log::error('Lỗi cập nhật sản phẩm: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi cập nhật sản phẩm: ' . $e->getMessage(),
+                ], 422);
+            }
+            return back()->withInput()->with('error', 'Lỗi cập nhật sản phẩm: ' . $e->getMessage());
+        }
     }
 
 
@@ -599,14 +612,6 @@ class ProductController extends Controller
                 'success' => false,
                 'message' => 'Không thể xóa vì đây là phân loại con duy nhất còn lại của sản phẩm [' . $product->name . ']. Một sản phẩm cần có ít nhất 1 phân loại để hiển thị giá và đặt mua. Nếu không muốn bán sản phẩm này nữa, vui lòng tạm dừng kinh doanh hoặc xóa sản phẩm cha.',
             ], 422);
-        }
-
-        // 3. Nếu là biến thể mặc định, chuyển cờ mặc định sang biến thể kế tiếp
-        if ($variant->is_default && $product) {
-            $other = $product->variants()->where('id', '!=', $variant->id)->first();
-            if ($other) {
-                $other->update(['is_default' => true]);
-            }
         }
 
         $variantName = ($variant->size ? $variant->size : '') . ($variant->color ? ' - ' . $variant->color : '');
@@ -741,7 +746,7 @@ class ProductController extends Controller
     public function addImage(Request $request, Product $product): JsonResponse
     {
         $request->validate([
-            'image_url' => ['required', 'string', 'max:500'],
+            'image_url' => ['required', 'string'],
         ]);
 
         $hasPrimary = $product->images()->where('is_primary', true)->exists();
@@ -988,6 +993,41 @@ class ProductController extends Controller
         if (!$hasPrimary && count($images) > 0) {
             $product->images()->oldest('sort_order')->first()?->update(['is_primary' => true]);
         }
+    }
+
+    /**
+     * Đảm bảo SKU của biến thể là duy nhất trong toàn hệ thống (kể cả các bản ghi đã xóa mềm).
+     *
+     * @param string|null $suggestedSku SKU gợi ý từ form
+     * @param int $productId ID sản phẩm cha
+     * @param int $vIndex Thứ tự biến thể trong mảng gửi lên
+     * @param int|null $variantId ID biến thể đang cập nhật (nếu có)
+     * @param array $usedInBatch Danh sách SKU đã dùng trong batch hiện tại
+     * @return string
+     */
+    private function generateUniqueSku(?string $suggestedSku, int $productId, int $vIndex, ?int $variantId = null, array &$usedInBatch = []): string
+    {
+        $base = !empty($suggestedSku) ? trim($suggestedSku) : ('PRD' . $productId . '-V' . ($vIndex + 1));
+        $candidate = $base;
+        $counter = 1;
+
+        while (
+            in_array($candidate, $usedInBatch, true) ||
+            ProductVariant::withTrashed()
+                ->where('sku', $candidate)
+                ->when($variantId, fn($q) => $q->where('id', '!=', $variantId))
+                ->exists()
+        ) {
+            $candidate = $base . '-' . strtoupper(substr(uniqid(), -4));
+            $counter++;
+            if ($counter > 10) {
+                $candidate = 'PRD' . $productId . '-V' . ($vIndex + 1) . '-' . time() . '-' . mt_rand(100, 999);
+                break;
+            }
+        }
+
+        $usedInBatch[] = $candidate;
+        return $candidate;
     }
 }
 

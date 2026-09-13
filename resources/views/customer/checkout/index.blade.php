@@ -1299,8 +1299,8 @@
                                         $lineTotal = $unitPrice * $item->quantity;
                                         $primaryImage = $item->product->images->firstWhere('is_primary', true) ?? $item->product->images->first();
                                         $imageUrl = $primaryImage 
-                                            ? (str_starts_with($primaryImage->image_url, 'http') ? $primaryImage->image_url : asset($primaryImage->image_url))
-                                            : asset('images/products/butterbear-chef.jpg');
+                                            ? ((str_starts_with($primaryImage->image_url, 'http') || str_starts_with($primaryImage->image_url, 'data:')) ? $primaryImage->image_url : asset($primaryImage->image_url))
+                                            : asset('images/customer/product-placeholder.png');
                                         
                                         $specs = [];
                                         if (!empty($item->product->size)) { $specs[] = $item->product->size; }
@@ -1312,7 +1312,7 @@
                                         <div class="mn-product-thumb">
                                             <img src="{{ $imageUrl }}" 
                                                  alt="{{ $item->product->name }}" 
-                                                 onerror="this.src='{{ asset('images/products/butterbear-chef.jpg') }}'">
+                                                 onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'">
                                         </div>
 
                                         {{-- Details --}}

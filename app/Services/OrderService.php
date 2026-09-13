@@ -38,7 +38,29 @@ class OrderService
                     'line_total' => $lineTotal,
                 ];
 
-                $product->decrement('stock_quantity', $cartItem->quantity);
+                if ($product->variants()->exists()) {
+                    $remainingToDecrement = $cartItem->quantity;
+                    $variants = $product->variants()
+                        ->orderByDesc('stock_quantity')
+                        ->lockForUpdate()
+                        ->get();
+
+                    foreach ($variants as $variant) {
+                        if ($remainingToDecrement <= 0) break;
+                        $dec = min($variant->stock_quantity, $remainingToDecrement);
+                        if ($dec > 0) {
+                            $variant->decrement('stock_quantity', $dec);
+                            $remainingToDecrement -= $dec;
+                        }
+                    }
+                    if ($remainingToDecrement > 0 && $variants->isNotEmpty()) {
+                        $variants->first()->decrement('stock_quantity', $remainingToDecrement);
+                    }
+                    $product->stock_quantity = (int) $product->variants()->sum('stock_quantity');
+                    $product->saveQuietly();
+                } else {
+                    $product->decrement('stock_quantity', $cartItem->quantity);
+                }
             }
 
             $shippingFee = isset($data['shipping_fee']) ? (float) $data['shipping_fee'] : 30000;
@@ -509,7 +531,19 @@ class OrderService
     public function restoreStock(Order $order): void
     {
         foreach ($order->details as $detail) {
-            $detail->product()->withTrashed()->first()?->increment('stock_quantity', $detail->quantity);
+            $product = $detail->product()->withTrashed()->first();
+            if ($product) {
+                if ($product->variants()->exists()) {
+                    $defaultVar = $product->variants()->first();
+                    if ($defaultVar) {
+                        $defaultVar->increment('stock_quantity', $detail->quantity);
+                    }
+                    $product->stock_quantity = (int) $product->variants()->sum('stock_quantity');
+                    $product->saveQuietly();
+                } else {
+                    $product->increment('stock_quantity', $detail->quantity);
+                }
+            }
         }
     }
 

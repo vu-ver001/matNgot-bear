@@ -161,7 +161,9 @@
                             @foreach($suggestedProducts as $prod)
                                 @php
                                     $pImg = $prod->images->firstWhere('is_primary', true) ?? $prod->images->first();
-                                    $pImgUrl = $pImg ? asset($pImg->image_url) : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
+                                    $pImgUrl = $pImg 
+                                        ? ((str_starts_with($pImg->image_url, 'data:') || str_starts_with($pImg->image_url, 'http')) ? $pImg->image_url : asset($pImg->image_url)) 
+                                        : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
                                     $pPrice = $prod->sale_price ?? $prod->price;
                                     $pHasDiscount = !empty($prod->sale_price) && $prod->sale_price < $prod->price;
                                     $pDiscount = $pHasDiscount && $prod->price > 0 ? round((($prod->price - $prod->sale_price) / $prod->price) * 100) : 0;
@@ -237,7 +239,7 @@
                                 $primaryImage =
                                     $product->images->firstWhere('is_primary', true) ?? $product->images->first();
                                 $imageUrl = $primaryImage
-                                    ? asset($primaryImage->image_url)
+                                    ? ((str_starts_with($primaryImage->image_url, 'data:') || str_starts_with($primaryImage->image_url, 'http')) ? $primaryImage->image_url : asset($primaryImage->image_url))
                                     : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
                                 $price = $product->sale_price ?? $product->price;
                                 $hasDiscount = !empty($product->sale_price) && $product->sale_price < $product->price;

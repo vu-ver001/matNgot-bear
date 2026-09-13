@@ -7,7 +7,7 @@
         ? (int) round((1 - ((float) $item['sale_price'] / (float) $item['price'])) * 100)
         : 0;
     $rawImage = $item['primary_image'];
-    $imageUrl = $rawImage && \Illuminate\Support\Str::startsWith($rawImage, ['http://', 'https://', '//'])
+    $imageUrl = $rawImage && \Illuminate\Support\Str::startsWith($rawImage, ['http://', 'https://', '//', 'data:'])
         ? $rawImage
         : ($rawImage ? asset(ltrim($rawImage, '/')) : null);
     $roundedRating = (int) round($item['average_rating'] ?? 0);

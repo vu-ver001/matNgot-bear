@@ -128,6 +128,7 @@
                 <option value="">-- Trạng thái bán --</option>
                 <option value="ACTIVE">Đang kinh doanh</option>
                 <option value="INACTIVE">Ngừng kinh doanh</option>
+                <option value="TRASHED">Thùng rác (Đã xóa)</option>
             </select>
         </div>
 
@@ -434,10 +435,13 @@
             const imgCount = (p.images && p.images.length) || 0;
             const variantCount = (p.variants && p.variants.length) || 0;
 
-            const isOnSale = p.is_on_sale !== undefined ? Boolean(p.is_on_sale) : (p.sale_price !== null && p.sale_price !== '' && Number(p.sale_price) < Number(p.price));
+            // Dùng effective_price từ server (đã tính đúng theo is_on_sale + thời gian sale)
+            const effectivePrice = (p.effective_price !== undefined && p.effective_price !== null) ? Number(p.effective_price) : Number(p.price);
+            const isOnSale = Boolean(p.is_on_sale) && p.sale_price !== null && p.sale_price !== '' && !isNaN(Number(p.sale_price)) && Number(p.sale_price) >= 0 && Number(p.sale_price) < Number(p.price);
+            const displaySalePrice = isOnSale ? Number(p.sale_price) : null;
             let discountPercent = 0;
-            if (isOnSale && Number(p.price) > 0 && p.sale_price !== null && p.sale_price !== '') {
-                discountPercent = Math.round(((Number(p.price) - Number(p.sale_price)) / Number(p.price)) * 100);
+            if (isOnSale && Number(p.price) > 0 && displaySalePrice !== null) {
+                discountPercent = Math.round(((Number(p.price) - displaySalePrice) / Number(p.price)) * 100);
             }
 
             let sizesList = [];
@@ -451,7 +455,12 @@
             }
 
             let stockHtml = '';
-            const stockQty = Number(p.stock_quantity) || 0;
+            let stockQty = 0;
+            if (p.variants && p.variants.length > 0) {
+                stockQty = p.variants.reduce((sum, v) => sum + (Number(v.stock_quantity) || 0), 0);
+            } else {
+                stockQty = Number(p.stock_quantity) || 0;
+            }
             if (stockQty <= 0) {
                 stockHtml = `<span class="stock-pill out-stock"><i class="fa-solid fa-circle-xmark"></i> Hết hàng (0)</span>`;
             } else if (stockQty <= 5) {
@@ -498,10 +507,10 @@
                     <!-- 4. Giá Bán & Khuyến Mãi -->
                     <td>
                         <div class="price-display-wrap">
-                            ${isOnSale 
+                            ${isOnSale && displaySalePrice !== null
                                 ? `
                                     <div class="price-sale-highlight">
-                                        ${Number(p.sale_price).toLocaleString('vi-VN')} đ
+                                        ${displaySalePrice.toLocaleString('vi-VN')} đ
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 6px;">
                                         <span class="price-original-crossed">${Number(p.price).toLocaleString('vi-VN')} đ</span>
@@ -549,38 +558,61 @@
 
                     <!-- 7. Trạng Thái Kinh Doanh -->
                     <td style="text-align: center; width: 70px;">
-                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
-                            <div class="switch-toggle-box" onclick="toggleProductStatus(${p.id}, '${p.status}', '${p.name.replace(/'/g, "\\'")}')" title="Bấm để ${p.status === 'ACTIVE' ? 'tạm ngừng bán' : 'mở bán'} sản phẩm này">
-                                <div class="switch-toggle-track ${p.status === 'ACTIVE' ? 'active' : ''}">
-                                    <span class="switch-toggle-thumb"></span>
-                                </div>
-                            </div>
-                            <span style="font-size: 10px; font-weight: 700; color: ${p.status === 'ACTIVE' ? '#10B981' : '#8D6E63'};">
-                                ${p.status === 'ACTIVE' ? 'Bật' : 'Tắt'}
+                        ${p.deleted_at ? `
+                            <span style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 800; display: inline-block; white-space: nowrap;">
+                                Đã xóa
                             </span>
-                        </div>
+                        ` : `
+                            <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
+                                <div class="switch-toggle-box" onclick="toggleProductStatus(${p.id}, '${p.status}', '${p.name.replace(/'/g, "\\'")}')" title="Bấm để ${p.status === 'ACTIVE' ? 'tạm ngừng bán' : 'mở bán'} sản phẩm này">
+                                    <div class="switch-toggle-track ${p.status === 'ACTIVE' ? 'active' : ''}">
+                                        <span class="switch-toggle-thumb"></span>
+                                    </div>
+                                </div>
+                                <span style="font-size: 10px; font-weight: 700; color: ${p.status === 'ACTIVE' ? '#10B981' : '#8D6E63'};">
+                                    ${p.status === 'ACTIVE' ? 'Bật' : 'Tắt'}
+                                </span>
+                            </div>
+                        `}
                     </td>
 
                     <!-- 8. Thao Tác -->
                     <td style="text-align: right; width: 110px;">
                         <div class="actions-cell-wrap">
-                            <!-- Xem nhanh -->
-                            <button type="button" class="btn-action-round view" onclick="openQuickView(${p.id})" title="Xem nhanh toàn bộ chi tiết & biến thể">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
+                            ${p.deleted_at ? `
+                                <!-- Khôi phục sản phẩm -->
+                                <button type="button" class="btn-action-round edit" style="color: #10B981; border-color: #A7F3D0; background: #ECFDF5;" 
+                                        data-name="${escapeHtml(p.name)}"
+                                        onclick="confirmRestoreProduct(${p.id}, this.getAttribute('data-name'))" 
+                                        title="Khôi phục sản phẩm về kinh doanh">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                                <!-- Xóa vĩnh viễn -->
+                                <button type="button" class="btn-action-round delete" 
+                                        data-name="${escapeHtml(p.name)}"
+                                        onclick="confirmForceDeleteProduct(${p.id}, this.getAttribute('data-name'), ${Boolean(p.has_been_ordered)})" 
+                                        title="Xóa vĩnh viễn sản phẩm khỏi hệ thống">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            ` : `
+                                <!-- Xem nhanh -->
+                                <button type="button" class="btn-action-round view" onclick="openQuickView(${p.id})" title="Xem nhanh toàn bộ chi tiết & biến thể">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
 
-                            <!-- Chỉnh sửa -->
-                            <a href="/admin/products/${p.id}/edit" class="btn-action-round edit" title="Chỉnh sửa sản phẩm">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
+                                <!-- Chỉnh sửa -->
+                                <a href="/admin/products/${p.id}/edit" class="btn-action-round edit" title="Chỉnh sửa sản phẩm">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
 
-                            <!-- Xóa sản phẩm (Xóa mềm) -->
-                            <button type="button" class="btn-action-round delete" 
-                                    data-name="${escapeHtml(p.name)}"
-                                    onclick="confirmDeleteProduct(${p.id}, this.getAttribute('data-name'), ${variantCount})" 
-                                    title="Xóa mềm sản phẩm này">
-                                <i class="fa-regular fa-trash-can"></i>
-                            </button>
+                                <!-- Xóa sản phẩm (Xóa mềm) -->
+                                <button type="button" class="btn-action-round delete" 
+                                        data-name="${escapeHtml(p.name)}"
+                                        onclick="confirmDeleteProduct(${p.id}, this.getAttribute('data-name'), ${variantCount})" 
+                                        title="Xóa mềm sản phẩm này">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            `}
                         </div>
                     </td>
                 </tr>
@@ -692,9 +724,10 @@
         tbody.innerHTML = variants.map(v => {
             const p = v.product || {};
             const imgUrl = v.image_url || 'https://placehold.co/100x100/F7EFE9/5D4037?text=Gau';
-            const isOnSale = Boolean(v.sale_price && Number(v.sale_price) < Number(v.price));
+            const hasSalePrice = v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price)) && Number(v.sale_price) >= 0;
+            const isOnSale = Boolean(hasSalePrice && Number(v.sale_price) < Number(v.price));
             let discountPercent = 0;
-            if (isOnSale && v.price && v.sale_price) {
+            if (isOnSale && Number(v.price) > 0) {
                 discountPercent = Math.round(((Number(v.price) - Number(v.sale_price)) / Number(v.price)) * 100);
             }
             const isActive = v.status === 'ACTIVE';
@@ -1535,7 +1568,7 @@
         const primaryImg = (product.images && product.images.find(img => img.is_primary)) || (product.images && product.images[0]) || { image_url: 'https://placehold.co/400x400/F7EFE9/5D4037?text=Gau+Bong' };
         const imagesList = product.images || [];
 
-        const isOnSale = product.is_on_sale !== undefined ? Boolean(product.is_on_sale) : (product.sale_price !== null && product.sale_price !== '' && Number(product.sale_price) < Number(product.price));
+        const isOnSale = Boolean(product.is_on_sale) && product.sale_price !== null && product.sale_price !== '' && !isNaN(Number(product.sale_price)) && Number(product.sale_price) >= 0 && Number(product.sale_price) < Number(product.price);
         const variants = product.variants || [];
 
         let modalBodyHtml = `
@@ -1565,7 +1598,7 @@
                     <h2 class="qv-info-title">${product.name}</h2>
 
                     <div class="qv-price-box">
-                        ${isOnSale ? `
+                        ${isOnSale && product.sale_price !== null && Number(product.sale_price) >= 0 ? `
                             <div class="price-sale-highlight" style="font-size: 22px;">
                                 ${Number(product.sale_price).toLocaleString('vi-VN')} đ
                             </div>

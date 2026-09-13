@@ -156,11 +156,8 @@ class ProductVariantSeeder extends Seeder
                         'sale_end_at'    => $saleEndAt,
                         'stock_quantity' => rand(15, 60),
                         'image_url'      => $variantImgPath,
-                        'is_default'     => $isFirst,
                         'status'         => 'ACTIVE',
                     ]);
-
-                    $isFirst = false;
                 }
             }
         }
