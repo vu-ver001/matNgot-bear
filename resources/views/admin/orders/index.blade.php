@@ -7,20 +7,7 @@
 
 @section('content')
 
-@if (session('success'))
-    <div class="mb-4 bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
-        <i class="fa-solid fa-circle-check text-green-600"></i>
-        <span>{{ session('success') }}</span>
-    </div>
-@endif
-
-@if (session('error'))
-    <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
-        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
-        <span>{{ session('error') }}</span>
-    </div>
-@endif
-
+{{-- Flash success/error đã chuyển sang toast góc phải (toastManager). --}}
 @if ($selectedCustomer)
     <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex flex-col gap-2">
@@ -124,6 +111,16 @@
         $bulkConfirmColor = '#E08A1E';
         $bulkCountLabel = 'có thể giao';
         $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('SHIPPING'))->pluck('id')->values()->all();
+    } elseif ($currentStatus === 'SHIPPING') {
+        $bulkTargetStatus = 'COMPLETED';
+        $bulkActionLabel = 'Đã giao hàng loạt';
+        $bulkActionIcon = 'fa-solid fa-circle-check';
+        $bulkConfirmTitle = 'Xác nhận đã giao hàng loạt?';
+        $bulkConfirmText = 'Bạn có chắc chắn muốn xác nhận :count đơn hàng đã chọn đã giao thành công? Shop chỉ chuyển sang "Đã giao", khách vẫn tự bấm "Đã nhận hàng" để mở đánh giá.';
+        $bulkConfirmButtonText = '<i class="fa-solid fa-circle-check mr-1"></i> Đồng ý hoàn thành';
+        $bulkConfirmColor = '#059669';
+        $bulkCountLabel = 'đang giao';
+        $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('COMPLETED'))->pluck('id')->values()->all();
     } else {
         $pendingIds = $orders->filter(fn ($o) => $o->canTransitionTo('CONFIRMED'))->pluck('id')->values()->all();
         $preparingIds = $orders->filter(fn ($o) => $o->canTransitionTo('SHIPPING'))->pluck('id')->values()->all();
@@ -172,7 +169,7 @@
         'countLabel' => $bulkCountLabel,
     ];
 
-    $showBulkToolbar = !in_array($currentStatus, ['SHIPPING', 'COMPLETED', 'RETURNED', 'CANCELLED'], true);
+    $showBulkToolbar = !in_array($currentStatus, ['COMPLETED', 'RETURNED', 'CANCELLED'], true);
 @endphp
 <div class="orders-ui">
 <!-- 2. Orders Panel with Order Cards & Bulk Toolbar -->
