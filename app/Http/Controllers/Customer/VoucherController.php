@@ -23,7 +23,7 @@ class VoucherController extends Controller
 
         // 1. Base query for all vouchers (excluding soft deleted)
         $query = Voucher::where('status', 'ACTIVE')
-            ->with(['categories', 'products'])
+            ->with(['categories', 'products', 'productVariants.product'])
             ->orderBy('start_date', 'asc');
 
         // Optional search filter
@@ -46,8 +46,8 @@ class VoucherController extends Controller
             $isDepleted = $voucher->usage_limit !== null && $voucher->used_count >= $voucher->usage_limit;
 
             $customerUsedCount = $userId ? $voucher->countUsedByCustomer($userId) : 0;
-            $limitPerUser = max(1, (int) ($voucher->usage_limit_per_user ?? 1));
-            $customerReachedLimit = $userId ? ($customerUsedCount >= $limitPerUser) : false;
+            $limitPerUser = ($voucher->usage_limit_per_user !== null && (int)$voucher->usage_limit_per_user > 0) ? (int) $voucher->usage_limit_per_user : null;
+            $customerReachedLimit = ($userId && $limitPerUser !== null) ? ($customerUsedCount >= $limitPerUser) : false;
             $isUsedByCustomer = $customerUsedCount > 0;
 
             // An active, ready-to-use voucher

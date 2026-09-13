@@ -16,7 +16,7 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $query = Order::with(['customer', 'latestPayment', 'details.product.images']);
+        $query = Order::with(['customer', 'latestPayment', 'details.product.images', 'details.productVariant']);
 
         $selectedCustomer = null;
         if ($request->filled('customer_id')) {
@@ -87,7 +87,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'order_ids' => 'required|array|min:1',
             'order_ids.*' => 'required|integer|exists:orders,id',
-            'target_status' => 'nullable|in:SHIPPING',
+            'target_status' => 'nullable|in:CONFIRMED,PREPARING,SHIPPING',
         ]);
 
         $targetStatus = $validated['target_status'] ?? 'SHIPPING';
@@ -126,7 +126,15 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'details.product', 'payments', 'statusHistories.changedByUser', 'voucher']);
+        $order->load([
+            'customer',
+            'details.product',
+            'details.productVariant',
+            'payments',
+            'statusHistories.changedByUser',
+            'voucher',
+            'latestRefundRequest.requestedByUser',
+        ]);
 
         return view('admin.orders.show', compact('order'));
     }

@@ -39,15 +39,33 @@ class SepayService
         }
 
         try {
+            $params = ['limit' => 30];
+            if (!empty($this->accountNumber)) {
+                $params['account_number'] = $this->accountNumber;
+            }
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
-            ])->timeout(5)->get($this->apiEndpoint, [
-                'account_number' => $this->accountNumber,
-                'limit' => 20,
-            ]);
+            ])->timeout(8)->get($this->apiEndpoint, $params);
 
-            if (!$response->successful()) {
+            $data = $response->successful() ? $response->json() : [];
+            $transactions = $data['transactions'] ?? $data['data'] ?? [];
+
+            // Nếu lọc theo số tài khoản không có giao dịch, tự động tra cứu mở rộng toàn bộ tài khoản trên SePAY
+            if (empty($transactions) && !empty($params['account_number'])) {
+                $fallbackResp = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ])->timeout(8)->get($this->apiEndpoint, ['limit' => 30]);
+
+                if ($fallbackResp->successful()) {
+                    $fallbackData = $fallbackResp->json();
+                    $transactions = $fallbackData['transactions'] ?? $fallbackData['data'] ?? [];
+                }
+            }
+
+            if (empty($transactions) && !$response->successful()) {
                 Log::warning('⚠️ [SEPAY API] Tra cứu lịch sử giao dịch thất bại:', [
                     'status' => $response->status(),
                     'body' => $response->body(),
@@ -55,8 +73,6 @@ class SepayService
                 return false;
             }
 
-            $data = $response->json();
-            $transactions = $data['transactions'] ?? $data['data'] ?? [];
             $orderCodeClean = preg_replace('/[^A-Z0-9]/', '', strtoupper($order->order_code));
             $expectedAmount = (int) $order->total_amount;
 

@@ -57,8 +57,12 @@
     <!-- Admin Dashboard Layout CSS (Tách riêng bởi Khánh Vân) -->
     <link rel="stylesheet" href="{{ asset('css/admin-layout.css') }}?v={{ file_exists(public_path('css/admin-layout.css')) ? filemtime(public_path('css/admin-layout.css')) : time() }}">
     @yield('styles')
-</head>
-<body>
+<body class="font-sans antialiased text-[#2C1408] bg-[#F7F4EE] selection:bg-[#E08A1E] selection:text-white"
+    x-data="toastManager({
+        success: {{ json_encode(session('success')) }},
+        error: {{ json_encode(session('error')) }},
+        info: {{ json_encode(session('info')) }}
+    })">
 
     @php
         $adminUser = auth()->user();
@@ -345,6 +349,71 @@
             });
         });
     </script>
+
+    <!-- Real-time Toast Notifications at Top-Right Corner (Không gây nhảy/giật layout) -->
+    <div class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 w-full max-w-sm pointer-events-none px-4 sm:px-0">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-show="toast.visible" x-transition:enter="transform ease-out duration-300 transition"
+                x-transition:enter-start="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-4"
+                x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
+                x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                class="pointer-events-auto w-full bg-[#FAF6F0] rounded-2xl shadow-2xl shadow-[#5C3219]/15 border-2 overflow-hidden p-4 flex items-start gap-3.5 transition-all backdrop-blur-md"
+                :class="{
+                    'border-emerald-400 bg-gradient-to-r from-emerald-50/95 via-[#FAF6F0] to-[#FAF6F0]': toast.type === 'success',
+                    'border-rose-400 bg-gradient-to-r from-rose-50/95 via-[#FAF6F0] to-[#FAF6F0]': toast.type === 'error',
+                    'border-amber-400 bg-gradient-to-r from-amber-50/95 via-[#FAF6F0] to-[#FAF6F0]': toast.type === 'warning',
+                    'border-sky-400 bg-gradient-to-r from-sky-50/95 via-[#FAF6F0] to-[#FAF6F0]': toast.type === 'info'
+                }">
+
+                <!-- Icon -->
+                <div class="shrink-0 mt-0.5">
+                    <template x-if="toast.type === 'success'">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-sm shadow-md shadow-emerald-500/25">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </span>
+                    </template>
+                    <template x-if="toast.type === 'error'">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 text-white text-sm shadow-md shadow-rose-500/25">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </span>
+                    </template>
+                    <template x-if="toast.type === 'warning'">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#F4B860] to-[#E09028] text-white text-sm shadow-md shadow-[#E09028]/25">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </span>
+                    </template>
+                    <template x-if="toast.type === 'info'">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 text-white text-sm shadow-md shadow-sky-500/25">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </span>
+                    </template>
+                </div>
+
+                <!-- Text -->
+                <div class="flex-1 min-w-0 pr-2">
+                    <h5 class="text-sm font-bold text-[#2C1408] tracking-tight" x-text="toast.title || (toast.type === 'success' ? 'Thành công' : 'Thông báo')"></h5>
+                    <p class="text-xs text-[#6B5E55] mt-0.5 leading-relaxed font-medium break-words" x-text="toast.message"></p>
+                </div>
+
+                <!-- Close Button -->
+                <button type="button" @click="removeToast(toast.id)" class="shrink-0 text-[#8E8076] hover:text-[#2C1408] transition p-1 rounded-lg hover:bg-black/5 cursor-pointer" aria-label="Đóng">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </template>
+    </div>
+
     @yield('scripts')
 </body>
 </html>

@@ -3,7 +3,7 @@
 @section('page-title', 'Cấu hình cổng & API thanh toán')
 
 @section('content')
-<div class="px-2 sm:px-4 lg:px-6 max-w-5xl mx-auto font-sans" x-data="{
+<div class="px-2 sm:px-4 lg:px-6 max-w-7xl mx-auto font-sans" x-data="{
     copiedWebhook: false,
     copiedMomoIpn: false,
     copiedMomoReturn: false,
@@ -209,6 +209,8 @@
                     </div>
                 </div>
             </div>
+        </div>
+
         {{-- 3. Cấu hình Cổng Thanh Toán MoMo Gateway & Ví MoMo --}}
         <div class="bg-white rounded-3xl border border-[#EBDDCD] shadow-xs overflow-hidden">
             <div class="p-5 border-b border-[#F0E6D8] bg-[#FAF8F5] flex items-center justify-between">

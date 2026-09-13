@@ -26,7 +26,7 @@
                         🏦
                     </div>
                     <div>
-                        <div class="font-bold text-xs sm:text-sm text-[#2C1408]">Chuyển khoản VietQR (MB Bank)</div>
+                        <div class="font-bold text-xs sm:text-sm text-[#2C1408]">Chuyển khoản VietQR</div>
                         <div class="text-[11px] text-[#786B61]">Quét mã QR qua app ngân hàng 24/7</div>
                     </div>
                 </div>

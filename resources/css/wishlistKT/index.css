@@ -516,9 +516,315 @@
     margin-top: 26px;
 }
 
-.wishlist-card.is-removing {
+.wishlist-card.is-removing,
+.product-card.is-removing {
     opacity: 0;
     transform: scale(0.94);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Wishlist Product Card (Homepage match style)
+   ========================================================================== */
+.wishlist-page .product-card {
+    background: var(--bg-card, #FFFFFF);
+    border: 1px solid var(--border, #EADFCF);
+    border-radius: var(--radius-lg, 20px);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(109, 76, 65, 0.05);
+}
+
+.wishlist-page .product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(109, 76, 65, 0.14);
+    border-color: #D7CCC8;
+}
+
+.wishlist-page .product-card-img-wrap {
+    position: relative;
+    padding-top: 100%;
+    overflow: hidden;
+    background: var(--bg-surface, #F8F4EE);
+}
+
+.wishlist-page .product-card-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.wishlist-page .product-card:hover .product-card-img {
+    transform: scale(1.08);
+}
+
+.wishlist-page .wishlist-card-badges {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.wishlist-page .wishlist-stock-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    backdrop-filter: blur(6px);
+    line-height: 1.2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.wishlist-page .wishlist-stock-badge.is-out {
+    background: rgba(76, 64, 57, 0.9);
+    color: #FFFFFF;
+}
+
+.wishlist-page .wishlist-stock-badge.is-unavailable {
+    background: rgba(180, 40, 40, 0.9);
+    color: #FFFFFF;
+}
+
+.wishlist-page .card-badge-sale,
+.wishlist-page .wishlist-card-badges .card-badge-sale {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #FF5252 0%, #D32F2F 100%);
+    color: #FFFFFF;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+    line-height: 1.2;
+}
+
+.wishlist-page .btn-wishlist-card {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(234, 223, 207, 0.8);
+    box-shadow: 0 4px 12px rgba(78, 52, 46, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: #A1887F;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wishlist-page .btn-wishlist-card:hover {
+    background: #FFFFFF;
+    color: #E57373;
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(229, 115, 115, 0.25);
+}
+
+.wishlist-page .btn-wishlist-card.active {
+    background: #FFF5F5;
+    color: #E57373 !important;
+    border-color: #FFCDD2;
+    box-shadow: 0 4px 14px rgba(229, 115, 115, 0.28);
+}
+
+.wishlist-page .btn-wishlist-card.active i {
+    color: #E57373 !important;
+}
+
+.wishlist-page .product-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-between;
+}
+
+.wishlist-page .product-card-body a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.wishlist-page .product-card-title-wrap {
+    position: relative;
+    display: block;
+}
+
+.wishlist-page .product-card-title-wrap a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.wishlist-page .product-title-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: #2C160B;
+    color: #FFFFFF;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+    padding: 8px 12px;
+    border-radius: 9px;
+    box-shadow: 0 10px 25px rgba(44, 22, 11, 0.35);
+    width: max-content;
+    max-width: 250px;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+    text-align: center;
+    word-break: break-word;
+}
+
+.wishlist-page .product-title-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #2C160B transparent transparent transparent;
+}
+
+.wishlist-page .product-card-title-wrap:hover .product-title-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.wishlist-page .product-card-category {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9E8076;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.wishlist-page .product-card-title {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: #4E342E;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 42px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    transition: color 0.2s ease;
+}
+
+.wishlist-page .product-card:hover .product-card-title {
+    color: #8D6E63;
+}
+
+.wishlist-page .product-card-prices {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.price-current,
+.wishlist-page .price-current {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: #D32F2F;
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+}
+
+.price-old,
+.wishlist-page .price-old {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px;
+    color: #9E8076;
+    text-decoration: line-through;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.wishlist-page .product-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid #F2EAE0;
+    font-size: 12px;
+    color: #795548;
+    font-weight: 600;
+}
+
+.wishlist-page .product-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.wishlist-page .rating-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #FFF9E6;
+    border: 1px solid #FFE082;
+    color: #B87309;
+    padding: 2.5px 8px;
+    border-radius: 6px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.2;
+    box-shadow: 0 1px 3px rgba(229, 152, 25, 0.08);
+    transition: all 0.2s ease;
+}
+
+.wishlist-page .rating-badge-pill i {
+    font-size: 10.5px;
+    color: #F59E0B;
+}
+
+.wishlist-page .sold-count-text {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 11.5px;
+    color: #8D7B68;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.2;
 }
 
 @keyframes wishlist-heart-float {

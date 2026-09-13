@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderStatusHistory;
+use App\Models\Payment;
+use App\Models\PaymentRefundRequest;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 
@@ -15,7 +18,7 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $query = Order::with(['customer', 'latestPayment', 'details.product.images']);
+        $query = Order::with(['customer', 'latestPayment', 'details.product.images', 'details.productVariant']);
 
         // Lọc theo tab Yêu cầu hủy hoặc Cần hoàn tiền
         if ($request->query('tab') === 'cancel_requests') {
@@ -64,7 +67,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'order_ids' => 'required|array|min:1',
             'order_ids.*' => 'required|integer|exists:orders,id',
-            'target_status' => 'nullable|in:SHIPPING',
+            'target_status' => 'nullable|in:CONFIRMED,PREPARING,SHIPPING',
         ]);
 
         $targetStatus = $validated['target_status'] ?? 'SHIPPING';
@@ -102,7 +105,16 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'details.product', 'payments', 'statusHistories.changedByUser', 'voucher']);
+        $order->load([
+            'customer',
+            'details.product',
+            'details.productVariant',
+            'payments',
+            'statusHistories.changedByUser',
+            'voucher',
+            'latestRefundRequest.requestedByUser',
+            'latestRefundRequest.approvedByUser',
+        ]);
 
         return view('staff.orders.show', compact('order'));
     }
@@ -174,20 +186,83 @@ class OrderController extends Controller
     }
 
     /**
-     * Nhân viên xác nhận đã hoàn tiền cho đơn hàng đã hủy
+     * Nhân viên gửi yêu cầu hoàn tiền lên Admin phê duyệt
      */
-    public function confirmRefund(Request $request, Order $order)
+    public function requestRefund(Request $request, Order $order)
     {
-        $validated = $request->validate([
-            'refund_note' => 'nullable|string|max:500',
-        ]);
-
-        try {
-            $this->orderService->confirmRefundOrder($order, auth()->id(), $validated['refund_note'] ?? null);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        if (! $order->needsRefund() && $order->payment_status !== 'PAID') {
+            return redirect()->back()->with('error', 'Đơn hàng này không ở trạng thái cần hoàn tiền.');
         }
 
-        return redirect()->back()->with('success', 'Đã xác nhận hoàn tiền thành công cho đơn hàng.');
+        // Kiểm tra xem đã có yêu cầu PENDING chưa
+        $existingPending = PaymentRefundRequest::where('order_id', $order->id)
+            ->where('status', 'PENDING')
+            ->first();
+
+        if ($existingPending) {
+            return redirect()->back()->with('error', 'Đơn hàng này đã có yêu cầu hoàn tiền đang chờ Admin xử lý.');
+        }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1000|max:'.max((float) $order->total_amount, 1000),
+            'reason' => 'required|string|min:5|max:1000',
+            'proof_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'bank_name' => 'nullable|string|max:100',
+            'bank_account' => 'nullable|string|max:50',
+            'account_holder' => 'nullable|string|max:100',
+        ], [
+            'amount.required' => 'Vui lòng nhập số tiền cần hoàn.',
+            'reason.required' => 'Vui lòng nhập lý do đề xuất hoàn tiền.',
+            'reason.min' => 'Lý do hoàn tiền tối thiểu 5 ký tự.',
+        ]);
+
+        $proofPath = null;
+        if ($request->hasFile('proof_image')) {
+            $proofPath = $request->file('proof_image')->store('payments/refund_proofs', 'public');
+        }
+
+        $payment = $order->payments->where('status', 'PAID')->first() ?? $order->latestPayment;
+        if (! $payment) {
+            $payment = Payment::create([
+                'order_id' => $order->id,
+                'method' => $order->payment_method ?? 'BANK_TRANSFER',
+                'status' => 'PAID',
+                'amount' => $order->total_amount,
+                'paid_at' => now(),
+            ]);
+        }
+
+        $refundReq = PaymentRefundRequest::create([
+            'payment_id' => $payment->id,
+            'order_id' => $order->id,
+            'requested_by' => auth()->id(),
+            'amount' => $validated['amount'],
+            'reason' => $validated['reason'],
+            'proof_image' => $proofPath,
+            'bank_name' => $validated['bank_name'] ?: ($order->refund_bank_name ?? 'MB'),
+            'bank_account' => $validated['bank_account'] ?: ($order->refund_bank_account ?? ''),
+            'account_holder' => $validated['account_holder'] ?: ($order->refund_account_holder ?? ''),
+            'status' => 'PENDING',
+        ]);
+
+        // Cập nhật lại thông tin ngân hàng vào đơn nếu có thay đổi
+        if ($validated['bank_account'] || $validated['bank_name'] || $validated['account_holder']) {
+            $order->update([
+                'refund_bank_name' => $validated['bank_name'] ?: $order->refund_bank_name,
+                'refund_bank_account' => $validated['bank_account'] ?: $order->refund_bank_account,
+                'refund_account_holder' => $validated['account_holder'] ?: $order->refund_account_holder,
+            ]);
+        }
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'from_status' => $order->order_status,
+            'to_status' => $order->order_status,
+            'changed_by' => auth()->id(),
+            'note' => 'Nhân viên '.(auth()->user()->full_name ?? auth()->user()->name ?? 'CSKH').' đã gửi yêu cầu hoàn tiền ('.number_format($refundReq->amount, 0, ',', '.').'đ) lên Admin. Lý do: '.$validated['reason'],
+            'changed_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', "Đã gửi yêu cầu hoàn tiền cho đơn #{$order->order_code} lên Admin thành công! Đang chờ Admin phê duyệt & chuyển khoản.");
     }
 }

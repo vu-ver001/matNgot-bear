@@ -44,6 +44,14 @@ return [
         ],
     ],
 
+    'ghn' => [
+        'api_token' => env('GHN_API_TOKEN', '37da7db1-ace3-11f1-9ab8-22efcf8aa1f7'),
+        'shop_id' => (int) env('GHN_SHOP_ID', 6658154),
+        'origin_district_id' => (int) env('GHN_ORIGIN_DISTRICT_ID', 1482),
+        'origin_ward_code' => env('GHN_ORIGIN_WARD_CODE', '11007'),
+        'api_url' => env('GHN_API_URL', 'https://online-gateway.ghn.vn/shiip/public-api'),
+    ],
+
     'google_maps' => [
         'api_key' => env('GOOGLE_MAPS_API_KEY'),
         'origin_address' => env('SHOP_ORIGIN_ADDRESS', 'Số 41A, Phú Diễn, Bắc Từ Liêm, Hà Nội'),

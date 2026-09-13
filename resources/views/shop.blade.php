@@ -40,7 +40,7 @@
 
     <!-- 2. 4 PROMISE BADGES (Exact Match to Image 2) -->
     <div class="promise-badges-row">
-        <div class="promise-badge-card" onclick="Swal.fire({title:'Giao Hàng Tận Nhà', text:'Đồng giá ship 30.000đ toàn quốc. Miễn phí ship đơn từ 500k!', icon:'info', confirmButtonColor:'#5D4037'})">
+        <div class="promise-badge-card" onclick="Swal.fire({title:'Giao Hàng Tận Nhà', text:'Giao hàng nhanh GHN toàn quốc, cước phí chuẩn xác theo địa chỉ nhận hàng và hỗ trợ voucher freeship!', icon:'info', confirmButtonColor:'#5D4037'})">
             <div class="promise-icon-circle pink"><i class="fa-solid fa-truck-fast"></i></div>
             <div class="promise-badge-title">GIAO HÀNG TẬN NHÀ</div>
         </div>

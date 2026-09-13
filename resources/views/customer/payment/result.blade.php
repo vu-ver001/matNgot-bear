@@ -203,13 +203,13 @@
                                 <span style="color: #786B61;">Phương thức:</span>
                                 <span style="font-weight: 700; color: #2C1408;">
                                     @if($order->payment_method === 'CARD')
-                                        💳 Cổng VNPAY (ATM/Visa/QR)
+                                        Cổng VNPAY (ATM/Visa/QR)
                                     @elseif($order->payment_method === 'E_WALLET')
                                         Ví MoMo
                                     @elseif($order->payment_method === 'BANK_TRANSFER')
-                                        🏦 Chuyển khoản VietQR
+                                        Chuyển khoản VietQR
                                     @else
-                                        💵 Thu hộ COD
+                                        Thanh toán khi nhận hàng (COD)
                                     @endif
                                 </span>
                             </div>

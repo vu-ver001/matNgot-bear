@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\Voucher;
 use App\Services\OrderService;
@@ -19,6 +20,8 @@ class OrderSeeder extends Seeder
         $orderService = app(OrderService::class);
 
         $customers = User::where('role', 'CUSTOMER')->get();
+        // Chỉ cần danh sách sản phẩm; tồn kho và biến thể được đọc lại ở mỗi
+        // vòng lặp vì OrderService sẽ khóa và trừ kho trong transaction.
         $products = Product::where('status', 'ACTIVE')->get();
         $vouchers = Voucher::where('status', 'ACTIVE')->where('voucher_type', 'ORDER')->get();
 
@@ -42,7 +45,10 @@ class OrderSeeder extends Seeder
 
         foreach ($scenarios as $scenario) {
             for ($i = 0; $i < $scenario['count']; $i++) {
-                $availableProducts = $products->filter(fn (Product $p) => $p->stock_quantity > 0);
+                $availableProducts = $products
+                    ->map(fn (Product $product) => Product::with('variants')->find($product->id))
+                    ->filter(fn (?Product $product) => $product && $this->availableStock($product) > 0)
+                    ->values();
 
                 if ($availableProducts->isEmpty()) {
                     $this->command->warn('Hết hàng, dừng tạo đơn mẫu.');
@@ -53,15 +59,25 @@ class OrderSeeder extends Seeder
                 $customer = $customers->random();
                 $selectedProducts = $availableProducts->random(rand(1, min(3, $availableProducts->count())));
 
-                $cartItems = $selectedProducts->map(fn (Product $product) => (object) [
-                    'product_id' => $product->id,
-                    'quantity' => rand(1, min(3, $product->stock_quantity)),
-                ])->all();
+                $cartItems = $selectedProducts->map(function (Product $product) {
+                    $variant = $this->selectVariant($product);
+                    $availableStock = $variant ? (int) $variant->stock_quantity : (int) $product->stock_quantity;
 
-                $subtotal = collect($cartItems)->sum(function ($item) {
-                    $product = Product::find($item->product_id);
+                    return (object) [
+                        'product_id' => $product->id,
+                        'product_variant_id' => $variant?->id,
+                        'quantity' => rand(1, min(3, $availableStock)),
+                    ];
+                })->all();
 
-                    return ($product->sale_price ?? $product->price) * $item->quantity;
+                $subtotal = collect($cartItems)->sum(function ($item) use ($selectedProducts) {
+                    $product = $selectedProducts->firstWhere('id', $item->product_id);
+                    $variant = $item->product_variant_id
+                        ? $product?->variants?->firstWhere('id', $item->product_variant_id)
+                        : null;
+                    $price = $variant ? $variant->effective_price : $this->effectiveProductPrice($product);
+
+                    return $price * $item->quantity;
                 });
 
                 $eligibleVouchers = $vouchers->filter(fn (Voucher $v) => $v->voucher_type === 'ORDER' && $subtotal >= $v->min_order_value);
@@ -91,6 +107,37 @@ class OrderSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    private function selectVariant(Product $product): ?ProductVariant
+    {
+        return $product->variants
+            ->where('status', 'ACTIVE')
+            ->where('stock_quantity', '>', 0)
+            ->sortByDesc('is_default')
+            ->sortBy('price')
+            ->first();
+    }
+
+    private function availableStock(Product $product): int
+    {
+        $variantStock = $product->variants
+            ->where('status', 'ACTIVE')
+            ->sum(fn ($variant) => max(0, (int) $variant->stock_quantity));
+
+        return $product->variants->isNotEmpty() ? (int) $variantStock : (int) $product->stock_quantity;
+    }
+
+    private function effectiveProductPrice(?Product $product): float
+    {
+        if (! $product) {
+            return 0;
+        }
+
+        $base = (float) $product->price;
+        $sale = (float) ($product->sale_price ?? 0);
+
+        return $sale > 0 && $sale < $base ? $sale : $base;
     }
 
     private function advanceOrder(OrderService $orderService, Order $order, string $targetStatus): void

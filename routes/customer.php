@@ -42,6 +42,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
             Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
             Route::post('/cart/log-uncheck', [CartController::class, 'logUncheck'])->name('cart.log_uncheck');
             Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
+            Route::patch('/cart/{cartItem}/variant', [CartController::class, 'updateVariant'])->name('cart.update-variant');
             Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
             Route::delete('/cart-clear', [CartController::class, 'clear'])->name('cart.clear');
 

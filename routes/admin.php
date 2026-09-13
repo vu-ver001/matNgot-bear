@@ -61,6 +61,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
     Route::patch('/reviews/{review}/toggle', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
     // 6. Voucher management (Ngọc Anh)
+    Route::post('/vouchers/{id}/extend', [VoucherController::class, 'restore'])->name('vouchers.extend');
     Route::post('/vouchers/{id}/restore', [VoucherController::class, 'restore'])->name('vouchers.restore');
     Route::delete('/vouchers/{id}/force-delete', [VoucherController::class, 'forceDelete'])->name('vouchers.force-delete');
     Route::match(['POST', 'PATCH'], '/vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
