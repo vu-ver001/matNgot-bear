@@ -423,11 +423,27 @@
     max-width: 100%;
     min-width: 0;
     overflow-x: auto;
+    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
     border: 1.5px solid var(--mn-beige-border);
     border-radius: var(--mn-radius-lg);
     background: #FFFFFF;
     box-shadow: 0 2px 8px rgba(93, 64, 55, 0.03);
+}
+
+/* Triệt tiêu hoàn toàn thanh cuộn dọc (scrollbar mũi tên và vạch trắng) */
+.prod-index-wrap .table-container::-webkit-scrollbar {
+    height: 6px;
+    width: 0px !important;
+}
+
+.prod-index-wrap .table-container::-webkit-scrollbar-thumb {
+    background: #E6D7C3;
+    border-radius: 4px;
+}
+
+.prod-index-wrap .table-container::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .prod-index-wrap table.data-table {

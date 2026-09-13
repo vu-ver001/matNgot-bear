@@ -186,7 +186,8 @@ class Product extends Model
 
     /**
      * Xác định biến thể con có giá bán thực tế thấp nhất (Lowest Effective Variant).
-     * Giá thực tế: nếu biến thể đang sale thì lấy sale_price (kể cả 0đ), nếu không thì lấy price.
+     * Ưu tiên chọn trong các phân loại ĐANG CÒN HÀNG (stock_quantity > 0).
+     * Nếu tất cả phân loại đều hết hàng thì mới lấy trong toàn bộ biến thể.
      */
     public function getLowestEffectiveVariantAttribute(): ?ProductVariant
     {
@@ -198,7 +199,11 @@ class Product extends Model
             return null;
         }
 
-        return $variants->sortBy(function (ProductVariant $v) {
+        // Ưu tiên chọn trong các phân loại ĐANG CÒN HÀNG (stock_quantity > 0)
+        $inStockVariants = $variants->filter(fn(ProductVariant $v) => (int)$v->stock_quantity > 0);
+        $targetVariants = $inStockVariants->isNotEmpty() ? $inStockVariants : $variants;
+
+        return $targetVariants->sortBy(function (ProductVariant $v) {
             $eff = $v->is_on_sale ? (float)$v->sale_price : (float)$v->price;
             // Sắp xếp tăng dần theo giá thực tế; nếu bằng nhau, ưu tiên biến thể đang sale (0 trước 1)
             return sprintf('%014.2f_%d', $eff, $v->is_on_sale ? 0 : 1);
@@ -368,7 +373,8 @@ class Product extends Model
     }
 
     /**
-     * Đồng bộ giá bán của sản phẩm cha lấy theo biến thể con có giá bán thực tế thấp nhất,
+     * Đồng bộ giá bán của sản phẩm cha lấy theo biến thể con có giá bán thực tế thấp nhất
+     * (ưu tiên các phân loại đang còn hàng stock_quantity > 0),
      * đồng thời đồng bộ lại sale_price và tổng tồn kho.
      */
     public function syncLowestPriceFromVariants(): bool
@@ -378,7 +384,11 @@ class Product extends Model
             return false;
         }
 
-        $lowestVariant = $variants->sortBy(function (ProductVariant $v) {
+        // Ưu tiên chọn trong các phân loại ĐANG CÒN HÀNG (stock_quantity > 0)
+        $inStockVariants = $variants->filter(fn(ProductVariant $v) => (int)$v->stock_quantity > 0);
+        $targetVariants = $inStockVariants->isNotEmpty() ? $inStockVariants : $variants;
+
+        $lowestVariant = $targetVariants->sortBy(function (ProductVariant $v) {
             $eff = $v->is_on_sale ? (float)$v->sale_price : (float)$v->price;
             return sprintf('%014.2f_%d', $eff, $v->is_on_sale ? 0 : 1);
         })->first();

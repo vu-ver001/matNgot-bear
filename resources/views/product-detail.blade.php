@@ -1286,12 +1286,15 @@
                 syncGalleryThumbnail(newImg);
             }
 
-            // Tìm variant có giá thực tế thấp nhất trong nhóm màu này
+            // Tìm variant có giá thực tế thấp nhất trong nhóm màu này (ưu tiên các phân loại ĐANG CÒN HÀNG)
             let bestVar = null;
             let minEffPrice = Infinity;
             const now = new Date();
 
-            colorVars.forEach(v => {
+            const inStockColorVars = colorVars.filter(v => (parseInt(v.stock_quantity) || 0) > 0);
+            const targetColorVars = inStockColorVars.length > 0 ? inStockColorVars : colorVars;
+
+            targetColorVars.forEach(v => {
                 const regP = Number(v.price) || 0;
                 const sP = (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null;
                 const startAt = v.sale_start_at ? new Date(v.sale_start_at) : null;
@@ -1350,12 +1353,15 @@
                 syncGalleryThumbnail(firstWithImg.image_url);
             }
 
-            // Tìm variant có giá thực tế thấp nhất trong nhóm size này
+            // Tìm variant có giá thực tế thấp nhất trong nhóm size này (ưu tiên các phân loại ĐANG CÒN HÀNG)
             let bestVar = null;
             let minEffPrice = Infinity;
             const now = new Date();
 
-            sizeVars.forEach(v => {
+            const inStockSizeVars = sizeVars.filter(v => (parseInt(v.stock_quantity) || 0) > 0);
+            const targetSizeVars = inStockSizeVars.length > 0 ? inStockSizeVars : sizeVars;
+
+            targetSizeVars.forEach(v => {
                 const regP = Number(v.price) || 0;
                 const sP = (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null;
                 const startAt = v.sale_start_at ? new Date(v.sale_start_at) : null;

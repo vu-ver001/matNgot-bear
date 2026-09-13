@@ -164,13 +164,13 @@
             <thead id="products-table-head">
                 <tr>
                     <th style="width: 52px; text-align: center;">Ảnh</th>
-                    <th style="width: 180px;">Thông Tin Gấu Bông</th>
-                    <th style="width: 110px;">Danh Mục</th>
-                    <th style="width: 115px;">Giá Bán</th>
-                    <th style="width: 125px;">Phân Loại (Size/Màu)</th>
-                    <th style="width: 100px; text-align: center;">Tồn Kho</th>
-                    <th style="width: 70px; text-align: center;">Trạng Thái</th>
-                    <th style="width: 110px; text-align: right;">Thao Tác</th>
+                    <th style="width: 220px;">Thông Tin Gấu Bông</th>
+                    <th style="width: 105px;">Danh Mục</th>
+                    <th style="width: 110px;">Giá Bán</th>
+                    <th style="width: 120px;">Phân Loại (Size/Màu)</th>
+                    <th style="width: 80px; text-align: center;">Tồn Kho</th>
+                    <th style="width: 60px; text-align: center;">Trạng Thái</th>
+                    <th style="width: 105px; text-align: right;">Thao Tác</th>
                 </tr>
             </thead>
             <tbody id="products-table-body">
@@ -260,13 +260,13 @@
             thead.innerHTML = `
                 <tr>
                     <th style="width: 52px; text-align: center;">Ảnh</th>
-                    <th style="width: 180px;">Thông Tin Gấu Bông</th>
-                    <th style="width: 110px;">Danh Mục</th>
-                    <th style="width: 115px;">Giá Bán</th>
-                    <th style="width: 125px;">Phân Loại (Size/Màu)</th>
-                    <th style="width: 100px; text-align: center;">Tồn Kho</th>
-                    <th style="width: 70px; text-align: center;">Trạng Thái</th>
-                    <th style="width: 110px; text-align: right;">Thao Tác</th>
+                    <th style="width: 220px;">Thông Tin Gấu Bông</th>
+                    <th style="width: 105px;">Danh Mục</th>
+                    <th style="width: 110px;">Giá Bán</th>
+                    <th style="width: 120px;">Phân Loại (Size/Màu)</th>
+                    <th style="width: 80px; text-align: center;">Tồn Kho</th>
+                    <th style="width: 60px; text-align: center;">Trạng Thái</th>
+                    <th style="width: 105px; text-align: right;">Thao Tác</th>
                 </tr>
             `;
             // Cập nhật text phụ KPI
@@ -278,14 +278,14 @@
             thead.innerHTML = `
                 <tr>
                     <th style="width: 50px; text-align: center;">Ảnh</th>
-                    <th style="width: 55px; text-align: center;">ID Cha</th>
-                    <th style="width: 55px; text-align: center;">ID Con</th>
-                    <th style="width: 155px;">Sản Phẩm Cha &amp; SKU Con</th>
-                    <th style="width: 85px;">Kích Thước</th>
-                    <th style="width: 105px;">Màu Sắc</th>
-                    <th style="width: 120px;">Giá Bán &amp; KM</th>
-                    <th style="width: 75px; text-align: center;">Tồn Kho</th>
-                    <th style="width: 70px; text-align: center;">Trạng Thái</th>
+                    <th style="width: 50px; text-align: center;">ID Cha</th>
+                    <th style="width: 50px; text-align: center;">ID Con</th>
+                    <th style="width: 215px;">Sản Phẩm Cha &amp; SKU Con</th>
+                    <th style="width: 75px;">Kích Thước</th>
+                    <th style="width: 80px;">Màu Sắc</th>
+                    <th style="width: 115px;">Giá Bán &amp; KM</th>
+                    <th style="width: 62px; text-align: center;">Tồn Kho</th>
+                    <th style="width: 60px; text-align: center;">Trạng Thái</th>
                     <th style="width: 75px; text-align: right;">Thao Tác</th>
                 </tr>
             `;
@@ -556,7 +556,7 @@
                     </td>
 
                     <!-- 7. Trạng Thái Kinh Doanh -->
-                    <td style="text-align: center; width: 70px;">
+                    <td style="text-align: center; width: 60px;">
                         <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
                             <div class="switch-toggle-box" onclick="toggleProductStatus(${p.id}, '${p.status}', '${p.name.replace(/'/g, "\\'")}')" title="Bấm để ${p.status === 'ACTIVE' ? 'tạm ngừng bán' : 'mở bán'} sản phẩm này">
                                 <div class="switch-toggle-track ${p.status === 'ACTIVE' ? 'active' : ''}">
@@ -570,7 +570,7 @@
                     </td>
 
                     <!-- 8. Thao Tác -->
-                    <td style="text-align: right; width: 110px;">
+                    <td style="text-align: right; width: 105px;">
                         <div class="actions-cell-wrap">
                             <!-- Xem nhanh -->
                             <button type="button" class="btn-action-round view" onclick="openQuickView(${p.id})" title="Xem nhanh toàn bộ chi tiết & biến thể">
@@ -793,12 +793,12 @@
                     </td>
 
                     <!-- 7. Tồn Kho Con -->
-                    <td style="text-align: center;">
+                    <td style="text-align: center; width: 62px;">
                         ${stockHtml}
                     </td>
 
                     <!-- 8. Trạng Thái Con: Switch Toggle Button (Thu gọn) -->
-                    <td style="text-align: center; width: 70px;">
+                    <td style="text-align: center; width: 60px;">
                         <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
                             <div class="switch-toggle-box" onclick="toggleVariantStatusQuick(${v.id}, '${v.status}')" title="Bấm để ${isActive ? 'tạm ngừng bán' : 'mở bán'} phân loại này">
                                 <div class="switch-toggle-track ${isActive ? 'active' : ''}">
@@ -870,6 +870,7 @@
     // XÁC NHẬN XÓA SẢN PHẨM CHA & CON (POPUP ĐẸP THEO STYLE VOUCHER)
     // ==========================================
     function confirmDeleteProduct(id, name, variantCount = 0) {
+        document.activeElement?.blur?.();
         const variantText = variantCount > 0 
             ? `toàn bộ <strong>${variantCount} sản phẩm con (các phân loại size/màu)</strong>`
             : `toàn bộ các sản phẩm con (các phân loại size/màu)`;
@@ -962,6 +963,7 @@
     }
 
     function confirmDeleteVariant(id, color, size, parentName) {
+        document.activeElement?.blur?.();
         const variantDesc = (size || color) ? `${size} - ${color}`.trim() : `ID #${id}`;
         if (typeof Swal !== 'undefined') {
             Swal.fire({
@@ -995,17 +997,18 @@
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Đã xóa!',
-                                text: `Phân loại [${variantDesc}] đã được xóa thành công.`,
+                                text: data.message || `Phân loại [${variantDesc}] đã được xóa thành công.`,
                                 timer: 1500,
                                 showConfirmButton: false
                             });
                             loadCurrentData(1);
+                            updateProductStats();
                         } else {
-                            // Chặn xóa nếu có sản phẩm con đang trong đơn hàng chưa hoàn tất
+                            // Chặn xóa nếu sản phẩm con này đang trong đơn hàng chưa hoàn tất
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Không thể xóa!',
-                                text: data.message || 'Không thể xóa vì có sản phẩm con đang trong đơn hàng xử lý.',
+                                text: data.message || 'Không thể xóa vì sản phẩm con này đang trong đơn hàng xử lý.',
                                 confirmButtonColor: '#5C3219',
                                 background: '#FAF6F0',
                                 color: '#2E190E',
