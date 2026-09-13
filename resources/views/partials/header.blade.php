@@ -69,7 +69,7 @@
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
             @endguest
                 <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
-                <span class="badge-count" id="wishlist-count">0</span>
+                <span class="badge-count" id="wishlist-count" style="display: {{ (auth()->check() && ($realWishlistCount ?? 0) > 0) ? 'flex' : 'none' }};">{{ (int) ($realWishlistCount ?? 0) > 99 ? '99+' : (int) ($realWishlistCount ?? 0) }}</span>
             </a>
 
             <!-- Cart (Giỏ hàng) -->
@@ -80,7 +80,7 @@
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.cart') }}', 'Đăng nhập xem Giỏ hàng', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem giỏ hàng và thanh toán nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.cart')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.cart*') ? 'active' : '' }}" title="Giỏ hàng">
             @endguest
                 <i class="fa-solid fa-bag-shopping" style="font-size: 16px; color: var(--honey-dark);"></i>
-                <span class="badge-count" id="cart-count">{{ (int) ($realCartCount ?? 0) > 99 ? '99+' : (int) ($realCartCount ?? 0) }}</span>
+                <span class="badge-count" id="cart-count" style="display: {{ (auth()->check() && ($realCartCount ?? 0) > 0) ? 'flex' : 'none' }};">{{ (int) ($realCartCount ?? 0) > 99 ? '99+' : (int) ($realCartCount ?? 0) }}</span>
             </a>
         @endif
 
@@ -94,9 +94,11 @@
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal('{{ route('customer.vouchers.index') }}', 'Đăng nhập xem Kho Voucher', 'Vui lòng đăng nhập hoặc tạo tài khoản Mật Ngọt Bear để xem toàn bộ voucher và nhận ưu đãi nhé!'); } else { window.location.href='{{ route('login', ['redirect' => route('customer.vouchers.index')]) }}'; }" class="utility-icon-btn {{ request()->routeIs('customer.vouchers.*') ? 'active' : '' }}" title="Kho voucher & khuyến mãi">
             @endguest
                 <i class="fa-solid fa-ticket" style="font-size: 16px; color: #E08A1E;"></i>
-                @if(($availableVoucherCount ?? 0) > 0)
-                    <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ (int) ($availableVoucherCount ?? 0) > 99 ? '99+' : (int) ($availableVoucherCount ?? 0) }}</span>
-                @endif
+                @auth
+                    @if(($availableVoucherCount ?? 0) > 0)
+                        <span class="badge-count" style="background: #E08A1E; color: #ffffff;">{{ (int) ($availableVoucherCount ?? 0) > 99 ? '99+' : (int) ($availableVoucherCount ?? 0) }}</span>
+                    @endif
+                @endauth
             </a>
         @endif
 

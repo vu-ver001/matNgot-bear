@@ -190,13 +190,13 @@
                     <p>
                         <strong>Phương thức:</strong> 
                         @if($order->payment_method === 'BANK_TRANSFER')
-                            🏦 Chuyển khoản QR (MB Bank)
+                            Chuyển khoản QR (MB Bank)
                         @elseif($order->payment_method === 'CARD')
-                            💳 Cổng thanh toán VNPAY (ATM/Visa/QR)
+                            Cổng thanh toán VNPAY (ATM/Visa/QR)
                         @elseif($order->payment_method === 'E_WALLET')
-                            👛 Ví điện tử MoMo
+                            Ví điện tử MoMo
                         @else
-                            💵 Thanh toán khi nhận hàng (COD)
+                            Thanh toán khi nhận hàng (COD)
                         @endif
                     </p>
                     <p>
@@ -234,7 +234,7 @@
                         <tr class="bg-[#FFF8F0] border-y border-[#EBDDCD] text-[#7D6B5D] font-bold">
                             <th class="py-2.5 px-3 w-10 text-center">STT</th>
                             <th class="py-2.5 px-3">Tên sản phẩm</th>
-                            <th class="py-2.5 px-3 text-center">Kích thước</th>
+                            <th class="py-2.5 px-3 text-center">Phân loại / Kích cỡ</th>
                             <th class="py-2.5 px-3 text-center">Số lượng</th>
                             <th class="py-2.5 px-3 text-right">Đơn giá</th>
                             <th class="py-2.5 px-3 text-right">Thành tiền</th>
@@ -244,18 +244,49 @@
                         @foreach($order->details as $index => $detail)
                             @php
                                 $product = $detail->product;
-                                $specs = [];
-                                if (!empty($product?->size)) { $specs[] = $product->size; }
-                                if (!empty($product?->color)) { $specs[] = $product->color; }
-                                $specsText = !empty($specs) ? implode(' · ', $specs) : ($product?->category?->name ?? 'Chuẩn');
+                                $variant = $detail->variant;
+                                $rawImg = $variant?->image_url
+                                    ?? $product?->images?->where('is_primary', true)->first()?->image_url
+                                    ?? $product?->images?->first()?->image_url;
+                                $itemImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+
+                                if (!empty($detail->variant_name)) {
+                                    $specsText = $detail->variant_name;
+                                } elseif ($variant) {
+                                    $specsText = "{$variant->color} · {$variant->size}";
+                                } else {
+                                    $specs = [];
+                                    if (!empty($product?->size)) { $specs[] = $product->size; }
+                                    if (!empty($product?->color)) { $specs[] = $product->color; }
+                                    $specsText = !empty($specs) ? implode(' · ', $specs) : ($product?->category?->name ?? 'Chuẩn');
+                                }
                             @endphp
                             <tr class="hover:bg-amber-50/30 transition">
                                 <td class="py-3 px-3 text-center text-[#7D6B5D]">{{ $index + 1 }}</td>
                                 <td class="py-3 px-3">
-                                    <div class="font-bold text-[#2B1810] text-xs sm:text-sm">{{ $detail->product_name ?? $product->name ?? 'Sản phẩm' }}</div>
-                                    <div class="text-[11px] text-[#8C4A19] mt-0.5">Mã SP: #{{ $detail->product_id ?? $product->id ?? '---' }}</div>
+                                    <div class="flex items-center gap-2.5">
+                                        @if ($itemImg)
+                                            <img src="{{ $itemImg }}" alt="{{ $detail->product_name }}"
+                                                 class="w-10 h-10 object-cover rounded-lg border border-[#EBDDCD] bg-white shrink-0 shadow-2xs"
+                                                 onerror="this.src='https://placehold.co/100x100/f5e6ca/7c4a2d?text=Bear'">
+                                        @endif
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-[#2B1810] text-xs sm:text-sm leading-snug">{{ $detail->product_name ?? $product->name ?? 'Sản phẩm' }}</div>
+                                            <div class="text-[11px] text-[#8C4A19] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                                <span>Mã SP: #{{ $detail->product_id ?? $product->id ?? '---' }}</span>
+                                                @if ($variant?->sku)
+                                                    <span class="text-[#7D6B5D] font-mono">| SKU: {{ $variant->sku }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="py-3 px-3 text-center text-[#4A3B32] font-medium">{{ $specsText }}</td>
+                                <td class="py-3 px-3 text-center text-[#4A3B32] font-semibold">
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded shadow-2xs">
+                                        <span>✨</span>
+                                        <span>{{ $specsText }}</span>
+                                    </span>
+                                </td>
                                 <td class="py-3 px-3 text-center font-bold text-[#2B1810]">{{ $detail->quantity }}</td>
                                 <td class="py-3 px-3 text-right text-[#4A3B32] font-semibold">{{ number_format($detail->product_price ?? 0, 0, ',', '.') }} đ</td>
                                 <td class="py-3 px-3 text-right font-extrabold text-[#2B1810]">{{ number_format($detail->line_total ?? (($detail->product_price ?? 0) * $detail->quantity), 0, ',', '.') }} đ</td>

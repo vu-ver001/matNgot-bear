@@ -14,9 +14,15 @@
     <!-- 1. Card Header: Checkbox, Mã đơn hàng, Tên người nhận, Icon nhắn tin, Trạng thái đơn -->
     <div class="order-card-header flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-3">
+            @php
+                $isActionable = isset($bulkActionableOrderIds) 
+                    ? in_array($order->id, $bulkActionableOrderIds, true) 
+                    : ($order->canTransitionTo('SHIPPING') || $order->canTransitionTo('CONFIRMED'));
+                $checkboxTitle = $order->canTransitionTo('SHIPPING') ? 'Chọn đơn để giao hàng' : 'Chọn đơn để xác nhận';
+            @endphp
             <!-- Checkbox chọn đơn -->
-            @if($order->canTransitionTo('SHIPPING'))
-                <label class="custom-order-checkbox flex items-center cursor-pointer select-none" title="Chọn đơn để giao hàng">
+            @if($isActionable)
+                <label class="custom-order-checkbox flex items-center cursor-pointer select-none" title="{{ $checkboxTitle }}">
                     <input type="checkbox"
                            value="{{ $order->id }}"
                            :checked="isSelected({{ $order->id }})"
@@ -64,25 +70,32 @@
             @php
                 $isFirstProduct = ($pIndex === 0);
                 $product = $detail->product;
-                $rawImg = $product?->images?->where('is_primary', true)->first()?->image_url
-                    ?? $product?->images?->first()?->image_url;
+                $rawImg = $detail->variant_image_url
+                    ?: ($product?->images?->where('is_primary', true)->first()?->image_url
+                        ?? $product?->images?->first()?->image_url);
                 $imageUrl = $rawImg
                     ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg))
                     : 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
 
                 $variationParts = [];
-                if ($product && !empty($product->size)) {
-                    $variationParts[] = 'Size: ' . $product->size;
+                $size = $detail->variant_size ?: $product?->size;
+                $color = $detail->variant_color ?: $product?->color;
+                if (!empty($size)) {
+                    $variationParts[] = 'Size: ' . $size;
                 }
-                if ($product && !empty($product->color)) {
-                    $variationParts[] = 'Màu: ' . $product->color;
+                if (!empty($color)) {
+                    $variationParts[] = 'Màu: ' . $color;
+                }
+                if (!empty($detail->variant_sku)) {
+                    $variationParts[] = 'SKU: ' . $detail->variant_sku;
                 }
                 $variation = !empty($variationParts) ? implode(', ', $variationParts) : 'Tiêu chuẩn';
 
                 $currentPrice = (float) $detail->product_price;
-                $originalPrice = ($product && $product->price > $currentPrice)
-                    ? (float) $product->price
-                    : $currentPrice;
+                $snapshotOriginalPrice = (float) ($detail->original_unit_price ?? 0);
+                $originalPrice = $snapshotOriginalPrice > $currentPrice
+                    ? $snapshotOriginalPrice
+                    : (($product && $product->price > $currentPrice) ? (float) $product->price : $currentPrice);
                 $productUrl = $detail->product_id
                     ? route('products.show', $detail->product_id)
                     : '#';

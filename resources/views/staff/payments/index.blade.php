@@ -65,28 +65,6 @@
         </div>
     </div>
 
-    {{-- Flash Notifications --}}
-    @if (session('success'))
-        <div class="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl flex items-center justify-between text-xs sm:text-sm shadow-xs"
-             x-data="{ show: true }" x-show="show">
-            <div class="flex items-center gap-2.5">
-                <span class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">✓</span>
-                <span class="font-semibold">{{ session('success') }}</span>
-            </div>
-            <button @click="show = false" class="text-emerald-700 hover:text-emerald-900 text-lg leading-none p-1">&times;</button>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-5 p-3.5 bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl flex items-center justify-between text-xs sm:text-sm shadow-xs"
-             x-data="{ show: true }" x-show="show">
-            <div class="flex items-center gap-2.5">
-                <span class="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold">✕</span>
-                <span class="font-semibold">{{ session('error') }}</span>
-            </div>
-            <button @click="show = false" class="text-rose-700 hover:text-rose-900 text-lg leading-none p-1">&times;</button>
-        </div>
-    @endif
 
     @if ($errors->any())
         <div class="mb-5 p-4 bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl text-xs sm:text-sm shadow-xs">

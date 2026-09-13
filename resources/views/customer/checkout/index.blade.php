@@ -380,13 +380,44 @@
         }
 
         /* Right Column Sticky Card */
+        @media (min-width: 1024px) {
+            .mn-sticky-sidebar {
+                position: -webkit-sticky !important;
+                position: sticky !important;
+                top: 24px !important;
+                z-index: 20;
+                align-self: flex-start !important;
+            }
+        }
+
         .mn-summary-card {
             background-color: var(--bg-card);
             border: 1.5px solid var(--border-card);
             border-radius: 22px;
             padding: 22px;
             box-shadow: 0 2px 8px rgba(43, 24, 16, 0.03);
-            margin-bottom: 24px;
+            margin-bottom: 14px;
+        }
+
+        .mn-summary-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .mn-order-items-scroll {
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .mn-order-items-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .mn-order-items-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .mn-order-items-scroll::-webkit-scrollbar-thumb {
+            background: #EADBCC;
+            border-radius: 4px;
         }
 
         .mn-summary-header {
@@ -489,6 +520,7 @@
             allVouchers: @json($allVouchers ?? $orderVouchers),
             usedVoucherCodes: @json($usedVoucherCodes ?? []),
             savedProfile: @json($savedProfile ?? null),
+            previousAddresses: @json($previousAddresses ?? []),
             userAddress: @json($user->address ?? ''),
             initialShipping: @json($initialShipping ?? null),
             googleMapsApiKey: @json($googleMapsApiKey ?? ''),
@@ -734,11 +766,11 @@
                                         </div>
                                         <div>
                                             <div class="font-bold flex items-center gap-1.5 flex-wrap">
-                                                <span x-text="distanceInfo.loading ? 'Đang tính toán khoảng cách...' : ('Khoảng cách ước tính: ~' + distanceInfo.distance_km + ' km')"></span>
-                                                <span class="text-[10.5px] text-[#7D6B5D]" x-text="distanceInfo.duration_text ? ('(' + distanceInfo.duration_text + ' vận chuyển)') : ''"></span>
+                                                <span x-text="distanceInfo.loading ? 'Đang kết nối tính cước vận chuyển...' : (distanceInfo.route_text || ('Kho Mật Ngọt Bear ➔ ' + (selectedDistrict ? (selectedDistrict + ', ' + selectedProvince) : (selectedProvince || 'Hà Nội'))))"></span>
+                                                <span class="text-[10.5px] text-[#7D6B5D]" x-show="shippingOptions[shippingMethod]?.time" x-text="'• Nhận dự kiến: ' + shippingOptions[shippingMethod]?.time"></span>
                                             </div>
                                             <div class="text-[10px] text-[#7D6B5D] mt-0.5">
-                                                <span x-text="distanceInfo.source === 'GOOGLE_MAPS_API' ? '✨ Tính toán qua Google Maps API' : '📦 Tính theo bản đồ khoảng cách từ kho Mật Ngọt Bear (Số 41A, P.Phú Diễn, Hà Nội)'"></span>
+                                                <span x-text="distanceInfo.source === 'GHN_API' ? '⚡ Cước phí và ngày giao hàng thực tế từ Giao Hàng Nhanh (GHN) API' : '📦 Cước phí vận chuyển theo khu vực từ kho Mật Ngọt Bear (Hà Nội)'"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -1095,27 +1127,6 @@
                                                                     <div class="text-[10px] text-[#7D6B5D] mt-0.5">
                                                                         Đơn tối thiểu: <span class="font-semibold text-[#2B1810]" x-text="formatVND(v.min_order_value || 0)"></span>
                                                                     </div>
-
-                                                                    {{-- Inapplicable Reason Alert Badge --}}
-                                                                    <div x-show="!isVoucherApplicable(v)" class="mt-1 px-2 py-0.5 rounded bg-rose-50 border border-rose-200/90 text-rose-700 text-[9.5px] flex items-start gap-1">
-                                                                        <svg class="w-3 h-3 shrink-0 mt-0.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                                                        <span class="leading-tight font-medium" x-text="getInapplicableReason(v)"></span>
-                                                                    </div>
-
-                                                                    {{-- Usage remaining badges --}}
-                                                                    <div class="flex items-center gap-1 mt-1 flex-wrap text-[9px]">
-                                                                        {{-- Global Shop remaining --}}
-                                                                        <span class="px-1.5 py-0.5 rounded font-medium transition"
-                                                                              :class="v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining <= 0) ? 'bg-rose-50 text-rose-600 font-bold border border-rose-200' : 'bg-[#F4E8D8]/60 text-[#7D6B5D]'"
-                                                                              x-text="v.global_limit > 0 ? (v.global_remaining > 0 ? ('Còn ' + v.global_remaining + '/' + v.global_limit + ' lượt') : 'Hết lượt toàn shop') : 'Lượt shop: Không giới hạn'">
-                                                                        </span>
-
-                                                                        {{-- Customer personal remaining --}}
-                                                                        <span class="px-1.5 py-0.5 rounded font-medium transition"
-                                                                              :class="v.is_user_exhausted || (v.user_remaining !== undefined && v.user_remaining <= 0) ? 'bg-rose-50 text-rose-600 font-bold border border-rose-200' : 'bg-[#FFF0DC] text-[#D68729] font-bold border border-[#FAD9B5]'"
-                                                                              x-text="(v.user_remaining !== undefined && v.user_remaining <= 0) ? ('Bạn đã dùng ' + v.user_used_count + '/' + (v.user_limit || 1) + ' lượt') : ('Lượt của bạn: còn ' + (v.user_remaining !== undefined ? v.user_remaining : (v.user_limit || 1)) + '/' + (v.user_limit || 1))">
-                                                                        </span>
-                                                                    </div>
                                                                 </div>
 
                                                                 {{-- Action Button --}}
@@ -1130,6 +1141,35 @@
                                                                     </button>
                                                                 </div>
                                                             </div>
+
+                                                            {{-- Inapplicable Reason Alert Badge (Chỉ hiện khi voucher còn lượt/còn hạn nhưng đơn chưa đạt điều kiện) --}}
+                                                            <div x-show="!isVoucherApplicable(v) && getVoucherStatus(v).key === 'ACTIVE' && getInapplicableReason(v)" class="mt-1.5 px-2 py-0.5 rounded bg-rose-50 border border-rose-200/90 text-rose-700 text-[9.5px] flex items-start gap-1">
+                                                                <svg class="w-3 h-3 shrink-0 mt-0.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                                <span class="leading-tight font-medium" x-text="getInapplicableReason(v)"></span>
+                                                            </div>
+
+                                                            {{-- Global Shop Progress Bar (Chỉ hiện khi voucher có giới hạn lượt toàn sàn) --}}
+                                                            <template x-if="v.global_limit > 0">
+                                                                <div class="mt-1.5 space-y-1">
+                                                                    <div class="flex items-center justify-between text-[10px] leading-tight">
+                                                                        <span class="font-medium flex items-center gap-1 text-[#7D6B5D]"
+                                                                              :class="v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining <= 0) ? 'text-rose-600 font-bold' : ''">
+                                                                            <i class="fa-solid fa-fire text-[9px]"
+                                                                               :class="getVoucherUsedPercent(v) >= 85 ? 'text-rose-500 animate-pulse' : 'text-[#E08A1E]'"></i>
+                                                                            <span x-text="v.global_remaining > 0 ? ('Còn ' + v.global_remaining + '/' + v.global_limit + ' lượt') : 'Hết lượt toàn shop'"></span>
+                                                                        </span>
+                                                                        <span class="font-bold text-[9.5px]"
+                                                                              :class="getVoucherUsedPercent(v) >= 85 ? 'text-rose-600' : 'text-[#E08A1E]'"
+                                                                              x-text="'Đã dùng ' + getVoucherUsedPercent(v) + '%'">
+                                                                        </span>
+                                                                    </div>
+                                                                    <div class="w-full h-1.5 bg-[#F0E6D8] rounded-full overflow-hidden">
+                                                                        <div class="h-full rounded-full transition-all duration-300"
+                                                                             :class="getVoucherUsedPercent(v) >= 85 ? 'bg-gradient-to-r from-amber-500 to-rose-500' : 'bg-gradient-to-r from-[#E08A1E] to-[#F59E0B]'"
+                                                                             :style="'width: ' + (getVoucherUsedPercent(v) > 0 ? Math.max(4, getVoucherUsedPercent(v)) : 0) + '%;'"></div>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
 
                                                             {{-- Status Badge & Timing --}}
                                                             <div class="flex items-center justify-between text-[10px] mt-1 pt-1 border-t border-[#F7EFE6]">
@@ -1218,27 +1258,6 @@
                                                                     <div class="text-[10px] text-[#7D6B5D] mt-0.5">
                                                                         Đơn tối thiểu: <span class="font-semibold text-[#2B1810]" x-text="formatVND(v.min_order_value || 0)"></span>
                                                                     </div>
-
-                                                                    {{-- Inapplicable Reason Alert Badge --}}
-                                                                    <div x-show="!isVoucherApplicable(v)" class="mt-1 px-2 py-0.5 rounded bg-rose-50 border border-rose-200/90 text-rose-700 text-[9.5px] flex items-start gap-1">
-                                                                        <svg class="w-3 h-3 shrink-0 mt-0.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                                                        <span class="leading-tight font-medium" x-text="getInapplicableReason(v)"></span>
-                                                                    </div>
-
-                                                                    {{-- Usage remaining badges --}}
-                                                                    <div class="flex items-center gap-1 mt-1 flex-wrap text-[9px]">
-                                                                        {{-- Global Shop remaining --}}
-                                                                        <span class="px-1.5 py-0.5 rounded font-medium transition"
-                                                                              :class="v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining <= 0) ? 'bg-rose-50 text-rose-600 font-bold border border-rose-200' : 'bg-[#F4E8D8]/60 text-[#7D6B5D]'"
-                                                                              x-text="v.global_limit > 0 ? (v.global_remaining > 0 ? ('Còn ' + v.global_remaining + '/' + v.global_limit + ' lượt') : 'Hết lượt toàn shop') : 'Lượt shop: Không giới hạn'">
-                                                                        </span>
-
-                                                                        {{-- Customer personal remaining --}}
-                                                                        <span class="px-1.5 py-0.5 rounded font-medium transition"
-                                                                              :class="v.is_user_exhausted || (v.user_remaining !== undefined && v.user_remaining <= 0) ? 'bg-rose-50 text-rose-600 font-bold border border-rose-200' : 'bg-[#FFF0DC] text-[#D68729] font-bold border border-[#FAD9B5]'"
-                                                                              x-text="(v.user_remaining !== undefined && v.user_remaining <= 0) ? ('Bạn đã dùng ' + v.user_used_count + '/' + (v.user_limit || 1) + ' lượt') : ('Lượt của bạn: còn ' + (v.user_remaining !== undefined ? v.user_remaining : (v.user_limit || 1)) + '/' + (v.user_limit || 1))">
-                                                                        </span>
-                                                                    </div>
                                                                 </div>
 
                                                                 {{-- Action Button --}}
@@ -1253,6 +1272,35 @@
                                                                     </button>
                                                                 </div>
                                                             </div>
+
+                                                            {{-- Inapplicable Reason Alert Badge (Chỉ hiện khi voucher còn lượt/còn hạn nhưng đơn chưa đạt điều kiện) --}}
+                                                            <div x-show="!isVoucherApplicable(v) && getVoucherStatus(v).key === 'ACTIVE' && getInapplicableReason(v)" class="mt-1.5 px-2 py-0.5 rounded bg-rose-50 border border-rose-200/90 text-rose-700 text-[9.5px] flex items-start gap-1">
+                                                                <svg class="w-3 h-3 shrink-0 mt-0.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                                <span class="leading-tight font-medium" x-text="getInapplicableReason(v)"></span>
+                                                            </div>
+
+                                                            {{-- Global Shop Progress Bar (Chỉ hiện khi voucher có giới hạn lượt toàn sàn) --}}
+                                                            <template x-if="v.global_limit > 0">
+                                                                <div class="mt-1.5 space-y-1">
+                                                                    <div class="flex items-center justify-between text-[10px] leading-tight">
+                                                                        <span class="font-medium flex items-center gap-1 text-[#7D6B5D]"
+                                                                              :class="v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining <= 0) ? 'text-rose-600 font-bold' : ''">
+                                                                            <i class="fa-solid fa-fire text-[9px]"
+                                                                               :class="getVoucherUsedPercent(v) >= 85 ? 'text-rose-500 animate-pulse' : 'text-[#E08A1E]'"></i>
+                                                                            <span x-text="v.global_remaining > 0 ? ('Còn ' + v.global_remaining + '/' + v.global_limit + ' lượt') : 'Hết lượt toàn shop'"></span>
+                                                                        </span>
+                                                                        <span class="font-bold text-[9.5px]"
+                                                                              :class="getVoucherUsedPercent(v) >= 85 ? 'text-rose-600' : 'text-[#E08A1E]'"
+                                                                              x-text="'Đã dùng ' + getVoucherUsedPercent(v) + '%'">
+                                                                        </span>
+                                                                    </div>
+                                                                    <div class="w-full h-1.5 bg-[#F0E6D8] rounded-full overflow-hidden">
+                                                                        <div class="h-full rounded-full transition-all duration-300"
+                                                                             :class="getVoucherUsedPercent(v) >= 85 ? 'bg-gradient-to-r from-amber-500 to-rose-500' : 'bg-gradient-to-r from-[#E08A1E] to-[#F59E0B]'"
+                                                                             :style="'width: ' + (getVoucherUsedPercent(v) > 0 ? Math.max(4, getVoucherUsedPercent(v)) : 0) + '%;'"></div>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
 
                                                             {{-- Status Badge & Timing --}}
                                                             <div class="flex items-center justify-between text-[10px] mt-1 pt-1 border-t border-[#F7EFE6]">
@@ -1281,7 +1329,7 @@
                     </div>
 
                     {{-- Right Column: Sticky Summary --}}
-                    <div class="lg:col-span-5 space-y-3 lg:sticky lg:top-6">
+                    <div class="lg:col-span-5 space-y-3 mn-sticky-sidebar lg:sticky lg:top-6">
 
                         {{-- Card: ĐƠN HÀNG CỦA BẠN --}}
                         <div class="mn-summary-card">
@@ -1292,20 +1340,21 @@
                                 </span>
                             </div>
 
-                            <div class="space-y-4 divide-y divide-[#F4E8D8]">
+                            <div class="space-y-4 divide-y divide-[#F4E8D8] mn-order-items-scroll">
                                 @foreach($cartItems as $item)
                                     @php
-                                        $unitPrice = $item->product->sale_price ?? $item->product->price;
+                                        $unitPrice = $item->effective_price;
                                         $lineTotal = $unitPrice * $item->quantity;
-                                        $primaryImage = $item->product->images->firstWhere('is_primary', true) ?? $item->product->images->first();
-                                        $imageUrl = $primaryImage 
-                                            ? (str_starts_with($primaryImage->image_url, 'http') ? $primaryImage->image_url : asset($primaryImage->image_url))
-                                            : asset('images/products/butterbear-chef.jpg');
+                                        $imageUrl = $item->effective_image;
                                         
-                                        $specs = [];
-                                        if (!empty($item->product->size)) { $specs[] = $item->product->size; }
-                                        if (!empty($item->product->color)) { $specs[] = $item->product->color; }
-                                        $specsText = !empty($specs) ? implode(' · ', $specs) : ($item->product->category->name ?? 'Gấu bông');
+                                        if ($item->variant) {
+                                            $specsText = "Phân loại: {$item->variant->color} · {$item->variant->size}";
+                                        } else {
+                                            $specs = [];
+                                            if (!empty($item->product->size)) { $specs[] = $item->product->size; }
+                                            if (!empty($item->product->color)) { $specs[] = $item->product->color; }
+                                            $specsText = !empty($specs) ? implode(' · ', $specs) : ($item->product->category->name ?? 'Gấu bông');
+                                        }
                                     @endphp
                                     <div class="flex items-center gap-3.5 pt-4 first:pt-0">
                                         {{-- Image (clean without circular bubble) --}}
@@ -1318,7 +1367,14 @@
                                         {{-- Details --}}
                                         <div class="flex-1 min-w-0">
                                             <h4 class="font-bold text-xs sm:text-sm text-[#2B1810] line-clamp-2 leading-snug">{{ $item->product->name }}</h4>
-                                            <p class="text-xs text-[#7D6B5D] mt-1">{{ $specsText }}</p>
+                                            @if($item->variant)
+                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded mt-1">
+                                                    <span>✨</span>
+                                                    <span>{{ $item->variant->color }} · {{ $item->variant->size }}</span>
+                                                </span>
+                                            @else
+                                                <p class="text-xs text-[#7D6B5D] mt-1">{{ $specsText }}</p>
+                                            @endif
                                         </div>
 
                                         {{-- Price & Quantity --}}
@@ -1432,6 +1488,7 @@
             allVouchers: @json($allVouchers ?? $orderVouchers),
             usedVoucherCodes: @json($usedVoucherCodes ?? []),
             savedProfile: @json($savedProfile ?? null),
+            previousAddresses: @json($previousAddresses ?? []),
             userAddress: @json($user->address ?? ''),
             initialShipping: @json($initialShipping ?? null),
             googleMapsApiKey: @json($googleMapsApiKey ?? ''),
@@ -1466,10 +1523,11 @@
                     express: { id: 'express', name: 'Giao hàng hoả tốc', desc: 'Giao trong 2 - 4 giờ tại Hà Nội', fee: 55000, time: '2 - 4 giờ', available: true, disabled_reason: '' }
                 },
                 distanceInfo: {
-                    distance_km: initialShip?.distance_km || 6.5,
-                    duration_text: initialShip?.duration_text || '16 phút',
+                    route_text: initialShip?.route_text || 'Kho Mật Ngọt Bear (Hà Nội) ➔ Hà Nội',
+                    distance_km: initialShip?.distance_km || null,
+                    duration_text: initialShip?.duration_text || '',
                     is_hanoi_inner: initialShip?.is_hanoi_inner !== undefined ? initialShip.is_hanoi_inner : true,
-                    source: initialShip?.source || 'REGIONAL_MATRIX',
+                    source: initialShip?.source || 'GHN_API',
                     loading: false
                 },
 
@@ -1480,6 +1538,9 @@
                 selectedProvince: config.savedProfile?.province || 'Hà Nội',
                 selectedWard: config.savedProfile?.ward || '',
                 streetAddress: config.savedProfile?.street || '',
+
+                previousAddresses: config.previousAddresses || [],
+                openPreviousAddresses: false,
 
                 // 63 Provinces / Cities in Vietnam with post-merger administrative wards & communes
                 provinces: [
@@ -2092,6 +2153,27 @@
                     this.onAddressChange();
                 },
 
+                selectPreviousAddress(addr) {
+                    if (!addr) return;
+                    if (addr.recipient_name) this.recipientName = addr.recipient_name;
+                    if (addr.recipient_phone) this.recipientPhone = addr.recipient_phone;
+                    if (addr.province) {
+                        this.selectProvinceName(addr.province);
+                    }
+                    if (addr.ward) {
+                        this.selectedWard = addr.ward;
+                        if (!this.availableWards.includes(this.selectedWard)) {
+                            this.availableWards.unshift(this.selectedWard);
+                        }
+                    }
+                    if (addr.street) {
+                        this.streetAddress = addr.street;
+                    }
+                    this.cleanStreetAddress();
+                    this.onAddressChange();
+                    this.openPreviousAddresses = false;
+                },
+
                 onAddressChange() {
                     this.updateShippingCalculation();
                 },
@@ -2121,6 +2203,7 @@
                             const data = await response.json();
                             if (data.success && data.options) {
                                 this.shippingOptions = data.options;
+                                this.distanceInfo.route_text = data.route_text;
                                 this.distanceInfo.distance_km = data.distance_km;
                                 this.distanceInfo.duration_text = data.duration_text;
                                 this.distanceInfo.is_hanoi_inner = data.is_hanoi_inner;
@@ -2244,7 +2327,9 @@
                     if (v.expected_discount !== undefined && v.expected_discount !== null) {
                         return parseFloat(v.expected_discount);
                     }
-                    const baseAmount = v.voucher_type === 'SHIPPING' ? this.shippingFee : this.subtotal;
+                    const baseAmount = v.voucher_type === 'SHIPPING' 
+                        ? this.shippingFee 
+                        : (v.eligible_subtotal !== undefined && v.eligible_subtotal !== null ? parseFloat(v.eligible_subtotal) : this.subtotal);
                     let discount = 0;
                     if (v.discount_type === 'PERCENTAGE') {
                         discount = (baseAmount * parseFloat(v.discount_value)) / 100;
@@ -2277,6 +2362,14 @@
                         return { key: 'UPCOMING', label: '🟡 Sắp diễn ra', badgeClass: 'bg-[#FFF8E6] text-[#D4981E] border-[#FFE8A3]', btnText: 'Chưa mở' };
                     }
                     return { key: 'ACTIVE', label: '🟢 Đang diễn ra', badgeClass: 'bg-[#E8F8F0] text-[#1E9E60] border-[#B8EED0]', btnText: 'Áp dụng' };
+                },
+
+                getVoucherUsedPercent(v) {
+                    if (!v || !v.global_limit || v.global_limit <= 0) return 0;
+                    const used = v.used_count !== undefined 
+                        ? parseInt(v.used_count || 0) 
+                        : (v.global_limit - (v.global_remaining !== null && v.global_remaining !== undefined ? parseInt(v.global_remaining) : 0));
+                    return Math.min(100, Math.max(0, Math.round((used / v.global_limit) * 100)));
                 },
 
                 filterVouchers(list, filterKey) {

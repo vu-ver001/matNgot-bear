@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductVariant extends Model
@@ -50,6 +51,16 @@ class ProductVariant extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function cartItems(): HasMany
+    {
+        return $this->hasMany(CartItem::class, 'product_variant_id');
+    }
+
+    public function orderDetails(): HasMany
+    {
+        return $this->hasMany(OrderDetail::class, 'product_variant_id');
     }
 
     /**
@@ -104,7 +115,7 @@ class ProductVariant extends Model
     public function getSaleRemainingSecondsAttribute(): int
     {
         if ($this->is_on_sale && $this->sale_end_at) {
-            return max(0, now()->diffInSeconds($this->sale_end_at, false));
+            return max(0, (int) now()->diffInSeconds($this->sale_end_at, false));
         }
         return 0;
     }

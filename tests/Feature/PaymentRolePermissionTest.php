@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\CartItem;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentRefundRequest;
 use App\Models\PaymentSetting;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -17,7 +20,9 @@ class PaymentRolePermissionTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $staff;
+
     private User $customer;
 
     protected function setUp(): void
@@ -61,7 +66,7 @@ class PaymentRolePermissionTest extends TestCase
     private function createDummyOrder(): Order
     {
         return Order::create([
-            'order_code' => 'TEST' . strtoupper(uniqid()),
+            'order_code' => 'TEST'.strtoupper(uniqid()),
             'customer_id' => $this->customer->id,
             'recipient_name' => 'Người Nhận Test',
             'recipient_phone' => '0987654321',
@@ -83,7 +88,7 @@ class PaymentRolePermissionTest extends TestCase
         $response = $this->actingAs($this->staff)->get(route('staff.payments.index'));
         $response->assertStatus(200);
         $response->assertSee('Giao Dịch Hôm Nay');
-        $response->assertDontSee('Xuất Báo Cáo Excel/CSV');
+        $response->assertDontSee('Xuất Báo Cáo');
     }
 
     /**
@@ -194,7 +199,7 @@ class PaymentRolePermissionTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('admin.payments.index'));
         $response->assertStatus(200);
         $response->assertSee('Thực Thu Thành Công');
-        $response->assertSee('Xuất Báo Cáo Excel/CSV');
+        $response->assertSee('Xuất Báo Cáo');
 
         $exportResponse = $this->actingAs($this->admin)->get(route('admin.payments.export'));
         $exportResponse->assertStatus(200);
@@ -297,8 +302,8 @@ class PaymentRolePermissionTest extends TestCase
      */
     public function test_order_placement_does_not_modify_user_personal_profile()
     {
-        $category = \App\Models\Category::create(['name' => 'Gấu Bông', 'slug' => 'gau-bong']);
-        $product = \App\Models\Product::create([
+        $category = Category::create(['name' => 'Gấu Bông', 'slug' => 'gau-bong']);
+        $product = Product::create([
             'category_id' => $category->id,
             'name' => 'Gấu Dâu Losto',
             'slug' => 'gau-dau-losto',
@@ -313,7 +318,7 @@ class PaymentRolePermissionTest extends TestCase
             'address' => 'Số 10 Nhà Riêng, Phường Cầu Giấy, Hà Nội',
         ]);
 
-        $cartItem = \App\Models\CartItem::create([
+        $cartItem = CartItem::create([
             'user_id' => $this->customer->id,
             'product_id' => $product->id,
             'quantity' => 1,
@@ -348,5 +353,71 @@ class PaymentRolePermissionTest extends TestCase
             'recipient_address' => 'Số 99 Lê Lợi, Phường Lê Lợi, Hải Phòng',
         ]);
     }
-}
 
+    /**
+     * Quy định phân quyền: Nhân viên không thể tự xác nhận hoàn tiền trực tiếp, chỉ có thể gửi yêu cầu lên Admin
+     */
+    public function test_staff_cannot_confirm_refund_directly_and_must_request_refund()
+    {
+        $order = Order::create([
+            'order_code' => 'TEST_REFUND_'.strtoupper(uniqid()),
+            'customer_id' => $this->customer->id,
+            'recipient_name' => 'Người Nhận Test',
+            'recipient_phone' => '0987654321',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 200000,
+            'shipping_fee' => 30000,
+            'total_amount' => 230000,
+            'order_status' => 'CANCELLED',
+            'payment_method' => 'BANK_TRANSFER',
+            'payment_status' => 'PAID',
+            'refund_bank_name' => 'Techcombank',
+            'refund_bank_account' => '19035555555',
+            'refund_account_holder' => 'NGUYEN VAN A',
+        ]);
+
+        Payment::create([
+            'order_id' => $order->id,
+            'method' => 'BANK_TRANSFER',
+            'status' => 'PAID',
+            'amount' => 230000,
+            'paid_at' => now(),
+        ]);
+
+        // 1. Nhân viên gửi yêu cầu hoàn tiền lên Admin
+        $response = $this->actingAs($this->staff)->post(route('staff.orders.request_refund', $order->id), [
+            'amount' => 230000,
+            'bank_name' => 'Techcombank',
+            'bank_account' => '19035555555',
+            'account_holder' => 'NGUYEN VAN A',
+            'reason' => 'Đơn hàng online đã hủy, đề xuất hoàn tiền lại cho khách',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('payment_refund_requests', [
+            'order_id' => $order->id,
+            'requested_by' => $this->staff->id,
+            'amount' => 230000,
+            'status' => 'PENDING',
+        ]);
+
+        // 2. Đơn hàng vẫn ở trạng thái PAID (chưa bị staff tự ý chuyển sang REFUNDED)
+        $order->refresh();
+        $this->assertEquals('PAID', $order->payment_status);
+
+        // 3. Admin phê duyệt hoàn tiền
+        $refundReq = $order->latestRefundRequest;
+        $this->assertNotNull($refundReq);
+
+        $adminResponse = $this->actingAs($this->admin)->post(route('admin.payments.approveRefund', $refundReq->id), [
+            'admin_note' => 'Admin đã chuyển khoản hoàn tiền xong',
+        ]);
+
+        $adminResponse->assertRedirect();
+        $order->refresh();
+        $refundReq->refresh();
+
+        $this->assertEquals('APPROVED', $refundReq->status);
+        $this->assertEquals('REFUNDED', $order->payment_status);
+    }
+}

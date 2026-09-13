@@ -319,7 +319,7 @@ class Product extends Model
         }
 
         $prices = $variants->pluck('price')
-            ->filter(fn($p) => is_numeric($p) && (float)$p > 0)
+            ->filter(fn($p) => is_numeric($p) && (float)$p >= 0)
             ->map(fn($p) => (float)$p)
             ->values()
             ->all();
@@ -355,6 +355,11 @@ class Product extends Model
         $this->stock_quantity = $totalStock;
 
         return $this->save();
+    }
+
+    public function syncVariantsStats(): bool
+    {
+        return $this->syncLowestPriceFromVariants();
     }
 }
 

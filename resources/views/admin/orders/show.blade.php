@@ -274,6 +274,23 @@
                 </button>
             </div>
 
+            @if($order->latestRefundRequest)
+                @php
+                    $rf = $order->latestRefundRequest;
+                @endphp
+                <div class="mt-3 p-3 bg-purple-50 rounded-xl border border-purple-200 text-xs text-purple-950 flex items-start gap-2.5">
+                    <i class="fa-solid fa-paper-plane text-purple-600 mt-0.5"></i>
+                    <div>
+                        <strong>Yêu cầu từ nhân viên {{ $rf->requestedByUser?->full_name ?? 'CSKH' }}:</strong>
+                        <span>{{ $rf->reason }}</span>
+                        <span class="text-[11px] text-[#7D6B5D] ml-1 font-mono">({{ $rf->created_at->format('d/m/Y H:i') }})</span>
+                        <a href="{{ route('admin.payments.index', ['tab' => 'refund_requests']) }}" class="ml-2 font-bold text-purple-700 hover:underline inline-flex items-center gap-1">
+                            <i class="fa-solid fa-qrcode"></i> Xem mã VietQR
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             @if($order->refund_bank_account || $order->refund_bank_name)
                 <div class="mt-4 p-3.5 bg-white rounded-xl border border-amber-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div>
@@ -450,8 +467,9 @@
                         <tbody>
                             @foreach ($order->details as $detail)
                                 @php
-                                    $rawImg = $detail->product?->images?->where('is_primary', true)->first()?->image_url
-                                        ?? $detail->product?->images?->first()?->image_url;
+                                    $rawImg = $detail->variant_image_url
+                                        ?: ($detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                            ?? $detail->product?->images?->first()?->image_url);
                                     $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
                                 @endphp
                                 <tr>
@@ -469,8 +487,16 @@
                                             @endif
                                             <div class="min-w-0">
                                                 <div class="font-bold text-[#4E342E]">{{ $detail->product_name }}</div>
+                                                @if ($detail->variant_display)
+                                                    <div class="mt-0.5">
+                                                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded shadow-2xs">
+                                                            <span>✨</span>
+                                                            <span>{{ $detail->variant_display }}</span>
+                                                        </span>
+                                                    </div>
+                                                @endif
                                                 @if ($detail->product)
-                                                    <div class="text-[11px] text-[#8E8076]">Mã SP: #{{ $detail->product_id }}</div>
+                                                    <div class="text-[11px] text-[#8E8076] mt-0.5">Mã SP: #{{ $detail->product_id }}</div>
                                                 @endif
                                             </div>
                                         </div>
@@ -551,11 +577,15 @@
                                 <tr>
                                     <td class="font-bold text-[#4E342E]">{{ $payment->method }}</td>
                                     <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
-                                    <td><x-payment-status-badge :status="$payment->status" /></td>
+                                    <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
                                     <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>
                                     <td class="text-xs text-[#8E8076]">{{ $payment->paid_at?->format('d/m/Y H:i') ?? $payment->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="text-right">
-                                        @if ($payment->status === 'PENDING')
+                                        @if ($payment->method === 'COD')
+                                            <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/60 inline-block">
+                                                Thu khi giao hàng
+                                            </span>
+                                        @elseif ($payment->status === 'PENDING')
                                             <div class="flex justify-end gap-1.5">
                                                 <form method="POST" action="{{ route('admin.payments.updateStatus', $payment) }}">
                                                     @csrf

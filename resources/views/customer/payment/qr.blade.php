@@ -51,7 +51,7 @@
                                 @elseif($order->payment_method === 'CARD')
                                     Thanh toán qua Cổng VNPAY-QR
                                 @else
-                                    Chuyển khoản VietQR (MB Bank)
+                                    Chuyển khoản VietQR
                                 @endif
                             </h1>
                         </div>
@@ -94,7 +94,7 @@
                                     <img src="{{ $vietQrUrl }}" alt="VietQR MB Bank" class="w-56 h-56 object-contain rounded-xl">
                                     <div class="mt-2 text-center text-xs font-bold text-[#5C3219] flex items-center justify-center gap-1.5">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                        VietQR Napas 24/7 (MB Bank)
+                                        VietQR Napas 24/7 
                                     </div>
                                 @endif
                             </div>

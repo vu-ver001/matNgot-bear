@@ -42,15 +42,15 @@
     {{-- Breadcrumb & Header --}}
     <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <x-breadcrumb :items="[
+            {{-- <x-breadcrumb :items="[
                 ['label' => 'Trang chủ', 'url' => route('admin.dashboard')],
                 ['label' => 'Quản lý thanh toán & Đối soát']
-            ]" class="mb-2 text-xs" />
+            ]" class="mb-2 text-xs" /> --}}
             <h1 class="text-2xl sm:text-3xl font-black text-[#2C1408] tracking-tight flex items-center gap-2.5">
                 <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5C3219] to-[#8C5835] text-white flex items-center justify-center text-lg shadow-sm">
                     💳
                 </span>
-                <span>Quản Lý Thanh Toán &amp; Đối Soát</span>
+                <span style="font-weight: 800;">Quản lý Thanh toán &amp; Đối soát</span>
             </h1>
             <p class="text-xs sm:text-sm text-[#786B61] mt-1">
                 Xem toàn bộ dòng tiền, duyệt hoàn tiền kèm mã QR, đối soát công nợ COD &amp; cấu hình cổng thanh toán.
@@ -67,7 +67,7 @@
             <a href="{{ route('admin.payments.export', request()->query()) }}" 
                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EBDDCD] hover:border-emerald-600 text-emerald-800 font-bold text-xs shadow-xs hover:shadow-sm transition">
                 <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                <span>Xuất Báo Cáo Excel/CSV</span>
+                <span>Xuất Báo Cáo</span>
             </a>
             <a href="{{ route('admin.orders.index') }}" 
                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5C3219] hover:bg-[#432310] text-white font-bold text-xs shadow-sm hover:shadow transition">
@@ -77,28 +77,6 @@
         </div>
     </div>
 
-    {{-- Flash Notifications --}}
-    @if (session('success'))
-        <div class="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl flex items-center justify-between text-xs sm:text-sm shadow-xs"
-             x-data="{ show: true }" x-show="show">
-            <div class="flex items-center gap-2.5">
-                <span class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">✓</span>
-                <span class="font-semibold">{{ session('success') }}</span>
-            </div>
-            <button @click="show = false" class="text-emerald-700 hover:text-emerald-900 text-lg leading-none p-1">&times;</button>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-5 p-3.5 bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl flex items-center justify-between text-xs sm:text-sm shadow-xs"
-             x-data="{ show: true }" x-show="show">
-            <div class="flex items-center gap-2.5">
-                <span class="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold">✕</span>
-                <span class="font-semibold">{{ session('error') }}</span>
-            </div>
-            <button @click="show = false" class="text-rose-700 hover:text-rose-900 text-lg leading-none p-1">&times;</button>
-        </div>
-    @endif
 
     {{-- Navigation Tabs (Shopify Style) --}}
     <div class="flex items-center gap-2 mb-6 border-b border-[#EBDDCD] pb-2 overflow-x-auto">

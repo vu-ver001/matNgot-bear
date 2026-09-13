@@ -250,6 +250,16 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function refundRequests(): HasMany
+    {
+        return $this->hasMany(PaymentRefundRequest::class);
+    }
+
+    public function latestRefundRequest(): HasOne
+    {
+        return $this->hasOne(PaymentRefundRequest::class)->latestOfMany();
+    }
+
     public function latestPayment(): HasOne
     {
         return $this->hasOne(Payment::class)->latestOfMany();

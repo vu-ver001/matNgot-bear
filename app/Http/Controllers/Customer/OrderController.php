@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\OrderDetail;
 use App\Models\OrderStatusHistory;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 
@@ -59,6 +61,7 @@ class OrderController extends Controller
 
         $orders = $query->with([
             'details.product.images',
+            'details.productVariant',
             'voucher',
             'shippingVoucher',
             'reviews',
@@ -103,7 +106,7 @@ class OrderController extends Controller
         $this->orderService->checkAndCancelIfExpired($order);
         $order->refresh();
 
-        $order->load(['details.product.images', 'payments', 'statusHistories', 'voucher', 'reviews']);
+        $order->load(['details.product.images', 'details.productVariant', 'payments', 'statusHistories', 'voucher', 'reviews']);
 
         return response()
             ->view('customer.orders.show', compact('order'))
@@ -121,7 +124,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['details.product.images', 'payments', 'voucher', 'customer']);
+        $order->load(['details.product.images', 'details.productVariant', 'payments', 'voucher', 'customer']);
 
         return view('customer.orders.invoice', compact('order'));
     }
@@ -370,22 +373,38 @@ class OrderController extends Controller
             return back()->with('error', 'Bạn chỉ có thể mua lại từ đơn hàng đã hoàn thành, đã hủy hoặc đã trả hàng.');
         }
 
-        $order->loadMissing('details.product');
+        $order->loadMissing('details.product', 'details.productVariant');
         $addedCount = 0;
 
         foreach ($order->details as $detail) {
             $product = $detail->product;
-            if ($product && $product->status === Product::STATUS_ACTIVE && $product->stock_quantity > 0) {
-                $cartItem = CartItem::firstOrNew([
-                    'user_id' => auth()->id(),
-                    'product_id' => $product->id,
-                ]);
-
-                $newQty = ($cartItem->exists ? $cartItem->quantity : 0) + $detail->quantity;
-                $cartItem->quantity = min($newQty, $product->stock_quantity);
-                $cartItem->save();
-                $addedCount++;
+            if (! $product || $product->status !== Product::STATUS_ACTIVE) {
+                continue;
             }
+
+            $variant = $this->resolveReorderVariant($detail, $product);
+            $hasVariants = ProductVariant::withTrashed()->where('product_id', $product->id)->exists();
+            if ($hasVariants && ! $variant) {
+                continue;
+            }
+
+            $availableStock = $variant
+                ? (int) $variant->stock_quantity
+                : (int) $product->stock_quantity;
+            if ($availableStock < 1) {
+                continue;
+            }
+
+            $cartItem = CartItem::firstOrNew([
+                'user_id' => auth()->id(),
+                'product_id' => $product->id,
+                'product_variant_id' => $variant?->id,
+            ]);
+
+            $newQty = ($cartItem->exists ? $cartItem->quantity : 0) + (int) $detail->quantity;
+            $cartItem->quantity = min($newQty, $availableStock);
+            $cartItem->save();
+            $addedCount++;
         }
 
         if ($addedCount > 0) {
@@ -393,5 +412,35 @@ class OrderController extends Controller
         }
 
         return back()->with('error', 'Rất tiếc, các sản phẩm trong đơn hàng này hiện đã hết hàng hoặc không còn kinh doanh.');
+    }
+
+    private function resolveReorderVariant(OrderDetail $detail, Product $product): ?ProductVariant
+    {
+        $variant = $detail->productVariant;
+        if ($variant
+            && ! $variant->trashed()
+            && $variant->product_id === $product->id
+            && $variant->status === Product::STATUS_ACTIVE) {
+            return $variant;
+        }
+
+        $query = ProductVariant::query()
+            ->where('product_id', $product->id)
+            ->where('status', Product::STATUS_ACTIVE);
+
+        if ($detail->variant_sku) {
+            return (clone $query)->where('sku', $detail->variant_sku)->first();
+        }
+
+        if ($detail->variant_size) {
+            $query->where('size', $detail->variant_size);
+        }
+        if ($detail->variant_color) {
+            $query->where('color', $detail->variant_color);
+        }
+
+        $matches = $query->limit(2)->get();
+
+        return $matches->count() === 1 ? $matches->first() : null;
     }
 }

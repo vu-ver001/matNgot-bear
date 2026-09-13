@@ -6,7 +6,7 @@
 @endsection
 
 @section('content')
-<div x-data="{ openApproveModal: false, openRejectModal: false, openRefundConfirmModal: false }">
+<div x-data="{ openApproveModal: false, openRejectModal: false, openRefundRequestModal: false }">
     <!-- Header Breadcrumb & Actions -->
     <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div class="flex items-center gap-3">
@@ -247,98 +247,198 @@
 
     {{-- KHỐI CẢNH BÁO 2: Cần hoàn tiền cho khách (Đơn đã hủy & đã thanh toán) --}}
     @if($order->needsRefund())
-        <div class="mb-6 bg-gradient-to-r from-amber-500/15 via-amber-50 to-orange-500/10 border-2 border-amber-400 rounded-2xl p-6 shadow-sm">
-            <div class="flex items-start justify-between gap-4 flex-wrap">
-                <div class="flex items-start gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-amber-600/30">
-                        <i class="fa-solid fa-hand-holding-dollar"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="text-base sm:text-lg font-bold text-amber-950">Đơn hàng đã hủy - CẦN HOÀN TIỀN CHO KHÁCH</h3>
-                            <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-xs animate-pulse">CHỜ HOÀN TIỀN</span>
+        @php
+            $latestRefund = $order->latestRefundRequest;
+        @endphp
+
+        @if($latestRefund && $latestRefund->status === 'PENDING')
+            {{-- Trạng thái: Đã gửi yêu cầu, đang chờ Admin duyệt --}}
+            <div class="mb-6 bg-gradient-to-r from-purple-500/10 via-purple-50 to-indigo-500/10 border-2 border-purple-300 rounded-2xl p-6 shadow-sm">
+                <div class="flex items-start justify-between gap-4 flex-wrap">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-purple-600/30">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
                         </div>
-                        <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1">
-                            Số tiền cần chuyển khoản trả khách: <strong class="text-amber-900 text-base font-black">{{ number_format($order->total_amount, 0, ',', '.') }} đ</strong>
-                        </p>
-                        <p class="text-xs text-[#7D6B5D] mt-0.5">
-                            Liên hệ khách qua SĐT: <strong class="text-[#2B1810] text-sm">{{ $order->recipient_phone }}</strong> (Khách nhận: <strong>{{ $order->recipient_name }}</strong>)
-                        </p>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-base sm:text-lg font-bold text-purple-950">Đã gửi yêu cầu hoàn tiền - ĐANG CHỜ ADMIN PHÊ DUYỆT</h3>
+                                <span class="px-2.5 py-0.5 rounded-full bg-purple-200 text-purple-900 font-extrabold text-xs animate-pulse">CHỜ ADMIN DUYỆT</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1">
+                                Mã yêu cầu: <strong class="text-purple-900 font-mono">#RF-{{ str_pad($latestRefund->id, 5, '0', STR_PAD_LEFT) }}</strong>
+                                &bull; Số tiền: <strong class="text-purple-900 font-black">{{ number_format($latestRefund->amount, 0, ',', '.') }} đ</strong>
+                            </p>
+                            <p class="text-xs text-[#7D6B5D] mt-0.5">
+                                Gửi bởi: <strong>{{ $latestRefund->requestedByUser?->full_name ?? $latestRefund->requestedByUser?->name ?? 'Nhân viên' }}</strong> lúc {{ $latestRefund->created_at->format('H:i - d/m/Y') }}
+                            </p>
+                            <div class="mt-2 text-xs bg-white/80 p-2.5 rounded-xl border border-purple-200 text-purple-950">
+                                <span class="font-bold">Lý do đề xuất:</span> {{ $latestRefund->reason }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-end gap-1.5">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-800 text-xs font-bold rounded-xl border border-purple-200">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <span>Chờ Admin chuyển khoản &amp; duyệt</span>
+                        </div>
+                        <span class="text-[11px] text-[#7D6B5D]">Nhân viên chỉ gửi yêu cầu, Admin mới duyệt lệnh chuyển tiền</span>
                     </div>
                 </div>
 
-                <button type="button" @click="openRefundConfirmModal = true"
-                        class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span>Xác nhận đã hoàn tiền</span>
-                </button>
+                @if($order->refund_bank_account || $order->refund_bank_name)
+                    <div class="mt-4 p-3.5 bg-white rounded-xl border border-purple-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Ngân hàng:</span>
+                            <strong class="text-[#2B1810] text-sm">{{ $order->refund_bank_name ?: '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Số tài khoản:</span>
+                            <strong class="text-purple-900 font-mono text-sm tracking-wide">{{ $order->refund_bank_account ?: '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Chủ tài khoản:</span>
+                            <strong class="text-[#2B1810] uppercase text-sm">{{ $order->refund_account_holder ?: '—' }}</strong>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @else
+            {{-- Chưa gửi yêu cầu hoặc yêu cầu trước bị từ chối --}}
+            <div class="mb-6 bg-gradient-to-r from-amber-500/15 via-amber-50 to-orange-500/10 border-2 border-amber-400 rounded-2xl p-6 shadow-sm">
+                @if($latestRefund && $latestRefund->status === 'REJECTED')
+                    <div class="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600 mt-0.5"></i>
+                        <div>
+                            <strong>Yêu cầu hoàn tiền trước bị Admin từ chối:</strong>
+                            {{ $latestRefund->admin_note ?? 'Không có ghi chú' }} (Vui lòng kiểm tra lại thông tin và gửi lại yêu cầu).
+                        </div>
+                    </div>
+                @endif
+
+                <div class="flex items-start justify-between gap-4 flex-wrap">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-amber-600/30">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-base sm:text-lg font-bold text-amber-950">Đơn hàng đã hủy - CẦN HOÀN TIỀN CHO KHÁCH</h3>
+                                <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-xs animate-pulse">CHỜ GỬI YÊU CẦU</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1">
+                                Số tiền cần hoàn trả: <strong class="text-amber-900 text-base font-black">{{ number_format($order->total_amount, 0, ',', '.') }} đ</strong>
+                            </p>
+                            <p class="text-xs text-[#7D6B5D] mt-0.5">
+                                Liên hệ khách: <strong class="text-[#2B1810] text-sm">{{ $order->recipient_phone }}</strong> (Khách nhận: <strong>{{ $order->recipient_name }}</strong>)
+                            </p>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="openRefundRequestModal = true"
+                            class="px-5 py-2.5 bg-[#5C3219] hover:bg-[#4E2B15] text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>{{ $latestRefund && $latestRefund->status === 'REJECTED' ? 'Gửi lại yêu cầu lên Admin' : 'Gửi yêu cầu hoàn tiền lên Admin' }}</span>
+                    </button>
+                </div>
+
+                @if($order->refund_bank_account || $order->refund_bank_name)
+                    <div class="mt-4 p-3.5 bg-white rounded-xl border border-amber-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Ngân hàng:</span>
+                            <strong class="text-[#2B1810] text-sm">{{ $order->refund_bank_name ?: '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Số tài khoản:</span>
+                            <strong class="text-amber-800 font-mono text-sm tracking-wide">{{ $order->refund_bank_account ?: '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-[#7D6B5D] block font-medium">Chủ tài khoản:</span>
+                            <strong class="text-[#2B1810] uppercase text-sm">{{ $order->refund_account_holder ?: '—' }}</strong>
+                        </div>
+                    </div>
+                @else
+                    <div class="mt-3 p-3 bg-white/80 rounded-xl border border-amber-200 text-xs text-amber-900">
+                        💡 Khách hàng chưa điền sẵn STK khi hủy. Vui lòng gọi điện tới <strong>{{ $order->recipient_phone }}</strong> để xin STK ngân hàng trước khi gửi yêu cầu lên Admin.
+                    </div>
+                @endif
             </div>
 
-            @if($order->refund_bank_account || $order->refund_bank_name)
-                <div class="mt-4 p-3.5 bg-white rounded-xl border border-amber-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div>
-                        <span class="text-[#7D6B5D] block font-medium">Ngân hàng:</span>
-                        <strong class="text-[#2B1810] text-sm">{{ $order->refund_bank_name ?: '—' }}</strong>
-                    </div>
-                    <div>
-                        <span class="text-[#7D6B5D] block font-medium">Số tài khoản:</span>
-                        <strong class="text-amber-800 font-mono text-sm tracking-wide">{{ $order->refund_bank_account ?: '—' }}</strong>
-                    </div>
-                    <div>
-                        <span class="text-[#7D6B5D] block font-medium">Chủ tài khoản:</span>
-                        <strong class="text-[#2B1810] uppercase text-sm">{{ $order->refund_account_holder ?: '—' }}</strong>
-                    </div>
-                </div>
-            @else
-                <div class="mt-3 p-3 bg-white/80 rounded-xl border border-amber-200 text-xs text-amber-900">
-                    💡 Khách hàng chưa điền sẵn STK. Vui lòng gọi điện tới <strong>{{ $order->recipient_phone }}</strong> để xin STK ngân hàng hoàn tiền.
-                </div>
-            @endif
-
-            {{-- POPUP Xác nhận đã hoàn tiền --}}
-            <div x-show="openRefundConfirmModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            {{-- POPUP Gửi yêu cầu hoàn tiền lên Admin --}}
+            <div x-show="openRefundRequestModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
                 <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                    <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openRefundConfirmModal = false"></div>
+                    <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openRefundRequestModal = false"></div>
                     <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                    <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-amber-300" @click.stop>
-                        <form method="POST" action="{{ route('staff.orders.confirm_refund', $order) }}">
+                    <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-amber-300" @click.stop>
+                        <form method="POST" action="{{ route('staff.orders.request_refund', $order) }}" enctype="multipart/form-data">
                             @csrf
                             <div class="p-6 sm:p-7">
                                 <div class="flex items-center gap-3.5 mb-4 pb-4 border-b border-gray-100">
-                                    <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0 shadow-xs">
-                                        <i class="fa-solid fa-circle-check"></i>
+                                    <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl shrink-0 shadow-xs">
+                                        <i class="fa-solid fa-paper-plane"></i>
                                     </div>
                                     <div>
-                                        <h3 class="text-base sm:text-lg font-black text-[#2B1810]">Xác nhận đã hoàn tiền</h3>
+                                        <h3 class="text-base sm:text-lg font-black text-[#2B1810]">Gửi yêu cầu hoàn tiền lên Admin</h3>
                                         <p class="text-xs text-[#7D6B5D] mt-0.5">Mã đơn: <strong class="text-amber-800 font-mono">#{{ $order->order_code }}</strong></p>
                                     </div>
                                 </div>
 
-                                <div class="space-y-3.5 text-xs text-[#5C3219]">
+                                <div class="space-y-4 text-xs text-[#5C3219]">
                                     <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
-                                        Bạn xác nhận đã chuyển khoản số tiền <strong class="text-amber-900 text-sm font-bold">{{ number_format($order->total_amount, 0, ',', '.') }} đ</strong> cho khách hàng <strong>{{ $order->recipient_name }}</strong>?
+                                        <div class="flex justify-between items-center">
+                                            <span class="font-medium text-[#7D6B5D]">Số tiền cần hoàn trả:</span>
+                                            <span class="text-amber-900 text-base font-black">{{ number_format($order->total_amount, 0, ',', '.') }} đ</span>
+                                        </div>
+                                        <input type="hidden" name="amount" value="{{ (int)$order->total_amount }}">
+                                        <p class="text-[11px] text-[#7D6B5D] mt-1">Yêu cầu sau khi gửi sẽ chuyển đến trang phê duyệt của Admin (Chủ shop) để thực hiện chuyển khoản.</p>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block font-bold text-[#2B1810] mb-1">Ngân hàng nhận:</label>
+                                            <input type="text" name="bank_name" value="{{ old('bank_name', $order->refund_bank_name ?: 'MB') }}" placeholder="MB, VCB, Techcombank..."
+                                                   class="w-full rounded-xl border-gray-300 text-xs p-2.5 focus:border-amber-500 focus:ring-amber-500">
+                                        </div>
+                                        <div>
+                                            <label class="block font-bold text-[#2B1810] mb-1">Số tài khoản nhận: <span class="text-red-500">*</span></label>
+                                            <input type="text" name="bank_account" value="{{ old('bank_account', $order->refund_bank_account) }}" required placeholder="Nhập số tài khoản"
+                                                   class="w-full rounded-xl border-gray-300 text-xs p-2.5 font-mono focus:border-amber-500 focus:ring-amber-500">
+                                        </div>
                                     </div>
 
                                     <div>
-                                        <label class="block font-bold text-[#2B1810] mb-1">Ghi chú hoàn tiền (Mã GD / STK / Lưu ý):</label>
-                                        <textarea name="refund_note" rows="2" placeholder="Ví dụ: Đã chuyển khoản qua Vietcombank ngày..."
-                                                  class="w-full rounded-xl border-gray-300 text-xs p-2.5 focus:border-amber-500 focus:ring-amber-500"></textarea>
+                                        <label class="block font-bold text-[#2B1810] mb-1">Chủ tài khoản: <span class="text-red-500">*</span></label>
+                                        <input type="text" name="account_holder" value="{{ old('account_holder', $order->refund_account_holder ?: $order->recipient_name) }}" required placeholder="NGUYEN VAN A"
+                                               class="w-full rounded-xl border-gray-300 text-xs p-2.5 uppercase focus:border-amber-500 focus:ring-amber-500">
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-[#2B1810] mb-1">Lý do đề xuất hoàn tiền: <span class="text-red-500">*</span></label>
+                                        <textarea name="reason" rows="3" required placeholder="Nhập lý do gửi Admin duyệt hoàn tiền..."
+                                                  class="w-full rounded-xl border-gray-300 text-xs p-2.5 focus:border-amber-500 focus:ring-amber-500">{{ old('reason', $order->cancel_reason ? 'Đơn hàng online đã hủy (Lý do: ' . $order->cancel_reason . '). Cần hoàn tiền trả khách.' : 'Đơn hàng đã thanh toán online bị hủy, gửi Admin duyệt chuyển khoản hoàn tiền.') }}</textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-[#2B1810] mb-1">Ảnh chứng từ / Bill chuyển khoản (nếu có):</label>
+                                        <input type="file" name="proof_image" accept="image/*"
+                                               class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
                                     </div>
                                 </div>
                             </div>
                             <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2.5 border-t border-gray-100">
-                                <button type="button" @click="openRefundConfirmModal = false" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+                                <button type="button" @click="openRefundRequestModal = false" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-100 transition cursor-pointer">
                                     Hủy
                                 </button>
-                                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition cursor-pointer">
-                                    Xác nhận hoàn tất
+                                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-purple-700 hover:bg-purple-800 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    <span>Gửi yêu cầu lên Admin</span>
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
     @endif
 
     {{-- KHỐI CẢNH BÁO 3: Đã hoàn tiền thành công --}}
@@ -450,8 +550,10 @@
                         <tbody>
                             @foreach ($order->details as $detail)
                                 @php
-                                    $rawImg = $detail->product?->images?->where('is_primary', true)->first()?->image_url
-                                        ?? $detail->product?->images?->first()?->image_url;
+                                    $rawImg = $detail->variant_image_url
+                                        ?: ($detail->variant?->image_url
+                                            ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
+                                            ?? $detail->product?->images?->first()?->image_url);
                                     $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
                                 @endphp
                                 <tr>
@@ -469,8 +571,30 @@
                                             @endif
                                             <div class="min-w-0">
                                                 <div class="font-bold text-[#4E342E]">{{ $detail->product_name }}</div>
+                                                @php
+                                                    $variantLabel = $detail->variant_display;
+                                                    if (empty($variantLabel) || $variantLabel === 'Phân loại tiêu chuẩn') {
+                                                        $vParts = array_filter([
+                                                            $detail->variant_size ? 'Size: '.$detail->variant_size : null,
+                                                            $detail->variant_color ? 'Màu: '.$detail->variant_color : null,
+                                                        ]);
+                                                        $variantLabel = !empty($vParts) ? implode(' · ', $vParts) : null;
+                                                    }
+                                                    $sku = $detail->variant_sku ?: $detail->variant?->sku;
+                                                @endphp
+                                                @if ($variantLabel)
+                                                    <div class="mt-0.5 flex items-center flex-wrap gap-1">
+                                                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded shadow-2xs">
+                                                            <span>✨</span>
+                                                            <span>{{ $variantLabel }}</span>
+                                                        </span>
+                                                        @if ($sku)
+                                                            <span class="text-[10px] text-gray-400 font-mono">({{ $sku }})</span>
+                                                        @endif
+                                                    </div>
+                                                @endif
                                                 @if ($detail->product)
-                                                    <div class="text-[11px] text-[#8E8076]">Mã SP: #{{ $detail->product_id }}</div>
+                                                    <div class="text-[11px] text-[#8E8076] mt-0.5">Mã SP: #{{ $detail->product_id }}</div>
                                                 @endif
                                             </div>
                                         </div>
@@ -551,11 +675,15 @@
                                 <tr>
                                     <td class="font-bold text-[#4E342E]">{{ $payment->method }}</td>
                                     <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
-                                    <td><x-payment-status-badge :status="$payment->status" /></td>
+                                    <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
                                     <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>
                                     <td class="text-xs text-[#8E8076]">{{ $payment->paid_at?->format('d/m/Y H:i') ?? $payment->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="text-right">
-                                        @if ($payment->status === 'PENDING')
+                                        @if ($payment->method === 'COD')
+                                            <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/60 inline-block">
+                                                Thu khi giao hàng
+                                            </span>
+                                        @elseif ($payment->status === 'PENDING')
                                             <div class="flex justify-end gap-1.5">
                                                 <form method="POST" action="{{ route('staff.payments.updateStatus', $payment) }}">
                                                     @csrf

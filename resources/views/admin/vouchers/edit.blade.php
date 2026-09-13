@@ -61,7 +61,7 @@
                 usage_limit_per_user: '{{ old('usage_limit_per_user', $voucher->usage_limit_per_user ?? 1) }}',
                 status: '{{ old('status', $voucher->status) }}',
             })"
-                class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 @csrf
                 @method('PUT')
 
@@ -520,9 +520,10 @@
                 {{-- ========================================================================= --}}
                 {{-- RIGHT COLUMN: Sticky Live Preview & Rule Box --}}
                 {{-- ========================================================================= --}}
-                <div class="lg:col-span-4 sticky top-6 space-y-4">
+                <div class="lg:col-span-4">
+                    <div class="sticky top-20 lg:top-24 space-y-4">
 
-                    {{-- Header title --}}
+                        {{-- Header title --}}
                     <div class="text-[#C97810] text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-[#C97810]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -624,11 +625,11 @@
                         </p>
                     </div>
 
+                    </div>
                 </div>
 
             </form>
         </div>
-
-    </form>
+    </div>
 </div>
 @endsection

@@ -78,6 +78,7 @@ class OrderManagementTest extends TestCase
         $order = $this->createOrder($this->customer);
         $payment = $this->createPayment($order);
         $order->update(['payment_method' => 'BANK_TRANSFER', 'payment_status' => 'UNPAID']);
+        $payment->update(['method' => 'BANK_TRANSFER']);
 
         $this->actingAs($this->staff);
         $this->get(route('staff.orders.index'))
@@ -126,6 +127,26 @@ class OrderManagementTest extends TestCase
             ->assertOk()
             ->assertSee('Nhắn tin cho khách')
             ->assertSee(e(route('admin.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id])), false);
+    }
+
+    public function test_cod_order_payment_does_not_show_manual_confirmation_buttons(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $payment = $this->createPayment($order); // method is COD
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Thu khi giao hàng')
+            ->assertSee('Thu tiền khi giao hàng (COD)')
+            ->assertDontSee(route('admin.payments.updateStatus', $payment), false);
+
+        $this->actingAs($this->staff)
+            ->get(route('staff.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Thu khi giao hàng')
+            ->assertSee('Thu tiền khi giao hàng (COD)')
+            ->assertDontSee(route('staff.payments.updateStatus', $payment), false);
     }
 
     public function test_shared_order_list_preserves_customer_scope_and_staff_filters(): void
@@ -569,6 +590,31 @@ class OrderManagementTest extends TestCase
             ])->assertSessionHas('success');
             $this->assertSame('PENDING', $pending->fresh()->order_status);
             $this->assertSame('SHIPPING', $ready->fresh()->order_status);
+        }
+    }
+
+    public function test_bulk_confirm_pending_orders_for_staff_and_admin(): void
+    {
+        $this->product->update(['stock_quantity' => 100]);
+
+        $shipping = $this->createOrder($this->customer);
+        $shipping->update(['order_status' => 'SHIPPING']);
+
+        foreach ([$this->admin, $this->staff] as $user) {
+            $p1 = $this->createOrder($this->customer);
+            $p2 = $this->createOrder($this->customer);
+            $prefix = strtolower($user->role);
+
+            $response = $this->actingAs($user)->post('/'.$prefix.'/orders/bulk-update-status', [
+                'order_ids' => [$p1->id, $p2->id, $shipping->id],
+                'target_status' => 'CONFIRMED',
+            ]);
+
+            $response->assertSessionHas('success');
+            $this->assertSame('CONFIRMED', $p1->fresh()->order_status);
+            $this->assertSame('CONFIRMED', $p2->fresh()->order_status);
+            $this->assertNotNull($p1->fresh()->confirmed_at);
+            $this->assertSame('SHIPPING', $shipping->fresh()->order_status);
         }
     }
 
