@@ -48,9 +48,7 @@ class ProductController extends Controller
         // Lọc theo trạng thái
         if ($request->filled('status')) {
             $statusVal = $request->input('status');
-            if ($statusVal === 'TRASHED') {
-                $query->onlyTrashed();
-            } else {
+            if (in_array($statusVal, ['ACTIVE', 'INACTIVE'])) {
                 $query->where('status', $statusVal);
             }
         }
@@ -298,7 +296,7 @@ class ProductController extends Controller
                     ProductVariant::create([
                         'product_id'     => $product->id,
                         'sku'            => $sku,
-                        'size'           => $vData['size'] ?? null,
+                        'size'           => !empty($vData['size']) ? preg_replace('/\s+/', '', mb_strtolower(trim($vData['size']), 'UTF-8')) : null,
                         'color'          => $formattedColor,
                         'price'          => $vData['price'] ?? $product->price,
                         'sale_price'     => $hasValidSale ? $vData['sale_price'] : null,
@@ -464,7 +462,7 @@ class ProductController extends Controller
 
                     $vFields = [
                         'sku'            => $sku,
-                        'size'           => $vData['size'] ?? null,
+                        'size'           => !empty($vData['size']) ? preg_replace('/\s+/', '', mb_strtolower(trim($vData['size']), 'UTF-8')) : null,
                         'color'          => $formattedColor,
                         'price'          => $vData['price'] ?? $product->price,
                         'sale_price'     => $hasValidSale ? $vData['sale_price'] : null,
@@ -589,28 +587,19 @@ class ProductController extends Controller
     /**
      * Xóa 1 sản phẩm con (biến thể) của sản phẩm cha.
      * Ràng buộc:
-     * 1. Chặn xóa nếu sản phẩm cha có đơn hàng chưa hoàn tất.
-     * 2. Chặn xóa nếu đây là sản phẩm con duy nhất còn lại của sản phẩm cha.
-     * 3. Tự động chuyển cờ mặc định (is_default) nếu biến thể bị xóa là mặc định.
-     * 4. Tự động đồng bộ lại khoảng giá thấp nhất và tồn kho của sản phẩm cha.
+     * 1. Chặn xóa nếu CHÍNH sản phẩm con này đang trong đơn hàng chưa hoàn tất.
+     * 2. Nếu đây là sản phẩm con cuối cùng còn lại của sản phẩm cha, chuyển luôn sản phẩm cha sang ngừng kinh doanh và xóa mềm.
+     * 3. Tự động đồng bộ lại khoảng giá thấp nhất và tồn kho của sản phẩm cha.
      */
     public function destroyVariant(ProductVariant $variant): JsonResponse
     {
         $product = $variant->product;
 
-        // 1. Chặn xóa nếu có đơn hàng chưa hoàn tất
-        if ($product && $product->hasPendingOrders()) {
+        // 1. Chặn xóa nếu chính sản phẩm con này đang trong đơn hàng chưa hoàn tất
+        if ($variant->hasPendingOrders()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Không thể xóa vì có sản phẩm con đang trong đơn hàng xử lý.',
-            ], 422);
-        }
-
-        // 2. Chặn xóa nếu đây là sản phẩm con duy nhất còn lại
-        if ($product && $product->variants()->count() <= 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không thể xóa vì đây là phân loại con duy nhất còn lại của sản phẩm [' . $product->name . ']. Một sản phẩm cần có ít nhất 1 phân loại để hiển thị giá và đặt mua. Nếu không muốn bán sản phẩm này nữa, vui lòng tạm dừng kinh doanh hoặc xóa sản phẩm cha.',
+                'message' => 'Không thể xóa vì sản phẩm con này đang trong đơn hàng xử lý.',
             ], 422);
         }
 
@@ -618,14 +607,25 @@ class ProductController extends Controller
         $variant->update(['status' => 'INACTIVE']);
         $variant->delete();
 
-        // 4. Đồng bộ lại giá bán và tổng tồn kho sản phẩm cha
+        // 2. Nếu đây là sản phẩm con cuối cùng của sản phẩm cha, chuyển luôn sản phẩm cha sang ngừng kinh doanh và xóa mềm
         if ($product) {
+            $remainingCount = $product->variants()->count();
+            if ($remainingCount === 0) {
+                $product->update(['status' => 'INACTIVE']);
+                $product->delete();
+                return response()->json([
+                    'success' => true,
+                    'message' => "Đã xóa mềm phân loại con [{$variantName}] thành công. Do đây là phân loại con cuối cùng nên sản phẩm cha [{$product->name}] cũng đã được chuyển vào thùng rác.",
+                ]);
+            }
+
+            // Đồng bộ lại giá bán và tổng tồn kho sản phẩm cha
             $product->syncLowestPriceFromVariants();
         }
 
         return response()->json([
             'success' => true,
-            'message' => "Đã xóa phân loại con [{$variantName}] thành công. Kho và giá của sản phẩm cha đã được tự động đồng bộ lại.",
+            'message' => "Đã xóa mềm phân loại con [{$variantName}] thành công. Kho và giá của sản phẩm cha đã được tự động đồng bộ lại.",
         ]);
     }
 
@@ -717,7 +717,9 @@ class ProductController extends Controller
 
     /**
      * Chuyển đổi trạng thái kinh doanh của sản phẩm (ACTIVE <-> INACTIVE).
-     * Ràng buộc: Khi sản phẩm cha tạm dừng kinh doanh (INACTIVE), tự động tắt toàn bộ sản phẩm con.
+     * Ràng buộc: 
+     * - Khi sản phẩm cha tạm dừng kinh doanh (INACTIVE), tự động tắt toàn bộ sản phẩm con.
+     * - Khi sản phẩm cha mở bán trở lại (ACTIVE), tự động bật lại toàn bộ sản phẩm con.
      */
     public function toggleStatus(Product $product): JsonResponse
     {
@@ -726,12 +728,17 @@ class ProductController extends Controller
 
         if ($newStatus === 'INACTIVE') {
             $product->variants()->update(['status' => 'INACTIVE']);
+        } else {
+            $product->variants()->update(['status' => 'ACTIVE']);
         }
+
+        // Đồng bộ lại giá bán / khuyến mãi theo các sản phẩm con
+        $product->syncLowestPriceFromVariants();
 
         return response()->json([
             'success' => true,
             'message' => $newStatus === 'ACTIVE' 
-                ? 'Đã kích hoạt sản phẩm mở bán trở lại!' 
+                ? 'Đã kích hoạt sản phẩm mở bán trở lại và tự động bật lại toàn bộ sản phẩm con!' 
                 : 'Đã chuyển sản phẩm sang ngừng kinh doanh và tự động tắt toàn bộ chi tiết sản phẩm con!',
             'status'  => $newStatus,
             'data'    => $product->fresh(['variants']),

@@ -16,6 +16,29 @@ class ProductRequest extends FormRequest
     }
 
     /**
+     * Chuẩn hóa dữ liệu trước khi validate.
+     * Tự động loại bỏ khoảng trắng, chuyển chữ thường cho kích thước (vd: '1 M2' -> '1m2', '45 CM' -> '45cm').
+     */
+    protected function prepareForValidation(): void
+    {
+        $variants = $this->input('variants');
+        if (is_string($variants)) {
+            $variants = json_decode($variants, true) ?: [];
+        }
+        if (is_array($variants)) {
+            foreach ($variants as $idx => $v) {
+                if (isset($v['size']) && is_string($v['size'])) {
+                    $s = preg_replace('/\s+/', '', $v['size']);
+                    $s = mb_strtolower($s, 'UTF-8');
+                    $s = str_replace(',', '.', $s);
+                    $variants[$idx]['size'] = $s;
+                }
+            }
+            $this->merge(['variants' => $variants]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -53,7 +76,7 @@ class ProductRequest extends FormRequest
             // Quản lý sản phẩm con (biến thể)
             'variants'                 => ['nullable', 'array'],
             'variants.*.id'            => ['nullable', 'integer'],
-            'variants.*.size'          => ['required_with:variants', 'string', 'regex:/^\d+(\.\d+)?cm$/i', 'max:20'],
+            'variants.*.size'          => ['required_with:variants', 'string', 'regex:/^(\d+([.,]\d+)?cm|\d+m\d+|\d+([.,]\d+)?m)$/i', 'max:20'],
             'variants.*.color'         => ['required_with:variants', 'string', 'max:50'],
             'variants.*.price'         => ['required_with:variants', 'numeric', 'min:0'],
             'variants.*.sale_price'    => ['nullable', 'numeric', 'min:0'],
@@ -101,7 +124,7 @@ class ProductRequest extends FormRequest
             'status.in'                     => 'Trạng thái sản phẩm không hợp lệ.',
 
             'variants.*.size.required_with' => 'Vui lòng nhập kích thước cho từng sản phẩm con.',
-            'variants.*.size.regex'         => 'Kích thước bắt buộc phải đúng dạng số kèm đơn vị "cm" viết liền (ví dụ: 45cm), không có khoảng trắng.',
+            'variants.*.size.regex'         => 'Kích thước bắt buộc phải đúng định dạng kèm đơn vị "cm" hoặc "m" viết liền (ví dụ: 45cm, 1m, 1m2, 1m5, 1m8, 2m), không có khoảng trắng.',
 
             'variants.*.color.required_with'=> 'Vui lòng nhập màu sắc cho từng sản phẩm con.',
             'variants.*.price.required_with'   => 'Vui lòng nhập giá gốc cho từng sản phẩm con.',
@@ -257,23 +280,45 @@ class ProductRequest extends FormRequest
                         $validator->errors()->add("variants.{$idx}.sale_end_at", "{$label}: Ngày giờ kết thúc sale phải diễn ra sau ngày giờ bắt đầu!");
                     }
 
-                    // Khi thêm mới: Ngày bắt đầu phải từ hiện tại trở đi (không được trong quá khứ)
-                    if ($isCreate && $startAt->lt($nowBuffer)) {
-                        $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi, không được chọn thời gian trong quá khứ!");
-                    }
-
-                    // Khi chỉnh sửa:
-                    if (!$isCreate) {
+                    // Khi thêm mới sản phẩm:
+                    if ($isCreate) {
+                        if ($endAt->lt($nowBuffer)) {
+                            $validator->errors()->add("variants.{$idx}.sale_end_at", "{$label}: Ngày giờ kết thúc sale không được ở trong quá khứ, phải từ thời điểm hiện tại trở đi!");
+                        }
+                        if ($startAt->lt($nowBuffer)) {
+                            $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi, không được chọn thời gian trong quá khứ!");
+                        }
+                    } else {
+                        // Khi chỉnh sửa sản phẩm:
                         $varId = $v['id'] ?? null;
                         $origVar = $varId ? \App\Models\ProductVariant::find($varId) : null;
-                        $origStartStr = ($origVar && $origVar->sale_start_at) ? $origVar->sale_start_at->format('Y-m-d\TH:i') : null;
 
-                        // Nếu không có id (phân loại mới thêm trong lúc sửa) hoặc ngày bắt đầu đã bị thay đổi so với CSDL
-                        $currentStartFormatted = $startAt->format('Y-m-d\TH:i');
-                        $isStartChanged = (!$origVar || $origStartStr !== $currentStartFormatted);
+                        if (!$origVar) {
+                            // Biến thể mới thêm trong lúc chỉnh sửa
+                            if ($endAt->lt($nowBuffer)) {
+                                $validator->errors()->add("variants.{$idx}.sale_end_at", "{$label}: Ngày giờ kết thúc sale không được ở trong quá khứ, phải từ thời điểm hiện tại trở đi!");
+                            }
+                            if ($startAt->lt($nowBuffer)) {
+                                $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi, không được chọn thời gian trong quá khứ!");
+                            }
+                        } else {
+                            $origStartStr = ($origVar && $origVar->sale_start_at) ? $origVar->sale_start_at->format('Y-m-d\TH:i') : null;
+                            $currentStartFormatted = $startAt->format('Y-m-d\TH:i');
+                            $isStartChanged = (!$origStartStr || $origStartStr !== $currentStartFormatted);
 
-                        if ($isStartChanged && $startAt->lt($nowBuffer)) {
-                            $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Bạn đã thay đổi ngày bắt đầu sale, thời gian mới phải từ thời điểm hiện tại trở đi!");
+                            $origEndStr = ($origVar && $origVar->sale_end_at) ? $origVar->sale_end_at->format('Y-m-d\TH:i') : null;
+                            $currentEndFormatted = $endAt->format('Y-m-d\TH:i');
+                            $isEndChanged = (!$origEndStr || $origEndStr !== $currentEndFormatted);
+
+                            // CHỈ hiển thị thông báo lỗi khi người dùng CÓ THAY ĐỔI ngày bắt đầu và chọn thời gian trong quá khứ
+                            if ($isStartChanged && $startAt->lt($nowBuffer)) {
+                                $validator->errors()->add("variants.{$idx}.sale_start_at", "{$label}: Ngày bắt đầu sale phải từ thời điểm hiện tại trở đi, không được chọn thời gian trong quá khứ!");
+                            }
+
+                            // CHỈ hiển thị thông báo lỗi khi người dùng CÓ THAY ĐỔI ngày kết thúc và chọn thời gian trong quá khứ
+                            if ($isEndChanged && $endAt->lt($nowBuffer)) {
+                                $validator->errors()->add("variants.{$idx}.sale_end_at", "{$label}: Ngày giờ kết thúc sale không được ở trong quá khứ, phải từ thời điểm hiện tại trở đi!");
+                            }
                         }
                     }
                 }

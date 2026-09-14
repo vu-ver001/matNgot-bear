@@ -17,17 +17,7 @@
                     </a>
                 </div>
             </div>
-            @if (session('success'))
-                <div class="mb-4 bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-xl">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3 rounded-xl">
-                    {{ session('error') }}
-                </div>
-            @endif
+            {{-- Flash success/error đã chuyển sang toast góc phải, chỉ giữ banner nghiệp vụ bên dưới. --}}
 
             @php
                 $canPayOnline = $order->canPayOnline();
@@ -659,7 +649,7 @@
                                                 $rawImg = $detail->variant?->image_url
                                                     ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
                                                     ?? $detail->product?->images?->first()?->image_url;
-                                                $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+                                                 $primaryImg = $rawImg ? ((str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg)) : '';
                                             @endphp
                                             <tr>
                                                 <td class="px-4 py-4 text-sm font-medium text-[#4E342E]">

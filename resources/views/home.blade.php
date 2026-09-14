@@ -74,9 +74,6 @@
                                 <a href="{{ route('products.index') }}" class="btn-hero-primary">
                                     <i class="fa-solid fa-bag-shopping"></i> KHÁM PHÁ CỬA HÀNG
                                 </a>
-                                <a href="{{ route('products.index', ['sort' => 'best_seller']) }}" class="btn-hero-secondary">
-                                    <i class="fa-solid fa-circle-play"></i> BÁN CHẠY NHẤT
-                                </a>
                             </div>
                             <div class="hero-bottom-doodle">
                                 <span class="doodle-bear">🧸</span>
@@ -125,8 +122,15 @@
                                     <div class="feature-sub">vạn người mê</div>
                                 </div>
                             </div>
+                            @php
+                                $butterBearCategory = $categories->first(function($c) {
+                                    $n = mb_strtoupper($c->name, 'UTF-8');
+                                    return str_contains($n, 'BUTTER') || str_contains($n, 'BƠ');
+                                });
+                                $butterBearCatId = $butterBearCategory ? $butterBearCategory->id : 9;
+                            @endphp
                             <div class="hero-btn-actions">
-                                <a href="{{ route('products.index', ['search' => 'Butter Bear']) }}" class="btn-hero-primary">
+                                <a href="{{ route('products.index', ['category_id' => $butterBearCatId]) }}#catalog-layout" class="btn-hero-primary">
                                     <i class="fa-solid fa-bag-shopping"></i> BỘ SƯU TẬP BƠ
                                 </a>
                                 <a href="{{ route('products.index', ['sort' => 'latest']) }}" class="btn-hero-secondary">
@@ -493,16 +497,20 @@
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
                     $regularPrice = (float) $product->lowest_price;
                     $salePrice = $product->lowest_sale_price;
-                    $hasSale = ($salePrice !== null && $salePrice !== '' && (float)$salePrice >= 0 && (float)$salePrice < $regularPrice);
+                    $hasSale = $product->is_on_sale && ($salePrice !== null && $salePrice !== '' && (float)$salePrice >= 0 && (float)$salePrice < $regularPrice);
                     $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - (float)$salePrice) / $regularPrice) * 100) : 0;
                 @endphp
                 <div class="product-card">
                     <div class="product-card-img-wrap">
-                        @if($hasSale && $discountPct > 0)
-                            <span class="card-badge-sale">-{{ $discountPct }}%</span>
+                        @if($hasSale)
+                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
+                            @if($discountPct > 0)
+                                <span class="card-badge-sale">-{{ $discountPct }}%</span>
+                            @endif
+                        @else
+                            <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
                         @endif
-                        <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
-                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
+                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($hasSale && $salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
                             <i class="fa-regular fa-heart"></i>
                         </button>
                         <a href="{{ route('products.show', $product->id) }}">
@@ -519,7 +527,7 @@
                         <div>
                             <div class="product-card-prices">
                                 @if($hasSale)
-                                    <span class="price-current">{{ number_format($salePrice, 0, ',', '.') }} đ</span>
+                                    <span class="price-current" style="color: #D32F2F; font-weight: 800;">{{ number_format($salePrice, 0, ',', '.') }} đ</span>
                                     <span class="price-old">{{ number_format($regularPrice, 0, ',', '.') }} đ</span>
                                 @else
                                     <span class="price-current" style="color: var(--primary-dark);">{{ number_format($regularPrice, 0, ',', '.') }} đ</span>
@@ -578,15 +586,18 @@
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
                     $regularPrice = (float) $product->lowest_price;
                     $salePrice = $product->lowest_sale_price;
-                    $hasSale = ($salePrice !== null && $salePrice !== '' && (float)$salePrice >= 0 && (float)$salePrice < $regularPrice);
+                    $hasSale = $product->is_on_sale && ($salePrice !== null && $salePrice !== '' && (float)$salePrice >= 0 && (float)$salePrice < $regularPrice);
                     $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - (float)$salePrice) / $regularPrice) * 100) : 0;
                 @endphp
                 <div class="product-card">
                     <div class="product-card-img-wrap">
-                        @if($hasSale && $discountPct > 0)
-                            <span class="card-badge-sale">-{{ $discountPct }}%</span>
+                        @if($hasSale)
+                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
+                            @if($discountPct > 0)
+                                <span class="card-badge-sale">-{{ $discountPct }}%</span>
+                            @endif
                         @endif
-                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
+                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($hasSale && $salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
                             <i class="fa-regular fa-heart"></i>
                         </button>
                         <a href="{{ route('products.show', $product->id) }}">
@@ -603,7 +614,7 @@
                         <div>
                             <div class="product-card-prices">
                                 @if($hasSale)
-                                    <span class="price-current">{{ number_format($salePrice, 0, ',', '.') }} đ</span>
+                                    <span class="price-current" style="color: #D32F2F; font-weight: 800;">{{ number_format($salePrice, 0, ',', '.') }} đ</span>
                                     <span class="price-old">{{ number_format($regularPrice, 0, ',', '.') }} đ</span>
                                 @else
                                     <span class="price-current" style="color: var(--primary-dark);">{{ number_format($regularPrice, 0, ',', '.') }} đ</span>

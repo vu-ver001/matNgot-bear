@@ -72,11 +72,15 @@ class WishlistController extends Controller
             return back()->with('success', 'Đã xóa sản phẩm khỏi danh sách yêu thích.');
         }
 
+        $remainingCount = \App\Models\WishlistItem::where('user_id', $request->user()->id)->count();
+
         return response()->json([
             'success' => true,
             'message' => 'Đã xóa sản phẩm khỏi danh sách yêu thích.',
+            'wishlist_count' => $remainingCount,
             'data' => [
                 'product_id' => $product->id,
+                'wishlist_count' => $remainingCount,
             ],
         ]);
     }
@@ -92,8 +96,10 @@ class WishlistController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Đã xóa tất cả sản phẩm khỏi danh sách yêu thích.',
+            'wishlist_count' => 0,
             'data' => [
                 'removed_count' => $removedCount,
+                'wishlist_count' => 0,
             ],
         ]);
     }

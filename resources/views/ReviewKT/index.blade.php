@@ -568,6 +568,12 @@
             const urlParams = new URLSearchParams(window.location.search);
             const autoOrderId = urlParams.get('order_id') || urlParams.get('order');
             if (autoOrderId) {
+                // Chỉ tự mở một lần; reload sau khi lưu hoặc đóng popup không mở lại.
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('order_id');
+                cleanUrl.searchParams.delete('order');
+                window.history.replaceState(window.history.state, '', cleanUrl.toString());
+
                 setTimeout(function () {
                     if (window.openOrderReviewModal) {
                         window.openOrderReviewModal(autoOrderId);

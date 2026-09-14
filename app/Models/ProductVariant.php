@@ -83,6 +83,18 @@ class ProductVariant extends Model
     }
 
     /**
+     * Kiểm tra biến thể con có đơn hàng chưa hoàn tất (chờ xử lý, đang giao...) không.
+     */
+    public function hasPendingOrders(): bool
+    {
+        return $this->orderDetails()
+            ->whereHas('order', function ($q) {
+                $q->whereIn('order_status', ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING']);
+            })
+            ->exists();
+    }
+
+    /**
      * Kiểm tra xem biến thể có đang trong thời gian sale hợp lệ hay không.
      */
     public function getIsOnSaleAttribute(): bool

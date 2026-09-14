@@ -135,7 +135,7 @@
     // Trạng thái giá ban đầu: lấy theo biến thể con có giá thực tế thấp nhất (Lowest Effective Variant)
     $initialPrice = (float) $product->lowest_price;
     $initialSalePrice = $product->lowest_sale_price;
-    $initialIsOnSale = ($initialSalePrice !== null && $initialSalePrice !== '' && is_numeric($initialSalePrice)) && (float)$initialSalePrice >= 0 && (float)$initialSalePrice < $initialPrice;
+    $initialIsOnSale = $product->is_on_sale && ($initialSalePrice !== null && $initialSalePrice !== '' && is_numeric($initialSalePrice)) && (float)$initialSalePrice >= 0 && (float)$initialSalePrice < $initialPrice;
     $initialIsUpcoming = false;
     $initialDiscountPct = ($initialIsOnSale && $initialPrice > 0) ? round((($initialPrice - (float)$initialSalePrice) / $initialPrice) * 100) : 0;
     $initialEffectivePrice = $initialIsOnSale ? (float)$initialSalePrice : $initialPrice;
@@ -600,13 +600,16 @@
                         $relImgUrl = $relImg ? $relImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($rel->name);
                         $relRegularPrice = (float) $rel->lowest_price;
                         $relSalePrice = $rel->lowest_sale_price;
-                        $relSale = ($relSalePrice !== null && $relSalePrice !== '' && (float)$relSalePrice >= 0 && (float)$relSalePrice < $relRegularPrice);
+                        $relSale = $rel->is_on_sale && ($relSalePrice !== null && $relSalePrice !== '' && (float)$relSalePrice >= 0 && (float)$relSalePrice < $relRegularPrice);
                         $relDiscountPct = ($relSale && $relRegularPrice > 0) ? round((($relRegularPrice - (float)$relSalePrice) / $relRegularPrice) * 100) : 0;
                     @endphp
                     <div class="product-card">
                         <div class="product-card-img-wrap">
-                            @if($relSale && $relDiscountPct > 0)
-                                <span class="card-badge-sale">-{{ $relDiscountPct }}%</span>
+                            @if($relSale)
+                                <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
+                                @if($relDiscountPct > 0)
+                                    <span class="card-badge-sale">-{{ $relDiscountPct }}%</span>
+                                @endif
                             @endif
                             <button type="button" class="btn-wishlist-card" data-product-id="{{ $rel->id }}" onclick="toggleWishlist({ id: {{ $rel->id }}, name: '{{ addslashes($rel->name) }}', price: {{ $relRegularPrice }}, sale_price: {{ ($relSalePrice !== null) ? (float)$relSalePrice : 'null' }}, image_url: '{{ $relImgUrl }}' }, event)" title="Lưu vào yêu thích">
                                 <i class="fa-regular fa-heart"></i>
@@ -715,7 +718,7 @@
     const productTotalStock = {{ $variants->isNotEmpty() ? (int) $variants->sum('stock_quantity') : (int) $product->stock_quantity }};
     const primaryImageUrl = "{{ $primaryUrl }}";
     const productBasePrice = {{ (float) $product->lowest_price }};
-    const productBaseSalePrice = {{ ($product->lowest_sale_price !== null && $product->lowest_sale_price !== '' && is_numeric($product->lowest_sale_price) && (float)$product->lowest_sale_price >= 0) ? (float)$product->lowest_sale_price : 'null' }};
+    const productBaseSalePrice = {{ ($initialIsOnSale && $product->lowest_sale_price !== null && (float)$product->lowest_sale_price >= 0) ? (float)$product->lowest_sale_price : 'null' }};
     const productBaseIsOnSale = {{ $initialIsOnSale ? 'true' : 'false' }};
     const productBaseRemainingSec = {{ $initialRemainingSec }};
     const productBaseDiscountPct = {{ $initialDiscountPct }};
@@ -1188,27 +1191,12 @@
                 if (priceBoxEl) priceBoxEl.classList.remove('has-countdown');
                 if (upcomingBarEl) upcomingBarEl.style.display = 'none';
 
-                if (sPrice !== null && sPrice !== '' && !isNaN(Number(sPrice)) && Number(sPrice) >= 0 && Number(sPrice) < Number(regPrice)) {
-                    if (priceCurrentEl) {
-                        priceCurrentEl.innerText = Number(sPrice).toLocaleString('vi-VN') + ' đ';
-                        priceCurrentEl.style.color = '#D32F2F';
-                    }
-                    if (priceOldEl) {
-                        priceOldEl.innerText = Number(regPrice).toLocaleString('vi-VN') + ' đ';
-                        priceOldEl.style.display = 'inline';
-                    }
-                    if (saleBadgeEl) {
-                        saleBadgeEl.innerText = `-${discountPct}% TIẾT KIỆM`;
-                        saleBadgeEl.style.display = 'inline-flex';
-                    }
-                } else {
-                    if (priceCurrentEl) {
-                        priceCurrentEl.innerText = Number(regPrice).toLocaleString('vi-VN') + ' đ';
-                        priceCurrentEl.style.color = 'var(--primary-dark)';
-                    }
-                    if (priceOldEl) priceOldEl.style.display = 'none';
-                    if (saleBadgeEl) saleBadgeEl.style.display = 'none';
+                if (priceCurrentEl) {
+                    priceCurrentEl.innerText = Number(regPrice).toLocaleString('vi-VN') + ' đ';
+                    priceCurrentEl.style.color = 'var(--primary-dark)';
                 }
+                if (priceOldEl) priceOldEl.style.display = 'none';
+                if (saleBadgeEl) saleBadgeEl.style.display = 'none';
             }
         }
 
@@ -1298,36 +1286,49 @@
                 syncGalleryThumbnail(newImg);
             }
 
-            // Tìm variant có giá thực tế thấp nhất trong nhóm màu này
+            // Tìm variant có giá thực tế thấp nhất trong nhóm màu này (ưu tiên các phân loại ĐANG CÒN HÀNG)
             let bestVar = null;
             let minEffPrice = Infinity;
             const now = new Date();
 
-            colorVars.forEach(v => {
+            const inStockColorVars = colorVars.filter(v => (parseInt(v.stock_quantity) || 0) > 0);
+            const targetColorVars = inStockColorVars.length > 0 ? inStockColorVars : colorVars;
+
+            targetColorVars.forEach(v => {
                 const regP = Number(v.price) || 0;
                 const sP = (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null;
                 const startAt = v.sale_start_at ? new Date(v.sale_start_at) : null;
                 const endAt = v.sale_end_at ? new Date(v.sale_end_at) : null;
                 
                 const isSale = (sP !== null && sP >= 0 && sP < regP && (!startAt || now >= startAt) && (!endAt || now <= endAt));
+                const isUp = (sP !== null && sP >= 0 && sP < regP && startAt && now < startAt);
                 const eff = isSale ? sP : regP;
 
-                if (eff < minEffPrice || (eff === minEffPrice && isSale && bestVar && !bestVar.isOnSale)) {
+                if (eff < minEffPrice || (eff === minEffPrice && isSale && bestVar && !bestVar.isOnSale) || (eff === minEffPrice && !isSale && isUp && bestVar && !bestVar.isOnSale && !bestVar.isUpcoming)) {
                     minEffPrice = eff;
                     bestVar = {
                         variant: v,
                         regularPrice: regP,
                         salePrice: sP,
                         isOnSale: isSale,
+                        isUpcoming: isUp,
+                        saleStartAt: startAt,
                         saleEndAt: endAt
                     };
                 }
             });
 
             if (bestVar) {
-                const discountPct = (bestVar.isOnSale && bestVar.regularPrice > 0) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
-                const remSec = (bestVar.isOnSale && bestVar.saleEndAt) ? Math.max(0, Math.floor((bestVar.saleEndAt - now) / 1000)) : 0;
-                renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, bestVar.isOnSale, false, null, remSec);
+                if (bestVar.isOnSale) {
+                    const discountPct = (bestVar.regularPrice > 0 && bestVar.salePrice !== null) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
+                    const remSec = bestVar.saleEndAt ? Math.max(0, Math.floor((bestVar.saleEndAt - now) / 1000)) : 0;
+                    renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, true, false, null, remSec);
+                } else if (bestVar.isUpcoming) {
+                    const discountPct = (bestVar.regularPrice > 0 && bestVar.salePrice !== null) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
+                    renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, false, true, bestVar.saleStartAt, 0);
+                } else {
+                    renderPriceDisplay(bestVar.regularPrice, null, 0, false, false, null, 0);
+                }
             }
 
             // Tổng tồn kho màu này
@@ -1352,36 +1353,49 @@
                 syncGalleryThumbnail(firstWithImg.image_url);
             }
 
-            // Tìm variant có giá thực tế thấp nhất trong nhóm size này
+            // Tìm variant có giá thực tế thấp nhất trong nhóm size này (ưu tiên các phân loại ĐANG CÒN HÀNG)
             let bestVar = null;
             let minEffPrice = Infinity;
             const now = new Date();
 
-            sizeVars.forEach(v => {
+            const inStockSizeVars = sizeVars.filter(v => (parseInt(v.stock_quantity) || 0) > 0);
+            const targetSizeVars = inStockSizeVars.length > 0 ? inStockSizeVars : sizeVars;
+
+            targetSizeVars.forEach(v => {
                 const regP = Number(v.price) || 0;
                 const sP = (v.sale_price !== null && v.sale_price !== '' && !isNaN(Number(v.sale_price))) ? Number(v.sale_price) : null;
                 const startAt = v.sale_start_at ? new Date(v.sale_start_at) : null;
                 const endAt = v.sale_end_at ? new Date(v.sale_end_at) : null;
                 
                 const isSale = (sP !== null && sP >= 0 && sP < regP && (!startAt || now >= startAt) && (!endAt || now <= endAt));
+                const isUp = (sP !== null && sP >= 0 && sP < regP && startAt && now < startAt);
                 const eff = isSale ? sP : regP;
 
-                if (eff < minEffPrice || (eff === minEffPrice && isSale && bestVar && !bestVar.isOnSale)) {
+                if (eff < minEffPrice || (eff === minEffPrice && isSale && bestVar && !bestVar.isOnSale) || (eff === minEffPrice && !isSale && isUp && bestVar && !bestVar.isOnSale && !bestVar.isUpcoming)) {
                     minEffPrice = eff;
                     bestVar = {
                         variant: v,
                         regularPrice: regP,
                         salePrice: sP,
                         isOnSale: isSale,
+                        isUpcoming: isUp,
+                        saleStartAt: startAt,
                         saleEndAt: endAt
                     };
                 }
             });
 
             if (bestVar) {
-                const discountPct = (bestVar.isOnSale && bestVar.regularPrice > 0) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
-                const remSec = (bestVar.isOnSale && bestVar.saleEndAt) ? Math.max(0, Math.floor((bestVar.saleEndAt - now) / 1000)) : 0;
-                renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, bestVar.isOnSale, false, null, remSec);
+                if (bestVar.isOnSale) {
+                    const discountPct = (bestVar.regularPrice > 0 && bestVar.salePrice !== null) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
+                    const remSec = bestVar.saleEndAt ? Math.max(0, Math.floor((bestVar.saleEndAt - now) / 1000)) : 0;
+                    renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, true, false, null, remSec);
+                } else if (bestVar.isUpcoming) {
+                    const discountPct = (bestVar.regularPrice > 0 && bestVar.salePrice !== null) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
+                    renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, false, true, bestVar.saleStartAt, 0);
+                } else {
+                    renderPriceDisplay(bestVar.regularPrice, null, 0, false, false, null, 0);
+                }
             }
 
             // Tổng tồn kho size này

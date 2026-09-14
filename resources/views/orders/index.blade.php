@@ -35,6 +35,16 @@
         $bulkConfirmColor = '#E08A1E';
         $bulkCountLabel = 'có thể giao';
         $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('SHIPPING'))->pluck('id')->values()->all();
+    } elseif ($currentStatus === 'SHIPPING') {
+        $bulkTargetStatus = 'COMPLETED';
+        $bulkActionLabel = 'Đã giao hàng loạt';
+        $bulkActionIcon = 'fa-solid fa-circle-check';
+        $bulkConfirmTitle = 'Xác nhận đã giao hàng loạt?';
+        $bulkConfirmText = 'Bạn có chắc chắn muốn xác nhận :count đơn hàng đã chọn đã giao thành công? Shop chỉ chuyển sang "Đã giao", khách vẫn tự bấm "Đã nhận hàng" để mở đánh giá.';
+        $bulkConfirmButtonText = '<i class="fa-solid fa-circle-check mr-1"></i> Đồng ý hoàn thành';
+        $bulkConfirmColor = '#059669';
+        $bulkCountLabel = 'đang giao';
+        $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('COMPLETED'))->pluck('id')->values()->all();
     } else {
         $pendingIds = $orders->filter(fn ($o) => $o->canTransitionTo('CONFIRMED'))->pluck('id')->values()->all();
         $preparingIds = $orders->filter(fn ($o) => $o->canTransitionTo('SHIPPING'))->pluck('id')->values()->all();
@@ -83,7 +93,7 @@
         'countLabel' => $bulkCountLabel,
     ];
 
-    $showBulkToolbar = !in_array($currentStatus, ['SHIPPING', 'COMPLETED', 'RETURNED', 'CANCELLED'], true) 
+    $showBulkToolbar = !in_array($currentStatus, ['COMPLETED', 'RETURNED', 'CANCELLED'], true) 
         && !in_array($currentTab, ['cancel_requests', 'need_refund'], true);
 @endphp
 <div class="orders-ui" x-data="bulkOrderManager({{ json_encode($bulkActionableOrderIds) }}, {{ json_encode($bulkConfig) }})">

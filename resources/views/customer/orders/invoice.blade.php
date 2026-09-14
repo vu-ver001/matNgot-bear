@@ -248,7 +248,7 @@
                                 $rawImg = $variant?->image_url
                                     ?? $product?->images?->where('is_primary', true)->first()?->image_url
                                     ?? $product?->images?->first()?->image_url;
-                                $itemImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+                                $itemImg = $rawImg ? ((str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg)) : '';
 
                                 if (!empty($detail->variant_name)) {
                                     $specsText = $detail->variant_name;

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('order_details', function (Blueprint $table): void {
-            $table->text('variant_image_url')->nullable()->change();
+            $table->longText('variant_image_url')->nullable()->change();
         });
     }
 

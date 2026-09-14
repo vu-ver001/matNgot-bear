@@ -140,7 +140,7 @@
                                 <th style="width: 15%; text-align: left;">Giá Gốc <span style="color:#C62828;">*</span></th>
                                 <th style="width: 18%; text-align: left;">Giá Sale &amp; Hẹn Giờ</th>
                                 <th style="width: 14%; text-align: left;">Tồn Kho <span style="color:#C62828;">*</span></th>
-                                <th style="width: 76px; text-align: center;">Trạng thái</th>
+                                <th style="width: 76px; text-align: center;">Trạng thái <span style="color:#C62828;">*</span></th>
                                 <th style="width: 32px; text-align: center;">Xóa</th>
                             </tr>
                         </thead>
@@ -317,7 +317,7 @@
                 <label class="form-label">
                     <i class="fa-solid fa-ruler-combined" style="color: #8D6E63;"></i> Danh sách Kích thước (phẩy cách nhau)
                 </label>
-                <input type="text" id="comb-sizes" class="input-control" placeholder="30cm, 40cm, 80cm...">
+                <input type="text" id="comb-sizes" class="input-control" placeholder="30cm, 40cm, 80cm..." onkeydown="handleCombSizesKeydown(event, this)" onblur="formatCombSizesInput(this)">
             </div>
 
             <!-- 2. Danh sách Màu sắc -->
@@ -325,7 +325,7 @@
                 <label class="form-label">
                     <i class="fa-solid fa-palette" style="color: #8D6E63;"></i> Danh sách Màu sắc (phẩy cách nhau)
                 </label>
-                <input type="text" id="comb-colors" class="input-control" placeholder="Nâu socola, Vàng bơ, Trắng kem...">
+                <input type="text" id="comb-colors" class="input-control" placeholder="Nâu socola, Vàng bơ, Trắng kem..." onkeydown="handleCombColorsKeydown(event, this)" onblur="formatCombColorsInput(this)">
             </div>
 
             <div style="border-top: 1px dashed var(--pf-beige-border); margin: 12px 0;"></div>
@@ -506,27 +506,48 @@
         return digits ? parseFloat(digits) : null;
     }
 
+    function formatSizeString(val) {
+        if (!val) return '';
+        let s = String(val).replace(/\s+/g, '').toLowerCase();
+        s = s.replace(/,/g, '.');
+        return s;
+    }
+
+    const SIZE_REGEX = /^(\d+([.,]\d+)?cm|\d+m\d+|\d+([.,]\d+)?m)$/i;
+
+    function handleSizeKeydown(e, idx, input) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            input.blur();
+        }
+    }
+
     function handleSizeBlur(idx, input) {
         if (!variantsList[idx]) return;
-        const val = input.value.trim();
-        if (!val) {
+        const raw = input.value.trim();
+        if (!raw) {
+            input.value = '';
+            variantsList[idx].size = '';
             input.style.borderColor = '';
             input.style.backgroundColor = '';
             return;
         }
-        if (!/^\d+(\.\d+)?cm$/i.test(val)) {
+        const formatted = formatSizeString(raw);
+        input.value = formatted;
+        variantsList[idx].size = formatted;
+
+        if (!SIZE_REGEX.test(formatted)) {
             input.style.borderColor = '#E53935';
             input.style.backgroundColor = '#FFEBEE';
             Swal.fire({
                 icon: 'warning',
                 title: 'Kích thước không hợp lệ',
-                html: `Kích thước <b>"${escapeHtml(val)}"</b> không đúng định dạng!<br><br>Kích thước bắt buộc phải là số kèm đơn vị <b>"cm"</b> viết liền nhau (ví dụ: <b>30cm, 45cm</b>).<br><span style="color:#C62828;">(Dạng có khoảng trắng như <i>45 cm</i> hoặc thiếu chữ <i>cm</i> đều bị lỗi)</span>.`,
+                html: `Kích thước <b>"${escapeHtml(formatted)}"</b> không đúng định dạng!<br><br>Kích thước bắt buộc phải có đơn vị <b>"cm"</b> hoặc <b>"m"</b> viết liền nhau (ví dụ: <b>30cm, 45cm, 1m, 1m2, 1m5, 1m8, 2m</b>).`,
                 confirmButtonColor: '#8D6E63'
             });
         } else {
             input.style.borderColor = '';
             input.style.backgroundColor = '';
-            variantsList[idx].size = val;
         }
     }
 
@@ -724,13 +745,16 @@
             let timeBtnLabel = '<i class="fa-regular fa-clock"></i> Lịch sale';
             let timeBtnClass = '';
 
-            // Chỉ hiển thị trạng thái Đang sale / Sắp sale khi đã có giá sale hợp lệ và có thời gian sale
+            // Chỉ hiển thị trạng thái Đang sale / Sắp sale / Đã hết hạn khi đã có giá sale hợp lệ và có thời gian sale
             if (hasSalePrice && (v.sale_start_at || v.sale_end_at)) {
                 const now = new Date();
                 const start = v.sale_start_at ? new Date(v.sale_start_at) : null;
                 const end = v.sale_end_at ? new Date(v.sale_end_at) : null;
 
-                if (start && now < start) {
+                if (end && now > end) {
+                    timeBtnClass = 'expired';
+                    timeBtnLabel = '<i class="fa-solid fa-clock-rotate-left"></i> Đã hết hạn';
+                } else if (start && now < start) {
                     timeBtnClass = 'upcoming';
                     timeBtnLabel = '<i class="fa-solid fa-bolt"></i> Sắp sale';
                 } else if ((!start || now >= start) && (!end || now <= end)) {
@@ -802,7 +826,7 @@
                         </div>
                     </td>
                     <td>
-                        <input type="text" id="var-size-${idx}" class="v-input" value="${escapeHtml(v.size || '')}" placeholder="30cm, 40cm,..." onblur="handleSizeBlur(${idx}, this)" oninput="updateVariantField(${idx}, 'size', this.value)">
+                        <input type="text" id="var-size-${idx}" class="v-input" value="${escapeHtml(v.size || '')}" placeholder="30cm, 45cm, 1m, 1m2,..." onblur="handleSizeBlur(${idx}, this)" onkeydown="handleSizeKeydown(event, ${idx}, this)" oninput="updateVariantField(${idx}, 'size', this.value)">
                     </td>
                     <td>
                         <input type="text" id="var-color-${idx}" class="v-input" value="${escapeHtml(v.color || '')}" placeholder="Nâu socola, Vàng bơ,..." oninput="handleColorInput(${idx}, this.value)" onkeydown="handleColorKeydown(event, ${idx}, this)" onblur="handleColorBlur(${idx}, this)">
@@ -854,7 +878,7 @@
         variantsList[idx][field] = val;
         if (field === 'size') {
             const inputEl = document.querySelector(`input[onblur*="handleSizeBlur(${idx}"]`);
-            if (inputEl && /^\d+(\.\d+)?cm$/i.test(val.trim())) {
+            if (inputEl && SIZE_REGEX.test(formatSizeString(val))) {
                 inputEl.style.borderColor = '';
                 inputEl.style.backgroundColor = '';
             }
@@ -986,35 +1010,14 @@
         }
     }
 
-    function handleSizeBlur(idx, input) {
-        if (!variantsList[idx]) return;
-        const raw = input.value;
-        if (!raw.trim()) {
-            input.style.borderColor = '';
-            input.style.backgroundColor = '';
-            return;
-        }
-        // Bắt buộc dạng số kèm "cm" viết liền (vd 45cm), có khoảng trắng (vd 45 cm) bị bắt lỗi
-        const sizeRegex = /^\d+(\.\d+)?cm$/i;
-        if (!sizeRegex.test(raw.trim())) {
-            input.style.borderColor = '#D32F2F';
-            input.style.backgroundColor = '#FFEBEE';
-            Swal.fire({
-                icon: 'warning',
-                title: 'Kích thước không hợp lệ',
-                html: `Kích thước <b>"${escapeHtml(raw)}"</b> không đúng định dạng!<br><br>Kích thước bắt buộc phải là số kèm đơn vị <b>"cm"</b> viết liền (ví dụ: <b>30cm, 45cm</b>).<br><span style="color:#C62828;">(Dạng có khoảng trắng như <i>45 cm</i> hoặc thiếu <i>cm</i> đều không hợp lệ)</span>.`,
-                confirmButtonColor: '#8D6E63'
-            });
-        } else {
-            input.style.borderColor = '';
-            input.style.backgroundColor = '';
-        }
-    }
-
     function updateSummaryStats() {
         document.getElementById('sum-count').innerText = `${variantsList.length} phân loại`;
 
-        const prices = variantsList.map(v => (v.price !== '' && v.price !== null && v.price !== undefined) ? parseFloat(v.price) : NaN).filter(p => !isNaN(p) && p >= 0);
+        // Ưu tiên tính khoảng giá trên các phân loại ĐANG CÒN HÀNG (tồn kho > 0 và trạng thái ACTIVE)
+        const inStockVariants = variantsList.filter(v => (parseInt(v.stock_quantity) || 0) > 0 && v.status !== 'INACTIVE');
+        const targetVariants = inStockVariants.length > 0 ? inStockVariants : variantsList;
+
+        const prices = targetVariants.map(v => (v.price !== '' && v.price !== null && v.price !== undefined) ? parseFloat(v.price) : NaN).filter(p => !isNaN(p) && p >= 0);
         if (prices.length > 0) {
             const minP = Math.min(...prices);
             const maxP = Math.max(...prices);
@@ -1143,6 +1146,44 @@
     // ==========================================
     // TẠO NHANH / ÁP DỤNG HÀNG LOẠT (POPUP KẾT HỢP)
     // ==========================================
+    function handleCombSizesKeydown(e, input) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            formatCombSizesInput(input);
+            input.blur();
+        }
+    }
+
+    function formatCombSizesInput(input) {
+        if (!input || !input.value.trim()) return;
+        const parts = input.value.split(',');
+        const formatted = parts.map(p => {
+            const trimmed = p.trim();
+            if (!trimmed) return '';
+            return formatSizeString(trimmed);
+        }).filter(Boolean).join(', ');
+        input.value = formatted;
+    }
+
+    function handleCombColorsKeydown(e, input) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            formatCombColorsInput(input);
+            input.blur();
+        }
+    }
+
+    function formatCombColorsInput(input) {
+        if (!input || !input.value.trim()) return;
+        const parts = input.value.split(',');
+        const formatted = parts.map(p => {
+            const trimmed = p.trim();
+            if (!trimmed) return '';
+            return capitalizeColor(trimmed);
+        }).filter(Boolean).join(', ');
+        input.value = formatted;
+    }
+
     function openCombinedBulkModal() {
         syncVariantsFromDom();
         const m = document.getElementById('combined-bulk-modal');
@@ -1196,17 +1237,17 @@
             }
         }
 
-        const sizes = sizesRaw ? sizesRaw.split(/[,;\n]/).map(s => s.trim()).filter(Boolean) : [];
+        const sizes = sizesRaw ? sizesRaw.split(/[,;\n]/).map(s => formatSizeString(s)).filter(Boolean) : [];
         const colors = colorsRaw ? colorsRaw.split(/[,;\n]/).map(c => capitalizeColor(c)).filter(Boolean) : [];
 
-        // Validate định dạng cm viết liền cho toàn bộ kích thước
+        // Validate định dạng cm hoặc m viết liền cho toàn bộ kích thước
         if (sizes.length > 0) {
             for (let s of sizes) {
-                if (!/^\d+(\.\d+)?cm$/i.test(s)) {
+                if (!SIZE_REGEX.test(s)) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Kích thước không hợp lệ',
-                        html: `Kích thước <b>"${escapeHtml(s)}"</b> không đúng định dạng!<br><br>Kích thước bắt buộc phải là số kèm đơn vị <b>"cm"</b> viết liền (ví dụ: <b>30cm, 45cm</b>).<br><span style="color:#C62828;">(Dạng có khoảng trắng như <i>45 cm</i> hoặc thiếu <i>cm</i> đều không hợp lệ)</span>.`,
+                        html: `Kích thước <b>"${escapeHtml(s)}"</b> không đúng định dạng!<br><br>Kích thước bắt buộc phải có đơn vị <b>"cm"</b> hoặc <b>"m"</b> viết liền (ví dụ: <b>30cm, 45cm, 1m, 1m2, 1m5, 1m8, 2m</b>).`,
                         confirmButtonColor: '#8D6E63'
                     });
                     return;
@@ -1447,6 +1488,11 @@
                 Swal.fire('Thời gian không hợp lệ', 'Ngày & Giờ kết thúc sale phải diễn ra sau ngày bắt đầu!', 'warning');
                 return;
             }
+
+            if (endDate < nowBuffer) {
+                Swal.fire('Thời gian không hợp lệ', 'Ngày & Giờ kết thúc sale không được ở trong quá khứ! Vui lòng chọn thời gian kết thúc ở tương lai để khuyến mãi có hiệu lực.', 'warning');
+                return;
+            }
         }
 
         variantsList[currentSaleModalIndex].sale_start_at = start;
@@ -1561,14 +1607,16 @@
                 return;
             }
 
-            if (!v.size || !v.size.trim()) {
+            const vSize = formatSizeString(v.size);
+            v.size = vSize;
+            if (!vSize) {
                 const sizeEl = document.getElementById(`var-size-${i}`);
                 highlightAndNotify(sizeEl, `Vui lòng nhập đầy đủ <b>Kích thước</b> cho <b>${label}</b>!`);
                 return;
             }
-            if (!/^\d+(\.\d+)?cm$/i.test(v.size.trim())) {
+            if (!SIZE_REGEX.test(vSize)) {
                 const sizeEl = document.getElementById(`var-size-${i}`);
-                highlightAndNotify(sizeEl, `Kích thước của <b>${label}</b> (<b>"${escapeHtml(v.size)}"</b>) chưa đúng định dạng!<br><br>Kích thước bắt buộc phải là số kèm đơn vị <b>"cm"</b> viết liền nhau (ví dụ: <b>30cm, 45cm</b>).<br><span style="color:#C62828;">(Dạng có khoảng trắng như <i>45 cm</i> hoặc thiếu chữ <i>cm</i> đều không hợp lệ)</span>`, 'Thông tin chưa hợp lệ');
+                highlightAndNotify(sizeEl, `Kích thước của <b>${label}</b> (<b>"${escapeHtml(vSize)}"</b>) chưa đúng định dạng!<br><br>Kích thước bắt buộc phải có đơn vị <b>"cm"</b> hoặc <b>"m"</b> viết liền nhau (ví dụ: <b>30cm, 45cm, 1m, 1m2, 1m5, 1m8, 2m</b>).`, 'Thông tin chưa hợp lệ');
                 return;
             }
             if (!v.color || !v.color.trim()) {

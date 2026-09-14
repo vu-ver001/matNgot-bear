@@ -101,7 +101,7 @@ class OrderCustomerConfirmationTest extends TestCase
 
         $this->actingAs($this->customer);
         $response = $this->post(route('customer.orders.confirm_received', $order));
-        $response->assertRedirect(route('customer.orders.review', $order->id));
+        $response->assertRedirect(route('customer.orders.index', ['review_order' => $order->id]));
         $response->assertSessionHas('success');
 
         $order->refresh();
@@ -120,6 +120,15 @@ class OrderCustomerConfirmationTest extends TestCase
         $response->assertOk();
         $response->assertSee(route('customer.orders.review', $order), false);
         $response->assertSee('Đánh giá');
+
+        // The confirmation redirect carries a one-time signal that the Orders page
+        // uses to open the review modal without navigating to the review page.
+        $response = $this->get(route('customer.orders.index', ['review_order' => $order->id]));
+        $response->assertOk();
+        $response->assertSee('cleanUrl.searchParams.delete(\'review_order\')', false);
+        $response->assertSee('window.openOrderReviewModal(orderId)', false);
+        $response->assertSee((string) $order->id, false);
+        $this->assertDoesNotMatchRegularExpression('/href="[^"]*review_order=/', $response->getContent());
     }
 
     public function test_customer_can_request_return_refund(): void

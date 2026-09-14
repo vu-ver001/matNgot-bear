@@ -238,6 +238,7 @@
     }
 
     let currentCategoriesList = [];
+    let newlyAddedCatId = null;
 
     async function loadCategoriesTable() {
         window.scrollTo({ left: 0 });
@@ -279,10 +280,14 @@
             const slug = cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const isActive = cat.is_active === true || cat.is_active === 1 || cat.status === 'ACTIVE';
             const isPinned = Boolean(cat.is_pinned);
+            const isNew = (cat.id === newlyAddedCatId);
 
             return `
-                <tr>
-                    <td><strong>#${cat.id}</strong></td>
+                <tr class="${isNew ? 'row-newly-added' : ''}" style="${isNew ? 'background-color: #FFF9EC; transition: background-color 2s ease;' : ''}">
+                    <td>
+                        <strong>#${cat.id}</strong>
+                        ${isNew ? '<span style="display:inline-block; font-size:10px; background:#E59819; color:#fff; font-weight:800; padding:1px 5px; border-radius:4px; margin-left:4px;">MỚI</span>' : ''}
+                    </td>
                     <td>
                         <div style="font-weight: 800; color: var(--text-main);">${cat.name}</div>
                         <div style="font-size: 11.5px; color: #8D6E63;">/${slug}</div>
@@ -324,6 +329,16 @@
                 </tr>
             `;
         }).join('');
+
+        if (newlyAddedCatId) {
+            setTimeout(() => {
+                const newRow = document.querySelector('.row-newly-added');
+                if (newRow) {
+                    newRow.style.backgroundColor = '';
+                }
+                newlyAddedCatId = null;
+            }, 3000);
+        }
     }
 
     function escapeQuote(str) {
@@ -551,6 +566,9 @@
             if (data.success) {
                 Swal.fire({ icon: 'success', title: 'Thành công!', text: data.message, timer: 1500, showConfirmButton: false });
                 closeCategoryModal();
+                if (!id && data.data && data.data.id) {
+                    newlyAddedCatId = data.data.id;
+                }
                 loadCategories();
             } else {
                 let errHtml = data.message || 'Không thể lưu danh mục';

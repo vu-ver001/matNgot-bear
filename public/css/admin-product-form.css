@@ -585,6 +585,20 @@ textarea.input-control {
     font-weight: 700;
 }
 
+.variant-time-btn.expired {
+    background: #FFEBEE;
+    border-color: #EF9A9A;
+    color: #C62828;
+    font-weight: 700;
+}
+
+.variant-time-btn.upcoming {
+    background: #FFF8E1;
+    border-color: #FFE082;
+    color: #F57F17;
+    font-weight: 700;
+}
+
 .variant-radio-default {
     accent-color: var(--pf-gold-dark);
     width: 16px;
