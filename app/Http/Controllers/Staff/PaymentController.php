@@ -20,32 +20,67 @@ class PaymentController extends Controller
     {
         $activeTab = $request->query('tab', 'transactions'); // transactions | cod | refund_requests
 
-        // 1. Daily Operational Counters (Chỉ số vận hành hôm nay, KHÔNG lộ doanh thu/lợi nhuận toàn shop)
+        // 1. Operational Counters (Giao dịch hôm nay HOẶC đơn PENDING chưa xử lý)
         $operationalStats = [
-            'today_total' => Payment::whereDate('created_at', Carbon::today())->count(),
-            'today_pending' => Payment::whereDate('created_at', Carbon::today())->where('status', 'PENDING')->count(),
+            'today_total' => Payment::where(function ($q) {
+                $q->whereDate('created_at', Carbon::today())
+                  ->orWhere(function ($sub) {
+                      $sub->where('status', 'PENDING')
+                          ->whereDoesntHave('order', function ($orderQ) {
+                              $orderQ->where('order_status', 'CANCELLED');
+                          });
+                  });
+            })->count(),
+            'today_pending' => Payment::where('status', 'PENDING')
+                ->whereDoesntHave('order', function ($orderQ) {
+                    $orderQ->where('order_status', 'CANCELLED');
+                })->count(),
             'today_paid' => Payment::whereDate('created_at', Carbon::today())->where('status', 'PAID')->count(),
-            'cod_unreconciled' => Payment::where('method', 'COD')->whereNull('cod_reconciled_at')->count(),
+            'cod_unreconciled' => Payment::where('method', 'COD')
+                ->whereNull('cod_reconciled_at')
+                ->whereHas('order', function ($q) {
+                    $q->where('order_status', '!=', 'CANCELLED');
+                })
+                ->count(),
             'my_pending_refunds' => PaymentRefundRequest::where('requested_by', auth()->id())->where('status', 'PENDING')->count(),
         ];
 
         // 2. Tab counts
         $counts = [
-            'ALL' => Payment::whereDate('created_at', Carbon::today())->count(),
-            'PENDING' => Payment::whereDate('created_at', Carbon::today())->where('status', 'PENDING')->count(),
+            'ALL' => Payment::where(function ($q) {
+                $q->whereDate('created_at', Carbon::today())
+                  ->orWhere(function ($sub) {
+                      $sub->where('status', 'PENDING')
+                          ->whereDoesntHave('order', function ($orderQ) {
+                              $orderQ->where('order_status', 'CANCELLED');
+                          });
+                  });
+            })->count(),
+            'PENDING' => Payment::where('status', 'PENDING')
+                ->whereDoesntHave('order', function ($orderQ) {
+                    $orderQ->where('order_status', 'CANCELLED');
+                })->count(),
             'PAID' => Payment::whereDate('created_at', Carbon::today())->where('status', 'PAID')->count(),
             'FAILED' => Payment::whereDate('created_at', Carbon::today())->where('status', 'FAILED')->count(),
             'REFUNDED' => Payment::whereDate('created_at', Carbon::today())->where('status', 'REFUNDED')->count(),
         ];
 
-        // 3. Transactions query (Giới hạn trong ngày hôm nay)
+        // 3. Transactions query (Hôm nay HOẶC đơn còn PENDING chưa xử lý từ trước)
         $query = Payment::with([
             'order.customer',
             'order.details.product',
             'confirmedByUser',
             'reconciledByUser',
             'latestRefundRequest',
-        ])->whereDate('created_at', Carbon::today());
+        ])->where(function ($q) {
+            $q->whereDate('created_at', Carbon::today())
+              ->orWhere(function ($sub) {
+                  $sub->where('status', 'PENDING')
+                      ->whereDoesntHave('order', function ($orderQ) {
+                          $orderQ->where('order_status', 'CANCELLED');
+                      });
+              });
+        });
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -75,8 +110,12 @@ class PaymentController extends Controller
         $payments = $query->orderBy('created_at', 'desc')->paginate(15, ['*'], 'p_page')->withQueryString();
 
         // 4. COD Reconciliation query (Chức năng 4: Đối soát đơn COD)
+        // Hiển thị tất cả đơn COD chưa bị hủy để nhân viên theo dõi tiến độ giao hàng & đối soát
         $codQuery = Payment::with(['order.customer', 'reconciledByUser'])
-            ->where('method', 'COD');
+            ->where('method', 'COD')
+            ->whereHas('order', function ($q) {
+                $q->where('order_status', '!=', 'CANCELLED');
+            });
 
         if ($request->filled('cod_status')) {
             if ($request->cod_status === 'RECONCILED') {
@@ -123,6 +162,10 @@ class PaymentController extends Controller
     {
         if ($payment->status === 'PAID') {
             return redirect()->back()->with('info', 'Giao dịch này đã được xác nhận thanh toán trước đó.');
+        }
+
+        if ($payment->order && $payment->order->order_status === 'CANCELLED') {
+            return redirect()->back()->with('error', 'Không thể xác nhận thanh toán cho đơn hàng đã bị hủy.');
         }
 
         $validated = $request->validate([
@@ -218,6 +261,10 @@ class PaymentController extends Controller
             return redirect()->back()->with('error', 'Chỉ áp dụng đối soát cho đơn COD.');
         }
 
+        if (! $payment->order || $payment->order->order_status !== 'COMPLETED') {
+            return redirect()->back()->with('error', 'Chỉ có thể đối soát COD cho đơn hàng đã giao thành công (COMPLETED). Các đơn đang xử lý hoặc chưa giao không phát sinh tiền thu hộ.');
+        }
+
         $payment->update([
             'cod_reconciled_at' => now(),
             'cod_reconciled_by' => auth()->id(),
@@ -245,6 +292,9 @@ class PaymentController extends Controller
         $updated = Payment::whereIn('id', $paymentIds)
             ->where('method', 'COD')
             ->whereNull('cod_reconciled_at')
+            ->whereHas('order', function ($q) {
+                $q->where('order_status', 'COMPLETED');
+            })
             ->update([
                 'cod_reconciled_at' => now(),
                 'cod_reconciled_by' => auth()->id(),
@@ -256,12 +306,90 @@ class PaymentController extends Controller
     }
 
     /**
+     * Bỏ đánh dấu đối soát đơn COD (Hủy đối soát khi ấn nhầm hoặc đối chiếu lại).
+     */
+    public function unreconcileCod(Request $request, Payment $payment)
+    {
+        if ($payment->method !== 'COD') {
+            return redirect()->back()->with('error', 'Chỉ áp dụng cho đơn COD.');
+        }
+
+        if (! $payment->cod_reconciled_at) {
+            return redirect()->back()->with('info', 'Đơn hàng này chưa được đánh dấu đối soát.');
+        }
+
+        if ($payment->cod_settled_at) {
+            return redirect()->back()->with('error', 'Đơn này đã được Admin chốt nhận tiền về tài khoản shop. Không thể hủy đối soát!');
+        }
+
+        $payment->update([
+            'cod_reconciled_at' => null,
+            'cod_reconciled_by' => null,
+            'status' => ($payment->order && $payment->order->order_status === 'CANCELLED') ? 'FAILED' : 'PENDING',
+            'paid_at' => null,
+        ]);
+
+        if ($payment->order) {
+            $payment->order->update(['payment_status' => 'UNPAID']);
+
+            OrderStatusHistory::create([
+                'order_id' => $payment->order->id,
+                'from_status' => $payment->order->order_status,
+                'to_status' => $payment->order->order_status,
+                'changed_by' => auth()->id(),
+                'note' => 'Nhân viên hủy đánh dấu đối soát COD (chuyển về trạng thái Chờ đối soát).',
+                'changed_at' => now(),
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Đã bỏ đánh dấu đối soát cho đơn COD #{$payment->order?->order_code}.");
+    }
+
+    /**
+     * Bỏ đánh dấu đối soát hàng loạt đơn COD.
+     */
+    public function bulkUnreconcileCod(Request $request)
+    {
+        $paymentIds = $request->input('payment_ids', []);
+        if (empty($paymentIds)) {
+            return redirect()->back()->with('error', 'Vui lòng chọn ít nhất một đơn để bỏ đối soát.');
+        }
+
+        $payments = Payment::with('order')
+            ->whereIn('id', $paymentIds)
+            ->where('method', 'COD')
+            ->whereNotNull('cod_reconciled_at')
+            ->whereNull('cod_settled_at')
+            ->get();
+
+        $count = 0;
+        foreach ($payments as $payment) {
+            $payment->update([
+                'cod_reconciled_at' => null,
+                'cod_reconciled_by' => null,
+                'status' => ($payment->order && $payment->order->order_status === 'CANCELLED') ? 'FAILED' : 'PENDING',
+                'paid_at' => null,
+            ]);
+
+            if ($payment->order) {
+                $payment->order->update(['payment_status' => 'UNPAID']);
+            }
+            $count++;
+        }
+
+        return redirect()->back()->with('success', "Đã bỏ đánh dấu đối soát cho {$count} đơn COD thành công!");
+    }
+
+    /**
      * Xuất bảng kê đơn COD để nhân viên đối soát với bưu cục / shipper (Quy định 4).
      */
     public function codExport(Request $request): StreamedResponse
     {
         $query = Payment::with(['order.customer', 'reconciledByUser'])
-            ->where('method', 'COD');
+            ->where('method', 'COD')
+            ->whereHas('order', function ($q) {
+                $q->where('order_status', '!=', 'CANCELLED');
+            });
 
         if ($request->filled('cod_status')) {
             if ($request->cod_status === 'RECONCILED') {
@@ -284,62 +412,58 @@ class PaymentController extends Controller
             });
         }
 
-        $fileName = 'bang_ke_doi_soat_cod_' . Carbon::now()->format('Ymd_His') . '.csv';
+        $orderStatusLabels = [
+            'PENDING' => 'Chờ xử lý',
+            'CONFIRMED' => 'Đã xác nhận',
+            'PREPARING' => 'Đang chuẩn bị',
+            'PROCESSING' => 'Đang chuẩn bị',
+            'SHIPPING' => 'Đang giao hàng',
+            'SHIPPED' => 'Đang giao hàng',
+            'COMPLETED' => 'Giao thành công',
+            'DELIVERED' => 'Giao thành công',
+            'CANCELLED' => 'Đã hủy',
+            'RETURNED' => 'Đã hoàn trả',
+        ];
 
+        // Xuất định dạng Excel (.xls) chuẩn bảng biểu, định dạng cột và tiếng Việt 100%
+        $fileName = 'bang_ke_doi_soat_cod_' . Carbon::now()->format('Ymd_His') . '.xls';
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
             'Pragma' => 'no-cache',
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
             'Expires' => '0',
         ];
 
-        return response()->stream(function () use ($query) {
+        return response()->stream(function () use ($query, $orderStatusLabels) {
             $handle = fopen('php://output', 'w');
-            
-            // 1. UTF-8 BOM + Chỉ dẫn mở đúng cột trong Microsoft Excel
-            fputs($handle, "\xEF\xBB\xBF");
-            fputs($handle, "sep=,\r\n");
-
-            // 2. Tiêu đề các cột
-            fputcsv($handle, [
-                'STT',
-                'Mã GD',
-                'Mã Đơn Hàng',
-                'Ngày Đặt Hàng',
-                'Khách Hàng / Người Nhận',
-                'Số Điện Thoại',
-                'Địa Chỉ Nhận Hàng',
-                'Tiền Thu Hộ COD (VNĐ)',
-                'Trạng Thái Giao Hàng',
-                'Trạng Thái Đối Soát',
-                'Thời Gian Đối Soát',
-                'Nhân Viên Đối Soát',
-                'Ghi Chú',
-            ], ',', '"', '\\');
-
-            $orderStatusLabels = [
-                'PENDING' => 'Chờ xử lý',
-                'CONFIRMED' => 'Đã xác nhận',
-                'PREPARING' => 'Đang chuẩn bị',
-                'PROCESSING' => 'Đang chuẩn bị',
-                'SHIPPING' => 'Đang giao hàng',
-                'SHIPPED' => 'Đang giao hàng',
-                'COMPLETED' => 'Giao thành công',
-                'DELIVERED' => 'Giao thành công',
-                'CANCELLED' => 'Đã hủy',
-                'RETURNED' => 'Đã hoàn trả',
-            ];
-
-            $cleanText = function (?string $text): string {
-                if ($text === null || trim($text) === '') {
-                    return '—';
-                }
-                // Triệt tiêu ký tự xuống dòng (\r, \n) và tab để tránh bị nhảy hàng lệch cột trên Excel
-                $cleaned = preg_replace('/[\r\n\t]+/', ', ', trim($text));
-                $cleaned = preg_replace('/\s+/', ' ', $cleaned);
-                return trim($cleaned, " ,");
-            };
+            fwrite($handle, "<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">\r\n");
+            fwrite($handle, "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\r\n");
+            fwrite($handle, "<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Bảng Kê COD</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->\r\n");
+            fwrite($handle, "<style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+                th { background-color: #F5EBE1; color: #5C3219; font-weight: bold; border: 1px solid #D4C5B3; padding: 8px; font-size: 11pt; text-align: center; }
+                td { border: 1px solid #E8DECB; padding: 6px; font-size: 10.5pt; vertical-align: middle; }
+                .text { mso-number-format: \"\\@\"; }
+                .number { mso-number-format: \"\\#\\,\\#\\#0\"; text-align: right; }
+                .center { text-align: center; }
+            </style></head><body>\r\n");
+            fwrite($handle, "<table border=\"1\">\r\n");
+            fwrite($handle, "<thead><tr>
+                <th>STT</th>
+                <th>Mã GD</th>
+                <th>Mã Đơn Hàng</th>
+                <th>Ngày Đặt Hàng</th>
+                <th>Khách Hàng / Người Nhận</th>
+                <th>Số Điện Thoại</th>
+                <th>Địa Chỉ Nhận Hàng</th>
+                <th>Tiền Thu Hộ COD (VNĐ)</th>
+                <th>Trạng Thái Giao Hàng</th>
+                <th>Trạng Thái Đối Soát</th>
+                <th>Thời Gian Đối Soát</th>
+                <th>Nhân Viên Đối Soát</th>
+                <th>Ghi Chú</th>
+            </tr></thead><tbody>\r\n");
 
             $stt = 0;
             $totalAmount = 0;
@@ -347,67 +471,44 @@ class PaymentController extends Controller
             $totalUnreconciled = 0;
 
             $query->orderBy('id', 'desc')->chunk(100, function ($payments) use (
-                $handle, &$stt, &$totalAmount, &$totalReconciled, &$totalUnreconciled, $orderStatusLabels, $cleanText
+                $handle, &$stt, &$totalAmount, &$totalReconciled, &$totalUnreconciled, $orderStatusLabels
             ) {
                 foreach ($payments as $p) {
                     $stt++;
                     $order = $p->order;
                     $amount = (float) $p->amount;
                     $totalAmount += $amount;
-
                     $isReconciled = ! empty($p->cod_reconciled_at);
-                    if ($isReconciled) {
-                        $totalReconciled++;
-                    } else {
-                        $totalUnreconciled++;
-                    }
+                    if ($isReconciled) { $totalReconciled++; } else { $totalUnreconciled++; }
 
-                    // Xử lý số điện thoại để giữ nguyên số 0 đầu trong Excel
-                    $phoneRaw = $order?->recipient_phone ?? $order?->customer?->phone ?? '';
-                    $phoneFormatted = ! empty($phoneRaw) ? '="' . preg_replace('/[^0-9+]/', '', $phoneRaw) . '"' : '—';
-
-                    // Xử lý mã giao dịch và mã đơn để hiển thị dạng Text rõ ràng
-                    $gdCode = '="PAY-' . str_pad($p->id, 5, '0', STR_PAD_LEFT) . '"';
-                    $orderCode = $order?->order_code ? '="' . $order->order_code . '"' : '—';
-
+                    $phoneRaw = $order?->recipient_phone ?? $order?->customer?->phone ?? '—';
+                    $gdCode = 'PAY-' . str_pad($p->id, 5, '0', STR_PAD_LEFT);
+                    $orderCode = $order?->order_code ?? '—';
                     $orderStatus = $order?->order_status ?? '';
                     $orderStatusText = $orderStatusLabels[$orderStatus] ?? ($orderStatus ?: '—');
 
-                    fputcsv($handle, [
-                        $stt,
-                        $gdCode,
-                        $orderCode,
-                        $order?->created_at ? $order->created_at->format('d/m/Y H:i') : ($p->created_at ? $p->created_at->format('d/m/Y H:i') : '—'),
-                        $cleanText($order?->recipient_name ?? $order?->customer?->full_name),
-                        $phoneFormatted,
-                        $cleanText($order?->recipient_address),
-                        round($amount),
-                        $orderStatusText,
-                        $isReconciled ? 'Đã đối soát' : 'Chưa đối soát',
-                        $isReconciled ? $p->cod_reconciled_at->format('d/m/Y H:i') : '—',
-                        $cleanText($p->reconciledByUser?->full_name),
-                        $cleanText($order?->note ?? $p->note),
-                    ], ',', '"', '\\');
+                    $row = "<tr>";
+                    $row .= "<td class=\"center\">{$stt}</td>";
+                    $row .= "<td class=\"text center\">{$gdCode}</td>";
+                    $row .= "<td class=\"text center\"><strong>{$orderCode}</strong></td>";
+                    $row .= "<td class=\"center\">" . ($order?->created_at ? $order->created_at->format('d/m/Y H:i') : ($p->created_at ? $p->created_at->format('d/m/Y H:i') : '—')) . "</td>";
+                    $row .= "<td>" . htmlspecialchars($order?->recipient_name ?? $order?->customer?->full_name ?? '—') . "</td>";
+                    $row .= "<td class=\"text center\">" . htmlspecialchars($phoneRaw) . "</td>";
+                    $row .= "<td>" . htmlspecialchars($order?->recipient_address ?? '—') . "</td>";
+                    $row .= "<td class=\"number\">" . number_format($amount, 0, ',', '.') . "</td>";
+                    $row .= "<td class=\"center\">" . htmlspecialchars($orderStatusText) . "</td>";
+                    $row .= "<td class=\"center\" style=\"color: " . ($isReconciled ? '#059669' : '#D97706') . "; font-weight: bold;\">" . ($isReconciled ? 'Đã đối soát' : 'Chờ đối soát bưu tá') . "</td>";
+                    $row .= "<td class=\"center\">" . ($isReconciled ? $p->cod_reconciled_at->format('d/m/Y H:i') : '—') . "</td>";
+                    $row .= "<td>" . htmlspecialchars($p->reconciledByUser?->full_name ?? '—') . "</td>";
+                    $row .= "<td>" . htmlspecialchars($order?->note ?? $p->note ?? '—') . "</td>";
+                    $row .= "</tr>\r\n";
+                    fwrite($handle, $row);
                 }
             });
 
-            // 3. Dòng tổng kết ở cuối bảng
-            fputcsv($handle, [
-                'TỔNG CỘNG',
-                '',
-                '',
-                '',
-                "Tổng số đơn: {$stt}",
-                '',
-                'Tổng tiền thu hộ:',
-                $totalAmount,
-                '',
-                "Đã đối soát: {$totalReconciled} | Chưa: {$totalUnreconciled}",
-                '',
-                '',
-                '',
-            ], ',', '"', '\\');
-
+            fwrite($handle, "</tbody><tfoot><tr style=\"font-weight:bold; background-color:#FAF6EE;\">");
+            fwrite($handle, "<td colspan=\"4\" class=\"center\">TỔNG CỘNG</td><td>Tổng số đơn: {$stt}</td><td></td><td class=\"center\">Tổng tiền thu hộ:</td><td class=\"number\" style=\"font-size:12pt; color:#B45309;\">" . number_format($totalAmount, 0, ',', '.') . "</td><td colspan=\"5\">Đã đối soát: {$totalReconciled} | Chưa: {$totalUnreconciled}</td>");
+            fwrite($handle, "</tr></tfoot></table></body></html>\r\n");
             fclose($handle);
         }, 200, $headers);
     }

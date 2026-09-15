@@ -43,7 +43,7 @@
                 <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5C3219] to-[#8C5835] text-white flex items-center justify-center text-lg shadow-sm">
                     🧾
                 </span>
-                <span>Xử Lý Thanh Toán &amp; Đối Soát Đơn</span>
+                <span>Xử lý Thanh toán &amp; Đối soát đơn</span>
             </h1>
             <p class="text-xs sm:text-sm text-[#786B61] mt-1">
                 Xử lý giao dịch hôm nay, xác nhận thủ công (ảnh bill bắt buộc), tạo yêu cầu hoàn tiền &amp; tải bảng kê đối soát COD.
@@ -51,11 +51,11 @@
         </div>
 
         {{-- Top Actions --}}
-        <div class="flex items-center gap-2.5 flex-wrap">
+        <div class="flex items-center gap-2.5">
             <a href="{{ route('staff.payments.codExport', request()->query()) }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EBDDCD] hover:border-[#E08A1E] text-[#5C3219] font-bold text-xs shadow-xs hover:shadow-sm transition">
-                <i class="fa-solid fa-file-csv text-blue-600"></i>
-                <span>Tải Bảng Kê COD</span>
+               class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50 text-emerald-700 font-bold text-xs shadow-2xs transition" title="Tải file Excel mở trực tiếp trên Windows & Mac không lỗi font">
+                <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                <span>Tải Bảng Kê Excel</span>
             </a>
             <a href="{{ route('staff.orders.index') }}" 
                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5C3219] hover:bg-[#432310] text-white font-bold text-xs shadow-sm hover:shadow transition">
@@ -128,7 +128,7 @@
         <a href="{{ route('staff.payments.index', ['tab' => 'transactions']) }}" 
            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition {{ ($activeTab ?? 'transactions') === 'transactions' ? 'bg-[#5C3219] text-white shadow-sm' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:bg-[#FFF9EE]' }}">
             <i class="fa-solid fa-calendar-day"></i>
-            <span>Giao Dịch Hôm Nay</span>
+            <span>Giao dịch cần xử lý</span>
             <span class="px-2 py-0.5 rounded-md text-[10px] {{ ($activeTab ?? 'transactions') === 'transactions' ? 'bg-white/20 text-white' : 'bg-[#FAF6EE] text-[#786B61]' }}">
                 {{ $counts['ALL'] }}
             </span>
@@ -160,7 +160,7 @@
                 <div class="flex items-center gap-2 min-w-max pb-3">
                     @php
                         $statusTabs = [
-                            '' => ['label' => 'Tất cả đơn hôm nay', 'count' => $counts['ALL']],
+                            '' => ['label' => 'Tất cả đơn cần xử lý', 'count' => $counts['ALL']],
                             'PENDING' => ['label' => 'Chờ thanh toán', 'count' => $counts['PENDING']],
                             'PAID' => ['label' => 'Đã thanh toán', 'count' => $counts['PAID']],
                             'FAILED' => ['label' => 'Thất bại', 'count' => $counts['FAILED']],
@@ -257,10 +257,14 @@
                                     default => ['label' => $item->method, 'class' => 'bg-gray-50 text-gray-700 border-gray-200', 'icon' => 'fa-circle-dot'],
                                 };
 
+                                $isOrderCancelled = ($order && $order->order_status === 'CANCELLED');
+
                                 $statusBadge = match ($item->status) {
                                     'PAID' => ['label' => 'Đã thanh toán', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dot-emerald-500'],
-                                    'PENDING' => ['label' => 'Chờ thanh toán', 'class' => 'bg-amber-50 text-amber-700 border-amber-200 dot-amber-500'],
-                                    'FAILED' => ['label' => 'Thất bại', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500'],
+                                    'PENDING' => $isOrderCancelled
+                                        ? ['label' => 'Đã hủy', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500']
+                                        : ['label' => 'Chờ thanh toán', 'class' => 'bg-amber-50 text-amber-700 border-amber-200 dot-amber-500'],
+                                    'FAILED' => ['label' => $isOrderCancelled ? 'Đã hủy' : 'Thất bại', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500'],
                                     'REFUNDED' => ['label' => 'Đã hoàn tiền', 'class' => 'bg-purple-50 text-purple-700 border-purple-200 dot-purple-500'],
                                     default => ['label' => $item->status, 'class' => 'bg-gray-50 text-gray-700 border-gray-200 dot-gray-500'],
                                 };
@@ -361,7 +365,12 @@
                                         </button>
 
                                         {{-- Xác nhận thanh toán thủ công (Quy định 2: Bắt buộc nhập lý do/ảnh bill) --}}
-                                        @if ($item->status === 'PENDING')
+                                        @if ($isOrderCancelled)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-400 font-semibold text-xs cursor-not-allowed" title="Đơn hàng đã bị hủy">
+                                                <i class="fa-solid fa-ban text-[10px] text-rose-400"></i>
+                                                <span>Đơn đã hủy</span>
+                                            </span>
+                                        @elseif ($item->status === 'PENDING')
                                             <button type="button" 
                                                     @click="openManualConfirm({{ json_encode([
                                                         'id' => $item->id,
@@ -437,9 +446,9 @@
 
                 <div class="flex items-center gap-2 flex-wrap">
                     <a href="{{ route('staff.payments.codExport', request()->query()) }}" 
-                       class="px-3.5 py-2 rounded-xl bg-white border border-[#EBDDCD] hover:border-blue-600 text-blue-700 font-bold text-xs shadow-2xs transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-download"></i>
-                        <span>Tải Bảng Kê Đối Soát (CSV)</span>
+                       class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1.5" title="Mở trực tiếp trên Microsoft Excel (Windows & Mac) chuẩn 100% tiếng Việt">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>Tải Bảng Kê Excel</span>
                     </a>
 
                     <form method="POST" action="{{ route('staff.payments.bulkReconcileCod') }}" class="inline" x-show="selectedCod.length > 0">
@@ -475,9 +484,17 @@
                 <table class="w-full min-w-[950px] text-left text-xs text-[#2C1408]">
                     <thead class="bg-[#FAF8F5] border-b border-[#F0E6D8] text-[11px] font-bold text-[#786B61] uppercase tracking-wider">
                         <tr>
+                            @php
+                                $eligibleCodIds = $codPayments->getCollection()->filter(function ($p) {
+                                    return empty($p->cod_reconciled_at) && $p->order?->order_status === 'COMPLETED';
+                                })->pluck('id')->values()->all();
+                            @endphp
                             <th class="py-3.5 px-4 w-10 text-center">
-                                <input type="checkbox" @click="selectedCod = selectedCod.length ? [] : {{ json_encode($codPayments->whereNull('cod_reconciled_at')->pluck('id')) }}" 
-                                       class="rounded text-[#E08A1E] focus:ring-[#E08A1E]">
+                                <input type="checkbox" 
+                                       @click="selectedCod = selectedCod.length ? [] : {{ json_encode($eligibleCodIds) }}" 
+                                       :disabled="{{ empty($eligibleCodIds) ? 'true' : 'false' }}"
+                                       class="rounded text-[#E08A1E] focus:ring-[#E08A1E] disabled:opacity-30 disabled:cursor-not-allowed"
+                                       title="{{ empty($eligibleCodIds) ? 'Không có đơn nào đã giao thành công để đối soát' : 'Chọn tất cả đơn đã giao thành công để đối soát' }}">
                             </th>
                             <th class="py-3.5 px-4 whitespace-nowrap">Mã Đơn / Mã GD</th>
                             <th class="py-3.5 px-4 whitespace-nowrap">Khách Hàng &amp; Địa Chỉ</th>
@@ -489,13 +506,20 @@
                     </thead>
                     <tbody class="divide-y divide-[#F0E6D8]">
                         @forelse ($codPayments as $cp)
-                            @php $cpOrder = $cp->order; @endphp
-                            <tr class="hover:bg-[#FFFDF9] transition">
+                            @php 
+                                $cpOrder = $cp->order; 
+                                $isCompleted = ($cpOrder?->order_status === 'COMPLETED');
+                            @endphp
+                            <tr class="hover:bg-[#FFFDF9] transition {{ !$isCompleted && !$cp->cod_reconciled_at ? 'bg-gray-50/40' : '' }}">
                                 <td class="py-3.5 px-4 text-center">
-                                    @if (!$cp->cod_reconciled_at)
+                                    @if ($cp->cod_reconciled_at)
+                                        <i class="fa-solid fa-check text-emerald-600" title="Đã đối soát"></i>
+                                    @elseif ($isCompleted)
                                         <input type="checkbox" value="{{ $cp->id }}" x-model="selectedCod" class="rounded text-[#E08A1E] focus:ring-[#E08A1E]">
                                     @else
-                                        <i class="fa-solid fa-check text-emerald-600"></i>
+                                        <span class="text-gray-300 inline-block cursor-not-allowed" title="Chỉ mở đối soát khi đơn hàng đã giao thành công (COMPLETED)">
+                                            <i class="fa-solid fa-lock text-[11px]"></i>
+                                        </span>
                                     @endif
                                 </td>
 
@@ -520,7 +544,15 @@
                                 </td>
 
                                 <td class="py-3.5 px-4 whitespace-nowrap">
-                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FAF6EE] text-[#5C3219] border border-[#EBDDCD]">
+                                    @php
+                                        $statusBadgeClass = match($cpOrder?->order_status) {
+                                            'COMPLETED' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                            'SHIPPING' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                            'CONFIRMED', 'PREPARING', 'PROCESSING' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                            default => 'bg-[#FAF6EE] text-[#5C3219] border-[#EBDDCD]',
+                                        };
+                                    @endphp
+                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-bold border {{ $statusBadgeClass }}">
                                         {{ $cpOrder?->order_status ?? '—' }}
                                     </span>
                                 </td>
@@ -531,26 +563,49 @@
                                             <i class="fa-solid fa-check"></i>
                                             <span>Đã đối soát ({{ $cp->cod_reconciled_at->format('d/m H:i') }})</span>
                                         </span>
-                                    @else
+                                    @elseif ($isCompleted)
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                                             <i class="fa-solid fa-clock"></i>
                                             <span>Chờ đối soát bưu tá</span>
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-500 border border-gray-200" title="Đơn chưa giao thành công, chưa thể đối soát tiền thu hộ">
+                                            <i class="fa-solid fa-hourglass-half text-[10px]"></i>
+                                            <span>Chờ giao thành công</span>
                                         </span>
                                     @endif
                                 </td>
 
                                 <td class="py-3.5 px-4 text-center whitespace-nowrap">
                                     @if (!$cp->cod_reconciled_at)
-                                        <form method="POST" action="{{ route('staff.payments.reconcileCod', $cp->id) }}" class="inline">
-                                            @csrf
-                                            <button type="submit" 
-                                                    class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1">
-                                                <i class="fa-solid fa-check"></i>
-                                                <span>Đánh Dấu Đã Đối Soát</span>
-                                            </button>
-                                        </form>
+                                        @if ($isCompleted)
+                                            <form method="POST" action="{{ route('staff.payments.reconcileCod', $cp->id) }}" class="inline">
+                                                @csrf
+                                                <button type="submit" 
+                                                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1">
+                                                    <i class="fa-solid fa-check"></i>
+                                                    <span>Đánh Dấu Đã Đối Soát</span>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-400 border border-dashed border-gray-300 font-semibold text-xs cursor-not-allowed" 
+                                                  title="Chỉ mở đối soát khi đơn hàng đã giao thành công (COMPLETED)">
+                                                <i class="fa-solid fa-lock text-[10px]"></i>
+                                                <span>Chờ giao xong</span>
+                                            </span>
+                                        @endif
                                     @else
-                                        <span class="text-[11px] font-bold text-emerald-600">✓ Hoàn tất</span>
+                                        <div class="flex items-center justify-center gap-2">
+                                            <span class="text-[11px] font-bold text-emerald-600">✓ Hoàn tất</span>
+                                            @if (!$cp->cod_settled_at)
+                                                <form method="POST" action="{{ route('staff.payments.unreconcileCod', $cp->id) }}" class="inline" onsubmit="return confirm('Bạn có chắc muốn bỏ đánh dấu đối soát cho đơn này?');">
+                                                    @csrf
+                                                    <button type="submit" class="text-[11px] text-gray-400 hover:text-rose-600 underline font-medium ml-1" title="Bỏ đánh dấu nếu ấn nhầm">
+                                                        Bỏ
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
                             </tr>

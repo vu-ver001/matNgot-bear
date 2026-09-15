@@ -302,10 +302,14 @@
                                     default => ['label' => $item->method, 'class' => 'bg-gray-50 text-gray-700 border-gray-200', 'icon' => 'fa-circle-dot'],
                                 };
 
+                                $isOrderCancelled = ($order && $order->order_status === 'CANCELLED');
+
                                 $statusBadge = match ($item->status) {
                                     'PAID' => ['label' => 'Đã thanh toán', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dot-emerald-500'],
-                                    'PENDING' => ['label' => 'Chờ thanh toán', 'class' => 'bg-amber-50 text-amber-700 border-amber-200 dot-amber-500'],
-                                    'FAILED' => ['label' => 'Thất bại', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500'],
+                                    'PENDING' => $isOrderCancelled
+                                        ? ['label' => 'Đã hủy', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500']
+                                        : ['label' => 'Chờ thanh toán', 'class' => 'bg-amber-50 text-amber-700 border-amber-200 dot-amber-500'],
+                                    'FAILED' => ['label' => $isOrderCancelled ? 'Đã hủy' : 'Thất bại', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500'],
                                     'REFUNDED' => ['label' => 'Đã hoàn tiền', 'class' => 'bg-purple-50 text-purple-700 border-purple-200 dot-purple-500'],
                                     default => ['label' => $item->status, 'class' => 'bg-gray-50 text-gray-700 border-gray-200 dot-gray-500'],
                                 };
@@ -421,36 +425,43 @@
                                             <i class="fa-solid fa-eye"></i>
                                         </button>
 
-                                        {{-- Realtime SePAY Check for Bank Transfer --}}
-                                        @if ($item->status === 'PENDING' && in_array($item->method, ['BANK_TRANSFER', 'E_WALLET']))
-                                            <form method="POST" action="{{ route('admin.payments.verifySepay', $item->id) }}" class="inline">
-                                                @csrf
-                                                <button type="submit" 
-                                                        class="w-8 h-8 rounded-lg bg-amber-500 hover:bg-[#C2751D] text-white flex items-center justify-center text-xs shadow-xs transition"
-                                                        title="Đối soát SePAY ngay">
-                                                    <i class="fa-solid fa-bolt"></i>
+                                        @if ($isOrderCancelled)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-400 font-semibold text-xs cursor-not-allowed" title="Đơn hàng đã bị hủy">
+                                                <i class="fa-solid fa-ban text-[10px] text-rose-400"></i>
+                                                <span>Đơn đã hủy</span>
+                                            </span>
+                                        @else
+                                            {{-- Realtime SePAY Check for Bank Transfer --}}
+                                            @if ($item->status === 'PENDING' && in_array($item->method, ['BANK_TRANSFER', 'E_WALLET']))
+                                                <form method="POST" action="{{ route('admin.payments.verifySepay', $item->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" 
+                                                            class="w-8 h-8 rounded-lg bg-amber-500 hover:bg-[#C2751D] text-white flex items-center justify-center text-xs shadow-xs transition"
+                                                            title="Đối soát SePAY ngay">
+                                                        <i class="fa-solid fa-bolt"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            {{-- Manual Confirm (Admin Toàn quyền) --}}
+                                            @if ($item->status === 'PENDING')
+                                                <button type="button" 
+                                                        @click="openConfirm({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
+                                                        class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-xs shadow-xs transition"
+                                                        title="Xác nhận đã thu tiền">
+                                                    <i class="fa-solid fa-check"></i>
                                                 </button>
-                                            </form>
-                                        @endif
+                                            @endif
 
-                                        {{-- Manual Confirm (Admin Toàn quyền) --}}
-                                        @if ($item->status === 'PENDING')
-                                            <button type="button" 
-                                                    @click="openConfirm({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
-                                                    class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-xs shadow-xs transition"
-                                                    title="Xác nhận đã thu tiền">
-                                                <i class="fa-solid fa-check"></i>
-                                            </button>
-                                        @endif
-
-                                        {{-- Refund Action for Paid --}}
-                                        @if ($item->status === 'PAID')
-                                            <button type="button" 
-                                                    @click="openRefund({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
-                                                    class="w-8 h-8 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 flex items-center justify-center text-xs transition"
-                                                    title="Hoàn tiền trực tiếp">
-                                                <i class="fa-solid fa-arrow-rotate-left"></i>
-                                            </button>
+                                            {{-- Refund Action for Paid --}}
+                                            @if ($item->status === 'PAID')
+                                                <button type="button" 
+                                                        @click="openRefund({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
+                                                        class="w-8 h-8 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 flex items-center justify-center text-xs transition"
+                                                        title="Hoàn tiền trực tiếp">
+                                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                                </button>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>

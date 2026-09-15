@@ -40,14 +40,14 @@
                                 @if($order->payment_method === 'CARD')
                                     Cổng thanh toán điện tử VNPAY
                                 @elseif($order->payment_method === 'E_WALLET')
-                                    Cổng thanh toán Ví điện tử MoMo
+                                    Chuyển tiền Ví MoMo cá nhân 24/7
                                 @else
                                     Chuyển khoản trực tuyến 24/7
                                 @endif
                             </div>
                             <h1 class="text-xl sm:text-2xl font-black mt-0.5">
                                 @if($order->payment_method === 'E_WALLET')
-                                    Thanh toán qua Ví MoMo
+                                    Thanh toán qua Ví MoMo (Tài khoản cá nhân)
                                 @elseif($order->payment_method === 'CARD')
                                     Thanh toán qua Cổng VNPAY-QR
                                 @else
@@ -169,7 +169,14 @@
                                 </div>
                                 <div class="flex items-center justify-between text-sm py-2 border-b border-[#F0E6D8]">
                                     <span class="text-[#786B61] font-medium">Chủ tài khoản ví:</span>
-                                    <span class="font-bold text-[#2C1408]">{{ $paymentConfig['momo_name'] }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-[#2C1408]">{{ $paymentConfig['momo_name'] }}</span>
+                                        <button type="button" @click="copyText('{{ $paymentConfig['momo_name'] }}', 'Tên chủ ví')" class="text-[#E08A1E] hover:text-[#5C3219] text-xs font-bold transition p-1 cursor-pointer" title="Sao chép tên chủ ví">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="pt-2 space-y-2">
                                     <a href="momo://" 
@@ -231,6 +238,24 @@
                                     <span class="font-bold text-[#2C1408]">{{ $paymentConfig['account_name'] }}</span>
                                 </div>
                             @endif
+
+                            {{-- Action buttons for Manual Confirmation & Simulation --}}
+                            <div class="pt-3 border-t border-[#F0E6D8] space-y-2.5">
+                                <form id="manualConfirmForm" action="{{ route('customer.payment.confirm', $order->id) }}" method="POST">
+                                    @csrf
+                                    <button type="button" @click="confirmManualPayment()"
+                                            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md shadow-emerald-600/25 tracking-wide cursor-pointer">
+                                        <i class="fa-solid fa-circle-check text-sm"></i>
+                                        <span>TÔI ĐÃ CHUYỂN TIỀN THÀNH CÔNG</span>
+                                    </button>
+                                </form>
+
+                                <button type="button" @click="simulatePayment()" :disabled="isSimulating"
+                                        class="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-amber-600" :class="{ 'fa-spin': isSimulating }"></i>
+                                    <span x-text="isSimulating ? 'Đang mô phỏng giao dịch...' : '⚡ Mô phỏng thanh toán thành công (Thử nghiệm)'"></span>
+                                </button>
+                            </div>
                         </div>
 
                         {{-- Live Automatic Payment Detection Card --}}
@@ -284,6 +309,7 @@
                 pollInterval: null,
                 isChecking: false,
                 isPaid: false,
+                isSimulating: false,
 
                 init() {
                     // 1. Countdown timer
@@ -321,7 +347,7 @@
                                 Swal.fire({
                                     icon: 'success',
                                     title: '🎉 ĐÃ NHẬN THANH TOÁN THÀNH CÔNG!',
-                                    html: 'Hệ thống đã tự động ghi nhận biến động số dư từ Ngân hàng.<br><span class=\"text-xs text-gray-500\">Đang chuyển hướng ngay...</span>',
+                                    html: 'Hệ thống đã tự động ghi nhận biến động số dư.<br><span class=\"text-xs text-gray-500\">Đang chuyển hướng ngay...</span>',
                                     timer: 1500,
                                     showConfirmButton: false,
                                     background: '#FAF6F0',
@@ -337,6 +363,73 @@
                     .catch(() => {})
                     .finally(() => {
                         this.isChecking = false;
+                    });
+                },
+
+                confirmManualPayment() {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Xác nhận đã chuyển tiền?',
+                            text: 'Bạn đã hoàn tất chuyển tiền qua Ví MoMo hoặc Chuyển khoản ngân hàng?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#059669',
+                            cancelButtonColor: '#6B7280',
+                            confirmButtonText: 'Đúng, tôi đã chuyển tiền',
+                            cancelButtonText: 'Kiểm tra lại',
+                            background: '#FAF6F0',
+                            color: '#2E190E'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.getElementById('manualConfirmForm').submit();
+                            }
+                        });
+                    } else {
+                        if (confirm('Bạn đã chuyển khoản thành công? Bấm OK để xác nhận hoàn tất.')) {
+                            document.getElementById('manualConfirmForm').submit();
+                        }
+                    }
+                },
+
+                simulatePayment() {
+                    if (this.isSimulating) return;
+                    this.isSimulating = true;
+
+                    fetch('{{ route('customer.payment.simulate', $order->id) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            this.isPaid = true;
+                            clearInterval(this.pollInterval);
+                            clearInterval(this.interval);
+
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '🎉 THANH TOÁN THÀNH CÔNG!',
+                                    text: data.message || 'Giao dịch đã được ghi nhận.',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                    background: '#FAF6F0',
+                                    color: '#2E190E'
+                                });
+                            }
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url || '{{ route('payment.result', $order->id) }}';
+                            }, 1000);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    })
+                    .finally(() => {
+                        this.isSimulating = false;
                     });
                 },
 

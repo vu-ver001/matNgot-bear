@@ -104,17 +104,73 @@ class MomoPaymentGatewayTest extends TestCase
     }
 
     /**
-     * Test redirect customer to MoMo gateway
+     * Test MomoService generates personal P2P QR payload with phone, name, amount and order code
      */
-    public function test_customer_redirect_to_momo_gateway(): void
+    public function test_momo_service_generates_personal_p2p_qr_payload(): void
+    {
+        $order = $this->createOrder(75000);
+        $momoService = app(MomoService::class);
+
+        $payload = $momoService->getPersonalQrPayload($order);
+        $this->assertStringContainsString('transfer_myqr', $payload);
+        $this->assertStringContainsString('75000', $payload);
+        $this->assertStringContainsString($order->order_code, $payload);
+
+        $qrUrl = $momoService->generateQrUrl($order);
+        $this->assertStringContainsString('api.qrserver.com', $qrUrl);
+    }
+
+    /**
+     * Test redirect customer to MoMo personal QR page
+     */
+    public function test_customer_redirect_to_momo_personal_qr(): void
     {
         $order = $this->createOrder(50000);
 
         $response = $this->actingAs($this->customer)
             ->get(route('customer.payment.momo.redirect', $order->id));
 
-        $response->assertRedirect();
-        $this->assertStringContainsString('test-payment.momo.vn', $response->headers->get('Location'));
+        $response->assertRedirect(route('customer.payment.qr', $order->id));
+        $response->assertSessionHas('info');
+    }
+
+    /**
+     * Test customer can manually confirm MoMo transfer
+     */
+    public function test_customer_can_confirm_momo_payment(): void
+    {
+        $order = $this->createOrder(120000);
+
+        $response = $this->actingAs($this->customer)
+            ->post(route('customer.payment.confirm', $order->id));
+
+        $response->assertRedirect(route('payment.result', $order->id));
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'payment_status' => 'PAID',
+        ]);
+        $this->assertDatabaseHas('payments', [
+            'order_id' => $order->id,
+            'status' => 'PAID',
+        ]);
+    }
+
+    /**
+     * Test customer can simulate successful MoMo payment
+     */
+    public function test_customer_can_simulate_momo_payment(): void
+    {
+        $order = $this->createOrder(180000);
+
+        $response = $this->actingAs($this->customer)
+            ->postJson(route('customer.payment.simulate', $order->id));
+
+        $response->assertOk();
+        $response->assertJson(['success' => true]);
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'payment_status' => 'PAID',
+        ]);
     }
 
     /**

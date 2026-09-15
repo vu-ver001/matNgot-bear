@@ -143,7 +143,7 @@
                         </div>
                     </div>
                     <div class="shrink-0 w-full sm:w-auto">
-                        <a href="{{ $order->payment_method === 'CARD' ? route('customer.payment.vnpay.redirect', $order) : ($order->payment_method === 'E_WALLET' ? route('customer.payment.momo.redirect', $order) : route('customer.payment.qr', $order)) }}"
+                        <a href="{{ $order->payment_method === 'CARD' ? route('customer.payment.vnpay.redirect', $order) : route('customer.payment.qr', $order) }}"
                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md transition transform hover:-translate-y-0.5 tracking-wide">
                             <span>Thanh toán ngay</span>
                             <span>→</span>

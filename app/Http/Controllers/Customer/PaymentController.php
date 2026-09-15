@@ -79,7 +79,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Redirect customer directly to official MoMo Payment Gateway.
+     * Redirect customer directly to MoMo Personal QR payment page.
      */
     public function redirectToMomo(Order $order): RedirectResponse
     {
@@ -88,21 +88,13 @@ class PaymentController extends Controller
                 ->with('error', "Đơn hàng #{$order->order_code} đã quá thời hạn thanh toán 24 giờ và đã tự động bị hủy.");
         }
 
-        $returnUrl = route('payment.momo.return');
-        $ipnUrl = route('payment.momo.ipn');
-        $momoRes = $this->momoService->createGatewayPayment($order, $returnUrl, $ipnUrl);
-
-        if (!empty($momoRes['success']) && !empty($momoRes['payUrl'])) {
-            Log::info("👛 [MOMO REDIRECT] Khách hàng chuyển hướng sang cổng MoMo cho đơn hàng #{$order->order_code}", [
-                'order_id' => $order->id,
-                'amount' => $order->total_amount,
-                'payUrl' => $momoRes['payUrl'],
-            ]);
-            return redirect()->away($momoRes['payUrl']);
-        }
+        Log::info("👛 [MOMO QR REDIRECT] Khách hàng chuyển sang thanh toán mã QR Ví MoMo cá nhân cho đơn hàng #{$order->order_code}", [
+            'order_id' => $order->id,
+            'amount' => $order->total_amount,
+        ]);
 
         return redirect()->route('customer.payment.qr', $order->id)
-            ->with('info', $momoRes['message'] ?? 'Chuyển sang chế độ quét mã QR MoMo.');
+            ->with('info', "Vui lòng quét mã QR Ví MoMo cá nhân để thanh toán đơn hàng #{$order->order_code}.");
     }
 
     /**
@@ -532,7 +524,8 @@ class PaymentController extends Controller
         }
 
         if ($method === 'E_WALLET') {
-            return $this->redirectToMomo($order);
+            return redirect()->route('customer.payment.qr', $order->id)
+                ->with('info', "Vui lòng quét mã QR Ví MoMo cá nhân để thanh toán đơn hàng #{$order->order_code}.");
         }
 
         return redirect()->route('customer.payment.qr', $order->id);

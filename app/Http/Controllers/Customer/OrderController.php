@@ -104,6 +104,7 @@ class OrderController extends Controller
         }
 
         $this->orderService->checkAndCancelIfExpired($order);
+        $this->orderService->checkAndRejectIfCancelRequestExpired($order);
         $order->refresh();
 
         $order->load(['details.product.images', 'details.productVariant', 'payments', 'statusHistories', 'voucher', 'reviews']);

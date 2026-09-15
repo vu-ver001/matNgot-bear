@@ -233,6 +233,16 @@ class OrderService
                 'cancelled_at' => now(),
             ];
 
+            if ($currentOrder->payment_status !== 'PAID') {
+                $updateData['payment_status'] = 'FAILED';
+                \App\Models\Payment::where('order_id', $currentOrder->id)
+                    ->where('status', 'PENDING')
+                    ->update([
+                        'status' => 'FAILED',
+                        'note' => 'Đơn hàng đã bị hủy: ' . $reason,
+                    ]);
+            }
+
             if (! empty($refundData['refund_bank_name'])) {
                 $updateData['refund_bank_name'] = $refundData['refund_bank_name'];
             }
@@ -318,6 +328,62 @@ class OrderService
                 $count++;
             } catch (\Throwable $e) {
                 Log::error("Lỗi khi tự động hủy đơn hàng #{$order->order_code}: ".$e->getMessage());
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Tự động kiểm tra và từ chối yêu cầu hủy nếu đã quá thời hạn xử lý 24 giờ.
+     * Trả về true nếu yêu cầu hủy vừa bị tự động từ chối.
+     */
+    public function checkAndRejectIfCancelRequestExpired(Order $order): bool
+    {
+        if ($order->isCancelRequestExpired()) {
+            DB::transaction(function () use ($order) {
+                $reason = 'Yêu cầu hủy đã quá thời hạn xử lý 24 giờ. Đơn hàng tiếp tục được chuẩn bị và giao hàng cho quý khách.';
+                $order->update([
+                    'cancel_request_status' => 'REJECTED',
+                    'cancel_rejection_reason' => $reason,
+                ]);
+
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'from_status' => $order->order_status,
+                    'to_status' => $order->order_status,
+                    'changed_by' => null,
+                    'note' => 'Hệ thống tự động từ chối yêu cầu hủy do quá thời hạn 24 giờ mà nhân viên chưa xử lý.',
+                    'changed_at' => now(),
+                ]);
+            });
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Quét và tự động từ chối tất cả yêu cầu hủy đơn hàng đã quá hạn 24 giờ mà nhân viên chưa xử lý.
+     * Trả về số lượng đơn đã được tự động từ chối.
+     */
+    public function autoRejectExpiredCancelRequests(): int
+    {
+        $expiredOrders = Order::query()
+            ->where('cancel_request_status', 'PENDING')
+            ->whereNotNull('cancel_requested_at')
+            ->where('cancel_requested_at', '<=', now()->subHours(24))
+            ->get();
+
+        $count = 0;
+        foreach ($expiredOrders as $order) {
+            try {
+                if ($this->checkAndRejectIfCancelRequestExpired($order)) {
+                    $count++;
+                }
+            } catch (\Throwable $e) {
+                Log::error("Lỗi khi tự động từ chối yêu cầu hủy đơn hàng #{$order->order_code}: " . $e->getMessage());
             }
         }
 
@@ -452,14 +518,26 @@ class OrderService
                 $this->refundPayment($paidPayment);
             }
 
-            $order->update([
+            $orderUpdateData = [
                 'order_status' => 'CANCELLED',
                 'cancel_request_status' => 'APPROVED',
                 'cancel_reason' => $reason,
                 'cancelled_by' => $adminId,
                 'cancelled_at' => now(),
                 'refund_note' => $refundNote,
-            ]);
+            ];
+
+            if (! $paidPayment && $order->payment_status !== 'REFUNDED') {
+                $orderUpdateData['payment_status'] = 'FAILED';
+                \App\Models\Payment::where('order_id', $order->id)
+                    ->where('status', 'PENDING')
+                    ->update([
+                        'status' => 'FAILED',
+                        'note' => 'Đơn hàng đã bị hủy: '.$reason,
+                    ]);
+            }
+
+            $order->update($orderUpdateData);
 
             $historyNote = 'Nhân viên đã duyệt yêu cầu hủy đơn hàng.'.($refundNote ? ' Ghi chú hoàn tiền: '.$refundNote : '');
 
@@ -551,6 +629,14 @@ class OrderService
 
                 if ($paidPayment) {
                     $this->refundPayment($paidPayment);
+                } elseif ($order->payment_status !== 'REFUNDED') {
+                    $updateData['payment_status'] = 'FAILED';
+                    \App\Models\Payment::where('order_id', $order->id)
+                        ->where('status', 'PENDING')
+                        ->update([
+                            'status' => 'FAILED',
+                            'note' => 'Đơn hàng đã bị hủy: '.$actualNote,
+                        ]);
                 }
             } elseif ($newStatus === 'RETURNED') {
                 if ($order->hasPendingReturnRequest()) {

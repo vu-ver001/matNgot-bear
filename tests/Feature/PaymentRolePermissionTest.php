@@ -87,7 +87,7 @@ class PaymentRolePermissionTest extends TestCase
     {
         $response = $this->actingAs($this->staff)->get(route('staff.payments.index'));
         $response->assertStatus(200);
-        $response->assertSee('Giao Dịch Hôm Nay');
+        $response->assertSee('Giao dịch cần xử lý');
         $response->assertDontSee('Xuất Báo Cáo');
     }
 
@@ -172,6 +172,7 @@ class PaymentRolePermissionTest extends TestCase
     public function test_staff_can_reconcile_cod_and_export_cod_sheet()
     {
         $order = $this->createDummyOrder();
+        $order->update(['order_status' => 'COMPLETED']);
         $payment = Payment::create([
             'order_id' => $order->id,
             'method' => 'COD',
@@ -186,9 +187,97 @@ class PaymentRolePermissionTest extends TestCase
         $this->assertNotNull($payment->cod_reconciled_at);
         $this->assertEquals($this->staff->id, $payment->cod_reconciled_by);
 
-        // Tải bảng kê COD
+        // Tải bảng kê COD (Định dạng Excel .xls chuẩn tiếng Việt)
         $exportResponse = $this->actingAs($this->staff)->get(route('staff.payments.codExport'));
         $exportResponse->assertStatus(200);
+        $exportResponse->assertHeader('Content-Type', 'application/vnd.ms-excel; charset=UTF-8');
+
+        ob_start();
+        $exportResponse->sendContent();
+        $content = ob_get_clean();
+
+        $this->assertStringContainsString('Bảng Kê COD', $content);
+        $this->assertStringContainsString('Tiền Thu Hộ COD', $content);
+        $this->assertStringContainsString($order->order_code, $content);
+    }
+
+    public function test_staff_cannot_reconcile_pending_or_uncompleted_order()
+    {
+        // Đơn hàng đang ở trạng thái PENDING -> Chưa giao thành công
+        $pendingOrder = Order::create([
+            'order_code' => 'PENDING'.strtoupper(uniqid()),
+            'customer_id' => $this->customer->id,
+            'recipient_name' => 'Khách Chờ Giao',
+            'recipient_phone' => '0911223399',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 200000,
+            'shipping_fee' => 30000,
+            'total_amount' => 230000,
+            'order_status' => 'PENDING',
+            'payment_method' => 'COD',
+            'payment_status' => 'UNPAID',
+        ]);
+
+        $payment = Payment::create([
+            'order_id' => $pendingOrder->id,
+            'method' => 'COD',
+            'status' => 'PENDING',
+            'amount' => 230000,
+        ]);
+
+        // Thử đối soát đơn PENDING -> Phải bị từ chối
+        $response = $this->actingAs($this->staff)->post(route('staff.payments.reconcileCod', $payment->id));
+        $response->assertSessionHas('error');
+
+        $payment->refresh();
+        $this->assertNull($payment->cod_reconciled_at);
+
+        // Danh sách COD vẫn hiển thị đơn này để theo dõi tiến độ giao hàng, nhưng nút đối soát bị khóa
+        $viewResponse = $this->actingAs($this->staff)->get(route('staff.payments.index', ['tab' => 'cod']));
+        $viewResponse->assertSee($pendingOrder->order_code);
+        $viewResponse->assertSee('Chờ giao xong');
+    }
+
+    public function test_staff_cannot_reconcile_cancelled_order_and_cancelled_orders_excluded_from_cod()
+    {
+        $cancelledOrder = Order::create([
+            'order_code' => 'CANCELLED'.strtoupper(uniqid()),
+            'customer_id' => $this->customer->id,
+            'recipient_name' => 'Khách Hàng Đã Hủy',
+            'recipient_phone' => '0911223344',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 200000,
+            'shipping_fee' => 30000,
+            'total_amount' => 230000,
+            'order_status' => 'CANCELLED',
+            'payment_method' => 'COD',
+            'payment_status' => 'UNPAID',
+        ]);
+
+        $payment = Payment::create([
+            'order_id' => $cancelledOrder->id,
+            'method' => 'COD',
+            'status' => 'PENDING',
+            'amount' => 230000,
+        ]);
+
+        // Cố tình đối soát đơn đã hủy -> phải bị từ chối
+        $response = $this->actingAs($this->staff)->post(route('staff.payments.reconcileCod', $payment->id));
+        $response->assertSessionHas('error');
+
+        $payment->refresh();
+        $this->assertNull($payment->cod_reconciled_at);
+
+        // Danh sách COD view của staff không được chứa đơn đã hủy này
+        $viewResponse = $this->actingAs($this->staff)->get(route('staff.payments.index', ['tab' => 'cod']));
+        $viewResponse->assertDontSee($cancelledOrder->order_code);
+
+        // File export cũng không được chứa mã đơn đã hủy
+        $exportResponse = $this->actingAs($this->staff)->get(route('staff.payments.codExport'));
+        ob_start();
+        $exportResponse->sendContent();
+        $exportContent = ob_get_clean();
+        $this->assertStringNotContainsString($cancelledOrder->order_code, $exportContent);
     }
 
     /**

@@ -59,6 +59,15 @@
 
         <!-- Trạng thái đơn hàng & Trạng thái thanh toán -->
         <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+            @if($order->hasPendingCancelRequest())
+                @php
+                    $isUrgent = ($order->cancelRequestHoursRemaining() !== null && $order->cancelRequestHoursRemaining() <= 2);
+                @endphp
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ $isUrgent ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse' : 'bg-amber-100 text-amber-800 border border-amber-300' }}" title="Hạn duyệt hủy trong 24h kể từ khi khách yêu cầu. Quá 24h hệ thống sẽ tự từ chối hủy.">
+                    <i class="fa-regular fa-clock"></i>
+                    Hạn hủy: {{ $order->cancelRequestTimeRemainingText() }}
+                </span>
+            @endif
             <x-order-status-badge :status="$order->order_status" :cancel-request-status="$order->cancel_request_status" :payment-status="$order->payment_status" />
             <x-payment-status-badge :status="$order->payment_status" />
         </div>
@@ -200,8 +209,11 @@
             </a>
 
             @if($order->hasPendingCancelRequest())
-                <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action bg-rose-600 hover:bg-rose-700 text-white! text-xs font-bold animate-pulse" title="Xử lý yêu cầu hủy đơn">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Duyệt hủy
+                @php
+                    $isUrgent = ($order->cancelRequestHoursRemaining() !== null && $order->cancelRequestHoursRemaining() <= 2);
+                @endphp
+                <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action {{ $isUrgent ? 'bg-rose-700 hover:bg-rose-800 animate-pulse' : 'bg-rose-600 hover:bg-rose-700' }} text-white! text-xs font-bold" title="Xử lý yêu cầu hủy đơn (Thời hạn 24h)">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Duyệt hủy ({{ $order->cancelRequestTimeRemainingText() }})
                 </a>
             @elseif($order->needsRefund())
                 <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action bg-amber-600 hover:bg-amber-700 text-white! text-xs font-bold" title="Xử lý hoàn tiền cho khách">

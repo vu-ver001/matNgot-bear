@@ -109,6 +109,10 @@
                                     Yêu cầu gửi lúc: <strong>{{ $order->cancel_requested_at?->format('d/m/Y H:i') }}</strong>
                                     · Lý do: <em class="text-[#2C1408] font-medium">"{{ $order->cancel_request_reason }}"</em>
                                 </p>
+                                <div class="mt-2 text-xs font-semibold text-amber-900 bg-amber-200/60 rounded-xl px-3 py-1.5 flex items-center gap-2 border border-amber-300">
+                                    <i class="fa-regular fa-clock text-amber-700"></i>
+                                    <span>Thời hạn nhân viên xử lý: <strong>còn {{ $order->cancelRequestTimeRemainingText() }}</strong> (tối đa 24h kể từ khi gửi yêu cầu). Nếu quá 24h chưa được duyệt, yêu cầu sẽ tự động hết hạn và đơn hàng tiếp tục được chuẩn bị để giao cho bạn.</span>
+                                </div>
                                 @if($order->payment_status === 'PAID')
                                     <div class="mt-2.5 inline-flex items-center gap-2 p-2.5 bg-white/80 rounded-xl border border-amber-300 text-xs text-amber-900">
                                         <i class="fa-solid fa-circle-info text-amber-600"></i>
@@ -891,7 +895,7 @@
                                                                     @if($isDirectCancel)
                                                                         Đơn hàng đang ở trạng thái <strong>Chờ xác nhận</strong> nên sẽ được <strong>hủy ngay</strong>. Shop sẽ sớm liên hệ SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% số tiền cho bạn.
                                                                     @else
-                                                                        Đơn hàng đã xác nhận, yêu cầu hủy sẽ được nhân viên xem xét. Khi được hủy, shop sẽ liên hệ qua SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% tiền cho bạn.
+                                                                        Đơn hàng đã xác nhận, yêu cầu hủy sẽ được nhân viên xem xét trong tối đa 24 giờ. Quá 24h chưa được duyệt, yêu cầu sẽ tự động hết hạn và đơn hàng tiếp tục được giao. Khi duyệt hủy thành công, shop sẽ liên hệ qua SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% tiền cho bạn.
                                                                     @endif
                                                                 </p>
                                                                 <div class="pt-1 text-[11px] text-amber-800 font-medium">
@@ -923,7 +927,7 @@
                                                                 @if($isDirectCancel)
                                                                     Đơn hàng đang chờ nhân viên xác nhận và chưa thanh toán. Đơn sẽ được <strong>hủy ngay lập tức</strong> sau khi bạn xác nhận.
                                                                 @else
-                                                                    Đơn hàng đã được xác nhận. Yêu cầu hủy đơn sẽ được gửi đến nhân viên cửa hàng để xem xét.
+                                                                    Đơn hàng đã được xác nhận. Yêu cầu hủy đơn sẽ được gửi đến nhân viên cửa hàng để xem xét trong tối đa 24 giờ. Quá 24h chưa được duyệt, yêu cầu sẽ tự động hết hạn và đơn hàng tiếp tục được chuẩn bị để giao.
                                                                 @endif
                                                             </div>
                                                         @endif
