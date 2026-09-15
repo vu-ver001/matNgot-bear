@@ -1,5 +1,5 @@
 <x-customer-account-layout title="Đơn hàng của tôi" :flush="true">
-    <div class="p-4 sm:p-8">
+    <div>
         <div class="min-w-0">
             <div class="orders-ui">
 

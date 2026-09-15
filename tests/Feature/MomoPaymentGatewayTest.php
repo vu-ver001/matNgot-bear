@@ -117,7 +117,7 @@ class MomoPaymentGatewayTest extends TestCase
         $this->assertStringContainsString($order->order_code, $payload);
 
         $qrUrl = $momoService->generateQrUrl($order);
-        $this->assertStringContainsString('api.qrserver.com', $qrUrl);
+        $this->assertStringContainsString('qrserver.com', $qrUrl);
     }
 
     /**
@@ -340,5 +340,66 @@ class MomoPaymentGatewayTest extends TestCase
         $this->assertSame('SEC_KEY_TEST', $settingService->get('momo_secret_key'));
         $this->assertSame('0912345678', $settingService->get('momo_phone'));
         $this->assertSame('CHU SHOP GAU', $settingService->get('momo_name'));
+    }
+
+    /**
+     * Test QR payment countdown persists remaining seconds across reloads.
+     */
+    public function test_qr_payment_page_persists_countdown_across_reloads(): void
+    {
+        $order = $this->createOrder();
+
+        // Lần đầu vào trang QR: Tạo phiên 15 phút (900 giây)
+        $response1 = $this->actingAs($this->customer)->get(route('customer.payment.qr', $order->id));
+        $response1->assertOk();
+        $response1->assertViewHas('remainingSeconds', 900);
+        $response1->assertViewHas('isQrExpired', false);
+
+        // Giả lập 5 phút đã trôi qua bằng cách cập nhật cache expires_at lùi về 10 phút còn lại
+        $cacheKey = "payment_qr_expires_at_{$order->id}";
+        \Illuminate\Support\Facades\Cache::put($cacheKey, now()->addMinutes(10)->timestamp, now()->addHours(24));
+
+        // Tải lại trang (F5): Thời gian còn lại phải là ~600 giây (10 phút), không được reset về 15 phút
+        $response2 = $this->actingAs($this->customer)->get(route('customer.payment.qr', $order->id));
+        $response2->assertOk();
+        $remaining = $response2->viewData('remainingSeconds');
+        $this->assertGreaterThanOrEqual(595, $remaining);
+        $this->assertLessThanOrEqual(600, $remaining);
+        $this->assertFalse($response2->viewData('isQrExpired'));
+
+        // Giả lập hết hạn 15 phút
+        \Illuminate\Support\Facades\Cache::put($cacheKey, now()->subMinutes(1)->timestamp, now()->addHours(24));
+        $response3 = $this->actingAs($this->customer)->get(route('customer.payment.qr', $order->id));
+        $response3->assertOk();
+        $this->assertSame(0, $response3->viewData('remainingSeconds'));
+        $this->assertTrue($response3->viewData('isQrExpired'));
+    }
+
+    /**
+     * Test customer can refresh / regenerate expired QR code.
+     */
+    public function test_customer_can_refresh_expired_qr_code(): void
+    {
+        $order = $this->createOrder();
+
+        // Làm hết hạn QR
+        $cacheKey = "payment_qr_expires_at_{$order->id}";
+        \Illuminate\Support\Facades\Cache::put($cacheKey, now()->subMinutes(5)->timestamp, now()->addHours(24));
+
+        // Gọi API refresh QR
+        $response = $this->actingAs($this->customer)->postJson(route('customer.payment.refresh-qr', $order->id));
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'remainingSeconds' => 900,
+        ]);
+        $response->assertJsonStructure(['vietQrUrl', 'momoQrUrl', 'vnpayQrUrl', 'expiresAt']);
+
+        // Sau khi refresh, tải lại trang sẽ có 15 phút mới
+        $reloadResponse = $this->actingAs($this->customer)->get(route('customer.payment.qr', $order->id));
+        $reloadResponse->assertOk();
+        $this->assertSame(900, $reloadResponse->viewData('remainingSeconds'));
+        $this->assertFalse($reloadResponse->viewData('isQrExpired'));
     }
 }

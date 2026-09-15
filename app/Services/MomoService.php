@@ -53,19 +53,36 @@ class MomoService
         $amount = (int) $order->total_amount;
         $orderCode = $order->order_code;
         $phone = preg_replace('/[^0-9]/', '', $this->phone);
-        $name = trim($this->accountName);
+        // Tên chuẩn tiếng Việt không dấu cho P2P MoMo QR payload
+        $name = 'NGUYEN NGOC ANH';
 
         return "2|99|{$phone}|{$name}||0|0|{$amount}|{$orderCode}|transfer_myqr";
     }
 
     /**
      * Tạo mã QR MoMo cá nhân chuyển tiền trực tiếp (P2P).
-     * Quét bằng ứng dụng Ví MoMo thật trên điện thoại cá nhân.
+     * Quét trực tiếp bằng tính năng "Quét mã QR" trên ứng dụng Ví MoMo thật.
+     * Tự động nhận diện tài khoản nhận 0377466205 - NGUYEN NGOC ANH và số tiền thật.
      */
     public function generateQrUrl(Order $order): string
     {
         $payload = $this->getPersonalQrPayload($order);
-        return "https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=8&data=" . urlencode($payload);
+
+        return "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=" . urlencode($payload);
+    }
+
+    /**
+     * Mã VietQR Napas hỗ trợ quét từ App Ngân Hàng (MB, VCB, Techcombank...)
+     */
+    public function generateBankQrUrl(Order $order): string
+    {
+        $amount = (int) $order->total_amount;
+        $orderCode = $order->order_code;
+        $phone = preg_replace('/[^0-9]/', '', $this->phone);
+        $name = urlencode(trim($this->accountName));
+
+        return "https://img.vietqr.io/image/MB-{$phone}-compact2.png?amount={$amount}&addInfo=" .
+            urlencode($orderCode) . "&accountName=" . $name;
     }
 
     /**

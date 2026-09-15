@@ -3,7 +3,7 @@
 @section('page-title', 'Xử lý thanh toán & Đối soát COD')
 
 @section('content')
-<div class="px-2 sm:px-4 lg:px-6 max-w-7xl mx-auto font-sans" x-data="{
+<div class="mx-auto font-sans" x-data="{
     activeTab: '{{ $activeTab ?? 'transactions' }}',
     drawerOpen: false,
     selectedPayment: null,
@@ -36,32 +36,53 @@
     }
 }">
 
-    {{-- Header --}}
-    <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-black text-[#2C1408] tracking-tight flex items-center gap-2.5">
-                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5C3219] to-[#8C5835] text-white flex items-center justify-center text-lg shadow-sm">
-                    🧾
-                </span>
-                <span>Xử lý Thanh toán &amp; Đối soát đơn</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-[#786B61] mt-1">
-                Xử lý giao dịch hôm nay, xác nhận thủ công (ảnh bill bắt buộc), tạo yêu cầu hoàn tiền &amp; tải bảng kê đối soát COD.
-            </p>
-        </div>
+    {{-- Header Banner --}}
+    <div class="relative overflow-hidden bg-[#FAF6F0] rounded-2xl sm:rounded-3xl border border-[#EBDDCD] shadow-2xs mb-6">
+        {{-- Decorative organic background shapes --}}
+        <div class="absolute -top-12 -right-12 w-40 h-40 bg-[#F2E5D5]/60 rounded-full blur-xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-[#F2E5D5]/60 rounded-full blur-xl pointer-events-none"></div>
 
-        {{-- Top Actions --}}
-        <div class="flex items-center gap-2.5">
-            <a href="{{ route('staff.payments.codExport', request()->query()) }}" 
-               class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50 text-emerald-700 font-bold text-xs shadow-2xs transition" title="Tải file Excel mở trực tiếp trên Windows & Mac không lỗi font">
-                <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                <span>Tải Bảng Kê Excel</span>
-            </a>
-            <a href="{{ route('staff.orders.index') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5C3219] hover:bg-[#432310] text-white font-bold text-xs shadow-sm hover:shadow transition">
-                <i class="fa-solid fa-boxes-packing"></i>
-                <span>Xử Lý Đơn Hàng</span>
-            </a>
+        <div class="relative z-10 p-5 sm:px-7 sm:py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+            {{-- Left: Icon + Vertical Divider + Titles --}}
+            <div class="flex items-center gap-4 sm:gap-5">
+                {{-- Brown Rounded Square Receipt Icon --}}
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#A77B5A] to-[#8C623A] flex items-center justify-center text-white shadow-md shadow-[#8C623A]/25 shrink-0 border border-white/20">
+                    <svg class="w-7 h-7 text-white drop-shadow-2xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+                        <line x1="8" y1="7" x2="16" y2="7"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                        <line x1="8" y1="17" x2="13" y2="17"/>
+                    </svg>
+                </div>
+
+                {{-- Vertical Divider --}}
+                <div class="hidden sm:block h-10 w-[1.5px] bg-[#E2D4C7] rounded-full shrink-0"></div>
+
+                {{-- Title & Subtitle --}}
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-[#3A1E11] tracking-tight font-sans">
+                        Xử lý Thanh toán &amp; Đối soát đơn
+                    </h1>
+                    <p class="text-xs sm:text-sm font-medium text-[#7D6E63] mt-0.5 max-w-2xl leading-relaxed">
+                        Xử lý giao dịch hôm nay, xác nhận thủ công (ảnh bill bắt buộc), tạo yêu cầu hoàn tiền &amp; tải bảng kê đối soát COD.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Right: Top Actions --}}
+            <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+                <a href="{{ route('staff.payments.codExport', request()->query()) }}" 
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50/50 text-[#3A1E11] font-bold text-xs shadow-2xs transition" title="Tải file Excel mở trực tiếp trên Windows & Mac không lỗi font">
+                    <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
+                    <span>Tải Bảng Kê Excel</span>
+                </a>
+                <a href="{{ route('staff.orders.index') }}" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#A77B5A] to-[#8C623A] hover:from-[#986E4E] hover:to-[#7E552F] text-white font-bold text-xs shadow-md shadow-[#8C623A]/25 transition duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fa-solid fa-boxes-packing text-xs"></i>
+                    <span>Xử Lý Đơn Hàng</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] ml-0.5"></i>
+                </a>
+            </div>
         </div>
     </div>
 

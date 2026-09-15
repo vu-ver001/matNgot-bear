@@ -1,6 +1,6 @@
 <x-customer-account-layout title="Chi tiết đơn hàng" :flush="true">
-    <div class="py-8 sm:py-10">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div>
+        <div class="">
             <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-3 flex-wrap">
                     <h2 class="font-bold text-2xl text-[#2B1810] tracking-tight">Chi tiết đơn hàng <span class="text-[#E08A1E] font-mono">{{ $order->order_code }}</span></h2>

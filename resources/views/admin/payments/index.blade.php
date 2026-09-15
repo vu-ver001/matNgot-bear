@@ -3,7 +3,7 @@
 @section('page-title', 'Quản lý thanh toán & Đối soát dòng tiền')
 
 @section('content')
-<div class="px-2 sm:px-4 lg:px-6 max-w-7xl mx-auto font-sans" x-data="{
+<div class="mx-auto font-sans" x-data="{
     activeTab: '{{ $activeTab ?? 'transactions' }}',
     drawerOpen: false,
     selectedPayment: null,
@@ -39,41 +39,66 @@
     }
 }">
 
-    {{-- Breadcrumb & Header --}}
-    <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            {{-- <x-breadcrumb :items="[
-                ['label' => 'Trang chủ', 'url' => route('admin.dashboard')],
-                ['label' => 'Quản lý thanh toán & Đối soát']
-            ]" class="mb-2 text-xs" /> --}}
-            <h1 class="text-2xl sm:text-3xl font-black text-[#2C1408] tracking-tight flex items-center gap-2.5">
-                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5C3219] to-[#8C5835] text-white flex items-center justify-center text-lg shadow-sm">
-                    💳
-                </span>
-                <span style="font-weight: 800;">Quản lý Thanh toán &amp; Đối soát</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-[#786B61] mt-1">
-                Xem toàn bộ dòng tiền, duyệt hoàn tiền kèm mã QR, đối soát công nợ COD &amp; cấu hình cổng thanh toán.
-            </p>
-        </div>
+    {{-- Header Banner --}}
+    <div class="relative overflow-hidden bg-[#FAF6F0] rounded-2xl sm:rounded-3xl border border-[#EBDDCD] shadow-2xs mb-6">
+        {{-- Decorative organic background shapes --}}
+        <div class="absolute -top-12 -right-12 w-40 h-40 bg-[#F2E5D5]/60 rounded-full blur-xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-[#F2E5D5]/60 rounded-full blur-xl pointer-events-none"></div>
 
-        {{-- Top Actions: Settings, Export CSV & Quick Links --}}
-        <div class="flex items-center gap-2.5 flex-wrap">
-            <a href="{{ route('admin.payments.settings') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EBDDCD] hover:border-[#E08A1E] text-[#5C3219] font-bold text-xs shadow-xs hover:shadow-sm transition">
-                <i class="fa-solid fa-sliders text-[#E08A1E]"></i>
-                <span>Cấu Hình Cổng &amp; API</span>
-            </a>
-            <a href="{{ route('admin.payments.export', request()->query()) }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EBDDCD] hover:border-emerald-600 text-emerald-800 font-bold text-xs shadow-xs hover:shadow-sm transition">
-                <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                <span>Xuất Báo Cáo</span>
-            </a>
-            <a href="{{ route('admin.orders.index') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5C3219] hover:bg-[#432310] text-white font-bold text-xs shadow-sm hover:shadow transition">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span>Xem Đơn Hàng</span>
-            </a>
+        <div class="relative z-10 p-5 sm:px-7 sm:py-5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+            {{-- Left: Icon + Vertical Divider + Titles --}}
+            <div class="flex items-center gap-4 sm:gap-5">
+                {{-- Brown Rounded Square Credit Card Icon --}}
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#A77B5A] to-[#8C623A] flex items-center justify-center text-white shadow-md shadow-[#8C623A]/25 shrink-0 border border-white/20">
+                    <svg class="w-7 h-7 text-white drop-shadow-2xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="3"/>
+                        <line x1="2" y1="10" x2="22" y2="10"/>
+                        <circle cx="17" cy="15" r="1.2" fill="currentColor"/>
+                    </svg>
+                </div>
+
+                {{-- Vertical Divider --}}
+                <div class="hidden sm:block h-10 w-[1.5px] bg-[#E2D4C7] rounded-full shrink-0"></div>
+
+                {{-- Title & Subtitle --}}
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-[#3A1E11] tracking-tight font-sans">
+                        Quản lý Thanh toán &amp; Đối soát
+                    </h1>
+                    <p class="text-xs sm:text-sm font-medium text-[#7D6E63] mt-0.5 max-w-2xl leading-relaxed">
+                        Xem toàn bộ dòng tiền, duyệt hoàn tiền kèm mã QR, đối soát công nợ COD &amp; cấu hình cổng thanh toán.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Right: Action Buttons Group --}}
+            <div class="flex flex-col sm:flex-row xl:flex-col items-start xl:items-end gap-2.5 shrink-0">
+                {{-- Top Row: Settings & Export Report + Sparkle Rays --}}
+                <div class="flex items-center gap-2.5 flex-wrap relative">
+                    <a href="{{ route('admin.payments.settings') }}" 
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#EBDDCD] hover:border-[#A77B5A] hover:bg-[#FAF6EE] text-[#3A1E11] font-bold text-xs shadow-2xs transition">
+                        <i class="fa-solid fa-sliders text-[#A77B5A] text-xs"></i>
+                        <span>Cấu Hình Cổng &amp; API</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 ml-0.5"></i>
+                    </a>
+                    
+                    <a href="{{ route('admin.payments.export', request()->query()) }}" 
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50/50 text-[#3A1E11] font-bold text-xs shadow-2xs transition">
+                        <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
+                        <span>Xuất Báo Cáo</span>
+                    </a>
+
+                    {{-- Bottom Row: View Orders --}}
+                    <div>
+                        <a href="{{ route('admin.orders.index') }}" 
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#A77B5A] to-[#8C623A] hover:from-[#986E4E] hover:to-[#7E552F] text-white font-bold text-xs shadow-md shadow-[#8C623A]/25 transition duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                            <i class="fa-solid fa-cart-shopping text-xs"></i>
+                            <span>Xem Đơn Hàng</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] ml-0.5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
