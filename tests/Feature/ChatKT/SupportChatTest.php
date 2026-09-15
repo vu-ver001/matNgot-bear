@@ -1754,25 +1754,27 @@ class SupportChatTest extends TestCase
         $staff = $this->createStaff();
         $chatService = app(ChatService::class);
 
+        $baseTime = now()->setTime(10, 30, 0);
+
         // Khách hàng gửi 3 tin nhắn liên tiếp trong vòng 1-2 phút
         $msg1 = $chatService->customerSendMessage($customer, 'Tin 1 của khách');
-        $msg1->update(['sent_at' => now()->subMinutes(3)]);
+        $msg1->update(['sent_at' => $baseTime->copy()->subMinutes(3)]);
 
         $msg2 = $chatService->customerSendMessage($customer, 'Tin 2 của khách');
-        $msg2->update(['sent_at' => now()->subMinutes(2)]);
+        $msg2->update(['sent_at' => $baseTime->copy()->subMinutes(2)]);
 
         $msg3 = $chatService->customerSendMessage($customer, 'Tin 3 của khách');
-        $msg3->update(['sent_at' => now()->subMinute()]);
+        $msg3->update(['sent_at' => $baseTime->copy()->subMinute()]);
 
         $case = $msg1->supportCase;
         $chatService->acceptCase($staff, $case);
 
         // Nhân viên trả lời 2 tin nhắn liên tiếp
         $staffMsg1 = $chatService->staffSendMessage($staff, $case, 'Shop chào bạn câu 1');
-        $staffMsg1->update(['sent_at' => now()->subSeconds(30)]);
+        $staffMsg1->update(['sent_at' => $baseTime->copy()->subSeconds(30)]);
 
         $staffMsg2 = $chatService->staffSendMessage($staff, $case, 'Shop chào bạn câu 2');
-        $staffMsg2->update(['sent_at' => now()]);
+        $staffMsg2->update(['sent_at' => $baseTime->copy()]);
 
         // 1. Kiểm tra view Customer
         $custResponse = $this->actingAs($customer)->get(route('customer.messages.index'));

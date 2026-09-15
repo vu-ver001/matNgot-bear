@@ -466,50 +466,37 @@
                                     @endif
                                     @if ($msg->content)
                                         <div class="staff-chat-bubble" title="{{ $msg->sent_at ? $msg->sent_at->format('H:i, d/m/Y') : '' }}">
-                                            @if (str_contains($msg->content, '📦 [ĐƠN HÀNG #'))
-                                                @php
-                                                    preg_match('/#([A-Z0-9\-]+)/', $msg->content, $orderCodeMatches);
-                                                    $parsedOrderCode = $orderCodeMatches[1] ?? null;
-                                                    $bubbleOrder = $parsedOrderCode ? \App\Models\Order::with(['details.product.images', 'details.variant'])->where('order_code', $parsedOrderCode)->first() : null;
-                                                @endphp
-                                                @if ($bubbleOrder)
-                                                    @php
-                                                        $bubbleDetail = $bubbleOrder->details->first();
-                                                        $bubbleImg = \App\Services\ReviewKT\ReviewService::resolveItemImageUrl($bubbleDetail);
-                                                        $bubbleVariantText = \App\Services\ReviewKT\ReviewService::resolveVariantText($bubbleDetail);
-                                                        $bubbleOthers = $bubbleOrder->details->count() - 1;
-                                                        $bubbleUrl = str_starts_with($routePrefix ?? '', 'admin.') ? route('admin.orders.show', $bubbleOrder) : route('staff.orders.show', $bubbleOrder);
-                                                    @endphp
-                                                    <div class="chat-order-card">
-                                                        <div class="chat-order-card__header">
-                                                            <span class="chat-order-card__tag">
-                                                                <i class="fa-solid fa-box"></i> #{{ $bubbleOrder->order_code }}
-                                                            </span>
-                                                            <span class="chat-order-card__status">{{ $bubbleOrder->order_status }}</span>
-                                                        </div>
-                                                        <div class="chat-order-card__body">
-                                                            <img src="{{ $bubbleImg }}" alt="{{ $bubbleOrder->order_code }}" class="chat-order-card__img" onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';">
-                                                            <div class="chat-order-card__info">
-                                                                <div class="chat-order-card__pname">{{ $bubbleDetail?->product_name ?? 'Đơn hàng' }}</div>
-                                                                @if ($bubbleVariantText)
-                                                                    <div class="chat-order-card__variant">Phân loại: {{ $bubbleVariantText }}</div>
-                                                                @endif
-                                                                @if ($bubbleOthers > 0)
-                                                                    <div class="chat-order-card__other">+{{ $bubbleOthers }} sản phẩm khác</div>
-                                                                @endif
-                                                                <div class="chat-order-card__total">Tổng tiền: <strong>{{ number_format($bubbleOrder->total_amount, 0, ',', '.') }} đ</strong></div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="chat-order-card__footer">
-                                                            <a href="{{ $bubbleUrl }}" class="chat-order-card__link">
-                                                                <span>Xem chi tiết đơn hàng</span>
-                                                                <i class="fa-solid fa-chevron-right"></i>
-                                                            </a>
+                                            @php
+                                                $orderCard = app(\App\Services\ChatKT\ChatService::class)->formatOrderCardData($msg->content, str_starts_with($routePrefix ?? '', 'admin.') ? 'admin' : 'staff');
+                                            @endphp
+                                            @if ($orderCard)
+                                                <div class="chat-order-card">
+                                                    <div class="chat-order-card__header">
+                                                        <span class="chat-order-card__tag">
+                                                            <i class="fa-solid fa-box"></i> #{{ $orderCard['order_code'] }}
+                                                        </span>
+                                                        <span class="chat-order-card__status">{{ $orderCard['order_status'] }}</span>
+                                                    </div>
+                                                    <div class="chat-order-card__body">
+                                                        <img src="{{ $orderCard['image_url'] }}" alt="{{ $orderCard['order_code'] }}" class="chat-order-card__img" onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';">
+                                                        <div class="chat-order-card__info">
+                                                            <div class="chat-order-card__pname">{{ $orderCard['product_name'] }}</div>
+                                                            @if ($orderCard['variant_text'])
+                                                                <div class="chat-order-card__variant">Phân loại: {{ $orderCard['variant_text'] }}</div>
+                                                            @endif
+                                                            @if ($orderCard['other_count'] > 0)
+                                                                <div class="chat-order-card__other">+{{ $orderCard['other_count'] }} sản phẩm khác</div>
+                                                            @endif
+                                                            <div class="chat-order-card__total">Tổng tiền: <strong>{{ $orderCard['total_amount'] }}</strong></div>
                                                         </div>
                                                     </div>
-                                                @else
-                                                    {!! nl2br(e($msg->content)) !!}
-                                                @endif
+                                                    <div class="chat-order-card__footer">
+                                                        <a href="{{ $orderCard['order_url'] }}" class="chat-order-card__link">
+                                                            <span>Xem chi tiết đơn hàng</span>
+                                                            <i class="fa-solid fa-chevron-right"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             @else
                                                 {!! nl2br(e($msg->content)) !!}
                                             @endif
@@ -604,7 +591,8 @@
                                     data-order-code="{{ $suggestedOrder->order_code }}"
                                     data-order-total="{{ number_format($suggestedOrder->total_amount, 0, ',', '.') }} đ"
                                     data-order-status="{{ $suggestedOrder->order_status }}"
-                                    data-product-name="{{ $suggDetail?->product_name ?? 'Sản phẩm' }}{{ $suggOtherCount > 0 ? ' (+' . $suggOtherCount . ' sản phẩm khác)' : '' }}"
+                                    data-product-name="{{ $suggDetail?->product_name ?? 'Đơn hàng' }}"
+                                    data-other-count="{{ $suggOtherCount }}"
                                     data-variant-text="{{ $suggVariantText ?? '' }}"
                                     data-product-image="{{ $suggImg }}"
                                     data-order-url="{{ route($suggOrderRoute, $suggestedOrder) }}"
