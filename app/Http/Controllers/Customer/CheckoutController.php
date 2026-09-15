@@ -521,15 +521,16 @@ class CheckoutController extends Controller
                 return redirect()->route('customer.payment.vnpay.redirect', $order->id);
             }
 
-            // If MoMo, redirect directly to official MoMo Gateway
-            if ($rawMethod === 'MOMO') {
-                return redirect()->route('customer.payment.momo.redirect', $order->id);
+            // If MoMo / E_WALLET, redirect directly to MoMo Personal QR payment page
+            if (in_array($rawMethod, ['MOMO', 'E_WALLET'])) {
+                return redirect()->route('customer.payment.qr', $order->id)
+                    ->with('info', 'Đơn hàng #' . $order->order_code . ' đã tạo thành công! Vui lòng quét mã QR Ví MoMo để hoàn tất thanh toán.');
             }
 
             // If Bank Transfer, redirect to interactive payment gateway page
-            if (in_array($rawMethod, ['BANK_TRANSFER', 'E_WALLET'])) {
+            if ($rawMethod === 'BANK_TRANSFER') {
                 return redirect()->route('customer.payment.qr', $order->id)
-                    ->with('info', 'Đơn hàng ' . $order->order_code . ' đã tạo! Vui lòng hoàn tất thanh toán.');
+                    ->with('info', 'Đơn hàng #' . $order->order_code . ' đã tạo! Vui lòng hoàn tất chuyển khoản VietQR.');
             }
 
             return redirect()->route('customer.checkout.success', $order->id)

@@ -88,7 +88,10 @@ class PaymentController extends Controller
         ];
 
         $codQuery = Payment::with(['order.customer', 'reconciledByUser', 'settledByUser'])
-            ->where('method', 'COD');
+            ->where('method', 'COD')
+            ->whereHas('order', function ($q) {
+                $q->where('order_status', '!=', 'CANCELLED');
+            });
 
         if ($request->filled('cod_status')) {
             match ($request->cod_status) {
@@ -304,11 +307,14 @@ class PaymentController extends Controller
             return redirect()->back()->with('error', 'Vui lòng chọn ít nhất một đơn COD để chốt nhận tiền.');
         }
 
-        // Chỉ chốt nhận tiền các đơn ĐÃ ĐƯỢC ĐỐI SOÁT VỚI BƯU TÁ
+        // Chỉ chốt nhận tiền các đơn ĐÃ ĐƯỢC ĐỐI SOÁT VỚI BƯU TÁ VÀ GIAO THÀNH CÔNG (COMPLETED)
         $validQuery = Payment::whereIn('id', $paymentIds)
             ->where('method', 'COD')
             ->whereNotNull('cod_reconciled_at')
-            ->whereNull('cod_settled_at');
+            ->whereNull('cod_settled_at')
+            ->whereHas('order', function ($q) {
+                $q->where('order_status', 'COMPLETED');
+            });
 
         $totalSettled = $validQuery->count();
 
@@ -405,7 +411,6 @@ class PaymentController extends Controller
         return response()->stream(function () use ($query) {
             $handle = fopen('php://output', 'w');
             fputs($handle, "\xEF\xBB\xBF");
-            fputs($handle, "sep=,\r\n");
 
             fputcsv($handle, [
                 'STT',

@@ -55,7 +55,7 @@
                     </div>
                     <div>
                         <div class="font-bold text-xs sm:text-sm text-[#2C1408]">Ví điện tử MoMo</div>
-                        <div class="text-[11px] text-[#786B61]">Thanh toán nhanh qua App MoMo</div>
+                        <div class="text-[11px] text-[#786B61]">Quét mã QR Ví MoMo cá nhân 24/7</div>
                     </div>
                 </div>
                 <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>

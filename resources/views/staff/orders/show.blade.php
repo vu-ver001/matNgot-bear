@@ -66,11 +66,24 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             <h3 class="text-base sm:text-lg font-bold text-rose-900">Khách hàng yêu cầu hủy đơn hàng này</h3>
                             <span class="px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-900 font-extrabold text-xs">CẦN XỬ LÝ</span>
+                            @if($order->cancelRequestHoursRemaining() <= 2)
+                                <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-xs animate-pulse">
+                                    <i class="fa-solid fa-hourglass-end mr-1"></i>SẮP HẾT HẠN ({{ $order->cancelRequestTimeRemainingText() }})
+                                </span>
+                            @else
+                                <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-xs">
+                                    <i class="fa-regular fa-clock mr-1"></i>Hạn xử lý: {{ $order->cancelRequestTimeRemainingText() }}
+                                </span>
+                            @endif
                         </div>
                         <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1">
-                            Thời gian gửi yêu cầu: <strong>{{ $order->cancel_requested_at?->format('d/m/Y H:i:s') }}</strong>
-                            ({{ $order->cancel_requested_at?->diffForHumans() }})
+                            Thời gian gửi: <strong>{{ $order->cancel_requested_at?->format('d/m/Y H:i:s') }}</strong>
+                            · Hạn chót xử lý (24h): <strong class="text-rose-700">{{ $order->cancelRequestExpiresAt()?->format('H:i - d/m/Y') }}</strong>
                         </p>
+                        <div class="mt-2 p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed flex items-start gap-2">
+                            <i class="fa-solid fa-shield-halved text-amber-600 mt-0.5 shrink-0"></i>
+                            <span><strong>Quy định xử lý:</strong> Nhân viên bắt buộc xử lý yêu cầu này trong vòng <strong>24 giờ</strong>. Nếu quá 24 giờ không duyệt, hệ thống sẽ <strong>tự động từ chối hủy</strong> và đơn hàng tiếp tục được giao cho khách.</span>
+                        </div>
                         <div class="mt-2 p-3 bg-white rounded-xl border border-rose-200 text-xs sm:text-sm">
                             <span class="font-bold text-[#2B1810]">Lý do khách hàng muốn hủy:</span>
                             <p class="text-rose-800 mt-1 font-medium italic">"{{ $order->cancel_request_reason }}"</p>

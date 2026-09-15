@@ -18,6 +18,9 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
+        // Tự động quét và từ chối các yêu cầu hủy đã quá 24h nhân viên chưa xử lý
+        $this->orderService->autoRejectExpiredCancelRequests();
+
         $query = Order::with(['customer', 'latestPayment', 'details.product.images', 'details.productVariant']);
 
         // Lọc theo tab Yêu cầu hủy hoặc Cần hoàn tiền
@@ -105,6 +108,9 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        $this->orderService->checkAndRejectIfCancelRequestExpired($order);
+        $order->refresh();
+
         $order->load([
             'customer',
             'details.product',

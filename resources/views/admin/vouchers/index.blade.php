@@ -6,95 +6,199 @@
 <div x-data="vouchersList()">
     <div class="space-y-6">
 
-        {{-- 1. Header Title Section --}}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div
-                    class="w-12 h-12 rounded-2xl bg-[#5C3219] flex items-center justify-center text-[#F6D89B] shadow-sm shrink-0">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                            </path>
+        {{-- 1. Header Title Section Banner --}}
+        <div class="relative overflow-hidden bg-[#FAF6F0] rounded-2xl sm:rounded-3xl border border-[#EBDDCD] shadow-2xs">
+            {{-- Decorative organic background shapes --}}
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-[#F2E5D5]/60 rounded-full blur-xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-[#F2E5D5]/60 rounded-full blur-xl pointer-events-none"></div>
+
+            <div class="relative z-10 p-5 sm:px-7 sm:py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                {{-- Left: Icon + Vertical Divider + Titles --}}
+                <div class="flex items-center gap-4 sm:gap-5">
+                    {{-- Brown Rounded Square Ticket Icon with Sparkles --}}
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-md shrink-0 border border-white/20"
+                         style="background: linear-gradient(135deg, #A77B5A 0%, #8C623A 100%); box-shadow: 0 4px 14px rgba(140, 98, 58, 0.25);">
+                        <svg class="w-7 h-7 text-white drop-shadow-2xs" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 3 Sparkles at top right -->
+                            <line x1="21" y1="6" x2="23.5" y2="3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="18.5" y1="4" x2="19.5" y2="1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="23.5" y1="9" x2="26" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            
+                            <!-- Ticket -->
+                            <g transform="translate(12, 16) rotate(-35) translate(-12, -16)">
+                                <rect x="4" y="9" width="16" height="14" rx="2.5" stroke="currentColor" stroke-width="2" fill="none"/>
+                                <path d="M4 14C5 14 5.8 14.9 5.8 16C5.8 17.1 5 18 4 18" stroke="currentColor" stroke-width="2"/>
+                                <path d="M20 14C19 14 18.2 14.9 18.2 16C18.2 17.1 19 18 20 18" stroke="currentColor" stroke-width="2"/>
+                            </g>
                         </svg>
                     </div>
+
+                    {{-- Vertical Divider --}}
+                    <div class="hidden sm:block h-10 w-[1.5px] bg-[#E2D4C7] rounded-full shrink-0"></div>
+
+                    {{-- Title & Subtitle --}}
                     <div>
-                        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#2C1408] tracking-tight uppercase">
+                        <h1 class="text-xl sm:text-2xl font-black tracking-tight uppercase font-sans" style="color: #4A2818;">
                             QUẢN LÝ VOUCHER
                         </h1>
-                        <p class="text-xs sm:text-sm font-medium text-[#786B61] mt-0.5">
+                        <p class="text-xs sm:text-sm font-medium mt-0.5" style="color: #8C7464;">
                             Quản lý, tạo mới và cấu hình các chương trình ưu đãi, khuyến mãi cho khách hàng
                         </p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2.5 shrink-0">
-                    <a href="{{ route('admin.vouchers.create') }}"
-                        class="inline-flex items-center justify-center gap-2 bg-[#E08A1E] hover:bg-[#C97810] text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-[#E08A1E]/20 text-xs sm:text-sm transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                {{-- Right: Sparkle Burst Decoration + CTA Button --}}
+                <div class="flex items-center gap-3 shrink-0 self-start md:self-center">
+                    {{-- 3 Radiating Rays Decoration --}}
+                    <div class="hidden sm:flex items-center" style="color: #B58E6D;">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="6" y1="7" x2="11" y2="9"/>
+                            <line x1="4" y1="12" x2="10" y2="12"/>
+                            <line x1="6" y1="17" x2="11" y2="15"/>
                         </svg>
+                    </div>
+
+                    {{-- Pill Button --}}
+                    <a href="{{ route('admin.vouchers.create') }}"
+                        class="inline-flex items-center justify-center gap-2.5 font-bold px-6 py-3 rounded-2xl shadow-md text-xs sm:text-sm transition duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                        style="background: linear-gradient(135deg, #A77B5A 0%, #8C623A 100%); color: #FFFFFF; box-shadow: 0 4px 14px rgba(140, 98, 58, 0.25);">
+                        <i class="fa-solid fa-plus text-xs"></i>
                         <span>Tạo Voucher Mới</span>
+                        <i class="fa-solid fa-arrow-right text-xs ml-0.5"></i>
                     </a>
                 </div>
             </div>
+        </div>
 
 
-            {{-- 2. 4 Quick Statistics Cards --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {{-- Card 1: Tổng Voucher --}}
-                <div class="voucher-stat-card">
-                    <div class="voucher-stat-icon bg-[#E08A1E] shadow-md shadow-[#E08A1E]/25">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                            </path>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="text-[11px] font-bold text-[#786B61] uppercase tracking-wider">TỔNG VOUCHER</div>
-                        <div class="text-2xl sm:text-3xl font-extrabold text-[#2C1408] mt-0.5" id="stat-total">{{ $stats['total'] }}</div>
-                    </div>
+            {{-- 2. 4 Quick Statistics Cards Container --}}
+            <div class="relative overflow-hidden bg-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#EDE2D5] p-3.5 sm:p-4.5 shadow-2xs">
+                {{-- Outer decorative accents matching design --}}
+                <div class="absolute top-2 left-3 text-[#D5C2AF] pointer-events-none">
+                    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="7" y1="7" x2="2" y2="2"/>
+                        <line x1="8" y1="12" x2="1" y2="12"/>
+                    </svg>
                 </div>
+                <div class="absolute -bottom-8 -right-8 w-36 h-36 bg-[#EFE3D3]/70 rounded-full pointer-events-none"></div>
+                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-[#EFE3D3]/50 rounded-full pointer-events-none"></div>
+                <div class="absolute -top-10 -right-6 w-32 h-32 bg-[#EFE3D3]/40 rounded-full pointer-events-none"></div>
 
-                {{-- Card 2: Đang Diễn Ra --}}
-                <div class="voucher-stat-card">
-                    <div class="voucher-stat-icon bg-[#10B981] shadow-md shadow-[#10B981]/25">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="text-[11px] font-bold text-[#786B61] uppercase tracking-wider">ĐANG DIỄN RA</div>
-                        <div class="text-2xl sm:text-3xl font-extrabold text-[#2C1408] mt-0.5" id="stat-running">{{ $stats['running'] }}</div>
-                    </div>
-                </div>
+                {{-- Grid of 4 Cards --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 relative z-10">
+                    {{-- Card 1: Tổng Voucher --}}
+                    <div class="relative overflow-hidden bg-white rounded-2xl sm:rounded-[22px] border border-[#EFE6DC] p-4.5 sm:p-5 shadow-2xs hover:shadow-xs transition duration-200 flex items-center gap-4 group">
+                        {{-- Decorative corner blob (crisp, unblurred pastel shape) --}}
+                        <div class="absolute -bottom-7 -right-7 w-22 h-22 bg-[#F4EDE4] rounded-full pointer-events-none"></div>
 
-                {{-- Card 3: Hết Hạn / Lượt --}}
-                <div class="voucher-stat-card">
-                    <div class="voucher-stat-icon bg-[#EF4444] shadow-md shadow-[#EF4444]/25">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="text-[11px] font-bold text-[#786B61] uppercase tracking-wider">HẾT HẠN / LƯỢT</div>
-                        <div class="text-2xl sm:text-3xl font-extrabold text-[#2C1408] mt-0.5" id="stat-expired">{{ $stats['expired'] }}</div>
-                    </div>
-                </div>
+                        {{-- Icon Container with Sparkles --}}
+                        <div class="relative shrink-0">
+                            {{-- 2 Sparkle Rays --}}
+                            <div class="absolute -top-2.5 -left-2 text-[#C6AB91] pointer-events-none">
+                                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="5.5" y1="5" x2="1.5" y2="1"/>
+                                    <line x1="5.5" y1="9" x2="0.5" y2="8.5"/>
+                                </svg>
+                            </div>
+                            <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#A37751] flex items-center justify-center text-white shadow-sm shadow-[#A37751]/25">
+                                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12.586 2.586A2 2 0 0 0 11.172 2H5a3 3 0 0 0-3 3v6.172a2 2 0 0 0 .586 1.414l8.828 8.828a2.5 2.5 0 0 0 3.536 0l5.88-5.88a2.5 2.5 0 0 0 0-3.536L12.586 2.586z"></path>
+                                    <circle cx="7.5" cy="7.5" r="1.5" fill="white"></circle>
+                                </svg>
+                            </div>
+                        </div>
 
-                {{-- Card 4: Vô Hiệu Hóa --}}
-                <div class="voucher-stat-card">
-                    <div class="voucher-stat-icon bg-[#64748B] shadow-md shadow-[#64748B]/25">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                        </svg>
+                        {{-- Content --}}
+                        <div class="relative z-10">
+                            <div class="text-[11px] font-black text-[#8A7A6E] uppercase tracking-wider font-sans">TỔNG VOUCHER</div>
+                            <div class="text-2xl sm:text-3xl font-black text-[#3C2415] mt-0.5 leading-none font-sans" id="stat-total">{{ $stats['total'] }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-[11px] font-bold text-[#786B61] uppercase tracking-wider">VÔ HIỆU HÓA</div>
-                        <div class="text-2xl sm:text-3xl font-extrabold text-[#2C1408] mt-0.5" id="stat-inactive">{{ $stats['inactive'] }}</div>
+
+                    {{-- Card 2: Đang Diễn Ra --}}
+                    <div class="relative overflow-hidden bg-white rounded-2xl sm:rounded-[22px] border border-[#EFE6DC] p-4.5 sm:p-5 shadow-2xs hover:shadow-xs transition duration-200 flex items-center gap-4 group">
+                        {{-- Decorative corner blob --}}
+                        <div class="absolute -bottom-7 -right-7 w-22 h-22 bg-[#EAF2E7] rounded-full pointer-events-none"></div>
+
+                        {{-- Icon Container with Sparkles --}}
+                        <div class="relative shrink-0">
+                            {{-- 2 Sparkle Rays --}}
+                            <div class="absolute -top-2.5 -left-2 text-[#95C389] pointer-events-none">
+                                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="5.5" y1="5" x2="1.5" y2="1"/>
+                                    <line x1="5.5" y1="9" x2="0.5" y2="8.5"/>
+                                </svg>
+                            </div>
+                            <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#85B774] flex items-center justify-center text-white shadow-sm shadow-[#85B774]/25">
+                                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                </svg>
+                            </div>
+                        </div>
+
+                        {{-- Content --}}
+                        <div class="relative z-10">
+                            <div class="text-[11px] font-black text-[#8A7A6E] uppercase tracking-wider font-sans">ĐANG DIỄN RA</div>
+                            <div class="text-2xl sm:text-3xl font-black text-[#3C2415] mt-0.5 leading-none font-sans" id="stat-running">{{ $stats['running'] }}</div>
+                        </div>
+                    </div>
+
+                    {{-- Card 3: Hết Hạn / Lượt --}}
+                    <div class="relative overflow-hidden bg-white rounded-2xl sm:rounded-[22px] border border-[#EFE6DC] p-4.5 sm:p-5 shadow-2xs hover:shadow-xs transition duration-200 flex items-center gap-4 group">
+                        {{-- Decorative corner blob --}}
+                        <div class="absolute -bottom-7 -right-7 w-22 h-22 bg-[#FCEEEA] rounded-full pointer-events-none"></div>
+
+                        {{-- Icon Container with Sparkles --}}
+                        <div class="relative shrink-0">
+                            {{-- 2 Sparkle Rays --}}
+                            <div class="absolute -top-2.5 -left-2 text-[#E7948F] pointer-events-none">
+                                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="5.5" y1="5" x2="1.5" y2="1"/>
+                                    <line x1="5.5" y1="9" x2="0.5" y2="8.5"/>
+                                </svg>
+                            </div>
+                            <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#DF7169] flex items-center justify-center text-white shadow-sm shadow-[#DF7169]/25">
+                                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="8.5"></circle>
+                                    <polyline points="12 7.5 12 12 8 12"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
+                        {{-- Content --}}
+                        <div class="relative z-10">
+                            <div class="text-[11px] font-black text-[#8A7A6E] uppercase tracking-wider font-sans">HẾT HẠN / LƯỢT</div>
+                            <div class="text-2xl sm:text-3xl font-black text-[#3C2415] mt-0.5 leading-none font-sans" id="stat-expired">{{ $stats['expired'] }}</div>
+                        </div>
+                    </div>
+
+                    {{-- Card 4: Vô Hiệu Hóa --}}
+                    <div class="relative overflow-hidden bg-white rounded-2xl sm:rounded-[22px] border border-[#EFE6DC] p-4.5 sm:p-5 shadow-2xs hover:shadow-xs transition duration-200 flex items-center gap-4 group">
+                        {{-- Decorative corner blob --}}
+                        <div class="absolute -bottom-7 -right-7 w-22 h-22 bg-[#EDF1F5] rounded-full pointer-events-none"></div>
+
+                        {{-- Icon Container with Sparkles --}}
+                        <div class="relative shrink-0">
+                            {{-- 2 Sparkle Rays --}}
+                            <div class="absolute -top-2.5 -left-2 text-[#9AAAB9] pointer-events-none">
+                                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="5.5" y1="5" x2="1.5" y2="1"/>
+                                    <line x1="5.5" y1="9" x2="0.5" y2="8.5"/>
+                                </svg>
+                            </div>
+                            <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#7B8A99] flex items-center justify-center text-white shadow-sm shadow-[#7B8A99]/25">
+                                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="8.5"></circle>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </div>
+                        </div>
+
+                        {{-- Content --}}
+                        <div class="relative z-10">
+                            <div class="text-[11px] font-black text-[#8A7A6E] uppercase tracking-wider font-sans">VÔ HIỆU HÓA</div>
+                            <div class="text-2xl sm:text-3xl font-black text-[#3C2415] mt-0.5 leading-none font-sans" id="stat-inactive">{{ $stats['inactive'] }}</div>
+                        </div>
                     </div>
                 </div>
             </div>

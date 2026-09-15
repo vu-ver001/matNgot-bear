@@ -1,5 +1,5 @@
 <x-customer-account-layout title="Đơn hàng của tôi" :flush="true">
-    <div class="p-4 sm:p-8">
+    <div>
         <div class="min-w-0">
             <div class="orders-ui">
 
@@ -165,7 +165,7 @@
                                     <div class="flex items-center gap-2">
                                         <span>Ngày đặt: <strong class="text-[#4E342E] font-medium">{{ $order->created_at->format('d/m/Y H:i') }}</strong></span>
                                         @if($hasUnpaidOnline && $order->paymentExpiresAt())
-                                            <span class="text-amber-700 font-medium hidden sm:inline">· Hạn thanh toán: <strong>{{ $order->paymentExpiresAt()->format('H:i - d/m') }}</strong></span>
+                                            <span class="text-amber-700 font-medium hidden sm:inline">· Thanh toán trước: <strong>{{ $order->paymentExpiresAt()->format('H:i - d/m') }}</strong> để đơn hàng của bạn được xử lý</span>
                                         @endif
                                     </div>
 

@@ -221,8 +221,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-black text-[#2C1408]">Cổng Thanh Toán MoMo Gateway (M4B & Ví MoMo)</h3>
-                        <p class="text-[11px] text-[#786B61]">Tích hợp cổng thanh toán trực tuyến MoMo All-in-One: quét mã QR, App MoMo và Thẻ ATM.</p>
+                        <h3 class="text-sm font-black text-[#2C1408]">Tài Khoản Ví MoMo Nhận Tiền (Ví Cá Nhân)</h3>
+                        <p class="text-[11px] text-[#786B61]">Khách hàng quét mã QR MoMo chuyển tiền trực tiếp đến số điện thoại ví cá nhân của chủ shop.</p>
                     </div>
                 </div>
                 <label class="inline-flex items-center gap-2 cursor-pointer">
@@ -231,99 +231,115 @@
                 </label>
             </div>
 
-            <div class="p-6 space-y-4">
-                {{-- MoMo Webhook IPN & Return URL boxes to copy --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {{-- IPN Webhook --}}
-                    <div class="p-3.5 rounded-2xl bg-[#FFF5F8] border border-[#FAD2E1]">
-                        <div class="flex items-center justify-between gap-2 mb-1.5">
-                            <span class="text-xs font-bold text-[#A50064] flex items-center gap-1.5">
-                                <i class="fa-solid fa-bell text-[11px]"></i>
-                                <span>MoMo IPN Webhook URL:</span>
-                            </span>
-                            <button type="button" @click="copyMomoIpn()" 
-                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#FAD2E1] hover:border-[#A50064] text-[#A50064] font-bold text-[10px] transition shadow-2xs">
-                                <i class="fa-regular fa-copy"></i>
-                                <span x-text="copiedMomoIpn ? '✓ Đã chép!' : 'Sao chép'"></span>
-                            </button>
-                        </div>
-                        <div class="font-mono text-[11px] text-[#A50064] font-bold break-all select-all bg-white p-2 rounded-xl border border-[#FAD2E1]">
-                            {{ $settings['momo_ipn_url'] }}
-                        </div>
-                    </div>
-
-                    {{-- Return URL --}}
-                    <div class="p-3.5 rounded-2xl bg-[#FFF5F8] border border-[#FAD2E1]">
-                        <div class="flex items-center justify-between gap-2 mb-1.5">
-                            <span class="text-xs font-bold text-[#A50064] flex items-center gap-1.5">
-                                <i class="fa-solid fa-arrow-turn-down text-[11px]"></i>
-                                <span>MoMo Redirect Return URL:</span>
-                            </span>
-                            <button type="button" @click="copyMomoReturn()" 
-                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#FAD2E1] hover:border-[#A50064] text-[#A50064] font-bold text-[10px] transition shadow-2xs">
-                                <i class="fa-regular fa-copy"></i>
-                                <span x-text="copiedMomoReturn ? '✓ Đã chép!' : 'Sao chép'"></span>
-                            </button>
-                        </div>
-                        <div class="font-mono text-[11px] text-[#A50064] font-bold break-all select-all bg-white p-2 rounded-xl border border-[#FAD2E1]">
-                            {{ $settings['momo_return_url'] }}
-                        </div>
+            <div class="p-6 space-y-4" x-data="{ showAdvanced: false }">
+                {{-- Notice about Sandbox & Personal MoMo Mode --}}
+                <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                    <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0"></i>
+                    <div class="leading-relaxed">
+                        <strong>Chế độ Ví MoMo cá nhân:</strong> Ứng dụng MoMo Sandbox đã chính thức ngừng hoạt động. Hệ thống chuyển sang sử dụng <strong>Ví MoMo cá nhân (P2P QR)</strong>. Khi khách thanh toán, hệ thống sẽ sinh mã QR chuẩn Ví MoMo chứa sẵn số tiền và mã đơn hàng để quét bằng app MoMo thật trên điện thoại.
                     </div>
                 </div>
 
-                {{-- Key credentials --}}
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {{-- Partner Code --}}
-                    <div>
-                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Partner Code</label>
-                        <input type="text" name="momo_partner_code" value="{{ old('momo_partner_code', $settings['momo_partner_code']) }}"
-                               placeholder="MOMO"
-                               class="w-full py-2.5 px-3 text-xs font-mono font-bold rounded-xl border border-[#EBDDCD] focus:border-[#A50064] focus:ring-1 focus:ring-[#A50064]">
-                        <p class="text-[10px] text-gray-400 mt-1">Mã định danh đối tác (Mặc định test: MOMO)</p>
-                    </div>
-
-                    {{-- Access Key --}}
-                    <div>
-                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Access Key</label>
-                        <input type="text" name="momo_access_key" value="{{ old('momo_access_key', $settings['momo_access_key']) }}"
-                               placeholder="F8BBA842ECF85"
-                               class="w-full py-2.5 px-3 text-xs font-mono rounded-xl border border-[#EBDDCD] focus:border-[#A50064] focus:ring-1 focus:ring-[#A50064]">
-                        <p class="text-[10px] text-gray-400 mt-1">Khóa truy cập API được MoMo cung cấp</p>
-                    </div>
-
-                    {{-- Secret Key --}}
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-xs font-bold text-[#5C3219]">Secret Key</label>
-                            <button type="button" @click="showMomoSecret = !showMomoSecret" class="text-[10px] text-[#A50064] font-bold hover:underline">
-                                <span x-text="showMomoSecret ? 'Ẩn' : 'Hiện'"></span>
-                            </button>
-                        </div>
-                        <input :type="showMomoSecret ? 'text' : 'password'" name="momo_secret_key" value="{{ old('momo_secret_key', $settings['momo_secret_key']) }}"
-                               placeholder="K951B6PE1waDMi640xX08PD3vg6EkVlz"
-                               class="w-full py-2.5 px-3 text-xs font-mono rounded-xl border border-[#EBDDCD] focus:border-[#A50064] focus:ring-1 focus:ring-[#A50064]">
-                        <p class="text-[10px] text-gray-400 mt-1">Khóa bí mật tạo chữ ký SHA256</p>
-                    </div>
-                </div>
-
-                {{-- Receiver Info --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                {{-- Primary Receiver Info (Phone & Name) --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {{-- SĐT Ví --}}
                     <div>
-                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Số điện thoại Ví MoMo nhận tiền</label>
+                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Số điện thoại Ví MoMo nhận tiền <span class="text-rose-500">*</span></label>
                         <input type="text" name="momo_phone" value="{{ old('momo_phone', $settings['momo_phone']) }}"
                                placeholder="0377466205"
                                class="w-full py-2.5 px-3 text-xs font-mono font-bold rounded-xl border border-[#EBDDCD] focus:border-[#A50064] focus:ring-1 focus:ring-[#A50064]">
-                        <p class="text-[10px] text-gray-400 mt-1">Dùng tạo mã QR P2P trực tiếp trên trang thanh toán</p>
+                        <p class="text-[10px] text-gray-400 mt-1">Dùng để tạo mã QR MoMo chuyển tiền và link MoMo Me.</p>
                     </div>
 
                     {{-- Tên chủ ví --}}
                     <div>
-                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Tên chủ Ví MoMo (In hoa)</label>
+                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Tên chủ Ví MoMo (In hoa không dấu) <span class="text-rose-500">*</span></label>
                         <input type="text" name="momo_name" value="{{ old('momo_name', $settings['momo_name']) }}"
                                placeholder="NGUYỄN NGỌC ANH"
                                class="w-full py-2.5 px-3 text-xs font-bold uppercase rounded-xl border border-[#EBDDCD] focus:border-[#A50064] focus:ring-1 focus:ring-[#A50064]">
-                        <p class="text-[10px] text-gray-400 mt-1">Tên hiển thị cho người chuyển tiền</p>
+                        <p class="text-[10px] text-gray-400 mt-1">Tên hiển thị cho khách hàng khi chuyển tiền vào Ví.</p>
+                    </div>
+                </div>
+
+                {{-- Advanced Gateway Configurations (Collapsible) --}}
+                <div class="pt-2 border-t border-[#F0E6D8]">
+                    <button type="button" @click="showAdvanced = !showAdvanced"
+                            class="text-xs font-bold text-[#A50064] hover:underline flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid" :class="showAdvanced ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        <span x-text="showAdvanced ? 'Ẩn cấu hình cổng MoMo Doanh nghiệp M4B (Nâng cao)' : 'Xem cấu hình cổng MoMo Doanh nghiệp M4B (Nâng cao)'"></span>
+                    </button>
+
+                    <div x-show="showAdvanced" x-cloak class="mt-4 space-y-4 bg-[#FAF8F5] p-4 rounded-2xl border border-[#EBDDCD]">
+                        {{-- MoMo Webhook IPN & Return URL boxes to copy --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {{-- IPN Webhook --}}
+                            <div class="p-3 rounded-xl bg-white border border-[#FAD2E1]">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="text-[11px] font-bold text-[#A50064] flex items-center gap-1">
+                                        <i class="fa-solid fa-bell text-[10px]"></i>
+                                        <span>MoMo IPN Webhook URL:</span>
+                                    </span>
+                                    <button type="button" @click="copyMomoIpn()" 
+                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white border border-[#FAD2E1] hover:border-[#A50064] text-[#A50064] font-bold text-[10px] transition">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span x-text="copiedMomoIpn ? '✓ Đã chép!' : 'Sao chép'"></span>
+                                    </button>
+                                </div>
+                                <div class="font-mono text-[10.5px] text-[#A50064] font-bold break-all select-all p-1.5 rounded-lg bg-pink-50/50">
+                                    {{ $settings['momo_ipn_url'] }}
+                                </div>
+                            </div>
+
+                            {{-- Return URL --}}
+                            <div class="p-3 rounded-xl bg-white border border-[#FAD2E1]">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="text-[11px] font-bold text-[#A50064] flex items-center gap-1">
+                                        <i class="fa-solid fa-arrow-turn-down text-[10px]"></i>
+                                        <span>MoMo Redirect Return URL:</span>
+                                    </span>
+                                    <button type="button" @click="copyMomoReturn()" 
+                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white border border-[#FAD2E1] hover:border-[#A50064] text-[#A50064] font-bold text-[10px] transition">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span x-text="copiedMomoReturn ? '✓ Đã chép!' : 'Sao chép'"></span>
+                                    </button>
+                                </div>
+                                <div class="font-mono text-[10.5px] text-[#A50064] font-bold break-all select-all p-1.5 rounded-lg bg-pink-50/50">
+                                    {{ $settings['momo_return_url'] }}
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Key credentials --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {{-- Partner Code --}}
+                            <div>
+                                <label class="block text-[11px] font-bold text-[#5C3219] mb-1">Partner Code</label>
+                                <input type="text" name="momo_partner_code" value="{{ old('momo_partner_code', $settings['momo_partner_code']) }}"
+                                       placeholder="MOMO"
+                                       class="w-full py-2 px-2.5 text-xs font-mono rounded-xl border border-[#EBDDCD] focus:border-[#A50064] bg-white">
+                            </div>
+
+                            {{-- Access Key --}}
+                            <div>
+                                <label class="block text-[11px] font-bold text-[#5C3219] mb-1">Access Key</label>
+                                <input type="text" name="momo_access_key" value="{{ old('momo_access_key', $settings['momo_access_key']) }}"
+                                       placeholder="F8BBA842ECF85"
+                                       class="w-full py-2 px-2.5 text-xs font-mono rounded-xl border border-[#EBDDCD] focus:border-[#A50064] bg-white">
+                            </div>
+
+                            {{-- Secret Key --}}
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[11px] font-bold text-[#5C3219]">Secret Key</label>
+                                    <button type="button" @click="showMomoSecret = !showMomoSecret" class="text-[10px] text-[#A50064] font-bold hover:underline">
+                                        <span x-text="showMomoSecret ? 'Ẩn' : 'Hiện'"></span>
+                                    </button>
+                                </div>
+                                <input :type="showMomoSecret ? 'text' : 'password'" name="momo_secret_key" value="{{ old('momo_secret_key', $settings['momo_secret_key']) }}"
+                                       placeholder="K951B6PE1waDMi640xX08PD3vg6EkVlz"
+                                       class="w-full py-2 px-2.5 text-xs font-mono rounded-xl border border-[#EBDDCD] focus:border-[#A50064] bg-white">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

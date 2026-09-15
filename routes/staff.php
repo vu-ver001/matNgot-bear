@@ -32,7 +32,9 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->grou
     Route::post('/payments/{payment}/manual-confirm', [PaymentController::class, 'manualConfirm'])->name('payments.manualConfirm');
     Route::post('/payments/{payment}/refund-request', [PaymentController::class, 'requestRefund'])->name('payments.requestRefund');
     Route::post('/payments/{payment}/reconcile-cod', [PaymentController::class, 'reconcileCod'])->name('payments.reconcileCod');
+    Route::post('/payments/{payment}/unreconcile-cod', [PaymentController::class, 'unreconcileCod'])->name('payments.unreconcileCod');
     Route::post('/payments/bulk-reconcile-cod', [PaymentController::class, 'bulkReconcileCod'])->name('payments.bulkReconcileCod');
+    Route::post('/payments/bulk-unreconcile-cod', [PaymentController::class, 'bulkUnreconcileCod'])->name('payments.bulkUnreconcileCod');
     Route::get('/payments/cod-export', [PaymentController::class, 'codExport'])->name('payments.codExport');
 
     // Chức năng 5: Cấu hình cổng & API thanh toán -> Khóa hoàn toàn cho nhân viên

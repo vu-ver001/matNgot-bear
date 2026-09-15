@@ -21,7 +21,7 @@
         </div>
 
         <div class="flex items-center gap-2.5 w-full md:w-auto shrink-0 justify-end">
-            <a href="{{ $order->payment_method === 'CARD' ? route('customer.payment.vnpay.redirect', $order) : ($order->payment_method === 'E_WALLET' ? route('customer.payment.momo.redirect', $order) : route('customer.payment.qr', $order)) }}"
+            <a href="{{ $order->payment_method === 'CARD' ? route('customer.payment.vnpay.redirect', $order) : route('customer.payment.qr', $order) }}"
                class="flex-1 md:flex-initial whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/25 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center uppercase tracking-wide flex items-center justify-center gap-2">
                 <i class="fa-solid fa-credit-card text-xs"></i>
                 <span class="whitespace-nowrap">THANH TOÁN NGAY</span>

@@ -195,6 +195,68 @@ class Order extends Model
         return $this->cancel_request_status === 'REJECTED';
     }
 
+    /**
+     * Thời hạn 24 giờ để nhân viên xử lý yêu cầu hủy (tính từ lúc khách gửi).
+     */
+    public function cancelRequestExpiresAt(): ?\Carbon\Carbon
+    {
+        if (! $this->cancel_requested_at) {
+            return null;
+        }
+
+        return $this->cancel_requested_at->copy()->addHours(24);
+    }
+
+    /**
+     * Kiểm tra yêu cầu hủy đã quá hạn 24 giờ hay chưa.
+     */
+    public function isCancelRequestExpired(): bool
+    {
+        if (! $this->hasPendingCancelRequest() || ! $this->cancel_requested_at) {
+            return false;
+        }
+
+        return now()->greaterThanOrEqualTo($this->cancelRequestExpiresAt());
+    }
+
+    /**
+     * Số giờ còn lại để nhân viên xử lý yêu cầu hủy.
+     */
+    public function cancelRequestHoursRemaining(): float
+    {
+        $expiresAt = $this->cancelRequestExpiresAt();
+        if (! $expiresAt) {
+            return 0;
+        }
+
+        return max(0, round(now()->diffInMinutes($expiresAt, false) / 60, 1));
+    }
+
+    /**
+     * Chuỗi văn bản hiển thị thời gian còn lại (ví dụ: "còn 18 giờ 25 phút").
+     */
+    public function cancelRequestTimeRemainingText(): string
+    {
+        $expiresAt = $this->cancelRequestExpiresAt();
+        if (! $expiresAt) {
+            return '';
+        }
+
+        if ($this->isCancelRequestExpired()) {
+            return 'Đã quá 24h (Hết hạn xử lý)';
+        }
+
+        $diffMinutes = (int) now()->diffInMinutes($expiresAt, false);
+        $hours = floor($diffMinutes / 60);
+        $minutes = $diffMinutes % 60;
+
+        if ($hours > 0) {
+            return "Còn {$hours}h {$minutes}m";
+        }
+
+        return "Còn {$minutes} phút";
+    }
+
     public function canCancelDirectly(): bool
     {
         return $this->order_status === 'PENDING';
