@@ -535,9 +535,15 @@
                             </div>
                             <div class="product-card-footer">
                                 <div class="product-card-meta">
-                                    <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating ?: 5.0, 1) }} sao">
-                                        <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating ?: 5.0, 1) }}
-                                    </span>
+                                    @if(($product->reviews_count ?? 0) > 0)
+                                        <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating, 1) }} sao">
+                                            <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating, 1) }}
+                                        </span>
+                                    @else
+                                        <span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                                            <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                                        </span>
+                                    @endif
                                     <span class="sold-count-text">Đã bán {{ $product->sold_count ?? 0 }}</span>
                                 </div>
                             </div>
@@ -557,7 +563,7 @@
                 <p class="gift-promo-desc">
                     Mật Ngọt Bear hỗ trợ gói hộp quà nơ sang trọng, xịt nước hoa thơm dịu và đính kèm thiệp viết tay theo lời nhắn của bạn. Giao hàng chuẩn giờ cho ngày kỷ niệm và sinh nhật!
                 </p>
-                <a href="{{ route('products.index') }}" class="gift-promo-btn">
+                <a href="{{ route('products.index') }}#catalog-layout" class="gift-promo-btn">
                     <i class="fa-solid fa-gift"></i> Chọn Quà Tặng Ngay
                 </a>
             </div>
@@ -622,9 +628,15 @@
                             </div>
                             <div class="product-card-footer">
                                 <div class="product-card-meta">
-                                    <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating ?: 5.0, 1) }} sao">
-                                        <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating ?: 5.0, 1) }}
-                                    </span>
+                                    @if(($product->reviews_count ?? 0) > 0)
+                                        <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating, 1) }} sao">
+                                            <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating, 1) }}
+                                        </span>
+                                    @else
+                                        <span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                                            <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                                        </span>
+                                    @endif
                                     <span class="sold-count-text">Đã bán {{ $product->sold_count ?? 0 }}</span>
                                 </div>
                             </div>

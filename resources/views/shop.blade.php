@@ -571,9 +571,14 @@
                                 </div>
                                 <div class="product-card-footer">
                                     <div class="product-card-meta">
-                                        <span class="rating-badge-pill" title="Đánh giá ${(parseFloat(p.avg_rating) || 5.0).toFixed(1)} sao">
-                                            <i class="fa-solid fa-star"></i> ${(parseFloat(p.avg_rating) || 5.0).toFixed(1)}
-                                        </span>
+                                        ${(p.reviews_count > 0 || p.review_count > 0)
+                                            ? `<span class="rating-badge-pill" title="Đánh giá ${parseFloat(p.avg_rating).toFixed(1)} sao">
+                                                <i class="fa-solid fa-star"></i> ${parseFloat(p.avg_rating).toFixed(1)}
+                                               </span>`
+                                            : `<span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                                                <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                                               </span>`
+                                        }
                                         <span class="sold-count-text">Đã bán ${p.sold_count || 0}</span>
                                     </div>
                                     ${(() => {

@@ -214,27 +214,34 @@
             <h1 class="detail-product-title">{{ $product->name }}</h1>
 
             @php
-                $avgRating = $product->reviews_count > 0 ? round($product->avg_rating, 1) : 5.0;
-                $fullStars = floor($avgRating);
-                $hasHalf = ($avgRating - $fullStars) >= 0.5;
+                $hasReviews = ($product->reviews_count ?? 0) > 0;
+                $avgRating = $hasReviews ? round($product->avg_rating, 1) : 0;
+                $fullStars = $hasReviews ? floor($avgRating) : 0;
+                $hasHalf = $hasReviews && ($avgRating - $fullStars) >= 0.5;
             @endphp
 
             <!-- Rating & Sold -->
             <div class="detail-rating-row">
-                <a href="#reviews-section" class="stars-group" style="text-decoration: none;" title="Xem các đánh giá">
-                    @for($i = 1; $i <= 5; $i++)
-                        @if($i <= $fullStars)
-                            <i class="fa-solid fa-star"></i>
-                        @elseif($i == $fullStars + 1 && $hasHalf)
-                            <i class="fa-solid fa-star-half-stroke"></i>
-                        @else
-                            <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
-                        @endif
-                    @endfor
-                    <strong style="color: var(--text-main); margin-left: 4px;">{{ number_format($avgRating, 1) }}</strong>
-                </a>
-                <span>&bull;</span>
-                <a href="#reviews-section" style="color: var(--text-muted); font-weight: 700; text-decoration: underline;" title="Xem chi tiết đánh giá">{{ $product->reviews_count ?? 0 }} đánh giá</a>
+                @if($hasReviews)
+                    <a href="#reviews-section" class="stars-group" style="text-decoration: none;" title="Xem các đánh giá">
+                        @for($i = 1; $i <= 5; $i++)
+                            @if($i <= $fullStars)
+                                <i class="fa-solid fa-star"></i>
+                            @elseif($i == $fullStars + 1 && $hasHalf)
+                                <i class="fa-solid fa-star-half-stroke"></i>
+                            @else
+                                <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
+                            @endif
+                        @endfor
+                        <strong style="color: var(--text-main); margin-left: 4px;">{{ number_format($avgRating, 1) }}</strong>
+                    </a>
+                    <span>&bull;</span>
+                    <a href="#reviews-section" style="color: var(--text-muted); font-weight: 700; text-decoration: underline;" title="Xem chi tiết đánh giá">{{ $product->reviews_count ?? 0 }} đánh giá</a>
+                @else
+                    <span style="display: inline-flex; align-items: center; gap: 6px; color: #8D6E63; font-size: 13.5px; font-weight: 600;">
+                        <i class="fa-regular fa-star" style="color: #BDBDBD; font-size: 15px;"></i> Chưa có đánh giá
+                    </span>
+                @endif
                 <span>&bull;</span>
                 <span><i class="fa-solid fa-fire" style="color: #FF5722;"></i> Đã bán {{ $product->sold_count ?? 0 }} em gấu</span>
             </div>
@@ -455,19 +462,29 @@
             <div class="review-overview-card">
                 <!-- Left: Big Score -->
                 <div class="review-score-box">
-                    <div class="review-big-score">{{ number_format($avgRating, 1) }}</div>
-                    <div class="review-stars-large">
-                        @for($i = 1; $i <= 5; $i++)
-                            @if($i <= $fullStars)
-                                <i class="fa-solid fa-star"></i>
-                            @elseif($i == $fullStars + 1 && $hasHalf)
-                                <i class="fa-solid fa-star-half-stroke"></i>
-                            @else
+                    @if($hasReviews)
+                        <div class="review-big-score">{{ number_format($avgRating, 1) }}</div>
+                        <div class="review-stars-large">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= $fullStars)
+                                    <i class="fa-solid fa-star"></i>
+                                @elseif($i == $fullStars + 1 && $hasHalf)
+                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                @else
+                                    <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
+                                @endif
+                            @endfor
+                        </div>
+                        <div class="review-total-text">{{ $product->reviews_count }} lượt đánh giá</div>
+                    @else
+                        <div class="review-big-score" style="font-size: 1.5rem; color: #BDBDBD;">--</div>
+                        <div class="review-stars-large">
+                            @for($i = 1; $i <= 5; $i++)
                                 <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
-                            @endif
-                        @endfor
-                    </div>
-                    <div class="review-total-text">{{ $product->reviews_count }} lượt đánh giá</div>
+                            @endfor
+                        </div>
+                        <div class="review-total-text" style="color: #8D6E63;">Chưa có đánh giá nào</div>
+                    @endif
                 </div>
 
                 <!-- Center: Progress Bars Breakdown -->
