@@ -579,24 +579,72 @@ html {
         justify-content: center;
         width: 40px;
         height: 40px;
+        min-width: 40px;
         border-radius: 50%;
         padding: 0;
-        background: #FAF3EC;
-        border: 2px solid #EADFCF;
-        box-shadow: 0 2px 8px rgba(74, 46, 43, 0.1);
+        background: #D48B38;
+        color: #FFFFFF !important;
+        font-size: 16px;
+        font-weight: 800;
+        box-shadow: 0 2px 8px rgba(212, 139, 56, 0.25);
         transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         cursor: pointer;
         text-decoration: none;
         overflow: hidden;
+        border: none;
+        user-select: none;
+        line-height: 1;
     }
 
     .header-user-avatar-btn:hover {
         transform: scale(1.08);
-        border-color: #C86A3B;
-        box-shadow: 0 4px 14px rgba(200, 106, 59, 0.25);
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 14px rgba(212, 139, 56, 0.35);
     }
 
     .header-avatar-circle {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .header-avatar-initial {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: #FFFFFF;
+        font-weight: 800;
+        font-size: 16px;
+        line-height: 1;
+        text-transform: uppercase;
+        font-family: inherit;
+    }
+
+    .header-user-popup-avatar {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 50%;
+        background: #D48B38;
+        color: #FFFFFF;
+        font-size: 18px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(212, 139, 56, 0.25);
+        flex-shrink: 0;
+        user-select: none;
+        text-transform: uppercase;
+        overflow: hidden;
+        font-family: inherit;
+    }
+
+    .header-user-popup-avatar img {
         width: 100%;
         height: 100%;
         border-radius: 50%;
@@ -988,8 +1036,8 @@ html {
 
     .card-badge-hot {
         position: absolute;
-        top: 12px;
-        right: 12px;
+        top: 10px;
+        right: 52px;
         background: linear-gradient(135deg, #F6D89B 0%, #E59819 100%);
         color: #4E342E;
         font-size: 11px;
@@ -998,6 +1046,29 @@ html {
         border-radius: 999px;
         box-shadow: 0 2px 8px rgba(229, 152, 25, 0.3);
         z-index: 2;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .card-badge-flashsale {
+        position: absolute;
+        top: 10px;
+        right: 52px;
+        background: linear-gradient(135deg, #FF1744 0%, #D50000 100%);
+        color: #FFFFFF;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 8px;
+        border-radius: 999px;
+        box-shadow: 0 2px 8px rgba(213, 0, 0, 0.35);
+        z-index: 2;
+        letter-spacing: 0.3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        pointer-events: none;
+        user-select: none;
+        cursor: default;
     }
 
     .product-card-body {

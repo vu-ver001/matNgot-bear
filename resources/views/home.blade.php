@@ -32,7 +32,7 @@
                 <div class="hero-slides-wrapper" id="heroSlidesWrapper">
                     <!-- SLIDE 1: THẾ GIỚI GẤU BÔNG CLASSIC -->
                     <div class="hero-slide active" data-slide="0">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/home-hero-banner.png') }}?v={{ file_exists(public_path('images/home-hero-banner.png')) ? filemtime(public_path('images/home-hero-banner.png')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/home-hero-banner.png') }}?v={{ file_exists(public_path('images/dashboard/home-hero-banner.png')) ? filemtime(public_path('images/dashboard/home-hero-banner.png')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-fan"></i> BỘ SƯU TẬP MỚI 2026 <i class="fa-solid fa-fan"></i>
@@ -74,9 +74,6 @@
                                 <a href="{{ route('products.index') }}" class="btn-hero-primary">
                                     <i class="fa-solid fa-bag-shopping"></i> KHÁM PHÁ CỬA HÀNG
                                 </a>
-                                <a href="{{ route('products.index', ['sort' => 'best_seller']) }}" class="btn-hero-secondary">
-                                    <i class="fa-solid fa-circle-play"></i> BÁN CHẠY NHẤT
-                                </a>
                             </div>
                             <div class="hero-bottom-doodle">
                                 <span class="doodle-bear">🧸</span>
@@ -87,7 +84,7 @@
 
                     <!-- SLIDE 2: BUTTER BEAR ĐỘC QUYỀN -->
                     <div class="hero-slide" data-slide="1">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/hero-banner-2.jpg') }}?v={{ file_exists(public_path('images/hero-banner-2.jpg')) ? filemtime(public_path('images/hero-banner-2.jpg')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/hero-banner-2.jpg') }}?v={{ file_exists(public_path('images/dashboard/hero-banner-2.jpg')) ? filemtime(public_path('images/dashboard/hero-banner-2.jpg')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-sparkles"></i> BUTTER BEAR ĐỘC QUYỀN <i class="fa-solid fa-sparkles"></i>
@@ -125,8 +122,15 @@
                                     <div class="feature-sub">vạn người mê</div>
                                 </div>
                             </div>
+                            @php
+                                $butterBearCategory = $categories->first(function($c) {
+                                    $n = mb_strtoupper($c->name, 'UTF-8');
+                                    return str_contains($n, 'BUTTER') || str_contains($n, 'BƠ');
+                                });
+                                $butterBearCatId = $butterBearCategory ? $butterBearCategory->id : 9;
+                            @endphp
                             <div class="hero-btn-actions">
-                                <a href="{{ route('products.index', ['search' => 'Butter Bear']) }}" class="btn-hero-primary">
+                                <a href="{{ route('products.index', ['category_id' => $butterBearCatId]) }}#catalog-layout" class="btn-hero-primary">
                                     <i class="fa-solid fa-bag-shopping"></i> BỘ SƯU TẬP BƠ
                                 </a>
                                 <a href="{{ route('products.index', ['sort' => 'latest']) }}" class="btn-hero-secondary">
@@ -142,7 +146,7 @@
 
                     <!-- SLIDE 3: TEDDY MR. BEAN VINTAGE -->
                     <div class="hero-slide" data-slide="2">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/hero-banner-3.jpg') }}?v={{ file_exists(public_path('images/hero-banner-3.jpg')) ? filemtime(public_path('images/hero-banner-3.jpg')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/hero-banner-3.jpg') }}?v={{ file_exists(public_path('images/dashboard/hero-banner-3.jpg')) ? filemtime(public_path('images/dashboard/hero-banner-3.jpg')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-coffee"></i> TEDDY MR. BEAN VINTAGE <i class="fa-solid fa-coffee"></i>
@@ -204,7 +208,7 @@
 
                     <!-- SLIDE 4: GẤU BÔNG COUPLE YÊU THƯƠNG -->
                     <div class="hero-slide" data-slide="3">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/hero-banner-4.jpg') }}?v={{ file_exists(public_path('images/hero-banner-4.jpg')) ? filemtime(public_path('images/hero-banner-4.jpg')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/hero-banner-4.jpg') }}?v={{ file_exists(public_path('images/dashboard/hero-banner-4.jpg')) ? filemtime(public_path('images/dashboard/hero-banner-4.jpg')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-heart-pulse"></i> QUÀ TẶNG TÌNH YÊU <i class="fa-solid fa-heart-pulse"></i>
@@ -257,7 +261,7 @@
 
                     <!-- SLIDE 5: TEDDY KHỔNG LỒ & GỐI ÔM -->
                     <div class="hero-slide" data-slide="4">
-                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/hero-banner-5.jpg') }}?v={{ file_exists(public_path('images/hero-banner-5.jpg')) ? filemtime(public_path('images/hero-banner-5.jpg')) : time() }}');"></div>
+                        <div class="hero-banner-bg" style="background-image: url('{{ asset('images/dashboard/hero-banner-5.jpg') }}?v={{ file_exists(public_path('images/dashboard/hero-banner-5.jpg')) ? filemtime(public_path('images/dashboard/hero-banner-5.jpg')) : time() }}');"></div>
                         <div class="hero-banner-content">
                             <div class="hero-collection-badge">
                                 <i class="fa-solid fa-moon"></i> TEDDY KHỔNG LỒ &amp; GỐI ÔM <i class="fa-solid fa-moon"></i>
@@ -493,16 +497,20 @@
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
                     $regularPrice = (float) $product->lowest_price;
                     $salePrice = $product->lowest_sale_price;
-                    $hasSale = !empty($salePrice) && (float)$salePrice < $regularPrice;
-                    $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - $salePrice) / $regularPrice) * 100) : 0;
+                    $hasSale = $product->is_on_sale && ($salePrice !== null && $salePrice !== '' && (float)$salePrice >= 0 && (float)$salePrice < $regularPrice);
+                    $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - (float)$salePrice) / $regularPrice) * 100) : 0;
                 @endphp
                 <div class="product-card">
                     <div class="product-card-img-wrap">
-                        @if($hasSale && $discountPct > 0)
-                            <span class="card-badge-sale">-{{ $discountPct }}%</span>
+                        @if($hasSale)
+                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
+                            @if($discountPct > 0)
+                                <span class="card-badge-sale">-{{ $discountPct }}%</span>
+                            @endif
+                        @else
+                            <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
                         @endif
-                        <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
-                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ $salePrice ?? 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
+                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($hasSale && $salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
                             <i class="fa-regular fa-heart"></i>
                         </button>
                         <a href="{{ route('products.show', $product->id) }}">
@@ -519,7 +527,7 @@
                         <div>
                             <div class="product-card-prices">
                                 @if($hasSale)
-                                    <span class="price-current">{{ number_format($salePrice, 0, ',', '.') }} đ</span>
+                                    <span class="price-current" style="color: #D32F2F; font-weight: 800;">{{ number_format($salePrice, 0, ',', '.') }} đ</span>
                                     <span class="price-old">{{ number_format($regularPrice, 0, ',', '.') }} đ</span>
                                 @else
                                     <span class="price-current" style="color: var(--primary-dark);">{{ number_format($regularPrice, 0, ',', '.') }} đ</span>
@@ -527,9 +535,15 @@
                             </div>
                             <div class="product-card-footer">
                                 <div class="product-card-meta">
-                                    <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating ?: 5.0, 1) }} sao">
-                                        <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating ?: 5.0, 1) }}
-                                    </span>
+                                    @if(($product->reviews_count ?? 0) > 0)
+                                        <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating, 1) }} sao">
+                                            <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating, 1) }}
+                                        </span>
+                                    @else
+                                        <span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                                            <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                                        </span>
+                                    @endif
                                     <span class="sold-count-text">Đã bán {{ $product->sold_count ?? 0 }}</span>
                                 </div>
                             </div>
@@ -549,7 +563,7 @@
                 <p class="gift-promo-desc">
                     Mật Ngọt Bear hỗ trợ gói hộp quà nơ sang trọng, xịt nước hoa thơm dịu và đính kèm thiệp viết tay theo lời nhắn của bạn. Giao hàng chuẩn giờ cho ngày kỷ niệm và sinh nhật!
                 </p>
-                <a href="{{ route('products.index') }}" class="gift-promo-btn">
+                <a href="{{ route('products.index') }}#catalog-layout" class="gift-promo-btn">
                     <i class="fa-solid fa-gift"></i> Chọn Quà Tặng Ngay
                 </a>
             </div>
@@ -578,15 +592,18 @@
                     $imgUrl = $primaryImg ? $primaryImg->image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' . urlencode($product->name);
                     $regularPrice = (float) $product->lowest_price;
                     $salePrice = $product->lowest_sale_price;
-                    $hasSale = !empty($salePrice) && (float)$salePrice < $regularPrice;
-                    $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - $salePrice) / $regularPrice) * 100) : 0;
+                    $hasSale = $product->is_on_sale && ($salePrice !== null && $salePrice !== '' && (float)$salePrice >= 0 && (float)$salePrice < $regularPrice);
+                    $discountPct = ($hasSale && $regularPrice > 0) ? round((($regularPrice - (float)$salePrice) / $regularPrice) * 100) : 0;
                 @endphp
                 <div class="product-card">
                     <div class="product-card-img-wrap">
-                        @if($hasSale && $discountPct > 0)
-                            <span class="card-badge-sale">-{{ $discountPct }}%</span>
+                        @if($hasSale)
+                            <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
+                            @if($discountPct > 0)
+                                <span class="card-badge-sale">-{{ $discountPct }}%</span>
+                            @endif
                         @endif
-                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ $salePrice ?? 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
+                        <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($hasSale && $salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
                             <i class="fa-regular fa-heart"></i>
                         </button>
                         <a href="{{ route('products.show', $product->id) }}">
@@ -603,7 +620,7 @@
                         <div>
                             <div class="product-card-prices">
                                 @if($hasSale)
-                                    <span class="price-current">{{ number_format($salePrice, 0, ',', '.') }} đ</span>
+                                    <span class="price-current" style="color: #D32F2F; font-weight: 800;">{{ number_format($salePrice, 0, ',', '.') }} đ</span>
                                     <span class="price-old">{{ number_format($regularPrice, 0, ',', '.') }} đ</span>
                                 @else
                                     <span class="price-current" style="color: var(--primary-dark);">{{ number_format($regularPrice, 0, ',', '.') }} đ</span>
@@ -611,9 +628,15 @@
                             </div>
                             <div class="product-card-footer">
                                 <div class="product-card-meta">
-                                    <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating ?: 5.0, 1) }} sao">
-                                        <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating ?: 5.0, 1) }}
-                                    </span>
+                                    @if(($product->reviews_count ?? 0) > 0)
+                                        <span class="rating-badge-pill" title="Đánh giá {{ number_format($product->avg_rating, 1) }} sao">
+                                            <i class="fa-solid fa-star"></i> {{ number_format($product->avg_rating, 1) }}
+                                        </span>
+                                    @else
+                                        <span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                                            <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                                        </span>
+                                    @endif
                                     <span class="sold-count-text">Đã bán {{ $product->sold_count ?? 0 }}</span>
                                 </div>
                             </div>

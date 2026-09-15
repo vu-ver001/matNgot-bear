@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\SupportCase;
 use App\Models\User;
 use App\Services\ChatKT\ChatService;
@@ -890,13 +891,13 @@ class SupportChatTest extends TestCase
         $responseA->assertDontSee('is-locked-other');
         $responseA->assertSee('data-staff-chat-submit');
 
-        // 5. Admin xem: Thấy tooltip hiển thị tên nhân viên đang xử lý khi di chuột vào, không có pill badge trong card, mở được và thấy nút Tiếp quản
+        // 5. Admin xem: Thấy tooltip hiển thị tên nhân viên đang xử lý khi di chuột vào, không có pill badge trong card, không có nút Tiếp quản ở topbar vì gửi tin là tự tiếp quản
         $responseAdmin = $this->actingAs($admin)->get(route('admin.support.index', ['case_id' => $case->id]));
         $responseAdmin->assertOk();
         $responseAdmin->assertSee('data-tooltip="🔒 Đang do Nhân viên A xử lý"', false);
         $responseAdmin->assertDontSee('staff-case-staff-pill');
-        $responseAdmin->assertSee('data-btn-takeover');
-        $responseAdmin->assertSee('Tiếp quản');
+        $responseAdmin->assertDontSee('data-btn-takeover');
+        $responseAdmin->assertSee('Bạn có thể gửi tin nhắn để tiếp quản');
     }
 
     public function test_viewing_case_without_being_handler_keeps_unread_until_admin_sends_message(): void
@@ -1753,25 +1754,27 @@ class SupportChatTest extends TestCase
         $staff = $this->createStaff();
         $chatService = app(ChatService::class);
 
+        $baseTime = now()->setTime(10, 30, 0);
+
         // Khách hàng gửi 3 tin nhắn liên tiếp trong vòng 1-2 phút
         $msg1 = $chatService->customerSendMessage($customer, 'Tin 1 của khách');
-        $msg1->update(['sent_at' => now()->subMinutes(3)]);
+        $msg1->update(['sent_at' => $baseTime->copy()->subMinutes(3)]);
 
         $msg2 = $chatService->customerSendMessage($customer, 'Tin 2 của khách');
-        $msg2->update(['sent_at' => now()->subMinutes(2)]);
+        $msg2->update(['sent_at' => $baseTime->copy()->subMinutes(2)]);
 
         $msg3 = $chatService->customerSendMessage($customer, 'Tin 3 của khách');
-        $msg3->update(['sent_at' => now()->subMinute()]);
+        $msg3->update(['sent_at' => $baseTime->copy()->subMinute()]);
 
         $case = $msg1->supportCase;
         $chatService->acceptCase($staff, $case);
 
         // Nhân viên trả lời 2 tin nhắn liên tiếp
         $staffMsg1 = $chatService->staffSendMessage($staff, $case, 'Shop chào bạn câu 1');
-        $staffMsg1->update(['sent_at' => now()->subSeconds(30)]);
+        $staffMsg1->update(['sent_at' => $baseTime->copy()->subSeconds(30)]);
 
         $staffMsg2 = $chatService->staffSendMessage($staff, $case, 'Shop chào bạn câu 2');
-        $staffMsg2->update(['sent_at' => now()]);
+        $staffMsg2->update(['sent_at' => $baseTime->copy()]);
 
         // 1. Kiểm tra view Customer
         $custResponse = $this->actingAs($customer)->get(route('customer.messages.index'));
@@ -2236,6 +2239,138 @@ class SupportChatTest extends TestCase
         $chatService->acceptCase($staff, $case);
         $this->assertEquals(SupportCase::STATUS_IN_PROGRESS, $case->fresh()->status);
         $this->assertEquals($staff->id, $case->fresh()->assigned_staff_id);
+    }
+
+    public function test_customer_chat_suggestion_displays_child_product_variant_information(): void
+    {
+        $customer = $this->createCustomer(['full_name' => 'Khách Có Biến Thể']);
+        $category = Category::create(['name' => 'Gấu Bông', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Gấu Teddy Cao Cấp',
+            'description' => 'Mô tả',
+            'price' => 200000,
+            'stock_quantity' => 10,
+            'status' => 'ACTIVE',
+        ]);
+
+        $variant = ProductVariant::create([
+            'product_id' => $product->id,
+            'variant_name' => 'Màu Nâu Socola / Size 1m',
+            'color' => 'Nâu Socola',
+            'size' => '1m',
+            'sku' => 'TEDDY-BR-1M',
+            'price' => 250000,
+            'stock_quantity' => 5,
+        ]);
+
+        $order = Order::create([
+            'order_code' => 'MNB-VARSUGG',
+            'customer_id' => $customer->id,
+            'recipient_name' => 'Khách Có Biến Thể',
+            'recipient_phone' => '0912345678',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 250000,
+            'total_amount' => 250000,
+            'order_status' => 'PENDING',
+            'payment_method' => 'COD',
+            'payment_status' => 'UNPAID',
+        ]);
+
+        OrderDetail::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'product_name' => 'Gấu Teddy Cao Cấp',
+            'variant_name' => 'Màu Nâu Socola / Size 1m',
+            'variant_color' => 'Nâu Socola',
+            'variant_size' => '1m',
+            'product_price' => 250000,
+            'quantity' => 1,
+            'line_total' => 250000,
+        ]);
+
+        $response = $this->actingAs($customer)->get(route('customer.messages.index', ['order_id' => $order->id]));
+        $response->assertOk();
+        $response->assertSee('data-order-suggestion', false);
+        $response->assertSee('Gấu Teddy Cao Cấp');
+        $response->assertSee('Phân loại: Màu Nâu Socola / Size 1m');
+        $response->assertSee('data-variant-text="Màu Nâu Socola / Size 1m"', false);
+    }
+
+    public function test_chat_message_with_variant_renders_variant_in_order_card_for_both_customer_and_staff(): void
+    {
+        $customer = $this->createCustomer(['full_name' => 'Khách Mua Biến Thể']);
+        $staff = $this->createStaff(['full_name' => 'Nhân Viên Hỗ Trợ']);
+        $category = Category::create(['name' => 'Gấu Bông', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Thỏ Bông Dễ Thương',
+            'description' => 'Mô tả',
+            'price' => 180000,
+            'stock_quantity' => 10,
+            'status' => 'ACTIVE',
+        ]);
+
+        $variant = ProductVariant::create([
+            'product_id' => $product->id,
+            'variant_name' => 'Màu Trắng Kem / Size 60cm',
+            'color' => 'Trắng Kem',
+            'size' => '60cm',
+            'sku' => 'THO-W-60',
+            'price' => 180000,
+            'stock_quantity' => 5,
+        ]);
+
+        $order = Order::create([
+            'order_code' => 'MNB-CARDVAR',
+            'customer_id' => $customer->id,
+            'recipient_name' => 'Khách Mua Biến Thể',
+            'recipient_phone' => '0912345678',
+            'recipient_address' => 'Hà Nội',
+            'subtotal' => 180000,
+            'total_amount' => 180000,
+            'order_status' => 'CONFIRMED',
+            'payment_method' => 'COD',
+            'payment_status' => 'UNPAID',
+        ]);
+
+        OrderDetail::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'product_name' => 'Thỏ Bông Dễ Thương',
+            'variant_name' => 'Màu Trắng Kem / Size 60cm',
+            'variant_color' => 'Trắng Kem',
+            'variant_size' => '60cm',
+            'product_price' => 180000,
+            'quantity' => 1,
+            'line_total' => 180000,
+        ]);
+
+        $content = "📦 [ĐƠN HÀNG #MNB-CARDVAR]\n• Sản phẩm: Thỏ Bông Dễ Thương\n• Phân loại: Màu Trắng Kem / Size 60cm\n• Tổng tiền: 180.000 đ\n• Trạng thái: CONFIRMED\n• Mã đơn hàng: #MNB-CARDVAR";
+
+        $sendResponse = $this->actingAs($customer)->postJson(route('customer.messages.send'), [
+            'content' => $content,
+            'order_id' => $order->id,
+        ]);
+        $sendResponse->assertCreated();
+
+        // Kiểm tra khách hàng thấy card với thông tin phân loại
+        $custView = $this->actingAs($customer)->get(route('customer.messages.index'));
+        $custView->assertOk();
+        $custView->assertSee('chat-order-card__variant', false);
+        $custView->assertSee('Phân loại: Màu Trắng Kem / Size 60cm');
+
+        // Kiểm tra nhân viên mở case cũng thấy card với thông tin phân loại
+        $case = SupportCase::where('order_id', $order->id)->first();
+        $staffView = $this->actingAs($staff)->get(route('staff.support.index', [
+            'tab' => 'waiting',
+            'case_id' => $case->id,
+        ]));
+        $staffView->assertOk();
+        $staffView->assertSee('chat-order-card__variant', false);
+        $staffView->assertSee('Phân loại: Màu Trắng Kem / Size 60cm');
     }
 }
 

@@ -42,43 +42,7 @@ if (wishlistRoot) {
         showToast(toast.dataset.initialMessage, toast.dataset.initialError === 'true');
     }
 
-    wishlistRoot.querySelectorAll('[data-product-image]').forEach((image) => {
-        image.addEventListener('error', () => image.remove(), { once: true });
-    });
-
     wishlistRoot.addEventListener('submit', async (event) => {
-        const cartForm = event.target.closest('[data-wishlist-cart-form]');
-
-        if (cartForm) {
-            event.preventDefault();
-
-            const button = cartForm.querySelector('button[type="submit"]');
-            button.disabled = true;
-
-            try {
-                const response = await fetch(cartForm.action, {
-                    method: 'POST',
-                    headers: {
-                        Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                });
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Không thể thêm sản phẩm vào giỏ hàng.');
-                }
-
-                showToast(result.message);
-            } catch (error) {
-                showToast(error.message, true);
-            } finally {
-                button.disabled = false;
-            }
-
-            return;
-        }
-
         const form = event.target.closest('[data-wishlist-remove-form]');
 
         if (!form) return;
@@ -104,8 +68,28 @@ if (wishlistRoot) {
             }
 
             card.classList.add('is-removing');
-            totalItems = Math.max(0, totalItems - 1);
+            const newCount = (typeof result.wishlist_count !== 'undefined')
+                ? Number(result.wishlist_count)
+                : Math.max(0, totalItems - 1);
+            totalItems = newCount;
             updateTotal();
+
+            if (typeof window.setWishlistCount === 'function') {
+                window.setWishlistCount(newCount);
+            } else {
+                window.wishlistCount = newCount;
+                if (typeof window.updateWishlistBadge === 'function') {
+                    window.updateWishlistBadge();
+                }
+            }
+
+            if (Array.isArray(window.dbWishlistProductIds) && result.data?.product_id) {
+                const idx = window.dbWishlistProductIds.indexOf(Number(result.data.product_id));
+                if (idx > -1) {
+                    window.dbWishlistProductIds.splice(idx, 1);
+                }
+            }
+
             showToast(result.message);
 
             window.setTimeout(() => {

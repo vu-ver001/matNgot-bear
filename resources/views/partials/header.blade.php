@@ -118,28 +118,37 @@
                 @php
                     $u = auth()->user();
                     $userRole = $u->role;
+                    $userName = $u->full_name ?? $u->name ?? 'Người dùng';
+                    $userInitial = mb_strtoupper(mb_substr(trim($userName), 0, 1, 'UTF-8'));
                     $avatarUrl = $u->avatar_url 
                         ?: ($u->avatar && file_exists(public_path('storage/' . $u->avatar)) ? asset('storage/' . $u->avatar) : null);
                     if (!$avatarUrl && $u->avatar && (str_starts_with($u->avatar, 'http://') || str_starts_with($u->avatar, 'https://'))) {
                         $avatarUrl = $u->avatar;
                     }
-                    if (!$avatarUrl) {
-                        $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($u->full_name ?: 'User') . '&background=EAD8C3&color=4A2E2B&bold=true';
-                    }
                 @endphp
 
                 <!-- 1 Icon Avatar của người đang đăng nhập -->
-                <a href="javascript:void(0)" class="header-user-avatar-btn" onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')" title="{{ $u->full_name }}">
-                    <img src="{{ $avatarUrl }}" alt="{{ $u->full_name }}" class="header-avatar-circle">
+                <a href="javascript:void(0)" class="header-user-avatar-btn" onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')" title="{{ $userName }}">
+                    @if (!empty($avatarUrl))
+                        <img src="{{ $avatarUrl }}" alt="{{ $userName }}" class="header-avatar-circle">
+                    @else
+                        <span class="header-avatar-initial">{{ $userInitial }}</span>
+                    @endif
                 </a>
 
                 <!-- Khung Popup Người Dùng (Theo Ảnh 4) -->
                 <div class="dropdown-menu role-dropdown" style="right: 0; left: auto; min-width: 250px; border-radius: 18px; box-shadow: 0 12px 36px rgba(62, 39, 35, 0.12); padding: 6px 0; border: 1px solid var(--border-light); background: #FFFFFF;">
                     <!-- Header người dùng trong popup: Avatar + Họ tên + Email -->
                     <div style="padding: 14px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
-                        <img src="{{ $avatarUrl }}" alt="{{ $u->full_name }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #EAD8C3; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                        <div class="header-user-popup-avatar">
+                            @if (!empty($avatarUrl))
+                                <img src="{{ $avatarUrl }}" alt="{{ $userName }}">
+                            @else
+                                {{ $userInitial }}
+                            @endif
+                        </div>
                         <div style="min-width: 0; overflow: hidden; flex: 1;">
-                            <div style="font-weight: 700; font-size: 14px; color: #3E2723; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $u->full_name }}</div>
+                            <div style="font-weight: 700; font-size: 14px; color: #3E2723; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $userName }}</div>
                             <div style="font-size: 11.5px; color: #8D6E63; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;" title="{{ $u->email }}">{{ $u->email }}</div>
                         </div>
                     </div>

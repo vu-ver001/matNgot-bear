@@ -6,8 +6,10 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Review;
 use App\Models\User;
+use App\Services\ReviewKT\ReviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -1162,6 +1164,169 @@ class ReviewTest extends TestCase
         $this->assertStringContainsString('data-review-id="'.$review1->id.'"', $content);
         $this->assertStringNotContainsString('data-review-id="'.$review2->id.'"', $content);
         $this->assertStringNotContainsString('data-review-id="'.$review3->id.'"', $content);
+    }
+
+    public function test_get_order_review_data_returns_variant_info_and_image(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+        $product = $this->createProduct(['name' => 'Gấu Bông Nơ Hồng']);
+        $product->images()->create([
+            'image_url' => 'https://example.com/bear-pink-primary.jpg',
+            'is_primary' => true,
+            'sort_order' => 1,
+        ]);
+        $variant = ProductVariant::create([
+            'product_id' => $product->id,
+            'sku' => 'VAR-BEAR-PINK-60',
+            'color' => 'Hồng',
+            'size' => '60cm',
+            'price' => 280000,
+            'stock_quantity' => 10,
+            'image_url' => 'https://example.com/bear-pink-60.jpg',
+            'status' => 'ACTIVE',
+        ]);
+
+        $order = $this->createOrder($user, [
+            'order_status' => 'COMPLETED',
+            'completed_at' => now(),
+        ]);
+
+        OrderDetail::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'variant_sku' => $variant->sku,
+            'variant_size' => $variant->size,
+            'variant_color' => $variant->color,
+            'variant_image_url' => $variant->image_url,
+            'product_name' => $product->name,
+            'product_price' => 280000,
+            'quantity' => 1,
+            'line_total' => 280000,
+        ]);
+
+        $service = app(ReviewService::class);
+        $data = $service->getOrderReviewData($user, $order);
+
+        $this->assertSame($order->id, $data['order_id']);
+        $this->assertCount(1, $data['items']);
+        $item = $data['items'][0];
+        $this->assertSame('Màu Hồng / Size 60cm', $item['variant_text']);
+        $this->assertSame('VAR-BEAR-PINK-60', $item['variant_sku']);
+        $this->assertSame('https://example.com/bear-pink-60.jpg', $item['product_image']);
+    }
+
+    public function test_review_page_and_details_display_child_product_variants(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+        $product = $this->createProduct(['name' => 'Gấu Teddy Nâu']);
+        $product->images()->create([
+            'image_url' => 'https://example.com/teddy-main.jpg',
+            'is_primary' => true,
+            'sort_order' => 1,
+        ]);
+
+        $variant = ProductVariant::create([
+            'product_id' => $product->id,
+            'sku' => 'TEDDY-BROWN-1M',
+            'color' => 'Nâu Cà Phê',
+            'size' => '1m',
+            'price' => 350000,
+            'stock_quantity' => 5,
+            'image_url' => 'https://example.com/teddy-brown-1m.jpg',
+            'status' => 'ACTIVE',
+        ]);
+
+        $order = $this->createOrder($user, [
+            'order_status' => 'COMPLETED',
+            'completed_at' => now(),
+        ]);
+
+        OrderDetail::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'variant_sku' => $variant->sku,
+            'variant_size' => $variant->size,
+            'variant_color' => $variant->color,
+            'variant_image_url' => $variant->image_url,
+            'product_name' => $product->name,
+            'product_price' => 350000,
+            'quantity' => 1,
+            'line_total' => 350000,
+        ]);
+
+        // 1. Kiểm tra Tab Chưa đánh giá (ảnh theo đúng phân loại biến thể)
+        $resPending = $this->actingAs($user)->get(route('customer.reviews.index', ['tab' => 'pending']));
+        $resPending->assertOk();
+        $resPending->assertSee('Phân loại: Màu Nâu Cà Phê / Size 1m');
+        $resPending->assertSee('https://example.com/teddy-brown-1m.jpg');
+
+        // Gửi đánh giá cho sản phẩm
+        Review::create([
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'order_id' => $order->id,
+            'rating' => 5,
+            'comment' => 'Bé gấu to và ấm áp lắm!',
+        ]);
+
+        // 2. Kiểm tra Tab Đã đánh giá
+        $resReviewed = $this->actingAs($user)->get(route('customer.reviews.index', ['tab' => 'reviewed']));
+        $resReviewed->assertOk();
+        $resReviewed->assertSee('Phân loại: Màu Nâu Cà Phê / Size 1m');
+        $resReviewed->assertSee('https://example.com/teddy-brown-1m.jpg');
+        $resReviewed->assertSee('data-variant-text="Màu Nâu Cà Phê / Size 1m"', false);
+    }
+
+    public function test_variant_without_image_uses_bear_placeholder_and_does_not_use_other_variant_image(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+        $product = $this->createProduct(['name' => 'Gấu Teddy Đặc Biệt']);
+        $product->images()->create([
+            'image_url' => 'https://example.com/teddy-different-variant.jpg',
+            'is_primary' => true,
+            'sort_order' => 1,
+        ]);
+
+        // Biến thể không có ảnh riêng (null hoặc file không tồn tại)
+        $variant = ProductVariant::create([
+            'product_id' => $product->id,
+            'sku' => 'TEDDY-SPECIAL-80',
+            'color' => 'Nènier',
+            'size' => '80cm',
+            'price' => 2000200,
+            'stock_quantity' => 10,
+            'image_url' => null,
+            'status' => 'ACTIVE',
+        ]);
+
+        $order = $this->createOrder($user, [
+            'order_status' => 'COMPLETED',
+            'completed_at' => now(),
+        ]);
+
+        OrderDetail::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'variant_sku' => $variant->sku,
+            'variant_size' => $variant->size,
+            'variant_color' => $variant->color,
+            'variant_image_url' => null,
+            'product_name' => $product->name,
+            'product_price' => 2000200,
+            'quantity' => 1,
+            'line_total' => 2000200,
+        ]);
+
+        $resPending = $this->actingAs($user)->get(route('customer.reviews.index', ['tab' => 'pending']));
+        $resPending->assertOk();
+        $resPending->assertSee('Phân loại: Màu Nènier / Size 80cm');
+        // Không được lấy ảnh của phân loại khác
+        $resPending->assertDontSee('https://example.com/teddy-different-variant.jpg');
+        // Sử dụng đúng placeholder Bear như bên trang Đơn hàng
+        $resPending->assertSee('https://placehold.co/120x120/fef3c7/78350f?text=Bear');
     }
 }
 

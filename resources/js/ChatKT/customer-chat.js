@@ -73,6 +73,81 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
+    // Tạo HTML thẻ đơn hàng (Shopee-style) đồng bộ với giao diện Blade
+    const formatOrderCardHtml = (content, orderCard = null) => {
+        let code = orderCard?.order_code || '';
+        let status = orderCard?.order_status || '';
+        let prodName = orderCard?.product_name || '';
+        let variantText = orderCard?.variant_text || '';
+        let total = orderCard?.total_amount || '';
+        let imgUrl = orderCard?.image_url || '';
+        let otherCount = typeof orderCard?.other_count === 'number' ? orderCard.other_count : 0;
+        let orderUrl = orderCard?.order_url || '';
+
+        if (content && (!orderCard || !imgUrl || !orderUrl)) {
+            if (!code) {
+                const codeMatch = content.match(/#([A-Za-z0-9\-]+)/);
+                if (codeMatch) code = codeMatch[1];
+            }
+
+            const lines = content.split('\n');
+            lines.forEach(line => {
+                if (!prodName && line.includes('Sản phẩm:')) prodName = line.replace(/^[•\s\-\*]*Sản phẩm:\s*/, '').trim();
+                if (!variantText && line.includes('Phân loại:')) variantText = line.replace(/^[•\s\-\*]*Phân loại:\s*/, '').trim();
+                if (!total && line.includes('Tổng tiền:')) total = line.replace(/^[•\s\-\*]*Tổng tiền:\s*/, '').trim();
+                if (!status && line.includes('Trạng thái:')) status = line.replace(/^[•\s\-\*]*Trạng thái:\s*/, '').trim();
+                if (!otherCount && (line.includes('sản phẩm khác') || line.includes('Khác:'))) {
+                    const m = line.match(/\+?(\d+)\s*sản phẩm khác/i);
+                    if (m) otherCount = parseInt(m[1], 10);
+                }
+            });
+        }
+
+        if (prodName) {
+            const otherMatch = prodName.match(/\(\+(\d+)\s*sản phẩm khác\)/i);
+            if (otherMatch) {
+                if (!otherCount) otherCount = parseInt(otherMatch[1], 10);
+                prodName = prodName.replace(/\s*\(\+\d+\s*sản phẩm khác\)/i, '').trim();
+            }
+        }
+
+        if (!imgUrl) {
+            imgUrl = 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
+        }
+
+        if (!orderUrl && code) {
+            orderUrl = `/customer/orders/${encodeURIComponent(code)}`;
+        }
+
+        return `
+            <div class="chat-order-card">
+                <div class="chat-order-card__header">
+                    <span class="chat-order-card__tag">
+                        <i class="fa-solid fa-box"></i> #${escapeHtml(code)}
+                    </span>
+                    ${status ? `<span class="chat-order-card__status">${escapeHtml(status)}</span>` : ''}
+                </div>
+                <div class="chat-order-card__body">
+                    <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(code)}" class="chat-order-card__img" onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';">
+                    <div class="chat-order-card__info">
+                        ${prodName ? `<div class="chat-order-card__pname">${escapeHtml(prodName)}</div>` : ''}
+                        ${variantText ? `<div class="chat-order-card__variant">Phân loại: ${escapeHtml(variantText)}</div>` : ''}
+                        ${otherCount > 0 ? `<div class="chat-order-card__other">+${otherCount} sản phẩm khác</div>` : ''}
+                        ${total ? `<div class="chat-order-card__total">Tổng tiền: <strong>${escapeHtml(total)}</strong></div>` : ''}
+                    </div>
+                </div>
+                ${orderUrl ? `
+                    <div class="chat-order-card__footer">
+                        <a href="${escapeHtml(orderUrl)}" class="chat-order-card__link">
+                            <span>Xem chi tiết đơn hàng</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    };
+
     // Tạo HTML cho tin nhắn mới
     const renderMessageHtml = (msg, options = {}) => {
         const isShop = !msg.is_self;
@@ -91,40 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const dateStr = msg.sent_at || '';
         const fullDateTooltip = msg.date ? `${dateStr}, ${msg.date}` : dateStr;
-
-        const formatBubbleContent = (content) => {
-            if (content && content.includes('📦 [ĐƠN HÀNG #')) {
-                const codeMatch = content.match(/#([A-Z0-9\-]+)/);
-                const code = codeMatch ? codeMatch[1] : '';
-                const lines = content.split('\n');
-                let prodName = '';
-                let total = '';
-                let status = '';
-                lines.forEach(line => {
-                    if (line.includes('Sản phẩm:')) prodName = line.replace(/^[•\s\-\*]*Sản phẩm:\s*/, '').trim();
-                    if (line.includes('Tổng tiền:')) total = line.replace(/^[•\s\-\*]*Tổng tiền:\s*/, '').trim();
-                    if (line.includes('Trạng thái:')) status = line.replace(/^[•\s\-\*]*Trạng thái:\s*/, '').trim();
-                });
-
-                return `
-                    <div class="chat-order-card">
-                        <div class="chat-order-card__header">
-                            <span class="chat-order-card__tag">
-                                <i class="fa-solid fa-box"></i> #${escapeHtml(code)}
-                            </span>
-                            ${status ? `<span class="chat-order-card__status">${escapeHtml(status)}</span>` : ''}
-                        </div>
-                        <div class="chat-order-card__body">
-                            <div class="chat-order-card__info">
-                                ${prodName ? `<div class="chat-order-card__pname">${escapeHtml(prodName)}</div>` : ''}
-                                ${total ? `<div class="chat-order-card__total">Tổng tiền: <strong>${escapeHtml(total)}</strong></div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            return escapeHtml(content).replace(/\n/g, '<br>');
-        };
 
         const images = Array.isArray(msg.image_urls) && msg.image_urls.length > 0
             ? msg.image_urls
@@ -146,9 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        const textHtml = msg.content ? `
-            <div class="chat-msg-text">${formatBubbleContent(msg.content)}</div>
-        ` : '';
+        const isOrderCard = Boolean(msg.order_card || (msg.content && msg.content.includes('📦 [ĐƠN HÀNG #')));
+
+        let textInnerHtml = '';
+        if (isOrderCard) {
+            textInnerHtml = formatOrderCardHtml(msg.content, msg.order_card);
+        } else if (msg.content) {
+            textInnerHtml = `<div class="chat-msg-text">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>`;
+        }
 
         const timeHtml = (showTime && dateStr) ? `
             <div class="chat-msg-time customer-chat-time">
@@ -164,10 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ` : '';
 
         let bubbleHtml = '';
-        if (textHtml) {
+        if (textInnerHtml) {
             bubbleHtml = `
                 <div class="customer-chat-bubble" title="${escapeHtml(fullDateTooltip)}">
-                    ${textHtml}
+                    ${textInnerHtml}
                     ${timeHtml}
                 </div>
             `;
@@ -448,8 +494,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const orderTotal = btnSendSuggestedOrder.dataset.orderTotal || '';
             const orderStatus = btnSendSuggestedOrder.dataset.orderStatus || '';
             const productName = btnSendSuggestedOrder.dataset.productName || '';
+            const variantText = btnSendSuggestedOrder.dataset.variantText || '';
+            const otherCount = parseInt(btnSendSuggestedOrder.dataset.otherCount || '0', 10);
+            const productImage = btnSendSuggestedOrder.dataset.productImage || '';
+            const orderUrl = btnSendSuggestedOrder.dataset.orderUrl || '';
 
-            const content = `📦 [ĐƠN HÀNG #${orderCode}]\n• Sản phẩm: ${productName}\n• Tổng tiền: ${orderTotal}\n• Trạng thái: ${orderStatus}\n• Mã đơn hàng: #${orderCode}`;
+            let content = `📦 [ĐƠN HÀNG #${orderCode}]\n• Sản phẩm: ${productName}`;
+            if (otherCount > 0) {
+                content += ` (+${otherCount} sản phẩm khác)`;
+            }
+            if (variantText) {
+                content += `\n• Phân loại: ${variantText}`;
+            }
+            content += `\n• Tổng tiền: ${orderTotal}\n• Trạng thái: ${orderStatus}\n• Mã đơn hàng: #${orderCode}`;
 
             btnSendSuggestedOrder.disabled = true;
             btnSendSuggestedOrder.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang gửi...</span>';
@@ -478,6 +535,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     cleanOrderIdFromUrl();
                     updateHeaderStatus(result.header_status);
                     const newMsg = result.data;
+                    if (!newMsg.order_card && orderCode) {
+                        newMsg.order_card = {
+                            order_id: orderId,
+                            order_code: orderCode,
+                            order_status: orderStatus,
+                            product_name: productName,
+                            variant_text: variantText,
+                            other_count: otherCount,
+                            total_amount: orderTotal,
+                            image_url: productImage || 'https://placehold.co/120x120/fef3c7/78350f?text=Bear',
+                            order_url: orderUrl,
+                        };
+                    }
                     lastMessageId = Math.max(lastMessageId, newMsg.id);
 
                     appendCustomerMessage(newMsg);

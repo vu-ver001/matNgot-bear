@@ -44,7 +44,7 @@
                     @endphp
                     <div class="nav-pills">
                         @foreach ($tabs as $value => $tab)
-                            <a href="{{ route($routePrefix.'.index', array_merge(request()->except('order_status', 'page'), $value ? ['order_status' => $value] : [])) }}"
+                            <a href="{{ route($routePrefix.'.index', array_merge(request()->except('order_status', 'page', 'review_order'), $value ? ['order_status' => $value] : [])) }}"
                                class="nav-pill {{ (string) request('order_status') === $value ? 'active' : '' }}">
                                 <span>{{ $tab['label'] }}</span>
                                 @if (isset($tab['count']))
@@ -416,11 +416,46 @@
                     <!-- Pagination -->
                     @if ($orders->hasPages())
                         <div class="mt-6">
-                            {{ $orders->withQueryString()->links() }}
+                            {{ $orders->appends(request()->except('page', 'review_order'))->links() }}
                         </div>
                     @endif
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- Mở popup đánh giá ngay trên trang Orders sau khi khách xác nhận đã nhận hàng. --}}
+    @if (request()->filled('review_order'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const orderId = @json((string) request()->query('review_order'));
+
+                if (!orderId) {
+                    return;
+                }
+
+                // Xóa tín hiệu khỏi URL trước khi mở modal để reload/back không mở lại popup.
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('review_order');
+                window.history.replaceState(window.history.state, '', cleanUrl.toString());
+
+                window.setTimeout(function () {
+                    if (window.openOrderReviewModal) {
+                        window.openOrderReviewModal(orderId);
+                        return;
+                    }
+
+                    const trigger = Array.from(document.querySelectorAll('[data-open-order-review-modal]'))
+                        .find(function (element) {
+                            return element.dataset.orderId === orderId;
+                        });
+
+                    if (trigger) {
+                        trigger.click();
+                    }
+                }, 350);
+            });
+        </script>
+    @endif
+
 </x-customer-account-layout>

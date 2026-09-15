@@ -293,7 +293,7 @@ class OrderController extends Controller
                 ]);
             }
 
-            return redirect()->route('customer.orders.review', $order->id)
+            return redirect()->route('customer.orders.index', ['review_order' => $order->id])
                 ->with('success', '🎉 Bạn đã xác nhận đã nhận hàng thành công! Hãy gửi đánh giá để chia sẻ trải nghiệm về sản phẩm nhé.');
         } catch (\Exception $e) {
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());

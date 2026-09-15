@@ -49,14 +49,19 @@ class Product extends Model
     ];
 
     /**
-     * Ràng buộc nghiệp vụ: Khi sản phẩm cha chuyển sang tạm dừng kinh doanh (INACTIVE),
-     * tự động tắt toàn bộ trạng thái của các sản phẩm con (variants).
+     * Ràng buộc nghiệp vụ: 
+     * - Khi sản phẩm cha chuyển sang tạm dừng kinh doanh (INACTIVE), tự động tắt toàn bộ trạng thái của các sản phẩm con (variants).
+     * - Khi sản phẩm cha chuyển sang mở bán lại (ACTIVE), tự động bật lại toàn bộ trạng thái của các sản phẩm con (variants).
      */
     protected static function booted(): void
     {
         static::saved(function (Product $product) {
-            if ($product->status === self::STATUS_INACTIVE && $product->wasChanged('status')) {
-                $product->variants()->update(['status' => 'INACTIVE']);
+            if ($product->wasChanged('status')) {
+                if ($product->status === self::STATUS_INACTIVE) {
+                    $product->variants()->update(['status' => 'INACTIVE']);
+                } elseif ($product->status === self::STATUS_ACTIVE) {
+                    $product->variants()->update(['status' => 'ACTIVE']);
+                }
             }
         });
 
@@ -67,6 +72,21 @@ class Product extends Model
             $product->variants()->update(['status' => 'INACTIVE']);
             $product->variants()->delete();
         });
+    }
+
+    /**
+     * Lấy số lượng tồn kho của sản phẩm:
+     * Nếu sản phẩm có biến thể, luôn đồng bộ theo tổng tồn kho của các biến thể.
+     */
+    public function getStockQuantityAttribute($value): int
+    {
+        if ($this->relationLoaded('variants') && $this->variants->isNotEmpty()) {
+            $activeVariants = $this->variants->where('status', 'ACTIVE');
+            return $activeVariants->isNotEmpty() 
+                ? (int) $activeVariants->sum('stock_quantity') 
+                : (int) $this->variants->sum('stock_quantity');
+        }
+        return (int) ($value ?? 0);
     }
 
     /**
@@ -165,18 +185,44 @@ class Product extends Model
     }
 
     /**
+     * Xác định biến thể con có giá bán thực tế thấp nhất (Lowest Effective Variant).
+     * Ưu tiên chọn trong các phân loại ĐANG CÒN HÀNG (stock_quantity > 0).
+     * Nếu tất cả phân loại đều hết hàng thì mới lấy trong toàn bộ biến thể.
+     */
+    public function getLowestEffectiveVariantAttribute(): ?ProductVariant
+    {
+        $variants = $this->relationLoaded('variants') 
+            ? $this->variants->where('status', 'ACTIVE') 
+            : $this->variants()->where('status', 'ACTIVE')->get();
+
+        if ($variants->isEmpty()) {
+            return null;
+        }
+
+        // Ưu tiên chọn trong các phân loại ĐANG CÒN HÀNG (stock_quantity > 0)
+        $inStockVariants = $variants->filter(fn(ProductVariant $v) => (int)$v->stock_quantity > 0);
+        $targetVariants = $inStockVariants->isNotEmpty() ? $inStockVariants : $variants;
+
+        return $targetVariants->sortBy(function (ProductVariant $v) {
+            $eff = $v->is_on_sale ? (float)$v->sale_price : (float)$v->price;
+            // Sắp xếp tăng dần theo giá thực tế; nếu bằng nhau, ưu tiên biến thể đang sale (0 trước 1)
+            return sprintf('%014.2f_%d', $eff, $v->is_on_sale ? 0 : 1);
+        })->first();
+    }
+
+    /**
      * Kiểm tra xem sản phẩm có đang trong thời gian khuyến mãi hợp lệ hay không.
      * Khi hết hạn thời gian kết thúc hoặc chưa tới ngày bắt đầu, giá gốc sẽ tự động áp dụng trở lại.
      */
     public function getIsOnSaleAttribute(): bool
     {
-        // Nếu sản phẩm có biến thể, kiểm tra theo biến thể mặc định (hoặc bất kỳ biến thể nào đang sale)
-        if ($this->relationLoaded('variants') && $this->variants->isNotEmpty()) {
-            $defaultVar = $this->variants->firstWhere('is_default', true) ?? $this->variants->first();
-            return $defaultVar ? $defaultVar->is_on_sale : false;
+        $lowestVariant = $this->lowest_effective_variant;
+        if ($lowestVariant) {
+            return $lowestVariant->is_on_sale;
         }
 
-        if (empty($this->sale_price) || $this->sale_price >= $this->price) {
+        // 1. Ràng buộc bất biến: Nếu không có giá khuyến mãi hợp lệ (>= 0) hoặc giá sale >= giá gốc thì tuyệt đối KHÔNG PHẢI là đang sale
+        if ($this->sale_price === null || $this->sale_price === '' || (float)$this->sale_price < 0 || (float)$this->sale_price >= (float)$this->price) {
             return false;
         }
 
@@ -184,50 +230,45 @@ class Product extends Model
     }
 
     /**
-     * Lấy giá bán gốc thấp nhất từ các sản phẩm con (hoặc giá của cha nếu không có biến thể).
+     * Lấy giá bán gốc tương ứng của biến thể có giá thực tế thấp nhất (hoặc giá cha nếu không có biến thể).
      */
     public function getLowestPriceAttribute(): float
     {
-        $variants = $this->relationLoaded('variants') ? $this->variants : $this->variants()->where('status', 'ACTIVE')->get();
-        if ($variants->isNotEmpty()) {
-            $prices = $variants->pluck('price')
-                ->filter(fn($p) => is_numeric($p) && (float)$p > 0)
-                ->map(fn($p) => (float)$p)
-                ->values()
-                ->all();
-            if (!empty($prices)) {
-                return min($prices);
-            }
+        $lowestVariant = $this->lowest_effective_variant;
+        if ($lowestVariant) {
+            return (float) $lowestVariant->price;
         }
         return (float) $this->price;
     }
 
     /**
-     * Lấy giá sale thấp nhất từ các sản phẩm con (nếu có giá sale hợp lệ < lowest_price).
+     * Lấy giá sale tương ứng của biến thể có giá thực tế thấp nhất nếu đang sale (kể cả 0.0), ngược lại null.
      */
     public function getLowestSalePriceAttribute(): ?float
     {
-        $lowestPrice = $this->lowest_price;
-        $variants = $this->relationLoaded('variants') ? $this->variants : $this->variants()->where('status', 'ACTIVE')->get();
-        if ($variants->isNotEmpty()) {
-            $salePrices = $variants->pluck('sale_price')
-                ->filter(fn($sp) => is_numeric($sp) && (float)$sp > 0 && (float)$sp < $lowestPrice)
-                ->map(fn($sp) => (float)$sp)
-                ->values()
-                ->all();
-            if (!empty($salePrices)) {
-                return min($salePrices);
-            }
+        $lowestVariant = $this->lowest_effective_variant;
+        if ($lowestVariant) {
+            return $lowestVariant->is_on_sale ? (float) $lowestVariant->sale_price : null;
         }
-        return ($this->sale_price && (float)$this->sale_price < $lowestPrice) ? (float)$this->sale_price : null;
+        if ($this->is_on_sale && $this->sale_price !== null && (float)$this->sale_price >= 0 && (float)$this->sale_price < (float)$this->price) {
+            return (float) $this->sale_price;
+        }
+        return null;
     }
 
     /**
-     * Lấy giá bán thực tế hiện tại (nếu đang sale thì lấy sale_price, nếu hết hạn sale thì lấy price gốc).
+     * Lấy giá bán thực tế hiện tại (giá thấp nhất dù là giá gốc hay giá sale, kể cả 0đ).
      */
     public function getEffectivePriceAttribute(): float
     {
-        return $this->is_on_sale ? (float) $this->sale_price : (float) $this->price;
+        $lowestVariant = $this->lowest_effective_variant;
+        if ($lowestVariant) {
+            return (float) $lowestVariant->effective_price;
+        }
+        if ($this->is_on_sale && $this->sale_price !== null && (float)$this->sale_price >= 0 && (float)$this->sale_price < (float)$this->price) {
+            return (float) $this->sale_price;
+        }
+        return (float) $this->price;
     }
 
 
@@ -308,53 +349,61 @@ class Product extends Model
     }
 
     /**
-     * Đồng bộ giá bán của sản phẩm cha lấy giá bán thấp nhất của sản phẩm con (biến thể),
+     * Thời gian kết thúc Flash Sale của biến thể có giá thấp nhất (nếu có).
+     */
+    public function getFlashSaleEndAtAttribute(): ?string
+    {
+        $lowestVariant = $this->lowest_effective_variant;
+        if ($lowestVariant && $lowestVariant->is_on_sale && $lowestVariant->sale_end_at) {
+            return (string) $lowestVariant->sale_end_at;
+        }
+        return null;
+    }
+
+    /**
+     * Số giây còn lại của Flash Sale cho biến thể có giá thấp nhất.
+     */
+    public function getFlashSaleRemainingSecondsAttribute(): int
+    {
+        $lowestVariant = $this->lowest_effective_variant;
+        if ($lowestVariant && $lowestVariant->is_on_sale && $lowestVariant->sale_end_at) {
+            return max(0, now()->diffInSeconds($lowestVariant->sale_end_at, false));
+        }
+        return 0;
+    }
+
+    /**
+     * Đồng bộ giá bán của sản phẩm cha lấy theo biến thể con có giá bán thực tế thấp nhất
+     * (ưu tiên các phân loại đang còn hàng stock_quantity > 0),
      * đồng thời đồng bộ lại sale_price và tổng tồn kho.
      */
     public function syncLowestPriceFromVariants(): bool
     {
-        $variants = $this->variants()->get();
+        $variants = $this->variants()->where('status', 'ACTIVE')->get();
         if ($variants->isEmpty()) {
             return false;
         }
 
-        $prices = $variants->pluck('price')
-            ->filter(fn($p) => is_numeric($p) && (float)$p >= 0)
-            ->map(fn($p) => (float)$p)
-            ->values()
-            ->all();
+        // Ưu tiên chọn trong các phân loại ĐANG CÒN HÀNG (stock_quantity > 0)
+        $inStockVariants = $variants->filter(fn(ProductVariant $v) => (int)$v->stock_quantity > 0);
+        $targetVariants = $inStockVariants->isNotEmpty() ? $inStockVariants : $variants;
 
-        if (empty($prices)) {
+        $lowestVariant = $targetVariants->sortBy(function (ProductVariant $v) {
+            $eff = $v->is_on_sale ? (float)$v->sale_price : (float)$v->price;
+            return sprintf('%014.2f_%d', $eff, $v->is_on_sale ? 0 : 1);
+        })->first();
+
+        if (!$lowestVariant) {
             return false;
-        }
-
-        $minPrice = min($prices);
-
-        // Biến thể có giá thấp nhất
-        $cheapestVariant = $variants->sortBy('price')->first();
-        $minSalePrice = null;
-        if ($cheapestVariant && !empty($cheapestVariant->sale_price) && (float)$cheapestVariant->sale_price < $minPrice) {
-            $minSalePrice = (float)$cheapestVariant->sale_price;
-        }
-
-        // Nếu có biến thể nào có giá sale hợp lệ còn thấp hơn nữa
-        $validSalePrices = $variants->pluck('sale_price')
-            ->filter(fn($sp) => is_numeric($sp) && (float)$sp > 0 && (float)$sp < $minPrice)
-            ->map(fn($sp) => (float)$sp)
-            ->values()
-            ->all();
-
-        if (!empty($validSalePrices)) {
-            $minSalePrice = min($validSalePrices);
         }
 
         $totalStock = (int) $variants->sum('stock_quantity');
 
-        $this->price = $minPrice;
-        $this->sale_price = $minSalePrice;
+        $this->price = (float) $lowestVariant->price;
+        $this->sale_price = $lowestVariant->is_on_sale ? (float) $lowestVariant->sale_price : null;
         $this->stock_quantity = $totalStock;
 
-        return $this->save();
+        return $this->saveQuietly();
     }
 
     public function syncVariantsStats(): bool

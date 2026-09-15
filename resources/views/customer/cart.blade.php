@@ -8,14 +8,14 @@
         $cartItems->map(function ($item) {
             $price = (float) $item->effective_price;
             $imgUrl = $item->effective_image;
-            if (!str_starts_with($imgUrl, 'http')) {
+            if (!str_starts_with($imgUrl, 'http') && !str_starts_with($imgUrl, 'data:')) {
                 $imgUrl = asset($imgUrl);
             }
 
             $variants = ($item->product && $item->product->variants)
                 ? $item->product->variants->map(function ($v) use ($imgUrl) {
                     $vImg = !empty($v->image_url)
-                        ? (str_starts_with($v->image_url, 'http') ? $v->image_url : asset($v->image_url))
+                        ? ((str_starts_with($v->image_url, 'http') || str_starts_with($v->image_url, 'data:')) ? $v->image_url : asset($v->image_url))
                         : $imgUrl;
                     return [
                         'id' => $v->id,
@@ -188,7 +188,9 @@
                             @foreach($suggestedProducts as $prod)
                                 @php
                                     $pImg = $prod->images->firstWhere('is_primary', true) ?? $prod->images->first();
-                                    $pImgUrl = $pImg ? asset($pImg->image_url) : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
+                                    $pImgUrl = $pImg 
+                                        ? ((str_starts_with($pImg->image_url, 'data:') || str_starts_with($pImg->image_url, 'http')) ? $pImg->image_url : asset($pImg->image_url)) 
+                                        : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
                                     $pPrice = $prod->sale_price ?? $prod->price;
                                     $pHasDiscount = !empty($prod->sale_price) && $prod->sale_price < $prod->price;
                                     $pDiscount = $pHasDiscount && $prod->price > 0 ? round((($prod->price - $prod->sale_price) / $prod->price) * 100) : 0;
@@ -262,7 +264,8 @@
                             @php
                                 $product = $item->product;
                                 $variant = $item->variant;
-                                $imageUrl = $item->effective_image;
+                                $rawImg = $item->effective_image;
+                                $imageUrl = (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg);
                                 $price = $item->effective_price;
                                 $originalPrice = $variant ? $variant->price : $product->price;
                                 $hasDiscount = $price < $originalPrice;
@@ -302,7 +305,8 @@
                                             class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-[#EBDDCD] shrink-0 group block shadow-2xs overflow-hidden bg-white"
                                             title="Xem chi tiết {{ $product->name }}">
                                             <img :src="getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}'" alt="{{ $product->name }}"
-                                                class="w-full h-full object-cover object-center transform transition duration-300 group-hover:scale-105">
+                                                class="w-full h-full object-cover object-center transform transition duration-300 group-hover:scale-105"
+                                                onerror="this.src='https://placehold.co/200x200/F7EFE9/5D4037?text=Gau+Bong'">
                                             @if ($hasDiscount)
                                                 <span class="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-xs leading-none">
                                                     -{{ $discountPercent }}%
@@ -514,7 +518,8 @@
                 <div class="p-5 border-b border-[#F0E6D8] bg-[#FFFDF9] flex items-start gap-4 relative">
                     <img :src="activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url" 
                          :alt="activeVariantModal?.item?.name" 
-                         class="w-20 h-20 rounded-2xl object-cover border-2 border-[#EBDDCD] shadow-sm shrink-0 bg-white">
+                         class="w-20 h-20 rounded-2xl object-cover border-2 border-[#EBDDCD] shadow-sm shrink-0 bg-white"
+                         onerror="this.src='https://placehold.co/200x200/F7EFE9/5D4037?text=Gau+Bong'">
                     
                     <div class="flex-1 min-w-0 pr-6">
                         <h4 class="font-bold text-[#2C1408] text-sm sm:text-base line-clamp-1" x-text="activeVariantModal?.item?.name"></h4>

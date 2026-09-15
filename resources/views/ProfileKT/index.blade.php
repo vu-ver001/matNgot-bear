@@ -31,7 +31,6 @@
         @class([
             'profile-page',
             'is-editing' => $startInEditMode,
-            'uses-default-layout' => !in_array($user->role, [\App\Models\User::ROLE_CUSTOMER, \App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_STAFF]),
         ])
         data-profile-editor
         data-profile-editing-initially="{{ $startInEditMode ? 'true' : 'false' }}"

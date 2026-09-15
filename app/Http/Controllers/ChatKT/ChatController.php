@@ -39,7 +39,7 @@ class ChatController extends Controller
 
         $suggestedOrder = null;
         if ($request->filled('order_id')) {
-            $suggestedOrder = \App\Models\Order::with(['details.product'])
+            $suggestedOrder = \App\Models\Order::with(['details.product.images', 'details.variant'])
                 ->where('customer_id', $customer->id)
                 ->find((int) $request->query('order_id'));
         }
@@ -69,6 +69,7 @@ class ChatController extends Controller
                         'sender_id' => $m->sender_id,
                         'is_self' => (int) $m->sender_id === (int) $customer->id,
                         'content' => $m->content,
+                        'order_card' => $this->chatService->formatOrderCardData($m->content, 'customer'),
                         'image_url' => $m->image_url,
                         'image_urls' => $m->image_urls,
                         'images' => $m->image_urls,
@@ -116,6 +117,7 @@ class ChatController extends Controller
                     'sender_id' => $message->sender_id,
                     'is_self' => true,
                     'content' => $message->content,
+                    'order_card' => $this->chatService->formatOrderCardData($message->content, 'customer'),
                     'image_url' => $message->image_url,
                     'image_urls' => $message->image_urls,
                     'images' => $message->image_urls,
@@ -129,6 +131,7 @@ class ChatController extends Controller
                     'sender_id' => $replyMessage->sender_id,
                     'is_self' => false,
                     'content' => $replyMessage->content,
+                    'order_card' => $this->chatService->formatOrderCardData($replyMessage->content, 'customer'),
                     'image_url' => $replyMessage->image_url,
                     'image_urls' => $replyMessage->image_urls,
                     'images' => $replyMessage->image_urls,
@@ -183,6 +186,7 @@ class ChatController extends Controller
                 'sender_id' => $m->sender_id,
                 'is_self' => (int) $m->sender_id === (int) $customer->id,
                 'content' => $m->content,
+                'order_card' => $this->chatService->formatOrderCardData($m->content, 'customer'),
                 'image_url' => $m->image_url,
                 'image_urls' => $m->image_urls,
                 'images' => $m->image_urls,

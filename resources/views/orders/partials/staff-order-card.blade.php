@@ -17,8 +17,8 @@
             @php
                 $isActionable = isset($bulkActionableOrderIds) 
                     ? in_array($order->id, $bulkActionableOrderIds, true) 
-                    : ($order->canTransitionTo('SHIPPING') || $order->canTransitionTo('CONFIRMED'));
-                $checkboxTitle = $order->canTransitionTo('SHIPPING') ? 'Chọn đơn để giao hàng' : 'Chọn đơn để xác nhận';
+                    : ($order->canTransitionTo('SHIPPING') || $order->canTransitionTo('CONFIRMED') || $order->canTransitionTo('COMPLETED'));
+                $checkboxTitle = $order->canTransitionTo('COMPLETED') ? 'Chọn đơn để hoàn thành' : ($order->canTransitionTo('SHIPPING') ? 'Chọn đơn để giao hàng' : 'Chọn đơn để xác nhận');
             @endphp
             <!-- Checkbox chọn đơn -->
             @if($isActionable)
@@ -83,7 +83,7 @@
                     ?: ($product?->images?->where('is_primary', true)->first()?->image_url
                         ?? $product?->images?->first()?->image_url);
                 $imageUrl = $rawImg
-                    ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg))
+                    ? ((str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg))
                     : 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
 
                 $variationParts = [];

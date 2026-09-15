@@ -532,20 +532,21 @@
             grid.innerHTML = products.map(p => {
                 const primaryImg = (p.images && p.images.find(img => img && img.is_primary)) || (p.images && p.images[0]) || null;
                 const imgUrl = (primaryImg && primaryImg.image_url) ? primaryImg.image_url : 'https://placehold.co/600x600/f5e6ca/7c4a2d?text=' + encodeURIComponent(p.name || 'Gau Bong');
-                const price = Number(p.lowest_price !== undefined ? p.lowest_price : (p.price || 0));
-                const salePrice = (p.lowest_sale_price !== undefined && p.lowest_sale_price !== null) 
-                    ? Number(p.lowest_sale_price) 
-                    : (p.sale_price ? Number(p.sale_price) : null);
-                const isOnSale = (salePrice !== null && salePrice > 0 && salePrice < price);
-                const discountPct = (isOnSale && price > 0 && salePrice) ? Math.round(((price - salePrice) / price) * 100) : 0;
+                const price = Number(p.lowest_price !== undefined && p.lowest_price !== null ? p.lowest_price : (p.price || 0));
+                const isOnSale = Boolean(p.is_on_sale) && p.lowest_sale_price !== null && p.lowest_sale_price !== undefined && Number(p.lowest_sale_price) >= 0 && Number(p.lowest_sale_price) < price;
+                const salePrice = isOnSale ? Number(p.lowest_sale_price) : null;
+                const discountPct = (isOnSale && price > 0) ? Math.round(((price - salePrice) / price) * 100) : 0;
                 const nameEscaped = (p.name || 'Gấu bông').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 const catName = (p.category && p.category.name) ? p.category.name : 'Gấu Bông';
 
                 return `
                     <div class="product-grid-item">
                         <div class="product-photo-wrap">
-                            ${isOnSale ? `<span class="card-badge-sale">-${discountPct}%</span>` : ''}
-                            <button type="button" class="btn-wishlist-card" data-product-id="${p.id}" onclick="toggleWishlist({ id: ${p.id}, name: '${nameEscaped}', price: ${price}, sale_price: ${salePrice || 'null'}, image_url: '${imgUrl}' }, event)" title="Lưu vào yêu thích">
+                            ${isOnSale ? `
+                                <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
+                                ${discountPct > 0 ? `<span class="card-badge-sale">-${discountPct}%</span>` : ''}
+                            ` : ''}
+                            <button type="button" class="btn-wishlist-card" data-product-id="${p.id}" onclick="toggleWishlist({ id: ${p.id}, name: '${nameEscaped}', price: ${price}, sale_price: ${(salePrice !== null && !isNaN(salePrice)) ? salePrice : 'null'}, image_url: '${imgUrl}' }, event)" title="Lưu vào yêu thích">
                                 <i class="fa-regular fa-heart"></i>
                             </button>
                             <a href="/products/${p.id}">
@@ -563,18 +564,35 @@
                             </div>
                             <div>
                                 <div class="product-card-prices">
-                                    ${isOnSale && salePrice
-                                        ? `<span class="price-current">${salePrice.toLocaleString('vi-VN')} đ</span><span class="price-old">${price.toLocaleString('vi-VN')} đ</span>`
+                                    ${isOnSale
+                                        ? `<span class="price-current" style="color: #D32F2F; font-weight: 800;">${salePrice.toLocaleString('vi-VN')} đ</span><span class="price-old">${price.toLocaleString('vi-VN')} đ</span>`
                                         : `<span class="price-current" style="color: var(--primary-dark);">${price.toLocaleString('vi-VN')} đ</span>`
                                     }
                                 </div>
                                 <div class="product-card-footer">
                                     <div class="product-card-meta">
-                                        <span class="rating-badge-pill" title="Đánh giá ${(parseFloat(p.avg_rating) || 5.0).toFixed(1)} sao">
-                                            <i class="fa-solid fa-star"></i> ${(parseFloat(p.avg_rating) || 5.0).toFixed(1)}
-                                        </span>
+                                        ${(p.reviews_count > 0 || p.review_count > 0)
+                                            ? `<span class="rating-badge-pill" title="Đánh giá ${parseFloat(p.avg_rating).toFixed(1)} sao">
+                                                <i class="fa-solid fa-star"></i> ${parseFloat(p.avg_rating).toFixed(1)}
+                                               </span>`
+                                            : `<span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                                                <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                                               </span>`
+                                        }
                                         <span class="sold-count-text">Đã bán ${p.sold_count || 0}</span>
                                     </div>
+                                    ${(() => {
+                                        const pStock = (p.variants && p.variants.length > 0)
+                                            ? p.variants.reduce((sum, v) => sum + (Number(v.stock_quantity) || 0), 0)
+                                            : (Number(p.stock_quantity) || 0);
+                                        return (pStock > 0)
+                                            ? `<button type="button" class="btn-add-cart-quick" onclick="addToCart(${p.id}, '${nameEscaped}')" title="Thêm vào giỏ hàng">
+                                                <i class="fa-solid fa-plus"></i>
+                                               </button>`
+                                            : `<button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
+                                                <i class="fa-solid fa-ban"></i>
+                                               </button>`;
+                                    })()}
                                 </div>
                             </div>
                         </div>

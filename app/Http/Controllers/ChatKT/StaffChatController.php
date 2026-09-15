@@ -69,7 +69,7 @@ class StaffChatController extends Controller
             ? User::where('role', User::ROLE_STAFF)->where('status', User::STATUS_ACTIVE)->orderBy('full_name')->get()
             : collect();
 
-        if ($request->expectsJson() && ! $request->hasHeader('X-Inertia')) {
+        if ($request->expectsJson() && ! $request->hasHeader('X-Inertia') && ! $request->boolean('bg_sync')) {
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -84,7 +84,7 @@ class StaffChatController extends Controller
         // Đơn hàng gợi ý gửi cho khách (khi nhấn "Nhắn tin cho khách" từ trang chi tiết đơn hàng)
         $suggestedOrder = null;
         if ($request->filled('order_id')) {
-            $suggestedOrder = Order::with(['details.product'])->find((int) $request->query('order_id'));
+            $suggestedOrder = Order::with(['details.product.images', 'details.variant'])->find((int) $request->query('order_id'));
             if ($suggestedOrder && $selectedCase && (int) $suggestedOrder->customer_id !== (int) $selectedCase->customer_id) {
                 $suggestedOrder = null;
             }
@@ -93,7 +93,8 @@ class StaffChatController extends Controller
         // Danh sách tất cả đơn hàng của khách hàng trong case đang mở
         $customerOrders = collect();
         if ($selectedCase && $selectedCase->customer_id) {
-            $customerOrders = Order::where('customer_id', $selectedCase->customer_id)
+            $customerOrders = Order::with(['details.product.images', 'details.variant'])
+                ->where('customer_id', $selectedCase->customer_id)
                 ->latest()
                 ->get();
         }
@@ -333,6 +334,8 @@ class StaffChatController extends Controller
         if ($request->expectsJson() || $request->ajax()) {
             $case->refresh()->loadMissing(['order']);
 
+            $role = ($user->role === User::ROLE_ADMIN) ? 'admin' : 'staff';
+
             return response()->json([
                 'success' => true,
                 'message' => 'Phản hồi đã được gửi thành công.',
@@ -342,6 +345,7 @@ class StaffChatController extends Controller
                     'is_customer' => false,
                     'sender_name' => $user->full_name ?? $user->name ?? 'Nhân viên hỗ trợ',
                     'content' => $message->content,
+                    'order_card' => $this->chatService->formatOrderCardData($message->content, $role),
                     'image_url' => $message->image_url,
                     'image_urls' => $message->image_urls,
                     'images' => $message->image_urls,
@@ -383,6 +387,8 @@ class StaffChatController extends Controller
         $isLastMsgSelf = $lastMsg && ((int) $lastMsg->sender_id !== (int) $case->customer_id);
         $lastMsgSeen = $isLastMsgSelf && (bool) $lastMsg->is_read;
 
+        $role = ($user->role === User::ROLE_ADMIN) ? 'admin' : 'staff';
+
         return response()->json([
             'success' => true,
             'is_last_msg_self' => $isLastMsgSelf,
@@ -394,6 +400,7 @@ class StaffChatController extends Controller
                 'sender_name' => $m->sender?->full_name ?? $m->sender?->name ?? 'Người dùng',
                 'sender_avatar' => $m->sender?->avatar_url,
                 'content' => $m->content,
+                'order_card' => $this->chatService->formatOrderCardData($m->content, $role),
                 'image_url' => $m->image_url,
                 'image_urls' => $m->image_urls,
                 'images' => $m->image_urls,

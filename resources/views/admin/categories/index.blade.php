@@ -238,6 +238,7 @@
     }
 
     let currentCategoriesList = [];
+    let newlyAddedCatId = null;
 
     async function loadCategoriesTable() {
         window.scrollTo({ left: 0 });
@@ -279,10 +280,14 @@
             const slug = cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             const isActive = cat.is_active === true || cat.is_active === 1 || cat.status === 'ACTIVE';
             const isPinned = Boolean(cat.is_pinned);
+            const isNew = (cat.id === newlyAddedCatId);
 
             return `
-                <tr>
-                    <td><strong>#${cat.id}</strong></td>
+                <tr class="${isNew ? 'row-newly-added' : ''}" style="${isNew ? 'background-color: #FFF9EC; transition: background-color 2s ease;' : ''}">
+                    <td>
+                        <strong>#${cat.id}</strong>
+                        ${isNew ? '<span style="display:inline-block; font-size:10px; background:#E59819; color:#fff; font-weight:800; padding:1px 5px; border-radius:4px; margin-left:4px;">MỚI</span>' : ''}
+                    </td>
                     <td>
                         <div style="font-weight: 800; color: var(--text-main);">${cat.name}</div>
                         <div style="font-size: 11.5px; color: #8D6E63;">/${slug}</div>
@@ -324,6 +329,16 @@
                 </tr>
             `;
         }).join('');
+
+        if (newlyAddedCatId) {
+            setTimeout(() => {
+                const newRow = document.querySelector('.row-newly-added');
+                if (newRow) {
+                    newRow.style.backgroundColor = '';
+                }
+                newlyAddedCatId = null;
+            }, 3000);
+        }
     }
 
     function escapeQuote(str) {
@@ -551,6 +566,9 @@
             if (data.success) {
                 Swal.fire({ icon: 'success', title: 'Thành công!', text: data.message, timer: 1500, showConfirmButton: false });
                 closeCategoryModal();
+                if (!id && data.data && data.data.id) {
+                    newlyAddedCatId = data.data.id;
+                }
                 loadCategories();
             } else {
                 let errHtml = data.message || 'Không thể lưu danh mục';
@@ -729,8 +747,22 @@
             let productSlotsHtml = '';
             for (let slot = 0; slot < 3; slot++) {
                 const curItem = items[slot] || null;
-                const curPId = curItem ? curItem.product_id : '';
-                const curCustomName = curItem ? (curItem.name || '') : '';
+                let curPId = curItem ? curItem.product_id : '';
+                let curCustomName = curItem ? (curItem.name || '') : '';
+
+                // Nếu sản phẩm trong config đã bị xóa/không còn active, treat slot này là trống
+                // (xóa cả ô dropdown lẫn ô tên tùy chỉnh phía dưới)
+                if (curPId) {
+                    const stillExists = currentCategoryProducts.some(p => p.id == curPId);
+                    if (!stillExists) {
+                        curPId = '';
+                        curCustomName = '';
+                        // Cập nhật lại data trong bộ nhớ để khi lưu không còn product_id đã bị xóa
+                        if (currentHeaderColumns[cIdx] && currentHeaderColumns[cIdx].items) {
+                            currentHeaderColumns[cIdx].items[slot] = null;
+                        }
+                    }
+                }
 
                 let optionsHtml = `<option value="">-- Chọn sản phẩm (${slot + 1}/3) --</option>`;
                 currentCategoryProducts.forEach(p => {
@@ -738,11 +770,13 @@
                     optionsHtml += `<option value="${p.id}" ${selected}>${p.name} (#${p.id})</option>`;
                 });
 
+                const isSlotFilled = !!curPId;
+
                 productSlotsHtml += `
                     <div style="background: #FAF7F2; padding: 10px; border-radius: 8px; border: 1px solid #EFE6DC; margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #8D6E63; margin-bottom: 4px;">
                             <span><i class="fa-solid fa-paw" style="color: #E59819;"></i> Sản phẩm ${slot + 1}</span>
-                            ${curItem ? `<span style="color: #2E7D32;"><i class="fa-solid fa-check"></i> Đã chọn</span>` : `<span style="color: #BDBDBD;">Trống</span>`}
+                            ${isSlotFilled ? `<span style="color: #2E7D32;"><i class="fa-solid fa-check"></i> Đã chọn</span>` : `<span style="color: #BDBDBD;">Trống</span>`}
                         </div>
                         <select class="select-control" style="font-size: 12px; padding: 6px 10px; margin-bottom: 4px; background: #FFFFFF;" onchange="updateProductSlot(${cIdx}, ${slot}, this.value)">
                             ${optionsHtml}
@@ -751,6 +785,7 @@
                     </div>
                 `;
             }
+
 
             return `
                 <div class="megamenu-column-card" style="background: #FFFFFF; border-radius: 12px; border: 1.5px solid #F6D89B; padding: 14px; box-shadow: 0 4px 14px rgba(229, 152, 25, 0.1); display: flex; flex-direction: column;">

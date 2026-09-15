@@ -42,19 +42,7 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <div class="mb-4 bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-green-600"></i>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
-            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
+    {{-- Flash success/error đã chuyển sang toast góc phải, chỉ giữ $errors validation. --}}
 
     @if ($errors->any())
         <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3 rounded-xl">
@@ -567,7 +555,7 @@
                                         ?: ($detail->variant?->image_url
                                             ?? $detail->product?->images?->where('is_primary', true)->first()?->image_url
                                             ?? $detail->product?->images?->first()?->image_url);
-                                    $primaryImg = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset($rawImg)) : '';
+                                     $primaryImg = $rawImg ? ((str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg)) : '';
                                 @endphp
                                 <tr>
                                     <td>

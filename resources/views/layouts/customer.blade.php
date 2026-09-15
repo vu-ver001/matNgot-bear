@@ -500,6 +500,33 @@
             }
         }
 
+        window.updateWishlistBadge = updateWishlistBadge;
+
+        window.setWishlistCount = function(count) {
+            const c = Math.max(0, parseInt(count) || 0);
+            window.wishlistCount = c;
+            wishlistCount = c;
+            updateWishlistBadge();
+        };
+
+        function fetchWishlistCount() {
+            if (window.isCustomerAuthenticated) {
+                fetch('{{ route('customer.wishlist.user_ids') }}')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.wishlist_count !== undefined) {
+                            window.setWishlistCount(data.wishlist_count);
+                        }
+                        if (data && Array.isArray(data.ids)) {
+                            window.dbWishlistProductIds = data.ids;
+                            syncAllHeartIcons();
+                        }
+                    })
+                    .catch(() => {});
+            }
+        }
+        window.fetchWishlistCount = fetchWishlistCount;
+
         function fetchCartCount() {
             if (window.isCustomerAuthenticated) {
                 fetch('{{ route('customer.cart.count') }}')
@@ -802,8 +829,7 @@
                     updateHeartIcons(id, isFav);
 
                     if (data.wishlist_count !== undefined) {
-                        wishlistCount = data.wishlist_count;
-                        updateWishlistBadge();
+                        window.setWishlistCount(data.wishlist_count);
                     }
 
                     if (Array.isArray(window.dbWishlistProductIds)) {
@@ -812,6 +838,26 @@
                             window.dbWishlistProductIds.push(id);
                         } else if (!isFav && idx > -1) {
                             window.dbWishlistProductIds.splice(idx, 1);
+                        }
+                    }
+
+                    // Đồng bộ giao diện nếu đang đứng ở trang Danh sách yêu thích
+                    const wishlistRoot = document.querySelector('[data-wishlist-root]');
+                    if (wishlistRoot && !isFav) {
+                        const card = wishlistRoot.querySelector(`[data-product-id="${id}"]`);
+                        if (card) {
+                            card.classList.add('is-removing');
+                            setTimeout(() => card.remove(), 250);
+                        }
+                        wishlistRoot.querySelectorAll('[data-wishlist-total]').forEach(el => {
+                            el.textContent = String(data.wishlist_count);
+                        });
+                        if (data.wishlist_count === 0) {
+                            wishlistRoot.querySelector('[data-wishlist-grid]')?.classList.add('hidden');
+                            wishlistRoot.querySelector('[data-wishlist-empty]')?.classList.remove('hidden');
+                            wishlistRoot.querySelector('[data-wishlist-pagination]')?.classList.add('hidden');
+                            wishlistRoot.querySelector('[data-wishlist-clear-control]')?.classList.add('hidden');
+                            wishlistRoot.querySelector('[data-wishlist-sort-control]')?.classList.add('hidden');
                         }
                     }
 
@@ -837,6 +883,31 @@
             syncAllHeartIcons();
             updateWishlistBadge();
             updateCartBadge();
+            fetchWishlistCount();
+            fetchCartCount();
+        });
+
+        window.addEventListener('pageshow', () => {
+            fetchWishlistCount();
+            fetchCartCount();
+        });
+
+        // Bắt sự kiện xóa khỏi wishlist từ form trên trang wishlist để đồng bộ badge ngay lập tức
+        document.addEventListener('submit', function(e) {
+            const removeForm = e.target.closest('[data-wishlist-remove-form]');
+            if (removeForm) {
+                setTimeout(() => {
+                    if (typeof window.fetchWishlistCount === 'function') {
+                        window.fetchWishlistCount();
+                    }
+                }, 300);
+            }
+            const clearForm = e.target.closest('[data-wishlist-clear-control]');
+            if (clearForm) {
+                if (typeof window.setWishlistCount === 'function') {
+                    window.setWishlistCount(0);
+                }
+            }
         });
 
         // Global Auth Modal Helper
@@ -925,7 +996,9 @@
                 }
 
                 qvProduct = json.data;
-                qvMaxStock = qvProduct.stock_quantity || 1;
+                qvMaxStock = (qvProduct.variants && qvProduct.variants.length > 0)
+                    ? qvProduct.variants.reduce((sum, v) => sum + (Number(v.stock_quantity) || 0), 0)
+                    : (Number(qvProduct.stock_quantity) || 0);
 
                 // Ảnh
                 const primaryImg = (qvProduct.images && qvProduct.images.find(i => i.is_primary)) || (qvProduct.images && qvProduct.images[0]) || null;
@@ -938,12 +1011,12 @@
 
                 // Giá
                 const price = Number(qvProduct.price || 0);
-                const salePrice = qvProduct.sale_price ? Number(qvProduct.sale_price) : null;
+                const salePrice = (qvProduct.sale_price !== null && qvProduct.sale_price !== '' && qvProduct.sale_price !== undefined) ? Number(qvProduct.sale_price) : null;
                 const isOnSale = qvProduct.is_on_sale !== undefined ? Boolean(qvProduct.is_on_sale) : (salePrice !== null && salePrice < price);
                 const curPriceEl = document.getElementById('qv-price-cur');
                 const oldPriceEl = document.getElementById('qv-price-old');
 
-                if (isOnSale && salePrice) {
+                if (isOnSale && salePrice !== null) {
                     curPriceEl.innerText = salePrice.toLocaleString('vi-VN') + ' đ';
                     oldPriceEl.innerText = price.toLocaleString('vi-VN') + ' đ';
                     oldPriceEl.style.display = 'inline-block';

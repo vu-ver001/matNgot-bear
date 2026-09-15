@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnHandover = supportWrapper.querySelector('[data-btn-handover]');
     const btnClose = supportWrapper.querySelector('[data-btn-close]');
     const btnReopen = supportWrapper.querySelector('[data-btn-reopen]');
-    const btnTakeover = supportWrapper.querySelector('[data-btn-takeover]');
     const btnRevoke = supportWrapper.querySelector('[data-btn-revoke]');
     const btnOpenAssign = supportWrapper.querySelector('[data-btn-open-assign]');
     const assignModal = document.getElementById('assignStaffModal');
@@ -48,6 +47,155 @@ document.addEventListener('DOMContentLoaded', () => {
         return div.innerHTML.replace(/\n/g, '<br>');
     };
 
+    // =========================================================
+    // ĐỊNH DẠNG THỜI GIAN TƯƠNG ĐỐI REALTIME (CHUẨN diffForHumans)
+    // Tự động cập nhật thời gian từng giây / phút mà không cần reload trang
+    // =========================================================
+    const formatTimeAgo = (timestampSec) => {
+        if (!timestampSec) return '';
+        const nowSec = Math.floor(Date.now() / 1000);
+        const diff = Math.max(0, nowSec - timestampSec);
+
+        if (diff < 60) {
+            return diff === 1 ? '1 second' : `${diff} seconds`;
+        }
+        const diffMinutes = Math.floor(diff / 60);
+        if (diffMinutes < 60) {
+            return diffMinutes === 1 ? '1 minute' : `${diffMinutes} minutes`;
+        }
+        const diffHours = Math.floor(diff / 3600);
+        if (diffHours < 24) {
+            return diffHours === 1 ? '1 hour' : `${diffHours} hours`;
+        }
+        const diffDays = Math.floor(diff / 86400);
+        if (diffDays < 30) {
+            return diffDays === 1 ? '1 day' : `${diffDays} days`;
+        }
+        const diffMonths = Math.floor(diffDays / 30);
+        if (diffMonths < 12) {
+            return diffMonths === 1 ? '1 month' : `${diffMonths} months`;
+        }
+        const diffYears = Math.floor(diffDays / 365);
+        return diffYears === 1 ? '1 year' : `${diffYears} years`;
+    };
+
+    // Tự động cập nhật thời gian hiển thị của tất cả case trong danh sách bên trái
+    const updateAllCaseTimes = () => {
+        const timeEls = supportWrapper.querySelectorAll('.staff-support-case-time[data-timestamp]');
+        timeEls.forEach((el) => {
+            const ts = parseInt(el.dataset.timestamp, 10);
+            if (ts) {
+                el.textContent = formatTimeAgo(ts);
+            }
+        });
+    };
+
+    // Chạy cập nhật ngay khi trang tải xong và lặp lại mỗi 1 giây để nhảy số realtime
+    updateAllCaseTimes();
+    setInterval(updateAllCaseTimes, 1000);
+
+    // Cập nhật timestamp & preview của một case trên sidebar ngay lập tức khi có tin nhắn mới
+    const touchCaseSidebarItem = (caseId, previewText = '') => {
+        if (!caseId) return;
+        const item = supportWrapper.querySelector(`.staff-support-case-item[data-case-id="${caseId}"]`);
+        if (!item) return;
+
+        const timeEl = item.querySelector('.staff-support-case-time');
+        if (timeEl) {
+            const nowSec = Math.floor(Date.now() / 1000);
+            timeEl.dataset.timestamp = String(nowSec);
+            timeEl.textContent = '0 seconds';
+        }
+
+        if (previewText) {
+            const previewEl = item.querySelector('.staff-support-case-preview');
+            if (previewEl) {
+                previewEl.textContent = previewText.includes('📦 [ĐƠN HÀNG #') ? '📦 [Đơn hàng]' : previewText;
+            }
+        }
+
+        const list = item.parentElement;
+        if (list && list.firstElementChild !== item) {
+            list.prepend(item);
+        }
+    };
+
+    // Tạo HTML thẻ đơn hàng (Shopee-style) đồng bộ với giao diện Blade
+    const formatOrderCardHtml = (content, orderCard = null) => {
+        let code = orderCard?.order_code || '';
+        let status = orderCard?.order_status || '';
+        let prodName = orderCard?.product_name || '';
+        let variantText = orderCard?.variant_text || '';
+        let total = orderCard?.total_amount || '';
+        let imgUrl = orderCard?.image_url || '';
+        let otherCount = typeof orderCard?.other_count === 'number' ? orderCard.other_count : 0;
+        let orderUrl = orderCard?.order_url || '';
+
+        if (content && (!orderCard || !imgUrl || !orderUrl)) {
+            if (!code) {
+                const codeMatch = content.match(/#([A-Za-z0-9\-]+)/);
+                if (codeMatch) code = codeMatch[1];
+            }
+
+            const lines = content.split('\n');
+            lines.forEach(line => {
+                if (!prodName && line.includes('Sản phẩm:')) prodName = line.replace(/^[•\s\-\*]*Sản phẩm:\s*/, '').trim();
+                if (!variantText && line.includes('Phân loại:')) variantText = line.replace(/^[•\s\-\*]*Phân loại:\s*/, '').trim();
+                if (!total && line.includes('Tổng tiền:')) total = line.replace(/^[•\s\-\*]*Tổng tiền:\s*/, '').trim();
+                if (!status && line.includes('Trạng thái:')) status = line.replace(/^[•\s\-\*]*Trạng thái:\s*/, '').trim();
+                if (!otherCount && (line.includes('sản phẩm khác') || line.includes('Khác:'))) {
+                    const m = line.match(/\+?(\d+)\s*sản phẩm khác/i);
+                    if (m) otherCount = parseInt(m[1], 10);
+                }
+            });
+        }
+
+        if (prodName) {
+            const otherMatch = prodName.match(/\(\+(\d+)\s*sản phẩm khác\)/i);
+            if (otherMatch) {
+                if (!otherCount) otherCount = parseInt(otherMatch[1], 10);
+                prodName = prodName.replace(/\s*\(\+\d+\s*sản phẩm khác\)/i, '').trim();
+            }
+        }
+
+        if (!imgUrl) {
+            imgUrl = 'https://placehold.co/120x120/fef3c7/78350f?text=Bear';
+        }
+
+        if (!orderUrl && code) {
+            const isStaff = window.location.pathname.startsWith('/staff');
+            orderUrl = isStaff ? `/staff/orders` : `/admin/orders`;
+        }
+
+        return `
+            <div class="chat-order-card">
+                <div class="chat-order-card__header">
+                    <span class="chat-order-card__tag">
+                        <i class="fa-solid fa-box"></i> #${escapeHtml(code)}
+                    </span>
+                    ${status ? `<span class="chat-order-card__status">${escapeHtml(status)}</span>` : ''}
+                </div>
+                <div class="chat-order-card__body">
+                    <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(code)}" class="chat-order-card__img" onerror="this.onerror=null; this.src='https://placehold.co/120x120/fef3c7/78350f?text=Bear';">
+                    <div class="chat-order-card__info">
+                        ${prodName ? `<div class="chat-order-card__pname">${escapeHtml(prodName)}</div>` : ''}
+                        ${variantText ? `<div class="chat-order-card__variant">Phân loại: ${escapeHtml(variantText)}</div>` : ''}
+                        ${otherCount > 0 ? `<div class="chat-order-card__other">+${otherCount} sản phẩm khác</div>` : ''}
+                        ${total ? `<div class="chat-order-card__total">Tổng tiền: <strong>${escapeHtml(total)}</strong></div>` : ''}
+                    </div>
+                </div>
+                ${orderUrl ? `
+                    <div class="chat-order-card__footer">
+                        <a href="${escapeHtml(orderUrl)}" class="chat-order-card__link">
+                            <span>Xem chi tiết đơn hàng</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    };
+
     // Tạo HTML cho tin nhắn trong chat stream
     const renderStaffMessageHtml = (msg, options = {}) => {
         const isCustomer = Boolean(msg.is_customer);
@@ -74,40 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const dateStr = msg.sent_at || '';
         const fullDateTooltip = msg.date ? `${dateStr}, ${msg.date}` : dateStr;
 
-        const formatBubbleContent = (content) => {
-            if (content && content.includes('📦 [ĐƠN HÀNG #')) {
-                const codeMatch = content.match(/#([A-Z0-9\-]+)/);
-                const code = codeMatch ? codeMatch[1] : '';
-                const lines = content.split('\n');
-                let prodName = '';
-                let total = '';
-                let status = '';
-                lines.forEach(line => {
-                    if (line.includes('Sản phẩm:')) prodName = line.replace(/^[•\s\-\*]*Sản phẩm:\s*/, '').trim();
-                    if (line.includes('Tổng tiền:')) total = line.replace(/^[•\s\-\*]*Tổng tiền:\s*/, '').trim();
-                    if (line.includes('Trạng thái:')) status = line.replace(/^[•\s\-\*]*Trạng thái:\s*/, '').trim();
-                });
-
-                return `
-                    <div class="chat-order-card">
-                        <div class="chat-order-card__header">
-                            <span class="chat-order-card__tag">
-                                <i class="fa-solid fa-box"></i> #${escapeHtml(code)}
-                            </span>
-                            ${status ? `<span class="chat-order-card__status">${escapeHtml(status)}</span>` : ''}
-                        </div>
-                        <div class="chat-order-card__body">
-                            <div class="chat-order-card__info">
-                                ${prodName ? `<div class="chat-order-card__pname">${escapeHtml(prodName)}</div>` : ''}
-                                ${total ? `<div class="chat-order-card__total">Tổng tiền: <strong>${escapeHtml(total)}</strong></div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            return escapeHtml(content).replace(/\n/g, '<br>');
-        };
-
         const images = Array.isArray(msg.image_urls) && msg.image_urls.length > 0
             ? msg.image_urls
             : (Array.isArray(msg.images) && msg.images.length > 0
@@ -128,9 +242,14 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        const textHtmlContent = msg.content ? `
-            <div class="chat-msg-text">${formatBubbleContent(msg.content)}</div>
-        ` : '';
+        const isOrderCard = Boolean(msg.order_card || (msg.content && msg.content.includes('📦 [ĐƠN HÀNG #')));
+
+        let textInnerHtmlContent = '';
+        if (isOrderCard) {
+            textInnerHtmlContent = formatOrderCardHtml(msg.content, msg.order_card);
+        } else if (msg.content) {
+            textInnerHtmlContent = `<div class="chat-msg-text">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>`;
+        }
 
         const timeHtmlContent = (showTime && dateStr) ? `
             <div class="staff-chat-time chat-msg-time">
@@ -146,10 +265,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ` : '';
 
         let bubbleHtmlContent = '';
-        if (textHtmlContent) {
+        if (textInnerHtmlContent) {
             bubbleHtmlContent = `
                 <div class="staff-chat-bubble" title="${escapeHtml(fullDateTooltip)}">
-                    ${textHtmlContent}
+                    ${textInnerHtmlContent}
                     ${timeHtmlContent}
                 </div>
             `;
@@ -423,53 +542,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Lỗi mở lại hỗ trợ:', err);
         } finally {
             btnReopen.disabled = false;
-        }
-    });
-
-    // Tiếp quản case (Takeover - dành cho Admin)
-    btnTakeover?.addEventListener('click', async () => {
-        const actionUrl = btnTakeover.dataset.takeoverUrl;
-        if (!actionUrl) return;
-
-        const confirmAction = async () => {
-            btnTakeover.disabled = true;
-            try {
-                const res = await fetch(actionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                    },
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    alert(data.message || 'Không thể tiếp quản cuộc hỗ trợ.');
-                    return;
-                }
-                window.location.reload();
-            } catch (err) {
-                console.error('Lỗi tiếp quản:', err);
-            } finally {
-                btnTakeover.disabled = false;
-            }
-        };
-
-        if (window.Swal) {
-            Swal.fire({
-                title: 'Tiếp quản cuộc hỗ trợ?',
-                text: 'Bạn sẽ trở thành người phụ trách chính và có thể trực tiếp chat với khách hàng.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#2563eb',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Đồng ý tiếp quản',
-                cancelButtonText: 'Hủy',
-            }).then((res) => {
-                if (res.isConfirmed) confirmAction();
-            });
-        } else if (confirm('Bạn có chắc muốn tiếp quản cuộc hỗ trợ này?')) {
-            confirmAction();
         }
     });
 
@@ -771,6 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (fileInput) fileInput.value = '';
 
                 scrollToBottom(true);
+                touchCaseSidebarItem(currentCaseId, newMsg.content || '📷 [Hình ảnh]');
             }
         } catch (err) {
             console.error('Lỗi gửi tin nhắn:', err);
@@ -807,8 +880,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const orderTotal = btnSendSuggestedOrder.dataset.orderTotal || '';
             const orderStatus = btnSendSuggestedOrder.dataset.orderStatus || '';
             const productName = btnSendSuggestedOrder.dataset.productName || '';
+            const variantText = btnSendSuggestedOrder.dataset.variantText || '';
+            const otherCount = parseInt(btnSendSuggestedOrder.dataset.otherCount || '0', 10);
+            const productImage = btnSendSuggestedOrder.dataset.productImage || '';
+            const orderUrl = btnSendSuggestedOrder.dataset.orderUrl || '';
 
-            const content = `📦 [ĐƠN HÀNG #${orderCode}]\n• Sản phẩm: ${productName}\n• Tổng tiền: ${orderTotal}\n• Trạng thái: ${orderStatus}\n• Mã đơn hàng: #${orderCode}`;
+            let content = `📦 [ĐƠN HÀNG #${orderCode}]\n• Sản phẩm: ${productName}`;
+            if (otherCount > 0) {
+                content += ` (+${otherCount} sản phẩm khác)`;
+            }
+            if (variantText) {
+                content += `\n• Phân loại: ${variantText}`;
+            }
+            content += `\n• Tổng tiền: ${orderTotal}\n• Trạng thái: ${orderStatus}\n• Mã đơn hàng: #${orderCode}`;
 
             btnSendSuggestedOrder.disabled = true;
             btnSendSuggestedOrder.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang gửi...</span>';
@@ -894,10 +978,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     const newMsg = result.data;
+                    if (!newMsg.order_card && orderCode) {
+                        newMsg.order_card = {
+                            order_id: orderId,
+                            order_code: orderCode,
+                            order_status: orderStatus,
+                            product_name: productName,
+                            variant_text: variantText,
+                            other_count: otherCount,
+                            total_amount: orderTotal,
+                            image_url: productImage || 'https://placehold.co/120x120/fef3c7/78350f?text=Bear',
+                            order_url: orderUrl,
+                        };
+                    }
                     lastMessageId = Math.max(lastMessageId, newMsg.id);
 
                     appendStaffMessage(newMsg);
                     scrollToBottom(true);
+                    touchCaseSidebarItem(currentCaseId, '📦 [Đơn hàng]');
 
                     // Xóa bỏ các notice trạng thái cũ (waiting / closed / assigned-other) nếu có
                     // để khi nhân viên gõ tiếp tin nhắn tiếp theo, form không reload trang gây gián đoạn
@@ -957,6 +1055,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (hasNew) {
                             scrollToBottom(true);
+                            const lastNewMsg = json.data[json.data.length - 1];
+                            touchCaseSidebarItem(currentCaseId, lastNewMsg?.content || '📷 [Hình ảnh]');
                         }
                     }
 
@@ -1003,6 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const res = await fetch(url.toString(), {
                     headers: {
+                        'Accept': 'text/html',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
                 });
@@ -1013,8 +1114,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const doc = parser.parseFromString(html, 'text/html');
 
                 const serverCaseList = doc.querySelector('.staff-support-case-list');
-                if (serverCaseList && caseListEl.innerHTML !== serverCaseList.innerHTML) {
-                    caseListEl.innerHTML = serverCaseList.innerHTML;
+                if (serverCaseList) {
+                    const serverItems = Array.from(serverCaseList.querySelectorAll('.staff-support-case-item'));
+                    const currentItems = Array.from(caseListEl.querySelectorAll('.staff-support-case-item'));
+
+                    const serverSignature = serverItems.map(it => it.dataset.caseId + ':' + (it.classList.contains('is-unread') ? 'u' : 'r') + ':' + (it.querySelector('.staff-support-case-unread')?.textContent || '') + ':' + (it.querySelector('.staff-support-case-time')?.dataset.timestamp || '')).join('|');
+                    const currentSignature = currentItems.map(it => it.dataset.caseId + ':' + (it.classList.contains('is-unread') ? 'u' : 'r') + ':' + (it.querySelector('.staff-support-case-unread')?.textContent || '') + ':' + (it.querySelector('.staff-support-case-time')?.dataset.timestamp || '')).join('|');
+
+                    if (serverSignature !== currentSignature) {
+                        caseListEl.innerHTML = serverCaseList.innerHTML;
+                        updateAllCaseTimes();
+                    }
                 }
 
                 // Cập nhật số đếm badge các tab
