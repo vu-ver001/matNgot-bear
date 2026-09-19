@@ -213,10 +213,10 @@
                             @foreach($order->details as $item)
                                 @php
                                     $prod = $item->product;
-                                    $primaryImage = $prod?->images?->firstWhere('is_primary', true) ?? $prod?->images?->first();
-                                    $imageUrl = $primaryImage 
-                                        ? ((str_starts_with($primaryImage->image_url, 'http') || str_starts_with($primaryImage->image_url, 'data:')) ? $primaryImage->image_url : asset($primaryImage->image_url)) 
-                                        : asset('images/customer/product-placeholder.png');
+                                    $rawImage = $item->effective_image ?? ($prod?->images?->firstWhere('is_primary', true)?->image_url ?? $prod?->images?->first()?->image_url);
+                                    $imageUrl = !empty($rawImage) 
+                                        ? ((str_starts_with($rawImage, 'http') || str_starts_with($rawImage, 'data:')) ? $rawImage : asset($rawImage)) 
+                                        : null;
                                     
                                     $specs = [];
                                     if (!empty($prod?->size)) { $specs[] = $prod->size; }
@@ -226,10 +226,21 @@
                                 <div class="py-3.5 flex items-center justify-between gap-4 first:pt-1 last:pb-1">
                                     <div class="flex items-center gap-3.5 min-w-0">
                                         <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border border-[#F2DECA] bg-white overflow-hidden shrink-0 p-1">
-                                            <img src="{{ $imageUrl }}" 
-                                                 alt="{{ $item->product_name }}" 
-                                                 class="w-full h-full object-cover rounded-lg"
-                                                 onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'">
+                                            @if(!empty($imageUrl))
+                                                <img src="{{ $imageUrl }}" 
+                                                     alt="{{ $item->product_name }}" 
+                                                     class="w-full h-full object-cover rounded-lg"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="w-full h-full bg-[#FAF5ED] rounded-lg flex flex-col items-center justify-center text-[#A8988A] border border-dashed border-[#E5D5C5]" style="display: none;">
+                                                    <i class="fa-regular fa-image text-sm"></i>
+                                                    <span class="text-[8.5px] font-semibold mt-0.5">Không ảnh</span>
+                                                </div>
+                                            @else
+                                                <div class="w-full h-full bg-[#FAF5ED] rounded-lg flex flex-col items-center justify-center text-[#A8988A] border border-dashed border-[#E5D5C5]">
+                                                    <i class="fa-regular fa-image text-sm"></i>
+                                                    <span class="text-[8.5px] font-semibold mt-0.5">Không ảnh</span>
+                                                </div>
+                                            @endif
                                         </div>
 
                                         <div class="min-w-0">

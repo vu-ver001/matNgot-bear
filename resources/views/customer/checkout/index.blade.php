@@ -12,13 +12,17 @@
             --border-card: #F2E4D4;
             --border-input: #EADBCC;
             --color-primary: #D68729;
-            --color-primary-dark: #8A4819;
-            --color-text-main: #2B1810;
-            --color-text-muted: #7D6B5D;
+            --color-primary-dark: #844B27;
+            --color-text-main: #5C3317;
+            --color-text-muted: #8C6B53;
             --bg-icon-inactive: #F4ECE1;
-            --color-icon-inactive: #7D6B5D;
+            --color-icon-inactive: #8C6B53;
             --btn-submit-bg: #EADBCC;
-            --btn-submit-text: #7D6B5D;
+            --btn-submit-text: #5C3317;
+        }
+
+        [x-cloak] {
+            display: none !important;
         }
 
         .mn-checkout-page {
@@ -32,8 +36,8 @@
         .mn-section-card {
             background-color: var(--bg-card);
             border: 1.5px solid var(--border-card);
-            border-radius: 22px;
-            box-shadow: 0 2px 8px rgba(43, 24, 16, 0.03);
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(92, 51, 23, 0.03);
             margin-bottom: 12px;
             position: relative;
         }
@@ -41,62 +45,62 @@
         /* Top Header Strip inside card */
         .mn-card-header {
             background-color: var(--bg-card-header);
-            padding: 14px 22px;
+            padding: 10px 18px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             border-bottom: 1.5px solid var(--border-card);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
         }
 
         .mn-num-badge {
-            width: 26px;
-            height: 26px;
-            background-color: var(--color-primary);
+            width: 24px;
+            height: 24px;
+            background-color: var(--color-primary-dark);
             color: #FFFFFF;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: 12px;
+            font-size: 11.5px;
             flex-shrink: 0;
         }
 
         .mn-header-title {
             font-weight: 800;
-            font-size: 14px;
+            font-size: 13.5px;
             color: var(--color-text-main);
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             text-transform: uppercase;
             margin: 0;
         }
 
         .mn-card-body {
-            padding: 22px;
+            padding: 16px 18px;
         }
 
         /* Input & Select fields */
         .mn-label {
             display: block;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 700;
             color: var(--color-text-main);
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
 
         .mn-req {
-            color: var(--color-primary);
+            color: var(--color-primary-dark);
             font-weight: 700;
         }
 
         .mn-input {
             width: 100%;
-            padding: 13px 18px;
+            padding: 10px 15px;
             border: 1.5px solid var(--border-input);
-            border-radius: 16px;
-            font-size: 14px;
+            border-radius: 14px;
+            font-size: 13.5px;
             font-weight: 500;
             color: var(--color-text-main);
             background-color: #FFFFFF;
@@ -204,15 +208,15 @@
         /* Shipping & Payment Options */
         .mn-option-card {
             border: 1.5px solid var(--border-input);
-            border-radius: 18px;
+            border-radius: 15px;
             background-color: #FFFFFF;
-            padding: 14px 18px;
+            padding: 11px 15px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             user-select: none;
         }
 
@@ -384,19 +388,32 @@
             .mn-sticky-sidebar {
                 position: -webkit-sticky !important;
                 position: sticky !important;
-                top: 24px !important;
-                z-index: 20;
+                top: var(--checkout-header-offset, 88px) !important;
+                z-index: 30;
                 align-self: flex-start !important;
+                max-height: calc(100vh - var(--checkout-header-offset, 88px) - 20px);
+                overscroll-behavior: contain;
+            }
+
+            .mn-sticky-sidebar::-webkit-scrollbar {
+                width: 4px;
+            }
+            .mn-sticky-sidebar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .mn-sticky-sidebar::-webkit-scrollbar-thumb {
+                background: #EADBCC;
+                border-radius: 4px;
             }
         }
 
         .mn-summary-card {
             background-color: var(--bg-card);
             border: 1.5px solid var(--border-card);
-            border-radius: 22px;
-            padding: 22px;
-            box-shadow: 0 2px 8px rgba(43, 24, 16, 0.03);
-            margin-bottom: 14px;
+            border-radius: 18px;
+            padding: 16px 18px;
+            box-shadow: 0 2px 8px rgba(92, 51, 23, 0.03);
+            margin-bottom: 12px;
         }
 
         .mn-summary-card:last-child {
@@ -404,7 +421,7 @@
         }
 
         .mn-order-items-scroll {
-            max-height: 240px;
+            max-height: 220px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -424,22 +441,22 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
         }
 
         .mn-pill-badge {
-            background-color: var(--color-primary);
+            background-color: var(--color-primary-dark);
             color: #FFFFFF;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 3px 10px;
+            border-radius: 16px;
         }
 
         .mn-product-thumb {
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
             background-color: #FFFFFF;
             border: 1.5px solid var(--border-input);
             position: relative;
@@ -451,20 +468,49 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 13px;
+            border-radius: 11px;
+        }
+
+        .mn-no-image-thumb {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #FAF5ED;
+            border-radius: 11px;
+            color: #A8988A;
+            border: 1px dashed #E2D3C4;
+            user-select: none;
+            padding: 2px;
+            text-align: center;
+        }
+
+        .mn-no-image-thumb i {
+            color: #B5A492;
+            font-size: 15px;
+        }
+
+        .mn-no-image-thumb span {
+            font-size: 8.5px;
+            font-weight: 700;
+            color: #A8988A;
+            margin-top: 2px;
+            line-height: 1;
         }
 
         .mn-qty-badge {
             position: absolute;
-            top: -6px;
-            right: -6px;
-            width: 20px;
-            height: 20px;
+            top: -5px;
+            right: -5px;
+            width: 19px;
+            height: 19px;
             border-radius: 50%;
-            background-color: var(--color-primary);
+            background-color: var(--color-primary-dark);
             color: #FFFFFF;
             font-weight: 800;
-            font-size: 11px;
+            font-size: 10.5px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -477,9 +523,9 @@
             background-color: var(--btn-submit-bg);
             color: var(--btn-submit-text);
             font-weight: 800;
-            font-size: 15px;
-            padding: 16px 20px;
-            border-radius: 18px;
+            font-size: 14.5px;
+            padding: 13px 18px;
+            border-radius: 16px;
             border: none;
             cursor: pointer;
             display: flex;
@@ -487,13 +533,13 @@
             justify-content: center;
             gap: 8px;
             transition: all 0.25s ease;
-            margin-top: 18px;
+            margin-top: 14px;
         }
 
         .mn-btn-submit:hover {
-            background-color: var(--color-primary);
+            background-color: var(--color-primary-dark);
             color: #FFFFFF;
-            box-shadow: 0 6px 18px rgba(214, 135, 41, 0.3);
+            box-shadow: 0 4px 14px rgba(132, 75, 39, 0.25);
             transform: translateY(-1px);
         }
 
@@ -531,36 +577,71 @@
     <div class="mn-checkout-page py-8 sm:py-10 pb-36" 
          x-data="checkoutComponent()">
         
-        {{-- Breadcrumb --}}
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-            <x-breadcrumb :items="[
-                ['label' => 'Trang Chủ', 'url' => route('home')],
-                ['label' => 'Giỏ Hàng', 'url' => route('customer.cart')],
-                ['label' => 'Thanh Toán']
-            ]" />
+        {{-- Top Branded Header Card (Mật Ngọt Bear Checkout Hero) --}}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-5">
+            <div class="rounded-2xl sm:rounded-3xl border border-[#F0E2D4] bg-[#FAF4EB]/90 backdrop-blur-xs px-5 py-3.5 sm:px-7 sm:py-4 shadow-2xs">
+                {{-- Main Header Row: True between layout across all devices --}}
+                <div class="flex items-center justify-between gap-4 w-full flex-wrap sm:flex-nowrap">
+                    {{-- Left: Bear Badge + Titles --}}
+                    <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+                        <div class="relative shrink-0 select-none w-11 h-11 sm:w-13 sm:h-13 aspect-square flex items-center justify-center">
+                            <img 
+                                src="{{ asset('images/customer/checkout-bear-badge.png') }}" 
+                                alt="Mật Ngọt Bear" 
+                                class="w-full h-full object-contain pointer-events-none drop-shadow-xs transform hover:scale-105 transition duration-200"
+                                loading="eager"
+                            />
+                        </div>
+                        <div>
+                            <h1 class="text-lg sm:text-xl md:text-2xl font-black text-[#5C3317] tracking-tight">Thanh Toán Đơn Hàng</h1>
+                            <p class="text-[11px] sm:text-xs font-medium text-[#8C6B53] mt-0.5">Điền thông tin giao hàng và chọn phương thức thanh toán</p>
+                        </div>
+                    </div>
+
+                    {{-- Right: Security Pill & Cart Count Pill --}}
+                    <div class="flex items-center gap-2.5 sm:gap-3 shrink-0 ml-auto sm:ml-0">
+                        {{-- Security Badge Pill --}}
+                        <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 sm:py-2 rounded-full border border-[#EADBCC] bg-[#FFFBF8] shadow-2xs">
+                            <div style="width: 26px; height: 26px; border-radius: 9999px; background-color: #5C3317; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" class="shadow-xs">
+                                <i class="fa-solid fa-shield-halved" style="font-size: 11.5px; color: #FFFFFF;"></i>
+                            </div>
+                            <div class="leading-tight text-left">
+                                <div class="text-xs font-bold text-[#5C3317]">Thanh toán an toàn</div>
+                                <div class="text-[10px] sm:text-[10.5px] font-medium text-[#8C6B53]">Bảo mật thông tin của bạn</div>
+                            </div>
+                        </div>
+
+                        {{-- Cart Count Pill with decorative spark --}}
+                        <div class="relative inline-flex">
+                            {{-- Decorative playful spark on top right --}}
+                            <span class="absolute -top-2.5 -right-1 text-[#D68729] text-[11px] select-none pointer-events-none font-bold transform rotate-12 z-20">
+                                ＼|／
+                            </span>
+                            <a 
+                                href="{{ route('customer.cart') }}" 
+                                onclick="window.location.href='{{ route('customer.cart') }}'"
+                                class="inline-flex items-center gap-2.5 px-3.5 py-1.5 sm:py-2 rounded-full border border-[#EADBCC] bg-[#FFF8F2] hover:bg-[#FFF0E4] transition shadow-2xs group cursor-pointer relative z-10"
+                                style="cursor: pointer; text-decoration: none;"
+                                title="Bấm để xem giỏ hàng"
+                            >
+                                <i class="fa-solid fa-cart-shopping text-sm sm:text-base text-[#5C3317] group-hover:scale-105 transition shrink-0" style="color: #5C3317;"></i>
+                                <div class="leading-tight text-left">
+                                    <div class="text-xs font-bold text-[#5C3317]">
+                                        {{ count($selectedItemIds) }} sản phẩm
+                                    </div>
+                                    <div class="text-[10px] sm:text-[10.5px] font-semibold text-[#8C6B53] flex items-center gap-0.5">
+                                        <span>trong giỏ</span>
+                                        <span class="text-[9px] text-[#844B27] group-hover:translate-x-0.5 transition">&rsaquo;</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            {{-- Top Header Title --}}
-            <div class="flex items-center gap-4 mb-8">
-                <div class="w-13 h-13 rounded-2xl flex items-center justify-center shrink-0 shadow-md transition transform hover:scale-105"
-                     style="width: 52px; height: 52px; background: linear-gradient(135deg, #DF8F30 0%, #9E5316 100%); box-shadow: 0 6px 16px rgba(184, 107, 29, 0.28); border: 2px solid #FFF5E6;">
-                    {{-- Detailed Modern Golden Payment Card SVG --}}
-                    <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="2" y="5" width="20" height="14" rx="3" fill="#FFFFFF" fill-opacity="0.18" stroke="#FFFFFF" stroke-width="1.8"/>
-                        <path d="M2 9.5H22" stroke="#FFFFFF" stroke-width="1.8"/>
-                        <rect x="5" y="13" width="3.5" height="2.5" rx="0.6" fill="#FFFFFF"/>
-                        <circle cx="16.5" cy="14.2" r="1.5" fill="#FFFFFF" fill-opacity="0.7"/>
-                        <circle cx="18.5" cy="14.2" r="1.5" fill="#FFFFFF" fill-opacity="0.5"/>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#2B1810] tracking-tight">Thanh Toán Đơn Hàng</h1>
-                    <p class="text-xs sm:text-sm font-medium text-[#7D6B5D] mt-0.5">Điền thông tin giao hàng và chọn phương thức thanh toán</p>
-                </div>
-            </div>
-
             @if(session('error'))
                 <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-3 shadow-xs">
                     <svg class="w-5 h-5 text-rose-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -651,9 +732,9 @@
                                         <div @click="open = !open; if(open) $nextTick(() => $refs.provInput.focus())"
                                              class="mn-input flex items-center justify-between cursor-pointer">
                                             <span x-text="selectedProvince || 'Chọn tỉnh / thành phố'" 
-                                                  :class="!selectedProvince ? 'text-[#A8988A]' : 'text-[#2B1810] font-medium'"
+                                                  :class="!selectedProvince ? 'text-[#A8988A]' : 'text-[#5C3317] font-medium'"
                                                   class="truncate pr-2"></span>
-                                            <svg class="w-4 h-4 text-[#7D6B5D] shrink-0 transition-transform duration-200" 
+                                            <svg class="w-4 h-4 text-[#8C6B53] shrink-0 transition-transform duration-200" 
                                                  :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                             </svg>
@@ -674,7 +755,7 @@
                                                         <span x-show="selectedProvince === p.name" class="text-xs font-bold text-[#D68729]">✓</span>
                                                     </div>
                                                 </template>
-                                                <div x-show="filterList(provinces, search).length === 0" class="p-3 text-center text-xs text-[#7D6B5D]">
+                                                <div x-show="filterList(provinces, search).length === 0" class="p-3 text-center text-xs text-[#8C6B53]">
                                                     Không tìm thấy kết quả
                                                 </div>
                                             </div>
@@ -688,9 +769,9 @@
                                              class="mn-input flex items-center justify-between cursor-pointer"
                                              :class="{ 'opacity-60 cursor-not-allowed': availableWards.length === 0 }">
                                             <span x-text="selectedWard || 'Chọn phường / xã / thị trấn'" 
-                                                  :class="!selectedWard ? 'text-[#A8988A]' : 'text-[#2B1810] font-medium'"
+                                                  :class="!selectedWard ? 'text-[#A8988A]' : 'text-[#5C3317] font-medium'"
                                                   class="truncate pr-2"></span>
-                                            <svg class="w-4 h-4 text-[#7D6B5D] shrink-0 transition-transform duration-200" 
+                                            <svg class="w-4 h-4 text-[#8C6B53] shrink-0 transition-transform duration-200" 
                                                  :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                             </svg>
@@ -724,7 +805,7 @@
                                                     <span class="text-sm">➕</span>
                                                     <span>Sử dụng: "<strong x-text="search.trim()"></strong>"</span>
                                                 </div>
-                                                <div x-show="filterWards(availableWards, search).length === 0 && !search.trim()" class="p-3 text-center text-xs text-[#7D6B5D]">
+                                                <div x-show="filterWards(availableWards, search).length === 0 && !search.trim()" class="p-3 text-center text-xs text-[#8C6B53]">
                                                     Không tìm thấy kết quả
                                                 </div>
                                             </div>
@@ -758,7 +839,7 @@
 
                                 {{-- Dynamic Distance / Location Status Badge (Google Maps & Regional Engine) --}}
                                 <div class="p-3 rounded-2xl text-xs flex flex-wrap items-center justify-between gap-2 border transition-all"
-                                     :class="distanceInfo.is_hanoi_inner ? 'bg-[#FFF9F2] border-[#F2DECA] text-[#2B1810]' : 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'">
+                                     :class="distanceInfo.is_hanoi_inner ? 'bg-[#FFF9F2] border-[#F2DECA] text-[#5C3317]' : 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'">
                                     <div class="flex items-center gap-2.5">
                                         <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
                                              :class="distanceInfo.is_hanoi_inner ? 'bg-[#FFF0DC] text-[#D68729]' : 'bg-[#DCFCE7] text-[#16A34A]'">
@@ -767,9 +848,9 @@
                                         <div>
                                             <div class="font-bold flex items-center gap-1.5 flex-wrap">
                                                 <span x-text="distanceInfo.loading ? 'Đang kết nối tính cước vận chuyển...' : (distanceInfo.route_text || ('Kho Mật Ngọt Bear ➔ ' + (selectedDistrict ? (selectedDistrict + ', ' + selectedProvince) : (selectedProvince || 'Hà Nội'))))"></span>
-                                                <span class="text-[10.5px] text-[#7D6B5D]" x-show="shippingOptions[shippingMethod]?.time" x-text="'• Nhận dự kiến: ' + shippingOptions[shippingMethod]?.time"></span>
+                                                <span class="text-[10.5px] text-[#8C6B53]" x-show="shippingOptions[shippingMethod]?.time" x-text="'• Nhận dự kiến: ' + shippingOptions[shippingMethod]?.time"></span>
                                             </div>
-                                            <div class="text-[10px] text-[#7D6B5D] mt-0.5">
+                                            <div class="text-[10px] text-[#8C6B53] mt-0.5">
                                                 <span x-text="distanceInfo.source === 'GHN_API' ? '⚡ Cước phí và ngày giao hàng thực tế từ Giao Hàng Nhanh (GHN) API' : '📦 Cước phí vận chuyển theo khu vực từ kho Mật Ngọt Bear (Hà Nội)'"></span>
                                             </div>
                                         </div>
@@ -812,13 +893,13 @@
                                             </svg>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-bold text-[#2B1810]" x-text="shippingOptions.standard.name || 'Giao hàng tiêu chuẩn'">Giao hàng tiêu chuẩn</div>
-                                            <div class="text-xs text-[#7D6B5D] mt-0.5" x-text="shippingOptions.standard.desc || 'Giao qua đối tác vận chuyển'">Giao qua đối tác vận chuyển</div>
+                                            <div class="text-sm font-bold text-[#5C3317]" x-text="shippingOptions.standard.name || 'Giao hàng tiêu chuẩn'">Giao hàng tiêu chuẩn</div>
+                                            <div class="text-xs text-[#8C6B53] mt-0.5" x-text="shippingOptions.standard.desc || 'Giao qua đối tác vận chuyển'">Giao qua đối tác vận chuyển</div>
                                         </div>
                                     </div>
                                     <div class="text-right shrink-0">
                                         <div class="text-sm sm:text-base font-extrabold text-[#D68729]" x-text="formatVND(shippingOptions.standard.fee)">22.000đ</div>
-                                        <div class="text-xs text-[#7D6B5D] mt-0.5" x-text="shippingOptions.standard.time">1 - 2 ngày</div>
+                                        <div class="text-xs text-[#8C6B53] mt-0.5" x-text="shippingOptions.standard.time">1 - 2 ngày</div>
                                     </div>
                                 </div>
 
@@ -837,13 +918,13 @@
                                             </svg>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-bold text-[#2B1810]" x-text="shippingOptions.fast.name || 'Giao hàng nhanh'">Giao hàng nhanh</div>
-                                            <div class="text-xs text-[#7D6B5D] mt-0.5" x-text="shippingOptions.fast.desc || 'Ưu tiên xử lý trong ngày'">Ưu tiên xử lý trong ngày</div>
+                                            <div class="text-sm font-bold text-[#5C3317]" x-text="shippingOptions.fast.name || 'Giao hàng nhanh'">Giao hàng nhanh</div>
+                                            <div class="text-xs text-[#8C6B53] mt-0.5" x-text="shippingOptions.fast.desc || 'Ưu tiên xử lý trong ngày'">Ưu tiên xử lý trong ngày</div>
                                         </div>
                                     </div>
                                     <div class="text-right shrink-0">
                                         <div class="text-sm sm:text-base font-extrabold text-[#D68729]" x-text="formatVND(shippingOptions.fast.fee)">32.000đ</div>
-                                        <div class="text-xs text-[#7D6B5D] mt-0.5" x-text="shippingOptions.fast.time">Trong 24h</div>
+                                        <div class="text-xs text-[#8C6B53] mt-0.5" x-text="shippingOptions.fast.time">Trong 24h</div>
                                     </div>
                                 </div>
 
@@ -865,11 +946,11 @@
                                             </svg>
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="text-sm font-bold text-[#2B1810] flex items-center gap-2 flex-wrap">
+                                            <div class="text-sm font-bold text-[#5C3317] flex items-center gap-2 flex-wrap">
                                                 <span>Giao hàng hoả tốc</span>
                                                 <span class="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-[#FFF0DC] text-[#D68729]" x-show="shippingOptions.express.available">2 - 4 giờ</span>
                                             </div>
-                                            <div class="text-xs text-[#7D6B5D] mt-0.5" x-show="shippingOptions.express.available" x-text="shippingOptions.express.desc || 'Giao trong 2 - 4 giờ tại Hà Nội'"></div>
+                                            <div class="text-xs text-[#8C6B53] mt-0.5" x-show="shippingOptions.express.available" x-text="shippingOptions.express.desc || 'Giao trong 2 - 4 giờ tại Hà Nội'"></div>
                                             <div class="text-[11px] font-semibold text-rose-600 mt-0.5 flex items-center gap-1" x-show="!shippingOptions.express.available">
                                                 <span>🚫</span>
                                                 <span x-text="shippingOptions.express.disabled_reason || 'Chỉ áp dụng nội thành Hà Nội'"></span>
@@ -880,7 +961,7 @@
                                         <template x-if="shippingOptions.express.available">
                                             <div>
                                                 <div class="text-sm sm:text-base font-extrabold text-[#D68729]" x-text="formatVND(shippingOptions.express.fee)">55.000đ</div>
-                                                <div class="text-xs text-[#7D6B5D] mt-0.5" x-text="shippingOptions.express.time">2 - 4 giờ</div>
+                                                <div class="text-xs text-[#8C6B53] mt-0.5" x-text="shippingOptions.express.time">2 - 4 giờ</div>
                                             </div>
                                         </template>
                                         <template x-if="!shippingOptions.express.available">
@@ -918,8 +999,8 @@
                                                 </svg>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#2B1810] truncate">Thanh toán khi nhận hàng</div>
-                                                <div class="text-[11px] sm:text-[11.5px] text-[#7D6B5D] mt-0.5 truncate">Trả tiền mặt khi nhận hàng (COD)</div>
+                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">Thanh toán khi nhận hàng</div>
+                                                <div class="text-[11px] sm:text-[11.5px] text-[#8C6B53] mt-0.5 truncate">Trả tiền mặt khi nhận hàng (COD)</div>
                                             </div>
                                         </div>
                                     </div>
@@ -943,8 +1024,8 @@
                                                 </svg>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#2B1810] truncate">VNPay QR</div>
-                                                <div class="text-[11px] sm:text-[11.5px] text-[#7D6B5D] mt-0.5 truncate">Thanh toán bằng mã QR VNPay</div>
+                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">VNPay QR</div>
+                                                <div class="text-[11px] sm:text-[11.5px] text-[#8C6B53] mt-0.5 truncate">Thanh toán bằng mã QR VNPay</div>
                                             </div>
                                         </div>
                                     </div>
@@ -968,8 +1049,8 @@
                                                 </svg>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#2B1810] truncate">Ví MoMo</div>
-                                                <div class="text-[11px] sm:text-[11.5px] text-[#7D6B5D] mt-0.5 truncate">Thanh toán qua ví điện tử MoMo</div>
+                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">Ví MoMo</div>
+                                                <div class="text-[11px] sm:text-[11.5px] text-[#8C6B53] mt-0.5 truncate">Thanh toán qua ví điện tử MoMo</div>
                                             </div>
                                         </div>
                                     </div>
@@ -990,8 +1071,8 @@
                                                 </svg>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#2B1810] truncate">Chuyển khoản ngân hàng</div>
-                                                <div class="text-[11px] sm:text-[11.5px] text-[#7D6B5D] mt-0.5 truncate">Quét mã VietQR chuyển khoản nhanh</div>
+                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">Chuyển khoản ngân hàng</div>
+                                                <div class="text-[11px] sm:text-[11.5px] text-[#8C6B53] mt-0.5 truncate">Quét mã VietQR chuyển khoản nhanh</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1010,7 +1091,7 @@
                                 {{-- Manual Voucher Code Input --}}
                                 <div class="flex items-center gap-2.5">
                                     <div class="relative flex-1">
-                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6B5D]">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8C6B53]">
                                             {{-- Ticket Tag SVG --}}
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
@@ -1041,7 +1122,7 @@
                                 <div class="bg-[#FFF8EE] border border-[#F2DECA] rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs"
                                      x-show="selectedOrderVoucher || selectedShippingVoucher">
                                     <div class="flex items-center gap-1.5 flex-wrap">
-                                        <span class="font-bold text-[#2B1810]">Đang áp dụng:</span>
+                                        <span class="font-bold text-[#5C3317]">Đang áp dụng:</span>
                                         <template x-if="selectedOrderVoucher">
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#E08A1E] text-white font-bold text-[10.5px]">
                                                 <span>🛍️ <span x-text="selectedOrderVoucher.code"></span></span>
@@ -1073,7 +1154,7 @@
                                                     🚚
                                                 </div>
                                                 <div class="min-w-0">
-                                                    <div class="text-xs font-black text-[#2B1810] uppercase flex items-center gap-1.5">
+                                                    <div class="text-xs font-black text-[#5C3317] uppercase flex items-center gap-1.5">
                                                         <span>VOUCHER VẬN CHUYỂN</span>
                                                     </div>
                                                     <div class="text-[11px] truncate mt-0.5 font-bold text-[#0D9488]" 
@@ -1081,7 +1162,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <svg class="w-4 h-4 text-[#7D6B5D] transition-transform duration-200 shrink-0 ml-2" 
+                                            <svg class="w-4 h-4 text-[#8C6B53] transition-transform duration-200 shrink-0 ml-2" 
                                                  :class="{ 'rotate-180': activeVoucherTab === 'SHIPPING' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                             </svg>
@@ -1117,15 +1198,15 @@
                                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                                         <span class="px-1.5 py-0.2 rounded bg-[#FFF0DC] text-[#D68729] font-extrabold text-[10px] tracking-wide border border-[#FAD9B5]"
                                                                               x-text="v.code"></span>
-                                                                        <span class="font-bold text-[11.5px] text-[#2B1810]"
+                                                                        <span class="font-bold text-[11.5px] text-[#5C3317]"
                                                                               x-text="v.discount_type === 'PERCENTAGE' ? 'Giảm ' + parseFloat(v.discount_value) + '% phí ship' + (v.max_discount_value && parseFloat(v.max_discount_value) > 0 ? ' (Tối đa ' + formatVND(v.max_discount_value) + ')' : '') : 'Giảm ' + formatVND(v.discount_value)"></span>
                                                                         <template x-if="v.apply_scope && v.apply_scope !== 'ALL'">
                                                                             <span class="px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 font-medium text-[9px] border border-amber-200"
                                                                                   x-text="v.scope_text"></span>
                                                                         </template>
                                                                     </div>
-                                                                    <div class="text-[10px] text-[#7D6B5D] mt-0.5">
-                                                                        Đơn tối thiểu: <span class="font-semibold text-[#2B1810]" x-text="formatVND(v.min_order_value || 0)"></span>
+                                                                    <div class="text-[10px] text-[#8C6B53] mt-0.5">
+                                                                        Đơn tối thiểu: <span class="font-semibold text-[#5C3317]" x-text="formatVND(v.min_order_value || 0)"></span>
                                                                     </div>
                                                                 </div>
 
@@ -1152,7 +1233,7 @@
                                                             <template x-if="v.global_limit > 0">
                                                                 <div class="mt-1.5 space-y-1">
                                                                     <div class="flex items-center justify-between text-[10px] leading-tight">
-                                                                        <span class="font-medium flex items-center gap-1 text-[#7D6B5D]"
+                                                                        <span class="font-medium flex items-center gap-1 text-[#8C6B53]"
                                                                               :class="v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining <= 0) ? 'text-rose-600 font-bold' : ''">
                                                                             <i class="fa-solid fa-fire text-[9px]"
                                                                                :class="getVoucherUsedPercent(v) >= 85 ? 'text-rose-500 animate-pulse' : 'text-[#E08A1E]'"></i>
@@ -1177,6 +1258,13 @@
                                                                     <span class="px-1.5 py-0.2 rounded text-[9px] font-bold border"
                                                                           :class="isVoucherApplicable(v) ? getVoucherStatus(v).badgeClass : 'bg-gray-100 text-gray-500 border-gray-200'"
                                                                           x-text="isVoucherApplicable(v) ? getVoucherStatus(v).label : 'Không áp dụng đơn này'"></span>
+                                                                    <button type="button" 
+                                                                            @click.stop="openConditionModal(v)"
+                                                                            class="font-bold text-[#0D9488] hover:text-[#047857] hover:underline flex items-center gap-0.5 cursor-pointer ml-1 text-[10px]"
+                                                                            title="Bấm để xem chi tiết điều kiện sử dụng voucher">
+                                                                        <i class="fa-solid fa-circle-info text-[9.5px]"></i>
+                                                                        <span>Điều kiện</span>
+                                                                    </button>
                                                                 </div>
                                                                 <span class="text-[#A8988A] text-[9.5px]" x-text="v.end_date ? 'HSD: ' + formatDate(v.end_date) : 'Vô thời hạn'"></span>
                                                             </div>
@@ -1184,7 +1272,7 @@
                                                     </div>
                                                 </template>
 
-                                                <div x-show="sortedShippingVouchers.length === 0" class="text-center py-3 text-xs text-[#7D6B5D]">
+                                                <div x-show="sortedShippingVouchers.length === 0" class="text-center py-3 text-xs text-[#8C6B53]">
                                                     Không có voucher vận chuyển nào.
                                                 </div>
                                             </div>
@@ -1203,16 +1291,16 @@
                                                     🛍️
                                                 </div>
                                                 <div class="min-w-0">
-                                                    <div class="text-xs font-black text-[#2B1810] uppercase flex items-center gap-1.5">
+                                                    <div class="text-xs font-black text-[#5C3317] uppercase flex items-center gap-1.5">
                                                         <span>VOUCHER CỦA SHOP</span>
                                                     </div>
                                                     <div class="text-[11px] truncate mt-0.5" 
-                                                         :class="selectedOrderVoucher ? 'font-bold text-[#E08A1E]' : 'text-[#7D6B5D]'"
+                                                         :class="selectedOrderVoucher ? 'font-bold text-[#E08A1E]' : 'text-[#8C6B53]'"
                                                          x-text="selectedOrderVoucher ? '✓ Đang dùng: [' + selectedOrderVoucher.code + ']' : 'Bấm để chọn mã giảm giá'">
                                                     </div>
                                                 </div>
                                             </div>
-                                            <svg class="w-4 h-4 text-[#7D6B5D] transition-transform duration-200 shrink-0 ml-2" 
+                                            <svg class="w-4 h-4 text-[#8C6B53] transition-transform duration-200 shrink-0 ml-2" 
                                                  :class="{ 'rotate-180': activeVoucherTab === 'SHOP' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                             </svg>
@@ -1248,15 +1336,15 @@
                                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                                         <span class="px-1.5 py-0.2 rounded bg-[#FFF0DC] text-[#D68729] font-extrabold text-[10px] tracking-wide border border-[#FAD9B5]"
                                                                               x-text="v.code"></span>
-                                                                        <span class="font-bold text-[11.5px] text-[#2B1810]"
+                                                                        <span class="font-bold text-[11.5px] text-[#5C3317]"
                                                                               x-text="v.discount_type === 'PERCENTAGE' ? 'Giảm ' + parseFloat(v.discount_value) + '%' + (v.max_discount_value && parseFloat(v.max_discount_value) > 0 ? ' (Tối đa ' + formatVND(v.max_discount_value) + ')' : '') : 'Giảm ' + formatVND(v.discount_value)"></span>
                                                                         <template x-if="v.apply_scope && v.apply_scope !== 'ALL'">
                                                                             <span class="px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 font-medium text-[9px] border border-amber-200"
                                                                                   x-text="v.scope_text"></span>
                                                                         </template>
                                                                     </div>
-                                                                    <div class="text-[10px] text-[#7D6B5D] mt-0.5">
-                                                                        Đơn tối thiểu: <span class="font-semibold text-[#2B1810]" x-text="formatVND(v.min_order_value || 0)"></span>
+                                                                    <div class="text-[10px] text-[#8C6B53] mt-0.5">
+                                                                        Đơn tối thiểu: <span class="font-semibold text-[#5C3317]" x-text="formatVND(v.min_order_value || 0)"></span>
                                                                     </div>
                                                                 </div>
 
@@ -1283,7 +1371,7 @@
                                                             <template x-if="v.global_limit > 0">
                                                                 <div class="mt-1.5 space-y-1">
                                                                     <div class="flex items-center justify-between text-[10px] leading-tight">
-                                                                        <span class="font-medium flex items-center gap-1 text-[#7D6B5D]"
+                                                                        <span class="font-medium flex items-center gap-1 text-[#8C6B53]"
                                                                               :class="v.is_global_exhausted || (v.global_remaining !== null && v.global_remaining <= 0) ? 'text-rose-600 font-bold' : ''">
                                                                             <i class="fa-solid fa-fire text-[9px]"
                                                                                :class="getVoucherUsedPercent(v) >= 85 ? 'text-rose-500 animate-pulse' : 'text-[#E08A1E]'"></i>
@@ -1308,6 +1396,13 @@
                                                                     <span class="px-1.5 py-0.2 rounded text-[9px] font-bold border"
                                                                           :class="isVoucherApplicable(v) ? getVoucherStatus(v).badgeClass : 'bg-gray-100 text-gray-500 border-gray-200'"
                                                                           x-text="isVoucherApplicable(v) ? getVoucherStatus(v).label : 'Không áp dụng đơn này'"></span>
+                                                                    <button type="button" 
+                                                                            @click.stop="openConditionModal(v)"
+                                                                            class="font-bold text-[#E08A1E] hover:text-[#B36B15] hover:underline flex items-center gap-0.5 cursor-pointer ml-1 text-[10px]"
+                                                                            title="Bấm để xem chi tiết điều kiện sử dụng voucher">
+                                                                        <i class="fa-solid fa-circle-info text-[9.5px]"></i>
+                                                                        <span>Điều kiện</span>
+                                                                    </button>
                                                                 </div>
                                                                 <span class="text-[#A8988A] text-[9.5px]" x-text="v.end_date ? 'HSD: ' + formatDate(v.end_date) : 'Vô thời hạn'"></span>
                                                             </div>
@@ -1315,7 +1410,7 @@
                                                     </div>
                                                 </template>
 
-                                                <div x-show="sortedOrderVouchers.length === 0" class="text-center py-3 text-xs text-[#7D6B5D]">
+                                                <div x-show="sortedOrderVouchers.length === 0" class="text-center py-3 text-xs text-[#8C6B53]">
                                                     Không có voucher đơn hàng nào từ shop.
                                                 </div>
                                             </div>
@@ -1329,7 +1424,7 @@
                     </div>
 
                     {{-- Right Column: Sticky Summary --}}
-                    <div class="lg:col-span-5 space-y-3 mn-sticky-sidebar lg:sticky lg:top-6">
+                    <div class="lg:col-span-5 space-y-3 mn-sticky-sidebar">
 
                         {{-- Card: ĐƠN HÀNG CỦA BẠN --}}
                         <div class="mn-summary-card">
@@ -1346,7 +1441,10 @@
                                         $unitPrice = $item->effective_price;
                                         $lineTotal = $unitPrice * $item->quantity;
                                         $rawImg = $item->effective_image;
-                                        $imageUrl = (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:') || str_starts_with($rawImg, '/')) ? $rawImg : asset($rawImg);
+                                        $imageUrl = null;
+                                        if (!empty($rawImg)) {
+                                            $imageUrl = (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:') || str_starts_with($rawImg, '/')) ? $rawImg : asset($rawImg);
+                                        }
                                         
                                         if ($item->variant) {
                                             $specsText = "Phân loại: {$item->variant->color} · {$item->variant->size}";
@@ -1358,23 +1456,34 @@
                                         }
                                     @endphp
                                     <div class="flex items-center gap-3.5 pt-4 first:pt-0">
-                                        {{-- Image (clean without circular bubble) --}}
+                                        {{-- Image (gọi đúng CSDL, nếu k có ảnh thì hiển thị không có ảnh) --}}
                                         <div class="mn-product-thumb">
-                                            <img src="{{ $imageUrl }}" 
-                                                 alt="{{ $item->product->name }}" 
-                                                 onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'">
+                                            @if(!empty($imageUrl))
+                                                <img src="{{ $imageUrl }}" 
+                                                     alt="{{ $item->product->name }}" 
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="mn-no-image-thumb" style="display: none;">
+                                                    <i class="fa-regular fa-image"></i>
+                                                    <span>Không ảnh</span>
+                                                </div>
+                                            @else
+                                                <div class="mn-no-image-thumb">
+                                                    <i class="fa-regular fa-image"></i>
+                                                    <span>Không ảnh</span>
+                                                </div>
+                                            @endif
                                         </div>
 
                                         {{-- Details --}}
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="font-bold text-xs sm:text-sm text-[#2B1810] line-clamp-2 leading-snug">{{ $item->product->name }}</h4>
+                                            <h4 class="font-bold text-xs sm:text-sm text-[#5C3317] line-clamp-2 leading-snug">{{ $item->product->name }}</h4>
                                             @if($item->variant)
                                                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-[#9A4A0A] bg-[#FFF3DD] border border-[#FDE68A] px-2 py-0.5 rounded mt-1">
                                                     <span>✨</span>
                                                     <span>{{ $item->variant->color }} · {{ $item->variant->size }}</span>
                                                 </span>
                                             @else
-                                                <p class="text-xs text-[#7D6B5D] mt-1">{{ $specsText }}</p>
+                                                <p class="text-xs text-[#8C6B53] mt-1">{{ $specsText }}</p>
                                             @endif
                                         </div>
 
@@ -1383,7 +1492,7 @@
                                             <span class="text-sm sm:text-base font-extrabold text-[#D68729] block">
                                                 {{ number_format($unitPrice, 0, ',', '.') }}đ
                                             </span>
-                                            <span class="text-xs font-bold text-[#7D6B5D] mt-0.5 block">
+                                            <span class="text-xs font-bold text-[#8C6B53] mt-0.5 block">
                                                 x{{ $item->quantity }}
                                             </span>
                                         </div>
@@ -1400,19 +1509,19 @@
 
                             <div class="space-y-3 text-xs sm:text-sm mt-3">
                                 {{-- 1. Tạm tính dạng x{qty} --}}
-                                <div class="flex justify-between items-center text-[#7D6B5D]">
+                                <div class="flex justify-between items-center text-[#8C6B53]">
                                     <span>Tạm tính (x{{ $cartItems->sum('quantity') }})</span>
-                                    <span class="font-extrabold text-[#2B1810]" x-text="formatVND(subtotal)">{{ number_format($subtotal, 0, ',', '.') }}đ</span>
+                                    <span class="font-extrabold text-[#5C3317]" x-text="formatVND(subtotal)">{{ number_format($subtotal, 0, ',', '.') }}đ</span>
                                 </div>
 
                                 {{-- 2. Phí vận chuyển --}}
-                                <div class="flex justify-between items-start text-[#7D6B5D]">
+                                <div class="flex justify-between items-start text-[#8C6B53]">
                                     <div>
                                         <span>Phí vận chuyển</span>
-                                        <span class="block text-[11px] text-[#7D6B5D] mt-0.5" x-text="selectedShippingTime">1 - 2 ngày</span>
+                                        <span class="block text-[11px] text-[#8C6B53] mt-0.5" x-text="selectedShippingTime">1 - 2 ngày</span>
                                     </div>
                                     <div class="text-right">
-                                        <span class="font-extrabold text-[#2B1810]" x-text="shippingFee > 0 ? formatVND(shippingFee) : '0đ'">{{ number_format($shippingFee, 0, ',', '.') }}đ</span>
+                                        <span class="font-extrabold text-[#5C3317]" x-text="shippingFee > 0 ? formatVND(shippingFee) : '0đ'">{{ number_format($shippingFee, 0, ',', '.') }}đ</span>
                                     </div>
                                 </div>
 
@@ -1440,8 +1549,8 @@
 
                                 <div class="pt-4 border-t border-[#F4E8D8] flex justify-between items-baseline">
                                     <div>
-                                        <span class="text-xs sm:text-sm font-extrabold text-[#2B1810] block">Tổng thanh toán</span>
-                                        {{-- <span class="text-[11px] text-[#7D6B5D] font-normal block mt-0.5">Đã bao gồm VAT (nếu có)</span> --}}
+                                        <span class="text-xs sm:text-sm font-extrabold text-[#5C3317] block">Tổng thanh toán</span>
+                                        {{-- <span class="text-[11px] text-[#8C6B53] font-normal block mt-0.5">Đã bao gồm VAT (nếu có)</span> --}}
                                     </div>
                                     <span class="text-2xl sm:text-3xl font-extrabold text-[#D68729] tracking-tight" x-text="formatVND(finalTotal)">{{ number_format($subtotal + $shippingFee, 0, ',', '.') }}đ</span>
                                 </div>
@@ -1456,7 +1565,7 @@
                             </button>
 
                             {{-- Trust Badges --}}
-                            <div class="pt-4 flex items-center justify-between text-[11px] sm:text-xs text-[#7D6B5D] px-1 font-medium">
+                            <div class="pt-4 flex items-center justify-between text-[11px] sm:text-xs text-[#8C6B53] px-1 font-medium">
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-sm">🔒</span>
                                     <span>Bảo mật</span>
@@ -1477,6 +1586,245 @@
                 </div>
             </form>
         </div>
+
+        {{-- Checkout Voucher Condition Detail Modal (Xem điều kiện voucher cho khách hàng) --}}
+        <div x-show="conditionModalOpen"
+             x-cloak
+             style="display: none;"
+             class="fixed inset-0 z-[9999] overflow-y-auto"
+             aria-labelledby="checkout-voucher-modal-title"
+             role="dialog"
+             aria-modal="true"
+             @keydown.escape.window="closeConditionModal()">
+            
+            {{-- Backdrop --}}
+            <div x-show="conditionModalOpen"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+                 @click="closeConditionModal()"></div>
+
+            {{-- Modal Dialog --}}
+            <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
+                <div x-show="conditionModalOpen"
+                     x-transition:enter="ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="relative transform overflow-hidden rounded-2xl sm:rounded-3xl bg-[#FFFDF9] text-left shadow-2xl transition-all w-full max-w-lg border border-[#EBDDCD]"
+                     @click.outside="closeConditionModal()">
+                    
+                    <template x-if="conditionVoucher">
+                        <div class="p-5 sm:p-6 space-y-4">
+                            {{-- Modal Header --}}
+                            <div class="flex items-start justify-between pb-3 border-b border-[#F0E2D2]">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg shadow-sm"
+                                         :class="conditionVoucher.voucher_type === 'SHIPPING' ? 'bg-[#0D9488]' : 'bg-[#E08A1E]'">
+                                        <i class="fa-solid" :class="conditionVoucher.voucher_type === 'SHIPPING' ? 'fa-truck-fast' : 'fa-ticket'"></i>
+                                    </div>
+                                    <div>
+                                        <h3 id="checkout-voucher-modal-title" class="text-base font-bold text-[#5C3317]">
+                                            Chi Tiết Điều Kiện Voucher
+                                        </h3>
+                                        <p class="text-xs text-[#8C6B53]" x-text="conditionVoucher.voucher_type === 'SHIPPING' ? 'Voucher Miễn phí vận chuyển' : 'Voucher Giảm giá đơn hàng'"></p>
+                                    </div>
+                                </div>
+                                <button type="button" @click="closeConditionModal()"
+                                        class="w-8 h-8 rounded-full bg-[#FAF4ED] text-[#8C6B53] hover:text-[#5C3317] hover:bg-[#F0E2D2] flex items-center justify-center transition cursor-pointer">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </div>
+
+                            {{-- Voucher Code & Discount Highlight Card --}}
+                            <div class="rounded-xl p-3.5 border flex items-center justify-between gap-3"
+                                 :class="conditionVoucher.voucher_type === 'SHIPPING' ? 'bg-teal-50/70 border-teal-200' : 'bg-amber-50/70 border-amber-200'">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-semibold"
+                                              :class="conditionVoucher.voucher_type === 'SHIPPING' ? 'text-teal-800' : 'text-amber-900'">
+                                            Mã voucher:
+                                        </span>
+                                        <span class="font-mono font-black text-sm px-2 py-0.5 rounded bg-white border border-[#EBDDCD] text-[#5C3317]"
+                                              x-text="conditionVoucher.code"></span>
+                                    </div>
+                                    <div class="mt-1 text-lg font-extrabold"
+                                         :class="conditionVoucher.voucher_type === 'SHIPPING' ? 'text-teal-700' : 'text-[#E08A1E]'"
+                                         x-text="(conditionVoucher.discount_display || '') + ' (' + (conditionVoucher.discount_subtext || '') + ')'">
+                                    </div>
+                                </div>
+                                <button type="button" 
+                                        @click="copyConditionCode(conditionVoucher.code)"
+                                        class="px-3 py-1.5 rounded-lg font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                                        :class="conditionVoucher.voucher_type === 'SHIPPING' ? 'bg-teal-600 hover:bg-teal-700 text-white' : 'bg-[#E08A1E] hover:bg-[#C2751D] text-white'">
+                                    <i class="fa-regular fa-copy"></i>
+                                    <span x-text="copiedConditionCode ? 'Đã chép!' : 'Chép mã'"></span>
+                                </button>
+                            </div>
+
+                            {{-- Live Condition Status for Current Order --}}
+                            <div class="rounded-xl p-3 border text-xs"
+                                 :class="isVoucherApplicable(conditionVoucher) ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' : 'bg-rose-50/80 border-rose-200 text-rose-900'">
+                                <div class="flex items-start gap-2">
+                                    <span class="text-base leading-none shrink-0" x-text="isVoucherApplicable(conditionVoucher) ? '✓' : '⚠️'"></span>
+                                    <div class="flex-1 space-y-1">
+                                        <div class="font-bold flex items-center justify-between">
+                                            <span x-text="isVoucherApplicable(conditionVoucher) ? 'Đơn hàng hiện tại đủ điều kiện áp dụng mã này!' : 'Đơn hàng hiện tại chưa đủ điều kiện áp dụng'"></span>
+                                            <template x-if="isVoucherApplicable(conditionVoucher)">
+                                                <span class="font-bold text-emerald-700" x-text="'Tiết kiệm: ' + formatVND(calculateSavings(conditionVoucher))"></span>
+                                            </template>
+                                        </div>
+                                        <template x-if="!isVoucherApplicable(conditionVoucher)">
+                                            <p class="text-rose-700 font-medium" x-text="getInapplicableReason(conditionVoucher)"></p>
+                                        </template>
+                                        <div class="text-[11px] text-[#8C6B53] pt-0.5 flex items-center justify-between border-t border-[#F0E2D2]/50">
+                                            <span>Đơn hàng áp dụng: <strong class="text-[#5C3317]" x-text="formatVND(conditionVoucher.eligible_subtotal !== undefined ? conditionVoucher.eligible_subtotal : subtotal)"></strong></span>
+                                            <span>Yêu cầu tối thiểu: <strong class="text-[#5C3317]" x-text="conditionVoucher.min_order_formatted || formatVND(conditionVoucher.min_order_value || 0)"></strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Detailed Conditions List --}}
+                            <div class="bg-white rounded-xl border border-[#F0E2D2] divide-y divide-[#F5E8D8] text-xs">
+                                {{-- Row: Đơn tối thiểu --}}
+                                <div class="flex items-center justify-between p-2.5">
+                                    <span class="text-[#8C6B53] flex items-center gap-1.5">
+                                        <i class="fa-solid fa-cart-shopping text-[#E08A1E] w-4"></i>
+                                        <span>Đơn tối thiểu:</span>
+                                    </span>
+                                    <span class="font-bold text-[#5C3317]" x-text="conditionVoucher.min_order_formatted || formatVND(conditionVoucher.min_order_value || 0)"></span>
+                                </div>
+
+                                {{-- Row: Mức giảm tối đa (nếu có) --}}
+                                <template x-if="conditionVoucher.max_discount_formatted">
+                                    <div class="flex items-center justify-between p-2.5">
+                                        <span class="text-[#8C6B53] flex items-center gap-1.5">
+                                            <i class="fa-solid fa-arrow-down-wide-short text-[#E08A1E] w-4"></i>
+                                            <span>Mức giảm tối đa:</span>
+                                        </span>
+                                        <span class="font-bold text-[#5C3317]" x-text="conditionVoucher.max_discount_formatted"></span>
+                                    </div>
+                                </template>
+
+                                {{-- Row: Thời gian hiệu lực --}}
+                                <div class="flex items-center justify-between p-2.5">
+                                    <span class="text-[#8C6B53] flex items-center gap-1.5">
+                                        <i class="fa-regular fa-clock text-[#E08A1E] w-4"></i>
+                                        <span>Thời gian hiệu lực:</span>
+                                    </span>
+                                    <span class="font-mono font-medium text-[#5C3317]" 
+                                          x-text="(conditionVoucher.start_date_formatted || formatDate(conditionVoucher.start_date)) + ' - ' + (conditionVoucher.end_date_formatted || formatDate(conditionVoucher.end_date))"></span>
+                                </div>
+
+                                {{-- Row: Lượt dùng toàn hệ thống --}}
+                                <div class="flex items-center justify-between p-2.5">
+                                    <span class="text-[#8C6B53] flex items-center gap-1.5">
+                                        <i class="fa-solid fa-fire text-[#E08A1E] w-4"></i>
+                                        <span>Lượt dùng toàn shop:</span>
+                                    </span>
+                                    <span class="font-semibold text-[#5C3317]">
+                                        <span x-text="'Đã dùng ' + (conditionVoucher.used_count || 0)"></span>
+                                        <span x-show="conditionVoucher.global_limit" x-text="' / ' + conditionVoucher.global_limit + ' lượt'"></span>
+                                        <span x-show="!conditionVoucher.global_limit">(Không giới hạn)</span>
+                                    </span>
+                                </div>
+
+                                {{-- Row: Giới hạn mỗi khách hàng --}}
+                                <div class="flex items-center justify-between p-2.5">
+                                    <span class="text-[#8C6B53] flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-tag text-[#E08A1E] w-4"></i>
+                                        <span>Lượt dùng mỗi khách:</span>
+                                    </span>
+                                    <span class="font-semibold text-[#5C3317]" 
+                                          x-text="conditionVoucher.user_limit ? (conditionVoucher.user_limit + ' lượt/khách' + (conditionVoucher.user_remaining !== null ? ' (Còn ' + conditionVoucher.user_remaining + ' lượt)' : '')) : 'Không giới hạn lượt/khách'"></span>
+                                </div>
+
+                                {{-- Row: Phạm vi áp dụng --}}
+                                <div class="p-2.5 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[#8C6B53] flex items-center gap-1.5">
+                                            <i class="fa-solid fa-boxes-stacked text-[#E08A1E] w-4"></i>
+                                            <span>Phạm vi áp dụng:</span>
+                                        </span>
+                                        <span class="font-bold text-[#5C3317]" x-text="conditionVoucher.scope_text || 'Toàn bộ sản phẩm'"></span>
+                                    </div>
+
+                                    {{-- Categories list if apply_scope === 'CATEGORY' --}}
+                                    <template x-if="conditionVoucher.apply_scope === 'CATEGORY' && conditionVoucher.category_names && conditionVoucher.category_names.length > 0">
+                                        <div class="pt-1 flex flex-wrap gap-1.5 pl-5">
+                                            <template x-for="cName in conditionVoucher.category_names" :key="cName">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 text-[11px] font-semibold">
+                                                    <span>🧸</span>
+                                                    <span x-text="cName"></span>
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    {{-- Products / Variants list if apply_scope === 'PRODUCT' --}}
+                                    <template x-if="conditionVoucher.apply_scope === 'PRODUCT' && conditionVoucher.product_names && conditionVoucher.product_names.length > 0">
+                                        <div class="pt-1 flex flex-wrap gap-1 pl-5 max-h-28 overflow-y-auto">
+                                            <template x-for="pName in conditionVoucher.product_names" :key="pName">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 text-[11px]">
+                                                    <span>🎁</span>
+                                                    <span x-text="pName"></span>
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                {{-- Row: Phương thức thanh toán --}}
+                                <div class="flex items-center justify-between p-2.5">
+                                    <span class="text-[#8C6B53] flex items-center gap-1.5">
+                                        <i class="fa-solid fa-credit-card text-[#E08A1E] w-4"></i>
+                                        <span>Thanh toán áp dụng:</span>
+                                    </span>
+                                    <span class="font-medium text-[#5C3317]">Mọi hình thức (COD, QR Ngân hàng, VNPay, MoMo)</span>
+                                </div>
+                            </div>
+
+                            {{-- Notes --}}
+                            <div class="text-[11px] text-[#8C7A6B] bg-[#FAF6EE] p-3 rounded-xl border border-[#EBDDCD] leading-relaxed space-y-1">
+                                <div class="font-bold text-[#5D4037] flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-exclamation text-[10px] text-[#E08A1E]"></i>
+                                    <span>Quy định sử dụng:</span>
+                                </div>
+                                <ul class="list-disc pl-4 space-y-0.5">
+                                    <li>Mỗi đơn hàng được áp dụng đồng thời tối đa 01 Voucher Đơn hàng và 01 Voucher Vận chuyển.</li>
+                                    <li>Voucher không có giá trị quy đổi thành tiền mặt hoặc chuyển nhượng.</li>
+                                    <li>Nếu đơn hàng bị hủy hợp lệ, voucher sẽ tự động được hoàn lại tài khoản của bạn.</li>
+                                </ul>
+                            </div>
+
+                            {{-- Modal Footer Actions --}}
+                            <div class="pt-2 flex items-center justify-end gap-2">
+                                <button type="button" @click="closeConditionModal()"
+                                        class="px-4 py-2 rounded-xl text-xs font-semibold text-[#8C6B53] bg-white hover:bg-[#F2DECA] border border-[#EBDDCD] transition cursor-pointer">
+                                    Đóng
+                                </button>
+                                <template x-if="isVoucherApplicable(conditionVoucher)">
+                                    <button type="button" 
+                                            @click="applyFromConditionModal()"
+                                            class="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                                            :class="conditionVoucher.voucher_type === 'SHIPPING' ? 'bg-[#0D9488] hover:bg-[#047857]' : 'bg-[#E08A1E] hover:bg-[#C2751D]'">
+                                        <i class="fa-solid fa-check"></i>
+                                        <span x-text="(selectedShippingVoucher && selectedShippingVoucher.id === conditionVoucher.id) || (selectedOrderVoucher && selectedOrderVoucher.id === conditionVoucher.id) ? 'Đang áp dụng' : 'Áp dụng mã này'"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 
     @push('scripts')
@@ -1495,6 +1843,19 @@
             googleMapsApiKey: @json($googleMapsApiKey ?? ''),
             calculateShippingUrl: '{{ route('customer.checkout.calculate_shipping') }}'
         };
+
+        // Tính toán khoảng cách sticky header tự động cho checkout sidebar
+        function updateCheckoutHeaderOffset() {
+            const header = document.querySelector('header.site-header');
+            const h = header ? header.offsetHeight : 72;
+            document.documentElement.style.setProperty('--checkout-header-offset', (h + 16) + 'px');
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateCheckoutHeaderOffset);
+        } else {
+            updateCheckoutHeaderOffset();
+        }
+        window.addEventListener('resize', updateCheckoutHeaderOffset);
 
         function checkoutComponent(customConfig) {
             const config = customConfig || window.__CHECKOUT_CONFIG__ || {};
@@ -1516,6 +1877,11 @@
                 voucherMessage: '',
                 voucherSuccess: false,
                 suggestedChips: ((config.allVouchers || []).filter(v => v.is_applicable).length > 0 ? (config.allVouchers || []).filter(v => v.is_applicable) : (config.allVouchers || [])).map(v => v.code).slice(0, 4),
+
+                // Condition Modal State
+                conditionModalOpen: false,
+                conditionVoucher: null,
+                copiedConditionCode: false,
 
                 // Shipping options & distance info
                 shippingOptions: initialShip && initialShip.options ? initialShip.options : {
@@ -2567,6 +2933,48 @@
 
                 formatVND(value) {
                     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value).replace('₫', 'đ');
+                },
+
+                openConditionModal(voucher) {
+                    this.conditionVoucher = voucher;
+                    this.conditionModalOpen = true;
+                    this.copiedConditionCode = false;
+                    document.body.style.overflow = 'hidden';
+                },
+
+                closeConditionModal() {
+                    this.conditionModalOpen = false;
+                    document.body.style.overflow = '';
+                    setTimeout(() => {
+                        if (!this.conditionModalOpen) this.conditionVoucher = null;
+                    }, 200);
+                },
+
+                copyConditionCode(code) {
+                    if (!code) return;
+                    navigator.clipboard.writeText(code).then(() => {
+                        this.copiedConditionCode = true;
+                        if (typeof Toast !== 'undefined') {
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Đã sao chép mã: ' + code
+                            });
+                        }
+                        setTimeout(() => {
+                            this.copiedConditionCode = false;
+                        }, 2500);
+                    });
+                },
+
+                applyFromConditionModal() {
+                    if (!this.conditionVoucher) return;
+                    if (!this.isVoucherApplicable(this.conditionVoucher)) return;
+                    if (this.conditionVoucher.voucher_type === 'SHIPPING') {
+                        this.toggleShippingVoucher(this.conditionVoucher);
+                    } else {
+                        this.toggleOrderVoucher(this.conditionVoucher);
+                    }
+                    this.closeConditionModal();
                 },
 
                 handleSubmit(e) {
