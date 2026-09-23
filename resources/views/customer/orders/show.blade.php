@@ -521,13 +521,6 @@
                     <i class="fa-solid fa-timeline"></i>
                     <span>Tiến trình đơn hàng</span>
                 </div>
-                @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
-                    <button type="button" @click="showGhnModal = true"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#F26522] to-[#D84A0E] hover:from-[#D84A0E] hover:to-[#B53B08] rounded-xl shadow-xs transition hover:scale-102 cursor-pointer">
-                        <i class="fa-solid fa-route"></i>
-                        <span>Tra cứu hành trình kho bãi GHN</span>
-                    </button>
-                @endif
             </div>
             <div class="py-2">
                 <x-order-timeline :status="$order->order_status" />
@@ -536,22 +529,23 @@
             {{-- Dải hiển thị Vị trí bưu kiện thực tế qua các kho GHN --}}
             @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
                 @php $ghn = $order->ghn_tracking; @endphp
-                <div class="mt-4 pt-3.5 border-t border-amber-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div class="mt-4 pt-3.5 border-t border-amber-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs" style="border-top: 1px solid rgba(251, 191, 36, 0.4);">
                     <div class="flex items-center gap-2.5">
-                        <span class="w-8 h-8 rounded-xl bg-orange-100 text-[#F26522] flex items-center justify-center font-bold text-sm shrink-0">
-                            <i class="fa-solid fa-location-dot"></i>
+                        <span class="w-8 h-8 rounded-xl bg-orange-100 text-[#F26522] flex items-center justify-center font-bold text-sm shrink-0" style="width: 36px; height: 36px; min-width: 36px; border-radius: 10px; background: #FFEDD5; color: #F26522; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                            <i class="fa-solid fa-location-dot" style="color: #F26522;"></i>
                         </span>
                         <div>
-                            <div class="text-[#786B61] text-[11px]">Vị trí bưu kiện hiện tại (Giao Hàng Nhanh):</div>
-                            <div class="font-bold text-[#4E342E] text-xs sm:text-[13px] mt-0.5">{{ $ghn['current_location'] }}</div>
+                            <div class="text-[#786B61] text-[11px]" style="color: #786B61; font-size: 11px;">Vị trí bưu kiện hiện tại (Giao Hàng Nhanh):</div>
+                            <div class="font-bold text-[#4E342E] text-xs sm:text-[13px] mt-0.5" style="color: #4E342E; font-weight: 700;">{{ $ghn['current_location'] }}</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <button type="button" @click="showGhnModal = true"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-[#795548] hover:text-[#4E342E] font-bold text-xs rounded-xl border border-amber-200 transition cursor-pointer">
-                            <i class="fa-solid fa-boxes-packing text-[#F26522]"></i>
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-[#795548] hover:text-[#4E342E] font-bold text-xs rounded-xl border border-amber-200 transition cursor-pointer"
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #FFF7ED; color: #C2410C; font-weight: 700; font-size: 12px; border-radius: 10px; border: 1px solid #FED7AA; cursor: pointer; transition: all 0.2s;">
+                            <i class="fa-solid fa-boxes-packing" style="color: #F26522;"></i>
                             <span>Thông tin vận chuyển</span>
-                            <i class="fa-solid fa-chevron-right text-[10px] text-[#A8988A]"></i>
+                            <i class="fa-solid fa-chevron-right text-[10px]" style="color: #A8988A; font-size: 10px;"></i>
                         </button>
                     </div>
                 </div>
@@ -851,7 +845,20 @@
                                 <tbody>
                                     @foreach ($order->payments as $payment)
                                         <tr>
-                                            <td class="font-bold text-[#4E342E]">{{ $payment->method }}</td>
+                                            <td class="font-bold text-[#4E342E]">
+                                                <span class="inline-flex items-center gap-1.5">
+                                                    @if($payment->method === 'CARD')
+                                                        <i class="fa-solid fa-credit-card text-blue-600"></i>
+                                                    @elseif($payment->method === 'BANK_TRANSFER')
+                                                        <i class="fa-solid fa-building-columns text-emerald-600"></i>
+                                                    @elseif($payment->method === 'COD')
+                                                        <i class="fa-solid fa-money-bill-wave text-amber-600"></i>
+                                                    @else
+                                                        <i class="fa-solid fa-wallet text-purple-600"></i>
+                                                    @endif
+                                                    <span>{{ $payment->method_label }}</span>
+                                                </span>
+                                            </td>
                                             <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
                                             <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
                                             <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>

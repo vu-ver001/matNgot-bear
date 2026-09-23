@@ -64,9 +64,20 @@ class Payment extends Model
         return $this->hasOne(PaymentRefundRequest::class)->latestOfMany();
     }
 
+    public function getMethodLabelAttribute(): string
+    {
+        return match ($this->method) {
+            'COD' => 'Tiền mặt (COD)',
+            'BANK_TRANSFER' => 'Chuyển khoản VietQR',
+            'CARD' => 'VNPAY',
+            'E_WALLET' => 'Ví điện tử',
+            default => $this->method ?? 'Khác',
+        };
+    }
+
     public function getProofImageUrlAttribute(): ?string
     {
-        if (!$this->proof_image) {
+        if (! $this->proof_image) {
             return null;
         }
 

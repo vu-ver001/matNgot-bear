@@ -21,7 +21,7 @@
                         @forelse ($order->payments as $payment)
                             <tr>
                                 <td data-label="Giao dịch">
-                                    <div class="font-bold text-[#4E342E]">{{ $payment->method }}</div>
+                                    <div class="font-bold text-[#4E342E]">{{ $payment->method_label }}</div>
                                     <div class="text-xs text-[#795548] font-mono mt-1">{{ $payment->transaction_ref ?? '—' }}</div>
                                 </td>
                                 <td data-label="Số tiền" class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>

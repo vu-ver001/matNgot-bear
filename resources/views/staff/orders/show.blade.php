@@ -480,14 +480,6 @@
                         Thông tin nhận hàng & Vận chuyển
                     </div>
                     <div class="flex items-center gap-2">
-                        @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
-                            <button type="button" @click="showGhnModal = true"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#F26522] to-[#D84A0E] hover:from-[#D84A0E] hover:to-[#B53B08] rounded-xl shadow-xs transition hover:scale-102 cursor-pointer"
-                                    title="Tra cứu hành trình vận chuyển qua các kho của GHN">
-                                <i class="fa-solid fa-truck-fast"></i>
-                                <span>Hành trình GHN</span>
-                            </button>
-                        @endif
                         @if ($order->customer_id)
                             <a href="{{ route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]) }}"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer"
@@ -517,7 +509,7 @@
                     </div>
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
                         <dt class="text-xs font-bold text-[#8E8076] uppercase">Phương thức thanh toán</dt>
-                        <dd class="font-bold text-[#4E342E] mt-0.5">{{ $order->payment_method }}</dd>
+                        <dd class="font-bold text-[#4E342E] mt-0.5">{{ $order->payment_method_label }}</dd>
                     </div>
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
                         <dt class="text-xs font-bold text-[#8E8076] uppercase">Hình thức giao hàng</dt>
@@ -541,25 +533,29 @@
                 {{-- Box thông tin vận đơn GHN Express --}}
                 @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
                     @php $ghn = $order->ghn_tracking; @endphp
-                    <div class="mt-4 p-3.5 bg-orange-50/80 border border-orange-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                        <div class="flex items-center gap-3">
-                            <span class="w-9 h-9 rounded-xl bg-[#F26522] text-white flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
-                                <i class="fa-solid fa-boxes-packing"></i>
-                            </span>
+                    <div class="ghn-banner-card" style="margin-top: 16px; padding: 14px 18px; background: linear-gradient(135deg, #FFF9F5 0%, #FFF3EC 100%); border: 1px solid #FFD9C2; border-left: 4px solid #F26522; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; box-shadow: 0 2px 8px rgba(242, 101, 34, 0.06);">
+                        <div class="ghn-banner-left" style="display: flex; align-items: center; gap: 14px;">
+                            <div class="ghn-banner-icon" style="width: 44px; height: 44px; min-width: 44px; border-radius: 12px; background: linear-gradient(135deg, #F26522 0%, #D84E0E 100%); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(242, 101, 34, 0.28);">
+                                <i class="fa-solid fa-truck-fast"></i>
+                            </div>
                             <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="font-extrabold text-[#F26522] uppercase tracking-wider text-[11px]">Vận đơn GHN Express:</span>
-                                    <span class="font-mono font-black text-sm text-[#4E342E]">{{ $ghn['tracking_code'] }}</span>
+                                <div class="ghn-banner-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span class="ghn-banner-tag" style="font-size: 11px; font-weight: 800; color: #F26522; text-transform: uppercase; letter-spacing: 0.5px;">VẬN ĐƠN GHN EXPRESS:</span>
+                                    <span class="ghn-banner-code" style="font-family: monospace; font-size: 13px; font-weight: 800; color: #3E2723; background: #FFFFFF; padding: 2px 8px; border-radius: 6px; border: 1px solid #FFCCA8; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                                        {{ $ghn['tracking_code'] }}
+                                    </span>
                                 </div>
-                                <div class="text-[#795548] text-xs mt-0.5">
-                                    Vị trí bưu kiện: <strong>{{ $ghn['current_location'] }}</strong>
+                                <div class="ghn-banner-location" style="font-size: 12px; color: #6D4C41; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
+                                    <i class="fa-solid fa-location-dot" style="color: #F26522; font-size: 12px;"></i>
+                                    <span>Vị trí bưu kiện: <strong style="color: #3E2723; font-weight: 700;">{{ $ghn['current_location'] }}</strong></span>
                                 </div>
                             </div>
                         </div>
                         <button type="button" @click="showGhnModal = true"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-orange-100 text-[#F26522] font-bold text-xs rounded-xl border border-orange-300 transition shadow-2xs shrink-0 cursor-pointer">
-                            <i class="fa-solid fa-route"></i>
-                            <span>Xem toàn bộ các kho</span>
+                                class="ghn-banner-btn"
+                                style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #F26522; color: #FFFFFF !important; font-weight: 700; font-size: 12px; border-radius: 10px; border: none; box-shadow: 0 2px 8px rgba(242, 101, 34, 0.28); cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
+                            <i class="fa-solid fa-route" style="color: #FFFFFF; font-size: 13px;"></i>
+                            <span style="color: #FFFFFF;">Theo dõi vận chuyển</span>
                         </button>
                     </div>
                 @endif
@@ -710,7 +706,20 @@
                         <tbody>
                             @forelse ($order->payments as $payment)
                                 <tr>
-                                    <td class="font-bold text-[#4E342E]">{{ $payment->method }}</td>
+                                    <td class="font-bold text-[#4E342E]">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            @if($payment->method === 'CARD')
+                                                <i class="fa-solid fa-credit-card text-blue-600"></i>
+                                            @elseif($payment->method === 'BANK_TRANSFER')
+                                                <i class="fa-solid fa-building-columns text-emerald-600"></i>
+                                            @elseif($payment->method === 'COD')
+                                                <i class="fa-solid fa-money-bill-wave text-amber-600"></i>
+                                            @else
+                                                <i class="fa-solid fa-wallet text-purple-600"></i>
+                                            @endif
+                                            <span>{{ $payment->method_label }}</span>
+                                        </span>
+                                    </td>
                                     <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
                                     <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
                                     <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>
