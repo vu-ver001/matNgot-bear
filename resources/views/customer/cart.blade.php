@@ -84,6 +84,31 @@
                 display: none !important;
             }
         }
+        .mn-no-image-thumb {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #FAF5ED;
+            border-radius: 14px;
+            color: #A8988A;
+            border: 1px dashed #E2D3C4;
+            user-select: none;
+            padding: 4px;
+            text-align: center;
+        }
+        .mn-no-image-thumb i {
+            color: #B5A492;
+        }
+        .mn-no-image-thumb span {
+            font-size: 10px;
+            font-weight: 700;
+            color: #A8988A;
+            margin-top: 3px;
+            line-height: 1;
+        }
     </style>
 
     {{-- Main Container --}}
@@ -96,13 +121,13 @@
                     ? $rawImg
                     : asset(ltrim($rawImg, '/'));
             } else {
-                $imgUrl = asset('images/customer/product-placeholder.png');
+                $imgUrl = null;
             }
 
             $variants = ($item->product && $item->product->variants)
                 ? $item->product->variants->map(function ($v) use ($imgUrl) {
                     $vImg = !empty($v->image_url)
-                        ? ((str_starts_with($v->image_url, 'http') || str_starts_with($v->image_url, 'data:')) ? $v->image_url : asset($v->image_url))
+                        ? ((str_starts_with($v->image_url, 'http') || str_starts_with($v->image_url, 'data:')) ? $v->image_url : asset(ltrim($v->image_url, '/')))
                         : $imgUrl;
                     return [
                         'id' => $v->id,
@@ -265,9 +290,9 @@
                             @foreach($suggestedProducts as $prod)
                                 @php
                                     $pImg = $prod->images->firstWhere('is_primary', true) ?? $prod->images->first();
-                                    $pImgUrl = $pImg 
-                                        ? ((str_starts_with($pImg->image_url, 'data:') || str_starts_with($pImg->image_url, 'http')) ? $pImg->image_url : asset($pImg->image_url)) 
-                                        : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
+                                    $pImgUrl = (!empty($pImg) && !empty($pImg->image_url))
+                                        ? ((str_starts_with($pImg->image_url, 'data:') || str_starts_with($pImg->image_url, 'http')) ? $pImg->image_url : asset(ltrim($pImg->image_url, '/'))) 
+                                        : null;
                                     $pPrice = $prod->sale_price ?? $prod->price;
                                     $pHasDiscount = !empty($prod->sale_price) && $prod->sale_price < $prod->price;
                                     $pDiscount = $pHasDiscount && $prod->price > 0 ? round((($prod->price - $prod->sale_price) / $prod->price) * 100) : 0;
@@ -275,7 +300,19 @@
                                 <a href="{{ route('products.show', $prod->id) }}" 
                                    class="bg-white rounded-2xl p-3 border border-[#F0E6D8] hover:border-[#E08A1E] shadow-2xs hover:shadow-md transition group flex flex-col">
                                     <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-[#FAF6EE] mb-2.5">
-                                        <img src="{{ $pImgUrl }}" alt="{{ $prod->name }}" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300">
+                                        @if(!empty($pImgUrl))
+                                            <img src="{{ $pImgUrl }}" alt="{{ $prod->name }}" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="mn-no-image-thumb" style="display: none;">
+                                                <i class="fa-regular fa-image text-xl text-[#B5A492]"></i>
+                                                <span class="text-[9px] font-bold text-[#A8988A] mt-0.5">Không ảnh</span>
+                                            </div>
+                                        @else
+                                            <div class="mn-no-image-thumb">
+                                                <i class="fa-regular fa-image text-xl text-[#B5A492]"></i>
+                                                <span class="text-[9px] font-bold text-[#A8988A] mt-0.5">Không ảnh</span>
+                                            </div>
+                                        @endif
                                         @if($pHasDiscount)
                                             <span class="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-2xs">
                                                 -{{ $pDiscount }}%
@@ -344,7 +381,9 @@
                                 $product = $item->product;
                                 $variant = $item->variant;
                                 $rawImg = $item->effective_image;
-                                $imageUrl = (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg);
+                                $imageUrl = !empty($rawImg) 
+                                    ? ((str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset(ltrim($rawImg, '/'))) 
+                                    : null;
                                 $price = $item->effective_price;
                                 $originalPrice = $variant ? $variant->price : $product->price;
                                 $hasDiscount = $price < $originalPrice;
@@ -379,9 +418,18 @@
                                     <a href="{{ route('products.show', $product->id) }}"
                                         class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-[#F0E6D8] shrink-0 group block shadow-2xs overflow-hidden bg-[#FAF6EE]"
                                         title="Xem chi tiết {{ $product->name }}">
-                                        <img :src="getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}'" alt="{{ $product->name }}"
-                                            class="w-full h-full object-cover object-center transform transition duration-300 group-hover:scale-105"
-                                            onerror="this.src='{{ asset('images/customer/product-placeholder.png') }}'">
+                                        <div class="w-full h-full relative">
+                                            <img :src="getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}'" 
+                                                 x-show="Boolean(getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}')"
+                                                 alt="{{ $product->name }}"
+                                                 class="w-full h-full object-cover object-center transform transition duration-300 group-hover:scale-105"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="mn-no-image-thumb" 
+                                                 :style="Boolean(getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}') ? 'display: none;' : 'display: flex;'">
+                                                <i class="fa-regular fa-image text-xl sm:text-2xl"></i>
+                                                <span>Không ảnh</span>
+                                            </div>
+                                        </div>
                                         @if ($hasDiscount)
                                             <span class="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-xs leading-none">
                                                 -{{ $discountPercent }}%
@@ -601,10 +649,18 @@
                 
                 {{-- Header with Product Preview --}}
                 <div class="p-5 border-b border-[#F0E6D8] bg-[#FFFDF9] flex items-start gap-4 relative">
-                    <img :src="activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url" 
-                         :alt="activeVariantModal?.item?.name" 
-                         class="w-20 h-20 rounded-2xl object-cover border-2 border-[#EBDDCD] shadow-sm shrink-0 bg-white"
-                         onerror="this.src='https://placehold.co/200x200/F7EFE9/5D4037?text=Gau+Bong'">
+                    <div class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#EBDDCD] shadow-sm shrink-0 bg-white relative">
+                        <img :src="activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url" 
+                             :alt="activeVariantModal?.item?.name" 
+                             x-show="Boolean(activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url)"
+                             class="w-full h-full object-cover"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="mn-no-image-thumb" 
+                             :style="(activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url) ? 'display: none;' : 'display: flex;'">
+                            <i class="fa-regular fa-image text-xl text-[#B5A492]"></i>
+                            <span class="text-[9px]">Không ảnh</span>
+                        </div>
+                    </div>
                     
                     <div class="flex-1 min-w-0 pr-6">
                         <h4 class="font-bold text-[#2C1408] text-sm sm:text-base line-clamp-1" x-text="activeVariantModal?.item?.name"></h4>

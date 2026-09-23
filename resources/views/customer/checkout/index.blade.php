@@ -982,7 +982,7 @@
                             </div>
 
                             <div class="mn-card-body">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5 items-stretch">
+                                <div class="grid grid-rows-1 sm:grid-rows-3 gap-3 sm:gap-3.5 items-stretch">
                                     {{-- COD --}}
                                     <div @click="paymentMethod = 'COD'"
                                          class="mn-option-card h-full !items-center !m-0 !py-3.5 !px-4"
@@ -991,12 +991,6 @@
                                         <div class="flex items-center gap-3 w-full">
                                             <div class="mn-radio-outer shrink-0">
                                                 <div class="mn-radio-inner" x-show="paymentMethod === 'COD'"></div>
-                                            </div>
-                                            <div class="mn-icon-container shrink-0">
-                                                {{-- Cash Bill SVG matching mockup --}}
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                                                </svg>
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">Thanh toán khi nhận hàng</div>
@@ -1014,43 +1008,9 @@
                                             <div class="mn-radio-outer shrink-0">
                                                 <div class="mn-radio-inner" x-show="paymentMethod === 'VNPAY'"></div>
                                             </div>
-                                            <div class="mn-icon-container shrink-0">
-                                                {{-- 4 Squares QR SVG matching mockup --}}
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <rect x="3" y="3" width="7.5" height="7.5" rx="2" />
-                                                    <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" />
-                                                    <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" />
-                                                    <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" />
-                                                </svg>
-                                            </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">VNPay QR</div>
+                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">VNPay</div>
                                                 <div class="text-[11px] sm:text-[11.5px] text-[#8C6B53] mt-0.5 truncate">Thanh toán bằng mã QR VNPay</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- MoMo --}}
-                                    <div @click="paymentMethod = 'MOMO'"
-                                         class="mn-option-card h-full !items-center !m-0 !py-3.5 !px-4"
-                                         :class="{ 'selected': paymentMethod === 'MOMO' }">
-                                        <input type="radio" name="payment_method" value="MOMO" x-model="paymentMethod" class="sr-only">
-                                        <div class="flex items-center gap-3 w-full">
-                                            <div class="mn-radio-outer shrink-0">
-                                                <div class="mn-radio-inner" x-show="paymentMethod === 'MOMO'"></div>
-                                            </div>
-                                            <div class="mn-icon-container shrink-0">
-                                                {{-- Smiley Face SVG matching mockup --}}
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                    <circle cx="12" cy="12" r="9" />
-                                                    <circle cx="9" cy="10" r="1.2" fill="currentColor" />
-                                                    <circle cx="15" cy="10" r="1.2" fill="currentColor" />
-                                                    <path d="M8.5 14c1 1.5 2.5 2 3.5 2s2.5-.5 3.5-2" stroke-linecap="round" />
-                                                </svg>
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">Ví MoMo</div>
-                                                <div class="text-[11px] sm:text-[11.5px] text-[#8C6B53] mt-0.5 truncate">Thanh toán qua ví điện tử MoMo</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1064,14 +1024,8 @@
                                             <div class="mn-radio-outer shrink-0">
                                                 <div class="mn-radio-inner" x-show="paymentMethod === 'BANK_TRANSFER'"></div>
                                             </div>
-                                            <div class="mn-icon-container shrink-0">
-                                                {{-- Bank Card SVG matching mockup --}}
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
-                                                </svg>
-                                            </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">Chuyển khoản ngân hàng</div>
+                                                <div class="text-[13.5px] sm:text-sm font-bold text-[#5C3317] truncate">VietQR</div>
                                                 <div class="text-[11px] sm:text-[11.5px] text-[#8C6B53] mt-0.5 truncate">Quét mã VietQR chuyển khoản nhanh</div>
                                             </div>
                                         </div>

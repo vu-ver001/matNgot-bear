@@ -1,5 +1,6 @@
 /* ==========================================================================
-   MẬT NGỌT BEAR - PAYMENT RESULT STYLESHEET (ĐỘC LẬP)
+   MẬT NGỌT BEAR - PAYMENT RESULT STYLESHEET
+   Tone: Warm Cocoa & Honey Palette (#FAF6EE, #4E342E, #E08A1E, #EADFCF)
    ========================================================================== */
 
 .payment-result-container {
@@ -18,15 +19,15 @@
     margin: 0 auto;
     background: #ffffff;
     border-radius: 24px;
-    box-shadow: 0 20px 40px -15px rgba(44, 20, 8, 0.1);
-    border: 1px solid #EBDDCD;
+    box-shadow: 0 20px 40px -15px rgba(92, 50, 25, 0.08);
+    border: 1px solid #EADFCF;
     overflow: hidden;
 }
 
 /* --- Status Banners --- */
 .status-banner-paid {
-    background: linear-gradient(135deg, #1C462C 0%, #059669 50%, #047857 100%);
-    padding: 36px 24px;
+    background: linear-gradient(135deg, #4E342E 0%, #6D4C41 50%, #3E2723 100%);
+    padding: 40px 24px;
     text-align: center;
     color: #ffffff;
     position: relative;
@@ -34,8 +35,8 @@
 }
 
 .status-banner-pending {
-    background: linear-gradient(135deg, #7C4A03 0%, #D97706 50%, #B45309 100%);
-    padding: 36px 24px;
+    background: linear-gradient(135deg, #6D4C41 0%, #8D5606 50%, #5D4037 100%);
+    padding: 40px 24px;
     text-align: center;
     color: #ffffff;
     position: relative;
@@ -43,8 +44,8 @@
 }
 
 .status-banner-failed {
-    background: linear-gradient(135deg, #681818 0%, #DC2626 50%, #B91C1C 100%);
-    padding: 36px 24px;
+    background: linear-gradient(135deg, #5C1D1D 0%, #7E2A2A 50%, #4A1616 100%);
+    padding: 40px 24px;
     text-align: center;
     color: #ffffff;
     position: relative;
@@ -56,12 +57,23 @@
     height: 72px;
     margin: 0 auto 16px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(46, 125, 50, 0.22);
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 8px 20px rgba(0, 0, 0, 0.15);
+    border: 2px solid rgba(129, 199, 132, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.status-icon-circle.icon-pending {
+    background: rgba(224, 138, 30, 0.25);
+    border: 2px solid rgba(246, 216, 155, 0.6);
+}
+
+.status-icon-circle.icon-failed {
+    background: rgba(198, 40, 40, 0.25);
+    border: 2px solid rgba(239, 154, 154, 0.6);
 }
 
 .status-title {
@@ -74,65 +86,92 @@
 
 .status-subtitle {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: #F6D89B !important;
     max-width: 580px;
     margin: 0 auto;
     line-height: 1.6;
+    font-weight: 500;
 }
 
 .order-code-badge {
-    margin-top: 18px;
+    margin-top: 20px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(8px);
     padding: 8px 18px;
     border-radius: 9999px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     color: #ffffff;
     font-size: 13px;
 }
 
 .order-code-text {
     font-family: monospace;
-    font-weight: 800;
+    font-weight: 900;
     font-size: 16px;
     color: #F6D89B;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
 }
 
 .btn-copy-code {
-    background: rgba(255, 255, 255, 0.25);
+    background: #E08A1E;
     border: none;
     color: #ffffff;
     padding: 4px 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .btn-copy-code:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: #C45E1B;
+    transform: scale(1.03);
 }
 
 /* --- Product Thumbnail & Cards --- */
-.product-thumb-img {
-    width: 64px !important;
-    height: 64px !important;
-    min-width: 64px !important;
-    max-width: 64px !important;
+.product-thumb-container {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
     border-radius: 12px;
-    object-fit: cover;
-    border: 1px solid #EBDDCD;
+    overflow: hidden;
+    border: 1px solid #EADFCF;
     background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.product-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-thumb-fallback {
+    width: 100%;
+    height: 100%;
+    background: #FAF6EE;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #A8988A;
+    font-size: 8px;
+    font-weight: 700;
 }
 
 .info-card {
     background: #FAF6EE;
-    border: 1px solid #EBDDCD;
+    border: 1px solid #EADFCF;
     border-radius: 18px;
     padding: 20px;
     margin-bottom: 20px;
@@ -143,7 +182,7 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 12px;
-    border-bottom: 1px solid #EBDDCD;
+    border-bottom: 1px solid #EADFCF;
     margin-bottom: 14px;
 }
 
@@ -160,7 +199,7 @@
 
 /* --- Action Buttons --- */
 .btn-primary-action {
-    background: linear-gradient(135deg, #5C3219 0%, #7E4A28 100%);
+    background: linear-gradient(135deg, #E08A1E 0%, #C45E1B 100%);
     color: #ffffff !important;
     font-weight: 800;
     padding: 14px 20px;
@@ -173,7 +212,7 @@
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 12px rgba(92, 50, 25, 0.25);
+    box-shadow: 0 4px 14px rgba(196, 94, 27, 0.3);
     transition: all 0.2s ease;
     border: none;
     width: 100%;
@@ -181,8 +220,8 @@
 
 .btn-primary-action:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(92, 50, 25, 0.35);
-    background: linear-gradient(135deg, #432310 0%, #5C3219 100%);
+    box-shadow: 0 6px 18px rgba(196, 94, 27, 0.4);
+    background: linear-gradient(135deg, #C45E1B 0%, #A34410 100%);
 }
 
 .btn-secondary-action {
@@ -197,21 +236,23 @@
     gap: 8px;
     text-decoration: none;
     font-size: 13px;
-    border: 1px solid #EBDDCD;
+    border: 1.5px solid #EADFCF;
     transition: all 0.2s ease;
     width: 100%;
     margin-top: 10px;
 }
 
 .btn-secondary-action:hover {
-    background: #FAF6EE;
+    background: #FFF8E7;
+    border-color: #E08A1E;
+    color: #E08A1E !important;
 }
 
-/* --- Status Pills --- */
+/* --- Status Pills (Harmonized with Mật Ngọt Bear warm tone) --- */
 .status-pill-paid {
-    background: #D1FAE5;
-    color: #065F46;
-    border: 1px solid #6EE7B7;
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
     font-size: 11px;
     font-weight: 800;
     padding: 3px 10px;
@@ -222,9 +263,9 @@
 }
 
 .status-pill-pending {
-    background: #FEF3C7;
-    color: #92400E;
-    border: 1px solid #FCD34D;
+    background: #FFF8E7;
+    color: #B87309;
+    border: 1px solid #F6D89B;
     font-size: 11px;
     font-weight: 800;
     padding: 3px 10px;
@@ -235,9 +276,9 @@
 }
 
 .status-pill-failed {
-    background: #FEE2E2;
-    color: #991B1B;
-    border: 1px solid #FCA5A5;
+    background: #FFEBEE;
+    color: #C62828;
+    border: 1px solid #FFCDD2;
     font-size: 11px;
     font-weight: 800;
     padding: 3px 10px;
@@ -248,9 +289,9 @@
 }
 
 .status-pill-confirmed {
-    background: #DBEAFE;
-    color: #1E40AF;
-    border: 1px solid #93C5FD;
+    background: #FFF3E0;
+    color: #C45E1B;
+    border: 1px solid #FFE0B2;
     font-size: 11px;
     font-weight: 800;
     padding: 3px 10px;
@@ -261,9 +302,22 @@
 }
 
 .status-pill-shipping {
-    background: #E0E7FF;
-    color: #3730A3;
-    border: 1px solid #C7D2FE;
+    background: #FAF0E6;
+    color: #795548;
+    border: 1px solid #EADFCF;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-pill-completed {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
     font-size: 11px;
     font-weight: 800;
     padding: 3px 10px;

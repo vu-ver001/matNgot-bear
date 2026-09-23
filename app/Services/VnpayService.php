@@ -7,8 +7,11 @@ use App\Models\Order;
 class VnpayService
 {
     protected string $tmnCode;
+
     protected string $hashSecret;
+
     protected string $vnpUrl;
+
     protected string $merchantName;
 
     public function __construct()
@@ -41,12 +44,12 @@ class VnpayService
         $transferContent = $order->order_code;
 
         // Standard EMVCo / VietQR payload formatted for VNPay & Mobile Banking
-        $payload = "00020101021238540010A00000072701240006970422011003774662050208QRIBFTTA5303704540" .
-            strlen((string)$amount) . $amount .
-            "5802VN5914NGUYEN NGOC ANH6006HA NOI62" .
-            (strlen($transferContent) + 4) . "08" . sprintf('%02d', strlen($transferContent)) . $transferContent . "6304";
+        $payload = '00020101021238540010A00000072701240006970422011003774662050208QRIBFTTA5303704540'.
+            strlen((string) $amount).$amount.
+            '5802VN5914NGUYEN NGOC ANH6006HA NOI62'.
+            (strlen($transferContent) + 4).'08'.sprintf('%02d', strlen($transferContent)).$transferContent.'6304';
 
-        return "https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=" . urlencode($payload);
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=350x350&data='.urlencode($payload);
     }
 
     /**
@@ -57,49 +60,49 @@ class VnpayService
         $returnUrl = $returnUrl ?? config('services.vnpay.return_url', route('payment.vnpay.return'));
         $createDate = date('YmdHis');
         $expireDate = date('YmdHis', strtotime('+15 minutes', strtotime($createDate)));
-        $cleanOrderInfo = "Thanh toan don hang " . preg_replace('/[^A-Za-z0-9]/', '', $order->order_code);
+        $cleanOrderInfo = 'Thanh toan don hang '.preg_replace('/[^A-Za-z0-9]/', '', $order->order_code);
 
         // VNPay requires valid IPv4. Localhost IPv6 '::1' causes gateway issues.
         $cleanIp = filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? $ipAddress : '127.0.0.1';
 
         // Use unique suffix so multiple payment attempts for the same order don't collide with VNPay's 'TxnRef already exists' constraint
-        $txnRef = $customTxnRef ?? ($order->order_code . '_' . date('His'));
+        $txnRef = $customTxnRef ?? ($order->order_code.'_'.date('His'));
 
         $vnp_Params = [
-            "vnp_Version" => "2.1.0",
-            "vnp_TmnCode" => $this->tmnCode,
-            "vnp_Amount" => (int) $order->total_amount * 100,
-            "vnp_Command" => "pay",
-            "vnp_CreateDate" => $createDate,
-            "vnp_CurrCode" => "VND",
-            "vnp_IpAddr" => $cleanIp,
-            "vnp_Locale" => "vn",
-            "vnp_OrderInfo" => $cleanOrderInfo,
-            "vnp_OrderType" => "other",
-            "vnp_ReturnUrl" => $returnUrl,
-            "vnp_TxnRef" => $txnRef,
-            "vnp_ExpireDate" => $expireDate,
+            'vnp_Version' => '2.1.0',
+            'vnp_TmnCode' => $this->tmnCode,
+            'vnp_Amount' => (int) $order->total_amount * 100,
+            'vnp_Command' => 'pay',
+            'vnp_CreateDate' => $createDate,
+            'vnp_CurrCode' => 'VND',
+            'vnp_IpAddr' => $cleanIp,
+            'vnp_Locale' => 'vn',
+            'vnp_OrderInfo' => $cleanOrderInfo,
+            'vnp_OrderType' => 'other',
+            'vnp_ReturnUrl' => $returnUrl,
+            'vnp_TxnRef' => $txnRef,
+            'vnp_ExpireDate' => $expireDate,
         ];
 
         ksort($vnp_Params);
-        $query = "";
+        $query = '';
         $i = 0;
-        $hashdata = "";
+        $hashdata = '';
 
         foreach ($vnp_Params as $key => $value) {
             if ($i == 1) {
-                $hashdata .= '&' . urlencode((string) $key) . "=" . urlencode((string) $value);
+                $hashdata .= '&'.urlencode((string) $key).'='.urlencode((string) $value);
             } else {
-                $hashdata .= urlencode((string) $key) . "=" . urlencode((string) $value);
+                $hashdata .= urlencode((string) $key).'='.urlencode((string) $value);
                 $i = 1;
             }
-            $query .= urlencode((string) $key) . "=" . urlencode((string) $value) . '&';
+            $query .= urlencode((string) $key).'='.urlencode((string) $value).'&';
         }
 
-        $vnp_Url = $this->vnpUrl . "?" . $query;
-        if (!empty($this->hashSecret)) {
+        $vnp_Url = $this->vnpUrl.'?'.$query;
+        if (! empty($this->hashSecret)) {
             $vnpSecureHash = hash_hmac('sha512', $hashdata, $this->hashSecret);
-            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+            $vnp_Url .= 'vnp_SecureHash='.$vnpSecureHash;
         }
 
         return $vnp_Url;
@@ -136,12 +139,12 @@ class VnpayService
 
         ksort($vnpData);
         $i = 0;
-        $hashData = "";
+        $hashData = '';
         foreach ($vnpData as $key => $value) {
             if ($i == 1) {
-                $hashData .= '&' . urlencode((string) $key) . "=" . urlencode((string) $value);
+                $hashData .= '&'.urlencode((string) $key).'='.urlencode((string) $value);
             } else {
-                $hashData .= urlencode((string) $key) . "=" . urlencode((string) $value);
+                $hashData .= urlencode((string) $key).'='.urlencode((string) $value);
                 $i = 1;
             }
         }
@@ -159,25 +162,25 @@ class VnpayService
         $params = [
             'vnp_Amount' => ((int) $order->total_amount) * 100,
             'vnp_BankCode' => 'NCB',
-            'vnp_BankTranNo' => 'VNP' . date('YmdHis'),
+            'vnp_BankTranNo' => 'VNP'.date('YmdHis'),
             'vnp_CardType' => 'ATM',
-            'vnp_OrderInfo' => 'Thanh toan don hang ' . $order->order_code,
+            'vnp_OrderInfo' => 'Thanh toan don hang '.$order->order_code,
             'vnp_PayDate' => date('YmdHis'),
             'vnp_ResponseCode' => $responseCode,
             'vnp_TmnCode' => $this->tmnCode,
             'vnp_TransactionNo' => (string) rand(10000000, 99999999),
             'vnp_TransactionStatus' => $responseCode,
-            'vnp_TxnRef' => $txnRef ?? ($order->order_code . '_' . date('His')),
+            'vnp_TxnRef' => $txnRef ?? ($order->order_code.'_'.date('His')),
         ];
 
         ksort($params);
-        $hashData = "";
+        $hashData = '';
         $i = 0;
         foreach ($params as $k => $v) {
             if ($i == 1) {
-                $hashData .= '&' . urlencode((string) $k) . "=" . urlencode((string) $v);
+                $hashData .= '&'.urlencode((string) $k).'='.urlencode((string) $v);
             } else {
-                $hashData .= urlencode((string) $k) . "=" . urlencode((string) $v);
+                $hashData .= urlencode((string) $k).'='.urlencode((string) $v);
                 $i = 1;
             }
         }

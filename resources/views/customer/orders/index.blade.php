@@ -198,7 +198,7 @@
                                             <i class="fa-regular fa-eye"></i> Xem chi tiết
                                         </a>
 
-                                        <!-- 1. Xác nhận đã nhận được hàng (Khi đang giao hoặc shop đã báo giao xong nhưng khách chưa xác nhận) -->
+                                        <!-- 1. Xác nhận đã nhận được hàng (Chỉ bật sáng khi nhân viên xác nhận đã giao hàng) -->
                                         @if($card['actions']['confirmReceived'])
                                             <form action="{{ route('customer.orders.confirm_received', $order->id) }}" 
                                                   method="POST" 
@@ -208,6 +208,12 @@
                                                     <i class="fa-solid fa-circle-check"></i> Đã nhận được hàng
                                                 </button>
                                             </form>
+                                        @elseif($card['order']['status'] === 'SHIPPING')
+                                            <button type="button" disabled 
+                                                    class="btn-card-action bg-gray-100! text-gray-400! border border-gray-200! cursor-not-allowed opacity-75 shadow-none" 
+                                                    title="Nút sẽ được bật sáng khi nhân viên xác nhận đã giao hàng thành công">
+                                                <i class="fa-solid fa-circle-check text-gray-300"></i> Đã nhận được hàng
+                                            </button>
                                         @endif
 
                                         <!-- 2. Yêu cầu Trả hàng / Hoàn tiền -->

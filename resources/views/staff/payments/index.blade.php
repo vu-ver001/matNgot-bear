@@ -104,7 +104,7 @@
     {{-- 1. Daily Operational Counters (Quy định 6: Chỉ xem chỉ số vận hành hôm nay, KHÔNG thấy lợi nhuận) --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 mb-6">
         <div class="bg-white rounded-2xl p-4 border border-[#EBDDCD] shadow-xs">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61]">Đơn Trong Ngày</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61]">Đơn Cần Xử Lý Ngay</span>
             <div class="text-xl sm:text-2xl font-black text-[#5C3219] mt-1">
                 {{ $operationalStats['today_total'] }}
             </div>

@@ -72,14 +72,23 @@
         </div>
 
         <div class="flex items-center gap-2.5 w-full sm:w-auto shrink-0 justify-end flex-wrap sm:flex-nowrap">
-            <form action="{{ route('customer.orders.confirm_received', $order->id) }}" method="POST" class="w-full sm:w-auto shrink-0">
-                @csrf
-                <button type="submit"
-                        class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-circle-check"></i>
+            @if($order->isDeliveredWaitingConfirmation())
+                <form action="{{ route('customer.orders.confirm_received', $order->id) }}" method="POST" class="w-full sm:w-auto shrink-0">
+                    @csrf
+                    <button type="submit"
+                            class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 text-center uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>ĐÃ NHẬN ĐƯỢC HÀNG</span>
+                    </button>
+                </form>
+            @else
+                <button type="button" disabled
+                        title="Nút sẽ được bật sáng khi nhân viên xác nhận đã giao hàng thành công"
+                        class="w-full sm:w-auto px-5 py-2.5 bg-gray-100 text-gray-400 font-bold text-xs sm:text-sm rounded-xl border border-gray-200 cursor-not-allowed opacity-75 shadow-none flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-check text-gray-300"></i>
                     <span>ĐÃ NHẬN ĐƯỢC HÀNG</span>
                 </button>
-            </form>
+            @endif
 
             @if($order->order_status === 'COMPLETED' && ! $order->isCustomerConfirmed())
                 <button type="button" @click="openReturnModal = true"
