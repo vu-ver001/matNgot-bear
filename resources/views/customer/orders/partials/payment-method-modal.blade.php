@@ -47,20 +47,6 @@
                 <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
             </button>
 
-            <button type="submit" name="payment_method" value="MOMO"
-                    class="w-full p-3 rounded-xl border-2 {{ $order->payment_method === 'E_WALLET' ? 'border-pink-500 bg-pink-50/50' : 'border-gray-200 hover:border-pink-300 bg-white' }} flex items-center justify-between text-left transition cursor-pointer">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-pink-100 text-pink-800 flex items-center justify-center font-bold text-xs shrink-0">
-                        👛
-                    </div>
-                    <div>
-                        <div class="font-bold text-xs sm:text-sm text-[#2C1408]">Ví điện tử MoMo</div>
-                        <div class="text-[11px] text-[#786B61]">Quét mã QR Ví MoMo cá nhân 24/7</div>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
-            </button>
-
             <button type="submit" name="payment_method" value="COD"
                     class="w-full p-3 rounded-xl border-2 {{ $order->payment_method === 'COD' ? 'border-amber-500 bg-amber-50/50' : 'border-gray-200 hover:border-amber-300 bg-white' }} flex items-center justify-between text-left transition cursor-pointer">
                 <div class="flex items-center gap-3">

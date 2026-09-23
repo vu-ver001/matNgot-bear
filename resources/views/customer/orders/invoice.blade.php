@@ -89,7 +89,7 @@
         }
     </style>
 </head>
-<body class="py-6 sm:py-10 px-4">
+<body class="py-4 sm:py-6 px-4">
 
     @php
         $backUrl = route('customer.orders.show', $order);
@@ -103,7 +103,7 @@
     @endphp
 
     <!-- Top Action Toolbar (Hidden when printing) -->
-    <div class="max-w-3xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 no-print">
+    <div class="max-w-3xl mx-auto mb-4 flex flex-wrap items-center justify-between gap-4 no-print">
         <a href="{{ $backUrl }}" 
            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-amber-50 text-[#8C4A19] font-bold text-sm border border-[#E8D9C8] shadow-xs transition">
             <i class="fa-solid fa-arrow-left"></i>
@@ -120,7 +120,7 @@
     </div>
 
     <!-- Main Printable Invoice Card -->
-    <div class="invoice-wrapper max-w-3xl mx-auto bg-white rounded-3xl border border-[#EBDDCD] shadow-xl p-8 sm:p-12 relative overflow-hidden">
+    <div class="invoice-wrapper max-w-3xl mx-auto bg-white rounded-3xl border border-[#EBDDCD] shadow-xl p-6 sm:p-8 relative overflow-hidden">
         
         <!-- Watermark Bear Background -->
         <div class="absolute right-6 top-24 opacity-[0.03] select-none pointer-events-none text-9xl">
