@@ -1,11 +1,12 @@
 <x-customer-account-layout title="Chi tiết đơn hàng" :flush="true">
-    <div class="orders-ui">
+    <div class="orders-ui" x-data="{ showGhnModal: false, copiedGhn: false }">
         {{-- Header Breadcrumb & Actions --}}
         <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div class="flex items-center gap-3">
                 <a href="{{ route('customer.orders.index') }}" 
-                   class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#795548] bg-white hover:bg-amber-50 rounded-xl border border-amber-200 transition shadow-2xs hover:scale-102">
-                    <i class="fa-solid fa-arrow-left text-xs"></i> <span>Quay lại</span>
+                   class="w-9 h-9 inline-flex items-center justify-center text-sm font-bold text-[#795548] bg-white hover:bg-amber-50 rounded-xl border border-amber-200 transition shadow-2xs hover:scale-105"
+                   title="Quay lại danh sách đơn hàng">
+                    <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
                     <h2 class="font-extrabold text-xl sm:text-2xl text-[#4E342E] flex items-center gap-2.5 flex-wrap">
@@ -21,13 +22,13 @@
 
             <div class="flex items-center gap-2.5 flex-wrap">
                 <a href="{{ route('customer.messages.index', ['order_id' => $order->id]) }}"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl border border-amber-300 transition shadow-2xs hover:scale-102"
-                   title="Chat với Shop">
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl border border-amber-300 transition shadow-2xs hover:scale-102"
+                    title="Chat với Shop">
                     <i class="fa-regular fa-comment-dots text-sm"></i>
                     <span>Chat với Shop</span>
                 </a>
                 <a href="{{ route('customer.orders.invoice', $order) }}" target="_blank"
-                   class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#795548] bg-white hover:bg-amber-50 rounded-xl border border-amber-200 transition shadow-2xs hover:scale-102">
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#795548] bg-white hover:bg-amber-50 rounded-xl border border-amber-200 transition shadow-2xs hover:scale-102">
                     <i class="fa-solid fa-file-invoice text-amber-600"></i>
                     <span>Xem hóa đơn điện tử</span>
                 </a>
@@ -318,39 +319,39 @@
             </div>
         @endif
 
-        {{-- Delivery Confirmation Banner when order is SHIPPING --}}
+        {{-- Delivery Confirmation Banner when order is SHIPPING (Compact version) --}}
         @if($order->order_status === 'SHIPPING')
-            <div class="mb-6 bg-gradient-to-r from-emerald-500/15 via-teal-500/20 to-emerald-500/15 border-2 border-emerald-400 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm"
+            <div class="mb-4 bg-gradient-to-r from-emerald-500/10 via-teal-500/15 to-emerald-500/10 border border-emerald-400/80 rounded-2xl py-3 px-4 sm:px-5 flex flex-col md:flex-row items-center justify-between gap-3 shadow-2xs"
                  x-data="{ showNotReceivedModal: false }">
-                <div class="flex items-center gap-4 w-full md:w-auto">
-                    <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-md shadow-emerald-600/30">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
                         🚚
                     </div>
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h4 class="text-base font-black text-[#1B4332]">Đơn hàng đang được giao đến bạn</h4>
-                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-extrabold text-[11px]">ĐANG GIAO HÀNG</span>
+                            <h4 class="text-xs sm:text-sm font-extrabold text-[#1B4332]">Đơn hàng đang được giao đến bạn</h4>
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">ĐANG GIAO HÀNG</span>
                         </div>
-                        <p class="text-xs sm:text-sm text-[#2D6A4F] mt-0.5">Kiện hàng đang trên đường giao đến bạn. Nút <strong>"Đã nhận được hàng"</strong> sẽ được <strong>bật sáng</strong> khi nhân viên xác nhận đã giao hàng thành công.</p>
+                        <p class="text-[11px] text-[#2D6A4F] mt-0.5">Kiện hàng đang trên đường giao đến bạn</p>
                     </div>
                 </div>
                 
-                <div class="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end flex-wrap sm:flex-nowrap">
+                <div class="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end flex-wrap sm:flex-nowrap">
                     {{-- Nút 1: Đã nhận được hàng (Chưa bật sáng - chỉ bật sáng khi nhân viên xác nhận đã giao) --}}
                     <form action="{{ route('customer.orders.complete', $order->id) }}" method="POST" class="w-full sm:w-auto shrink-0">
                         @csrf
                         <button type="button" disabled 
                                 title="Nút sẽ được bật sáng khi nhân viên xác nhận đã giao hàng thành công"
-                                class="w-full sm:w-auto px-5 py-3 bg-gray-100 text-gray-400 font-bold text-xs sm:text-sm rounded-xl border border-gray-200 cursor-not-allowed opacity-75 shadow-none flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-circle-check text-base text-gray-300"></i>
+                                class="w-full sm:w-auto px-3.5 py-2 bg-gray-100 text-gray-400 font-bold text-xs rounded-xl border border-gray-200 cursor-not-allowed opacity-75 shadow-none flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-xs text-gray-300"></i>
                             <span>ĐÃ NHẬN ĐƯỢC HÀNG</span>
                         </button>
                     </form>
 
                     {{-- Nút 2: Chưa nhận được hàng --}}
                     <button type="button" @click="showNotReceivedModal = true"
-                            class="w-full sm:w-auto px-4 py-3 bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 font-bold text-xs sm:text-sm rounded-xl border border-rose-200 hover:border-rose-300 shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                        <i class="fa-solid fa-circle-question text-rose-500"></i>
+                            class="w-full sm:w-auto px-3 py-2 bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 font-bold text-xs rounded-xl border border-rose-200 hover:border-rose-300 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-circle-question text-rose-500 text-xs"></i>
                         <span>CHƯA NHẬN ĐƯỢC HÀNG</span>
                     </button>
                 </div>
@@ -515,15 +516,46 @@
 
         {{-- 1. Tiến Trình Đơn Hàng --}}
         <div class="panel-card mb-6">
-            <div class="panel-header">
+            <div class="panel-header flex items-center justify-between flex-wrap gap-2">
                 <div class="panel-title">
                     <i class="fa-solid fa-timeline"></i>
                     <span>Tiến trình đơn hàng</span>
                 </div>
+                @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
+                    <button type="button" @click="showGhnModal = true"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#F26522] to-[#D84A0E] hover:from-[#D84A0E] hover:to-[#B53B08] rounded-xl shadow-xs transition hover:scale-102 cursor-pointer">
+                        <i class="fa-solid fa-route"></i>
+                        <span>Tra cứu hành trình kho bãi GHN</span>
+                    </button>
+                @endif
             </div>
             <div class="py-2">
                 <x-order-timeline :status="$order->order_status" />
             </div>
+
+            {{-- Dải hiển thị Vị trí bưu kiện thực tế qua các kho GHN --}}
+            @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
+                @php $ghn = $order->ghn_tracking; @endphp
+                <div class="mt-4 pt-3.5 border-t border-amber-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-xl bg-orange-100 text-[#F26522] flex items-center justify-center font-bold text-sm shrink-0">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </span>
+                        <div>
+                            <div class="text-[#786B61] text-[11px]">Vị trí bưu kiện hiện tại (Giao Hàng Nhanh):</div>
+                            <div class="font-bold text-[#4E342E] text-xs sm:text-[13px] mt-0.5">{{ $ghn['current_location'] }}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" @click="showGhnModal = true"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-[#795548] hover:text-[#4E342E] font-bold text-xs rounded-xl border border-amber-200 transition cursor-pointer">
+                            <i class="fa-solid fa-boxes-packing text-[#F26522]"></i>
+                            <span>Thông tin vận chuyển</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-[#A8988A]"></i>
+                        </button>
+                    </div>
+                </div>
+            @endif
         </div>
 
         {{-- 2. Grid Nội Dung Chính --}}
@@ -1134,5 +1166,9 @@
                 </div>
             </div>
         </div>
+
+        {{-- Modal Tra Cứu Hành Trình GHN --}}
+        <x-ghn-tracking-modal :order="$order" />
     </div>
 </x-customer-account-layout>
+

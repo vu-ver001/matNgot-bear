@@ -368,4 +368,18 @@ class Order extends Model
             default => 'Giao hàng tiêu chuẩn',
         };
     }
+
+    /**
+     * Get simulated GHN tracking code and timeline details.
+     */
+    public function getGhnTrackingCodeAttribute(): string
+    {
+        return \App\Services\GhnTrackingService::getTrackingCode($this);
+    }
+
+    public function getGhnTrackingAttribute(): array
+    {
+        return \App\Services\GhnTrackingService::getTrackingInfo($this);
+    }
 }
+

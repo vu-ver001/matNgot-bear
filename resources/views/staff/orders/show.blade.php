@@ -6,7 +6,7 @@
 @endsection
 
 @section('content')
-<div x-data="{ openApproveModal: false, openRejectModal: false, openRefundRequestModal: false }">
+<div x-data="{ openApproveModal: false, openRejectModal: false, openRefundRequestModal: false, showGhnModal: false, copiedGhn: false }">
     <!-- Header Breadcrumb & Actions -->
     <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div class="flex items-center gap-3">
@@ -474,19 +474,29 @@
         <div class="lg:col-span-2 space-y-6">
             <!-- Thông tin người nhận & vận chuyển -->
             <div class="panel-card mb-0">
-                <div class="panel-header flex items-center justify-between">
+                <div class="panel-header flex items-center justify-between flex-wrap gap-2">
                     <div class="panel-title">
                         <i class="fa-solid fa-truck-ramp-box"></i>
                         Thông tin nhận hàng & Vận chuyển
                     </div>
-                    @if ($order->customer_id)
-                        <a href="{{ route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]) }}"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer"
-                           title="Mở cuộc trò chuyện hỗ trợ khách hàng cho đơn này">
-                            <i class="fa-solid fa-comments"></i>
-                            <span>Nhắn tin cho khách</span>
-                        </a>
-                    @endif
+                    <div class="flex items-center gap-2">
+                        @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
+                            <button type="button" @click="showGhnModal = true"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#F26522] to-[#D84A0E] hover:from-[#D84A0E] hover:to-[#B53B08] rounded-xl shadow-xs transition hover:scale-102 cursor-pointer"
+                                    title="Tra cứu hành trình vận chuyển qua các kho của GHN">
+                                <i class="fa-solid fa-truck-fast"></i>
+                                <span>Hành trình GHN</span>
+                            </button>
+                        @endif
+                        @if ($order->customer_id)
+                            <a href="{{ route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]) }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer"
+                               title="Mở cuộc trò chuyện hỗ trợ khách hàng cho đơn này">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Nhắn tin cho khách</span>
+                            </a>
+                        @endif
+                    </div>
                 </div>
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
@@ -527,6 +537,32 @@
                         </div>
                     @endif
                 </dl>
+
+                {{-- Box thông tin vận đơn GHN Express --}}
+                @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
+                    @php $ghn = $order->ghn_tracking; @endphp
+                    <div class="mt-4 p-3.5 bg-orange-50/80 border border-orange-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-3">
+                            <span class="w-9 h-9 rounded-xl bg-[#F26522] text-white flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                                <i class="fa-solid fa-boxes-packing"></i>
+                            </span>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-extrabold text-[#F26522] uppercase tracking-wider text-[11px]">Vận đơn GHN Express:</span>
+                                    <span class="font-mono font-black text-sm text-[#4E342E]">{{ $ghn['tracking_code'] }}</span>
+                                </div>
+                                <div class="text-[#795548] text-xs mt-0.5">
+                                    Vị trí bưu kiện: <strong>{{ $ghn['current_location'] }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" @click="showGhnModal = true"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-orange-100 text-[#F26522] font-bold text-xs rounded-xl border border-orange-300 transition shadow-2xs shrink-0 cursor-pointer">
+                            <i class="fa-solid fa-route"></i>
+                            <span>Xem toàn bộ các kho</span>
+                        </button>
+                    </div>
+                @endif
             </div>
 
             <!-- Danh sách sản phẩm đặt mua -->
@@ -823,6 +859,8 @@
                 </div>
             @endif
         </div>
-    </div>
+    {{-- Modal Tra cứu hành trình GHN --}}
+    <x-ghn-tracking-modal :order="$order" />
 </div>
 @endsection
+
