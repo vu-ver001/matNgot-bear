@@ -64,13 +64,16 @@
             <!-- Wishlist (Yêu thích) -->
             @auth
                 <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn {{ request()->routeIs('customer.wishlist*') ? 'active' : '' }}" id="wishlist-header-btn" title="Danh sách yêu thích">
+                    <i class="{{ ($realWishlistCount ?? 0) > 0 ? 'fa-solid' : 'fa-regular' }} fa-heart" id="header-wishlist-icon" style="font-size: 16px; color: {{ ($realWishlistCount ?? 0) > 0 ? '#E57373' : 'var(--honey-dark)' }};"></i>
+                    <span class="badge-count" id="wishlist-count" style="display: {{ ($realWishlistCount ?? 0) > 0 ? 'flex' : 'none' }};">{{ (int) ($realWishlistCount ?? 0) > 99 ? '99+' : (int) ($realWishlistCount ?? 0) }}</span>
+                </a>
             @endauth
             @guest
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+                    <i class="fa-regular fa-heart" id="header-wishlist-icon" style="font-size: 16px; color: var(--honey-dark);"></i>
+                    <span class="badge-count" id="wishlist-count" style="display: none;">0</span>
+                </a>
             @endguest
-                <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
-                <span class="badge-count" id="wishlist-count" style="display: {{ (auth()->check() && ($realWishlistCount ?? 0) > 0) ? 'flex' : 'none' }};">{{ (int) ($realWishlistCount ?? 0) > 99 ? '99+' : (int) ($realWishlistCount ?? 0) }}</span>
-            </a>
 
             <!-- Cart (Giỏ hàng) -->
             @auth
