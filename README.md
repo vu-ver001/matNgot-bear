@@ -9,7 +9,7 @@
 
 ## Chạy bằng Docker trong mạng Wi-Fi
 
-Hướng dẫn triển khai, vận hành, sao lưu và khôi phục nằm tại [`docs/docker-lan.md`](docs/docker-lan.md). Bắt đầu bằng cách sao chép `.env.docker.example` thành `.env.docker`, đặt `APP_URL` theo địa chỉ IP của máy chủ rồi chạy `docker compose --env-file .env.docker up -d`.
+Hướng dẫn triển khai, vận hành, sao lưu và khôi phục nằm tại [`docs/docker-lan.md`](docs/docker-lan.md). Bắt đầu bằng cách sao chép `.env.docker.example` thành `.env.docker`, đặt `APP_URL` theo địa chỉ IP Wi-Fi hiện tại của máy chủ (lấy bằng `ipconfig`, cổng phải khớp `APP_PORT`) rồi chạy `docker compose --env-file .env.docker up -d`. Chạy lại thì giữ nguyên `APP_KEY`, không dùng `down -v` hay `migrate:fresh`.
 
 ## About Laravel
 

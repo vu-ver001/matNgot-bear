@@ -66,11 +66,13 @@ COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # The repository may contain a Windows junction at public/storage. It is
 # excluded from the build context and recreated against the Docker volume.
+# Strip CRLF in case the shell script was checked out on Windows.
 RUN rm -rf public/storage \
     && mkdir -p storage/app/public storage/app/private \
         storage/framework/cache/data storage/framework/sessions \
         storage/framework/views storage/logs bootstrap/cache \
     && ln -s /var/www/html/storage/app/public public/storage \
+    && sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
     && php artisan package:discover --ansi \
     && chmod +x /usr/local/bin/docker-entrypoint.sh
 

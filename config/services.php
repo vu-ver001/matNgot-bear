@@ -81,7 +81,8 @@ return [
 
     'sepay' => [
         'api_key' => env('SEPAY_API_KEY', ''),
-        'webhook_token' => env('SEPAY_WEBHOOK_TOKEN', ''),
+        // Chấp nhận cả 2 tên biến do .env mẫu cũ dùng SECRET, code settings dùng TOKEN.
+        'webhook_token' => env('SEPAY_WEBHOOK_TOKEN', env('SEPAY_WEBHOOK_SECRET', '')),
     ],
 
     'vietqr' => [

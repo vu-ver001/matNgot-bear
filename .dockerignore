@@ -5,6 +5,7 @@
 .env
 .env.*
 !.env.docker.example
+!.env.production.example
 vendor
 node_modules
 public/build

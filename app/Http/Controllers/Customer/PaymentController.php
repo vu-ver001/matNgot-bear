@@ -694,7 +694,7 @@ class PaymentController extends Controller
         // BƯỚC 10: KIỂM TRA CHỮ KÝ / API KEY / WEBHOOK SECRET (NẾU CÓ CẤU HÌNH)
         // ==============================================================
         $expectedApiKey = config('services.sepay.api_key', env('SEPAY_API_KEY', env('PAYMENT_WEBHOOK_SECRET', '')));
-        $expectedSecret = env('SEPAY_WEBHOOK_SECRET', '');
+        $expectedSecret = config('services.sepay.webhook_token', env('SEPAY_WEBHOOK_TOKEN', env('SEPAY_WEBHOOK_SECRET', '')));
         
         if (!empty($expectedApiKey) || !empty($expectedSecret)) {
             $authHeader = $request->header('Authorization', '');

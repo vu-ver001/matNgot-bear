@@ -29,13 +29,13 @@ docker version
 docker compose version
 ```
 
-3. Lấy địa chỉ IPv4 của Wi-Fi:
+3. Lấy địa chỉ IPv4 của Wi-Fi hiện tại (IP hay đổi mỗi lần đổi mạng/phát lại hotspot):
 
 ```powershell
 ipconfig
 ```
 
-Đặt DHCP reservation trên router để địa chỉ này không đổi. Ví dụ `192.168.1.10`.
+Tìm adapter Wi-Fi đang dùng chung với thiết bị khác (ví dụ hiện tại `172.20.10.3`, ví dụ cũ `192.168.1.10`). Đặt DHCP reservation trên router để địa chỉ này không đổi nếu trình bày nhiều lần.
 
 ## 2. Tạo môi trường Docker
 
@@ -44,7 +44,7 @@ Copy-Item .env.docker.example .env.docker
 notepad .env.docker
 ```
 
-Sửa `APP_URL` thành địa chỉ thật, ví dụ `http://192.168.1.10:8080`, đặt hai mật khẩu MySQL khác nhau và giữ nguyên `DB_HOST=db`.
+Sửa `APP_URL` thành địa chỉ thật, ví dụ `http://172.20.10.3:8080`, đặt hai mật khẩu MySQL khác nhau và giữ nguyên `DB_HOST=db`. Cổng trong `APP_URL` phải khớp `APP_PORT` (mặc định `8080`) vì `compose.yaml` map `${APP_PORT:-8080}:80` và `scripts/present-online.ps1` tự đọc `APP_PORT` từ `.env.docker`. Để trống `SESSION_DOMAIN` để cookie đúng IP/host hiện tại; `migrate --force` ở bước sau sẽ tạo sẵn bảng `sessions`, `cache`, `jobs` cho `SESSION_DRIVER/CACHE_STORE/QUEUE_CONNECTION=database`.
 
 Tạo khóa Laravel một lần sau khi các service đã build:
 
@@ -100,10 +100,10 @@ Mở trên máy chủ trước:
 http://localhost:8080
 ```
 
-Sau đó mở trên điện thoại/laptop cùng Wi-Fi:
+Sau đó mở trên điện thoại/laptop cùng Wi-Fi (thay bằng IP Wi-Fi hiện tại của máy chủ):
 
 ```text
-http://192.168.1.10:8080
+http://172.20.10.3:8080
 ```
 
 ## 4. Mở cổng trong Windows Firewall
@@ -154,7 +154,7 @@ docker compose --env-file .env.docker exec app php artisan queue:failed
 docker stats
 ```
 
-Không chạy `docker compose down -v` nếu chưa muốn xóa volume database và file tải lên.
+Không chạy `docker compose down -v` nếu chưa muốn xóa volume database và file tải lên. Không chạy `migrate:fresh`/`migrate:refresh` trên dữ liệu thật. Giữ nguyên `APP_KEY` khi chạy lại, nếu không toàn bộ session/password-reset mã hóa cũ sẽ hỏng.
 
 Service `scheduler` chạy `schedule:work`, nên lệnh tự hủy đơn chưa thanh toán mỗi 15 phút trong `routes/console.php` tiếp tục hoạt động. Service `queue` xử lý các job database queue riêng.
 
