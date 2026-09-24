@@ -488,14 +488,25 @@
 
         function updateWishlistBadge() {
             const wBadge = document.getElementById('wishlist-count');
+            const hIcon = document.getElementById('header-wishlist-icon');
             const count = (typeof window.wishlistCount !== 'undefined') ? window.wishlistCount : wishlistCount;
-            if (wBadge) {
-                if (window.isCustomerAuthenticated && count > 0) {
+            if (window.isCustomerAuthenticated && count > 0) {
+                if (wBadge) {
                     wBadge.innerText = count > 99 ? '99+' : count;
                     wBadge.style.display = 'flex';
-                } else {
+                }
+                if (hIcon) {
+                    hIcon.className = 'fa-solid fa-heart';
+                    hIcon.style.color = '#E57373';
+                }
+            } else {
+                if (wBadge) {
                     wBadge.innerText = '0';
                     wBadge.style.display = 'none';
+                }
+                if (hIcon) {
+                    hIcon.className = 'fa-regular fa-heart';
+                    hIcon.style.color = 'var(--honey-dark)';
                 }
             }
         }
@@ -696,42 +707,41 @@
 
         // ================= WISHLIST MANAGER (ĂN LIỀN VỚI CSDL) =================
         function getWishlist() {
-            try {
-                return JSON.parse(localStorage.getItem('mn_wishlist_items') || '[]');
-            } catch(e) {
-                return [];
-            }
+            // Wishlist chỉ lưu trong CSDL của tài khoản đã đăng nhập, không dùng localStorage
+            return [];
         }
 
         function saveWishlist(list) {
-            localStorage.setItem('mn_wishlist_items', JSON.stringify(list));
-            wishlistCount = list.length;
-            localStorage.setItem('mn_wishlist_count', wishlistCount);
-            updateWishlistBadge();
+            // Không lưu vào localStorage
         }
 
         function isInWishlist(productId) {
+            if (!window.isCustomerAuthenticated) {
+                return false;
+            }
             const pid = parseInt(productId);
-            if (window.isCustomerAuthenticated && Array.isArray(window.dbWishlistProductIds)) {
+            if (Array.isArray(window.dbWishlistProductIds)) {
                 return window.dbWishlistProductIds.includes(pid);
             }
-            const list = getWishlist();
-            return list.some(item => item.id == pid);
+            return false;
         }
 
         function updateHeartIcons(productId, isFav) {
             const pid = parseInt(productId);
+            const shouldBeFav = !!(isFav && window.isCustomerAuthenticated);
             document.querySelectorAll(`[data-product-id="${pid}"], [data-wishlist-btn="${pid}"]`).forEach(btn => {
                 const icon = btn.querySelector('i');
                 if (icon) {
-                    if (isFav) {
+                    if (shouldBeFav) {
                         icon.classList.remove('fa-regular');
                         icon.classList.add('fa-solid');
+                        icon.style.color = '#E57373';
                         btn.classList.add('active');
                         btn.style.color = '#E57373';
                     } else {
                         icon.classList.remove('fa-solid');
                         icon.classList.add('fa-regular');
+                        icon.style.color = '';
                         btn.classList.remove('active');
                         btn.style.color = '';
                     }
@@ -741,16 +751,27 @@
 
         function syncAllHeartIcons() {
             if (window.isCustomerAuthenticated && Array.isArray(window.dbWishlistProductIds)) {
-                window.dbWishlistProductIds.forEach(id => {
-                    updateHeartIcons(id, true);
+                document.querySelectorAll('.btn-wishlist-card, [data-wishlist-btn]').forEach(btn => {
+                    const pid = parseInt(btn.getAttribute('data-product-id') || btn.getAttribute('data-wishlist-btn') || 0);
+                    const isFav = window.dbWishlistProductIds.includes(pid);
+                    updateHeartIcons(pid, isFav);
                 });
             } else {
-                const list = getWishlist();
-                list.forEach(item => {
-                    if (item && item.id) {
-                        updateHeartIcons(item.id, true);
+                // CHƯA ĐĂNG NHẬP: Đảm bảo TẤT CẢ nút trái tim trên toàn bộ trang KHÔNG BAO GIỜ hồng
+                document.querySelectorAll('.btn-wishlist-card, [data-wishlist-btn]').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.style.color = '';
+                    const icon = btn.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-solid');
+                        icon.classList.add('fa-regular');
+                        icon.style.color = '';
                     }
                 });
+                try {
+                    localStorage.removeItem('mn_wishlist_items');
+                    localStorage.removeItem('mn_wishlist_count');
+                } catch(e) {}
             }
         }
 
