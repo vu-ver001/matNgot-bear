@@ -421,29 +421,6 @@
                                     <span class="font-bold text-[#2C1408] text-xs sm:text-sm">{{ $paymentConfig['account_name'] }}</span>
                                 </div>
                             @endif
-
-                            {{-- Action buttons for Manual Confirmation --}}
-                            <div class="pt-2 border-t border-[#F0E6D8]">
-                                <form id="manualConfirmForm" action="{{ route('customer.payment.confirm', $order->id) }}" method="POST">
-                                    @csrf
-                                    <button type="button" @click="confirmManualPayment()"
-                                            class="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md shadow-emerald-600/25 tracking-wide cursor-pointer">
-                                        <i class="fa-solid fa-circle-check text-sm"></i>
-                                        <span>TÔI ĐÃ CHUYỂN TIỀN THÀNH CÔNG</span>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        {{-- Live Automatic Payment Detection Bar --}}
-                        <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-300/80 rounded-xl px-3.5 py-2 flex items-center gap-2.5 text-xs text-emerald-900">
-                            <span class="relative flex h-2.5 w-2.5 shrink-0">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
-                            </span>
-                            <div class="leading-tight">
-                                <strong>Tự động nhận diện giao dịch:</strong> Quét đúng mã MoMo và chuyển khoản thật, hệ thống sẽ tự động kích hoạt đơn hàng sau khi hoàn tất.
-                            </div>
                         </div>
 
                         {{-- Navigation & Secondary Actions --}}
@@ -502,7 +479,6 @@
                 pollInterval: null,
                 isChecking: false,
                 isPaid: false,
-                isSimulating: false,
                 isRefreshing: false,
                 momoTab: config.defaultTab || 'qr',
                 isZoomed: false,
@@ -646,73 +622,6 @@
                     .catch(() => {})
                     .finally(() => {
                         this.isChecking = false;
-                    });
-                },
-
-                confirmManualPayment() {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            title: 'Xác nhận đã chuyển tiền?',
-                            text: 'Bạn đã hoàn tất chuyển tiền qua Ví MoMo hoặc Chuyển khoản ngân hàng?',
-                            icon: 'question',
-                            showCancelButton: true,
-                            confirmButtonColor: '#059669',
-                            cancelButtonColor: '#6B7280',
-                            confirmButtonText: 'Đúng, tôi đã chuyển tiền',
-                            cancelButtonText: 'Kiểm tra lại',
-                            background: '#FAF6F0',
-                            color: '#2E190E'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                document.getElementById('manualConfirmForm').submit();
-                            }
-                        });
-                    } else {
-                        if (confirm('Bạn đã chuyển khoản thành công? Bấm OK để xác nhận hoàn tất.')) {
-                            document.getElementById('manualConfirmForm').submit();
-                        }
-                    }
-                },
-
-                simulatePayment() {
-                    if (this.isSimulating) return;
-                    this.isSimulating = true;
-
-                    fetch('{{ route('customer.payment.simulate', $order->id) }}', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data && data.success) {
-                            this.isPaid = true;
-                            clearInterval(this.pollInterval);
-                            clearInterval(this.interval);
-
-                            if (typeof Swal !== 'undefined') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: '🎉 THANH TOÁN THÀNH CÔNG!',
-                                    text: data.message || 'Giao dịch đã được ghi nhận.',
-                                    timer: 1500,
-                                    showConfirmButton: false,
-                                    background: '#FAF6F0',
-                                    color: '#2E190E'
-                                });
-                            }
-                            setTimeout(() => {
-                                window.location.href = data.redirect_url || '{{ route('payment.result', $order->id) }}';
-                            }, 1000);
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    })
-                    .finally(() => {
-                        this.isSimulating = false;
                     });
                 },
 
