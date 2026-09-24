@@ -401,10 +401,15 @@
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 2500,
-            timerProgressBar: true,
+            showCloseButton: true,
+            timer: 3500,
+            timerProgressBar: false,
             background: '#FAF6F0',
-            color: '#3E2723'
+            color: '#3E2723',
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
         });
 
         // Close role dropdowns when clicking outside
