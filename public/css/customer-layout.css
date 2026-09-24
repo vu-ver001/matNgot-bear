@@ -1135,24 +1135,7 @@ html {
     }
 
     .btn-add-cart-quick {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        border: 1px solid var(--border);
-        background: var(--bg-surface);
-        color: var(--primary-dark);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .btn-add-cart-quick:hover {
-        background: var(--honey);
-        color: #FFFFFF;
-        border-color: var(--honey);
-        transform: scale(1.1);
+        display: none !important;
     }
 
     /* Buttons */
