@@ -151,7 +151,7 @@ class CustomerOrderPresenter
                 'currency' => 'VND',
             ],
             'actions' => [
-                'confirmReceived' => $isWaitingConfirmation || $order->order_status === 'SHIPPING',
+                'confirmReceived' => $isWaitingConfirmation,
                 'requestReturn' => $isWaitingConfirmation && ! $hasPendingReturn,
                 'hasPendingReturn' => $hasPendingReturn,
                 'buyAgain' => $order->canBeReordered(),

@@ -276,7 +276,7 @@ class CartController extends Controller
                 'line_total' => $mergedPrice * $combinedQty,
                 'stock_quantity' => $newVariant->stock_quantity,
                 'variant_display' => "{$newVariant->color} · {$newVariant->size}",
-                'image_url' => $existingItem->effective_image,
+                'image_url' => $this->formatImageUrl($existingItem->effective_image),
                 'cart_count' => $cartCount,
             ]);
         }
@@ -303,7 +303,7 @@ class CartController extends Controller
             'line_total' => $newPrice * $newQuantity,
             'stock_quantity' => $newVariant->stock_quantity,
             'variant_display' => "{$newVariant->color} · {$newVariant->size}",
-            'image_url' => $cartItem->effective_image,
+            'image_url' => $this->formatImageUrl($cartItem->effective_image),
             'cart_count' => $cartCount,
         ]);
     }
@@ -394,5 +394,16 @@ class CartController extends Controller
             'message' => 'Đã ghi nhận log bỏ tích sản phẩm thành công.',
             'logged_at' => $time,
         ]);
+    }
+
+    private function formatImageUrl(?string $rawImg): ?string
+    {
+        if (empty($rawImg)) {
+            return null;
+        }
+
+        return (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:'))
+            ? $rawImg
+            : asset(ltrim($rawImg, '/'));
     }
 }

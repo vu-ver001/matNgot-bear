@@ -28,6 +28,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/vouchers', [CustomerVoucherController::class, 'index'])
             ->middleware(['role:CUSTOMER,STAFF'])
             ->name('vouchers.index');
+        Route::get('/vouchers/{code}/conditions', [CustomerVoucherController::class, 'conditions'])
+            ->middleware(['role:CUSTOMER,STAFF'])
+            ->name('vouchers.conditions');
 
         // ==========================================
         // CÁC CHỨC NĂNG DÀNH RIÊNG CHO KHÁCH HÀNG (role: CUSTOMER)

@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Presenters\CustomerOrderPresenter;
+use App\Services\GhnTrackingService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -38,7 +41,7 @@ class Order extends Model
      */
     public function isCustomerConfirmed(): bool
     {
-        if (!is_null($this->customer_confirmed_at)) {
+        if (! is_null($this->customer_confirmed_at)) {
             return true;
         }
 
@@ -83,6 +86,7 @@ class Order extends Model
         if (! $this->created_at) {
             return null;
         }
+
         return $this->created_at->copy()->addHours(24);
     }
 
@@ -97,6 +101,7 @@ class Order extends Model
         }
 
         $expiresAt = $this->paymentExpiresAt();
+
         return $expiresAt ? $expiresAt->isPast() : false;
     }
 
@@ -106,6 +111,7 @@ class Order extends Model
         if (! $expiresAt) {
             return 0;
         }
+
         return max(0, now()->diffInSeconds($expiresAt, false));
     }
 
@@ -198,7 +204,7 @@ class Order extends Model
     /**
      * Thời hạn 24 giờ để nhân viên xử lý yêu cầu hủy (tính từ lúc khách gửi).
      */
-    public function cancelRequestExpiresAt(): ?\Carbon\Carbon
+    public function cancelRequestExpiresAt(): ?Carbon
     {
         if (! $this->cancel_requested_at) {
             return null;
@@ -347,8 +353,9 @@ class Order extends Model
         }
 
         $reviewedProductIds = $this->reviews->pluck('product_id')->all();
+
         return $this->details->contains(function ($detail) use ($reviewedProductIds) {
-            return !in_array($detail->product_id, $reviewedProductIds);
+            return ! in_array($detail->product_id, $reviewedProductIds);
         });
     }
 
@@ -357,7 +364,7 @@ class Order extends Model
      */
     public function toCustomerCardData(): array
     {
-        return \App\Presenters\CustomerOrderPresenter::format($this);
+        return CustomerOrderPresenter::format($this);
     }
 
     public function getShippingMethodLabelAttribute(): string
@@ -367,5 +374,29 @@ class Order extends Model
             'express' => 'Giao hàng hỏa tốc',
             default => 'Giao hàng tiêu chuẩn',
         };
+    }
+
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        return match ($this->payment_method) {
+            'COD' => 'Thanh toán khi nhận hàng (COD)',
+            'BANK_TRANSFER' => 'Chuyển khoản VietQR',
+            'CARD' => 'VNPAY (Thẻ ATM / QR)',
+            'E_WALLET' => 'Ví điện tử',
+            default => $this->payment_method ?? 'Chưa xác định',
+        };
+    }
+
+    /**
+     * Get simulated GHN tracking code and timeline details.
+     */
+    public function getGhnTrackingCodeAttribute(): string
+    {
+        return GhnTrackingService::getTrackingCode($this);
+    }
+
+    public function getGhnTrackingAttribute(): array
+    {
+        return GhnTrackingService::getTrackingInfo($this);
     }
 }

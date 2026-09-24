@@ -411,7 +411,7 @@
                     </div>
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
                         <dt class="text-xs font-bold text-[#8E8076] uppercase">Phương thức thanh toán</dt>
-                        <dd class="font-bold text-[#4E342E] mt-0.5">{{ $order->payment_method }}</dd>
+                        <dd class="font-bold text-[#4E342E] mt-0.5">{{ $order->payment_method_label }}</dd>
                     </div>
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
                         <dt class="text-xs font-bold text-[#8E8076] uppercase">Hình thức giao hàng</dt>
@@ -563,7 +563,20 @@
                         <tbody>
                             @forelse ($order->payments as $payment)
                                 <tr>
-                                    <td class="font-bold text-[#4E342E]">{{ $payment->method }}</td>
+                                    <td class="font-bold text-[#4E342E]">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            @if($payment->method === 'CARD')
+                                                <i class="fa-solid fa-credit-card text-blue-600"></i>
+                                            @elseif($payment->method === 'BANK_TRANSFER')
+                                                <i class="fa-solid fa-building-columns text-emerald-600"></i>
+                                            @elseif($payment->method === 'COD')
+                                                <i class="fa-solid fa-money-bill-wave text-amber-600"></i>
+                                            @else
+                                                <i class="fa-solid fa-wallet text-purple-600"></i>
+                                            @endif
+                                            <span>{{ $payment->method_label }}</span>
+                                        </span>
+                                    </td>
                                     <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
                                     <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
                                     <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>
