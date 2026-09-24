@@ -69,6 +69,7 @@ class PaymentController extends Controller
         $query = Payment::with([
             'order.customer',
             'order.details.product',
+            'order.latestRefundRequest',
             'confirmedByUser',
             'reconciledByUser',
             'latestRefundRequest',
@@ -164,6 +165,10 @@ class PaymentController extends Controller
             return redirect()->back()->with('info', 'Giao dịch này đã được xác nhận thanh toán trước đó.');
         }
 
+        if ($payment->method === 'COD') {
+            return redirect()->back()->with('error', 'Đơn hàng COD (tiền mặt khi nhận hàng) được đối soát qua bưu tá khi giao thành công, không xác nhận thủ công qua bill chuyển khoản.');
+        }
+
         if ($payment->order && $payment->order->order_status === 'CANCELLED') {
             return redirect()->back()->with('error', 'Không thể xác nhận thanh toán cho đơn hàng đã bị hủy.');
         }
@@ -234,6 +239,13 @@ class PaymentController extends Controller
         }
 
         $order = $payment->order;
+        if (! $order) {
+            return redirect()->back()->with('error', 'Không tìm thấy đơn hàng tương ứng.');
+        }
+
+        if (! $order->canStaffRequestRefund()) {
+            return redirect()->back()->with('error', 'Chỉ có thể yêu cầu hoàn tiền khi khách hàng có yêu cầu hủy đơn đã được xác nhận trước đó hoặc đơn hàng đã bị hủy cần hoàn tiền.');
+        }
 
         PaymentRefundRequest::create([
             'payment_id' => $payment->id,

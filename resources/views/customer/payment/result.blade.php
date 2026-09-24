@@ -86,10 +86,10 @@
                         </svg>
                     </div>
                     <h1 class="status-title">
-                        ĐƠN HÀNG CHƯA HOÀN TẤT THANH TOÁN
+                        ĐƠN HÀNG CHỜ THANH TOÁN
                     </h1>
                     <p class="status-subtitle">
-                        Đơn hàng của bạn đã được ghi nhận thành công trong hệ thống. Vui lòng bấm nút thanh toán bên dưới để hoàn tất giao dịch.
+                        Thanh toán trực tuyến chưa hoàn tất. Đơn hàng của bạn đã được ghi nhận trong hệ thống và được giữ trong <strong>24 giờ</strong>. Vui lòng thanh toán lại trước khi đơn tự động hủy.
                     </p>
                     <div class="order-code-badge">
                         <span>Mã đơn hàng:</span>
@@ -263,9 +263,9 @@
                                     <span class="status-pill-paid">
                                         <span style="width: 6px; height: 6px; border-radius: 50%; background: #2E7D32;"></span> Đã thanh toán
                                     </span>
-                                @elseif($order->payment_status === 'FAILED')
-                                    <span class="status-pill-failed">
-                                        Thất bại
+                                @elseif($order->payment_status === 'FAILED' || $order->payment_status === 'UNPAID')
+                                    <span class="status-pill-pending">
+                                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #D97706;"></span> Chờ thanh toán
                                     </span>
                                 @else
                                     <span class="status-pill-pending">
@@ -279,11 +279,11 @@
                                 <span style="color: #795548;">Trạng thái đơn hàng:</span>
                                 @if($order->order_status === 'PENDING')
                                     <span class="status-pill-pending">
-                                        Chờ nhân viên xác nhận
+                                        Chờ xác nhận
                                     </span>
-                                @elseif($order->order_status === 'CONFIRMED')
+                                @elseif(in_array($order->order_status, ['CONFIRMED', 'PREPARING']))
                                     <span class="status-pill-confirmed">
-                                        Đã xác nhận
+                                        Đang chuẩn bị
                                     </span>
                                 @elseif($order->order_status === 'SHIPPING')
                                     <span class="status-pill-shipping">
@@ -291,7 +291,7 @@
                                     </span>
                                 @elseif($order->order_status === 'COMPLETED')
                                     <span class="status-pill-completed">
-                                        Hoàn thành
+                                        Đã giao
                                     </span>
                                 @else
                                     <span class="status-pill-shipping">
@@ -360,6 +360,13 @@
                                 <i class="fa-solid fa-qrcode" style="color: #E08A1E;"></i>
                                 <span>Quét mã QR thanh toán</span>
                             </a>
+
+                            @if($order->paymentExpiresAt())
+                                <div style="margin-top: 12px; font-size: 11.5px; color: #B87309; background: #FFF8E7; border: 1px solid #F6D89B; border-radius: 10px; padding: 8px 12px; text-align: center;">
+                                    <i class="fa-regular fa-clock" style="margin-right: 4px;"></i>
+                                    <span>Hạn thanh toán: <strong>{{ $order->paymentExpiresAt()->format('H:i - d/m/Y') }}</strong> (Tự động hủy sau 24h đặt hàng)</span>
+                                </div>
+                            @endif
                         @endif
                     </div>
 

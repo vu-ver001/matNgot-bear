@@ -17,4 +17,10 @@ Artisan::command('inspire', function () {
     ->withoutOverlapping()
     ->runInBackground();
 
+\Illuminate\Support\Facades\Schedule::command('orders:auto-complete-delivered')
+    ->daily()
+    ->withoutOverlapping()
+    ->runInBackground();
+
+
 

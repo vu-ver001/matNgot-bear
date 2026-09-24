@@ -16,6 +16,21 @@
     })">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
 
+            {{-- Top Navigation & Back Bar --}}
+            <div class="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+                <button type="button" 
+                        @click="goToOrderDetail()"
+                        class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#786B61] hover:text-[#5C3219] bg-white hover:bg-amber-50 px-3.5 py-1.5 rounded-xl border border-[#EBDDCD] transition shadow-2xs cursor-pointer group"
+                        title="Quay lại chi tiết đơn hàng (đơn hàng được giữ ở trạng thái Chờ thanh toán trong 24h)">
+                    <i class="fa-solid fa-arrow-left text-[#B87309] group-hover:-translate-x-0.5 transition-transform"></i>
+                    <span>Quay lại chi tiết đơn hàng</span>
+                </button>
+                <div class="flex items-center gap-2 text-xs text-[#786B61]">
+                    <span class="hidden sm:inline">Mã đơn:</span>
+                    <span class="font-mono font-bold text-[#5C3219] bg-white border border-[#EBDDCD] px-2.5 py-1 rounded-lg shadow-2xs">#{{ $order->order_code }}</span>
+                </div>
+            </div>
+
             {{-- Breadcrumb --}}
             <div class="mb-3">
                 <x-breadcrumb :items="[
@@ -428,14 +443,15 @@
                             @if($order->paymentExpiresAt())
                                 <span class="text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5">
                                     <i class="fa-regular fa-clock text-amber-600"></i>
-                                    <span>Hạn thanh toán: <strong>{{ $order->paymentExpiresAt()->format('H:i - d/m/Y') }}</strong></span>
+                                    <span>Hạn thanh toán: <strong>{{ $order->paymentExpiresAt()->format('H:i - d/m/Y') }}</strong> (tự hủy sau 24h)</span>
                                 </span>
                             @endif
-                            <a href="{{ route('customer.orders.show', $order->id) }}" 
-                               class="text-[#786B61] hover:text-[#5C3219] font-medium underline inline-flex items-center gap-1 transition">
+                            <button type="button" 
+                               @click="goToOrderDetail()"
+                               class="text-[#786B61] hover:text-[#5C3219] font-medium underline inline-flex items-center gap-1 transition cursor-pointer">
                                 <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
                                 <span>Thanh toán sau & xem đơn hàng #{{ $order->order_code }}</span>
-                            </a>
+                            </button>
                         </div>
 
                     </div>
@@ -468,6 +484,13 @@
             </div>
         </div>
 
+        {{-- Hidden Form for Cancel and Return Home Fallback --}}
+        <form id="cancel-order-home-form" method="POST" action="{{ route('customer.orders.cancel', $order->id) }}" class="hidden">
+            @csrf
+            <input type="hidden" name="reason" value="Khách hàng hủy đơn khi thoát khỏi trang thanh toán online">
+            <input type="hidden" name="redirect_to" value="home">
+        </form>
+
     </div>
 
     @push('scripts')
@@ -480,6 +503,7 @@
                 isChecking: false,
                 isPaid: false,
                 isRefreshing: false,
+                allowLeave: false,
                 momoTab: config.defaultTab || 'qr',
                 isZoomed: false,
                 qrUrl: config.qrUrl,
@@ -508,6 +532,17 @@
                     this.pollInterval = setInterval(() => {
                         this.checkAutoPayment();
                     }, 1800);
+
+                    // 3. Nút Back của trình duyệt / Mobile swipe back -> Chuyển về chi tiết đơn hàng vừa tạo
+                    try {
+                        history.pushState({ page: 'payment_qr' }, '', window.location.href);
+                    } catch (e) {}
+
+                    window.addEventListener('popstate', (e) => {
+                        if (!this.allowLeave && !this.isPaid) {
+                            this.goToOrderDetail();
+                        }
+                    });
                 },
 
                 startTimer() {
@@ -599,6 +634,7 @@
                     .then(data => {
                         if (data && data.paid && data.redirect_url) {
                             this.isPaid = true;
+                            this.allowLeave = true;
                             clearInterval(this.pollInterval);
                             clearInterval(this.interval);
 
@@ -622,6 +658,149 @@
                     .catch(() => {})
                     .finally(() => {
                         this.isChecking = false;
+                    });
+                },
+
+                goToOrderDetail() {
+                    this.allowLeave = true;
+                    window.location.href = '{{ route('customer.orders.show', $order->id) }}';
+                },
+
+                confirmLeave(targetUrl = null) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Rời khỏi trang thanh toán?',
+                            html: `
+                                <div class="text-left text-xs sm:text-sm space-y-3 text-[#4E342E]">
+                                    <div class="p-3.5 bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-200 rounded-2xl shadow-2xs">
+                                        <div class="flex items-center gap-2 text-rose-800 font-bold mb-1.5">
+                                            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
+                                            <span>Lưu ý quan trọng:</span>
+                                        </div>
+                                        <p class="text-xs text-stone-700 leading-relaxed">
+                                            Nếu bạn chọn <strong>Quay lại trang chủ</strong>, đơn hàng <strong class="font-mono text-[#5C3219]">#{{ $order->order_code }}</strong> sẽ <strong>bị hủy</strong> ngay lập tức.
+                                        </p>
+                                    </div>
+                                    <p class="text-xs text-stone-600 leading-relaxed">
+                                        Bạn có muốn <strong>tiếp tục thanh toán</strong> đơn hàng này không? Hoặc bạn có thể chọn <strong>Thanh toán sau</strong> để hệ thống giữ đơn trong vòng 24 giờ.
+                                    </p>
+                                </div>
+                            `,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            showDenyButton: true,
+                            cancelButtonText: '<i class="fa-solid fa-qrcode mr-1.5"></i> Thanh toán tiếp',
+                            confirmButtonText: '<i class="fa-solid fa-ban mr-1.5"></i> Về trang chủ (Hủy đơn)',
+                            denyButtonText: '<i class="fa-solid fa-clock-rotate-left mr-1.5"></i> Thanh toán sau (Giữ 24h)',
+                            cancelButtonColor: '#059669',
+                            confirmButtonColor: '#DC2626',
+                            denyButtonColor: '#B87309',
+                            background: '#FAF6F0',
+                            color: '#2E190E',
+                            customClass: {
+                                popup: 'rounded-3xl shadow-2xl border border-amber-200',
+                                cancelButton: 'rounded-xl text-xs sm:text-sm font-bold px-3.5 py-2.5 shadow-xs cursor-pointer',
+                                confirmButton: 'rounded-xl text-xs sm:text-sm font-bold px-3.5 py-2.5 shadow-xs cursor-pointer',
+                                denyButton: 'rounded-xl text-xs sm:text-sm font-bold px-3.5 py-2.5 shadow-xs cursor-pointer'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Người dùng chọn: Về trang chủ (Hủy đơn)
+                                this.cancelOrderAndGoHome();
+                            } else if (result.isDenied) {
+                                // Người dùng chọn: Thanh toán sau (Giữ đơn 24h)
+                                this.allowLeave = true;
+                                window.location.href = '{{ route('customer.checkout.success', $order->id) }}';
+                            } else {
+                                // Người dùng chọn: Thanh toán tiếp (ở lại trang)
+                                try {
+                                    history.pushState({ page: 'payment_qr' }, '', window.location.href);
+                                } catch (e) {}
+                            }
+                        });
+                    } else {
+                        if (confirm('Nếu bạn rời đi và quay lại trang chủ, đơn hàng #{{ $order->order_code }} sẽ bị hủy.\\n\\nBạn có muốn hủy đơn và quay về trang chủ không?')) {
+                            this.cancelOrderAndGoHome();
+                        } else {
+                            try {
+                                history.pushState({ page: 'payment_qr' }, '', window.location.href);
+                            } catch (e) {}
+                        }
+                    }
+                },
+
+                confirmPayLater() {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Thanh toán sau & Giữ đơn hàng?',
+                            html: `
+                                <div class="text-left text-xs sm:text-sm space-y-2.5 text-[#4E342E]">
+                                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed">
+                                        Đơn hàng <strong class="font-mono text-[#5C3219]">#{{ $order->order_code }}</strong> sẽ được giữ với trạng thái <strong>Chờ thanh toán</strong>.
+                                    </div>
+                                    <p class="text-xs text-stone-600">
+                                        ⏳ Hệ thống sẽ giữ đơn hàng của bạn trong <strong>24 giờ</strong>. Bạn có thể thanh toán sau tại mục <em>Đơn hàng của tôi</em>. Sau 24h nếu chưa thanh toán, đơn hàng sẽ tự động hủy.
+                                    </p>
+                                </div>
+                            `,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="fa-solid fa-clock-rotate-left mr-1.5"></i> Đồng ý thanh toán sau',
+                            cancelButtonText: 'Ở lại thanh toán ngay',
+                            confirmButtonColor: '#B87309',
+                            cancelButtonColor: '#059669',
+                            background: '#FAF6F0',
+                            color: '#2E190E',
+                            customClass: {
+                                popup: 'rounded-3xl shadow-2xl border border-amber-200',
+                                confirmButton: 'rounded-xl text-xs sm:text-sm font-bold px-4 py-2.5 shadow-xs cursor-pointer',
+                                cancelButton: 'rounded-xl text-xs sm:text-sm font-bold px-4 py-2.5 shadow-xs cursor-pointer'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                this.allowLeave = true;
+                                window.location.href = '{{ route('customer.checkout.success', $order->id) }}';
+                            }
+                        });
+                    } else {
+                        this.allowLeave = true;
+                        window.location.href = '{{ route('customer.checkout.success', $order->id) }}';
+                    }
+                },
+
+                cancelOrderAndGoHome() {
+                    this.allowLeave = true;
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Đang hủy đơn hàng...',
+                            text: 'Vui lòng chờ trong giây lát...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+                    }
+
+                    fetch('{{ route('customer.orders.cancel', $order->id) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            reason: 'Khách hàng hủy đơn khi thoát khỏi trang thanh toán online'
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        window.location.href = (data && data.redirect_url) ? data.redirect_url : '{{ route('home') }}';
+                    })
+                    .catch(() => {
+                        const fallbackForm = document.getElementById('cancel-order-home-form');
+                        if (fallbackForm) {
+                            fallbackForm.submit();
+                        } else {
+                            window.location.href = '{{ route('home') }}';
+                        }
                     });
                 },
 

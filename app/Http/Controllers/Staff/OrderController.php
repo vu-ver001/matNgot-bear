@@ -24,8 +24,10 @@ class OrderController extends Controller
         $query = Order::with(['customer', 'latestPayment', 'details.product.images', 'details.productVariant']);
 
         // Lọc theo tab Yêu cầu hủy hoặc Cần hoàn tiền
+        // Nhân viên chỉ xử lý yêu cầu hủy của đơn đang ở trạng thái "Đang chuẩn bị hàng"
         if ($request->query('tab') === 'cancel_requests') {
-            $query->where('cancel_request_status', 'PENDING');
+            $query->where('cancel_request_status', 'PENDING')
+                ->whereIn('order_status', ['PREPARING', 'CONFIRMED']);
         } elseif ($request->query('tab') === 'need_refund') {
             $query->where('order_status', 'CANCELLED')->where('payment_status', 'PAID');
         } elseif ($request->filled('order_status')) {
@@ -62,7 +64,15 @@ class OrderController extends Controller
             'cancelled' => Order::where('order_status', 'CANCELLED')->count(),
         ];
 
-        return view('staff.orders.index', compact('orders', 'stats'));
+        // Nhân viên chỉ đếm các đơn PENDING cancel request đang ở trạng thái chuẩn bị hàng
+        $pendingCancelRequestsCount = Order::where('cancel_request_status', 'PENDING')
+            ->whereIn('order_status', ['PREPARING', 'CONFIRMED'])
+            ->count();
+        $needRefundCount = Order::where('order_status', 'CANCELLED')
+            ->where('payment_status', 'PAID')
+            ->count();
+
+        return view('staff.orders.index', compact('orders', 'stats', 'pendingCancelRequestsCount', 'needRefundCount'));
     }
 
     public function bulkUpdateStatus(Request $request)
@@ -153,10 +163,14 @@ class OrderController extends Controller
     }
 
     /**
-     * Nhân viên duyệt hủy đơn hàng (Không bắt buộc nhập lý do)
+     * Nhân viên duyệt hủy đơn hàng (Chỉ cho phép đơn đang ở trạng thái PREPARING/CONFIRMED)
      */
     public function approveCancel(Request $request, Order $order)
     {
+        if (! in_array($order->order_status, ['PREPARING', 'CONFIRMED'], true)) {
+            return redirect()->back()->with('error', 'Nhân viên chỉ có thể duyệt hủy các đơn hàng đang ở trạng thái "Đang chuẩn bị hàng". Yêu cầu hủy & hoàn tiền của đơn chưa xác nhận do Quản trị viên (Admin) xử lý.');
+        }
+
         $validated = $request->validate([
             'refund_note' => 'nullable|string|max:500',
         ]);
@@ -171,10 +185,14 @@ class OrderController extends Controller
     }
 
     /**
-     * Nhân viên từ chối hủy đơn hàng (Bắt buộc nhập lý do từ chối)
+     * Nhân viên từ chối hủy đơn hàng (Bắt buộc nhập lý do từ chối - Ví dụ đã giao cho đơn vị vận chuyển)
      */
     public function rejectCancel(Request $request, Order $order)
     {
+        if (! in_array($order->order_status, ['PREPARING', 'CONFIRMED'], true)) {
+            return redirect()->back()->with('error', 'Nhân viên chỉ có thể từ chối hủy các đơn hàng đang ở trạng thái "Đang chuẩn bị hàng". Yêu cầu hủy & hoàn tiền của đơn chưa xác nhận do Quản trị viên (Admin) xử lý.');
+        }
+
         $validated = $request->validate([
             'rejection_reason' => 'required|string|min:5|max:500',
         ], [

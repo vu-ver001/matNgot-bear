@@ -392,22 +392,40 @@
                                                 <span>Đơn đã hủy</span>
                                             </span>
                                         @elseif ($item->status === 'PENDING')
-                                            <button type="button" 
-                                                    @click="openManualConfirm({{ json_encode([
-                                                        'id' => $item->id,
-                                                        'amount' => number_format($item->amount, 0, ',', '.') . 'đ',
-                                                        'order_code' => $order?->order_code,
-                                                        'recipient_name' => $order?->recipient_name ?? $order?->customer?->full_name,
-                                                    ]) }})"
-                                                    class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1"
-                                                    title="Xác nhận thanh toán kèm ảnh bill">
-                                                <i class="fa-solid fa-receipt"></i>
-                                                <span>Xác nhận (+Bill)</span>
-                                            </button>
+                                            @if ($item->method !== 'COD')
+                                                <button type="button" 
+                                                        @click="openManualConfirm({{ json_encode([
+                                                            'id' => $item->id,
+                                                            'amount' => number_format($item->amount, 0, ',', '.') . 'đ',
+                                                            'order_code' => $order?->order_code,
+                                                            'recipient_name' => $order?->recipient_name ?? $order?->customer?->full_name,
+                                                        ]) }})"
+                                                        class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1"
+                                                        title="Xác nhận thanh toán kèm ảnh bill">
+                                                    <i class="fa-solid fa-receipt"></i>
+                                                    <span>Xác nhận (+Bill)</span>
+                                                </button>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 text-blue-700 font-medium text-[11px] border border-blue-200" title="Đơn COD: Bưu tá thu tiền khi giao hàng, đối soát tại Tab Đối Soát COD sau khi giao thành công">
+                                                    <i class="fa-solid fa-hand-holding-dollar text-[10px]"></i>
+                                                    <span>Thu khi giao</span>
+                                                </span>
+                                            @endif
                                         @endif
 
-                                        {{-- Yêu cầu hoàn tiền (Quy định 3: Nhân viên tạo yêu cầu hoàn tiền) --}}
-                                        @if ($item->status === 'PAID')
+                                        {{-- Yêu cầu hoàn tiền (Chỉ hiển thị khi khách yêu cầu hủy đơn đã được xác nhận trước đó hoặc đơn đã bị hủy cần hoàn tiền) --}}
+                                        @php
+                                            $orderRefundRequest = $item->latestRefundRequest ?? $order?->latestRefundRequest;
+                                            $isPendingAdminRefund = $orderRefundRequest && $orderRefundRequest->status === 'PENDING';
+                                            $canStaffRefund = $item->status === 'PAID' && $order && $order->canStaffRequestRefund();
+                                        @endphp
+
+                                        @if ($isPendingAdminRefund)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold text-xs border border-purple-200" title="Yêu cầu hoàn tiền đang chờ Admin xử lý">
+                                                <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
+                                                <span>Chờ duyệt hoàn</span>
+                                            </span>
+                                        @elseif ($canStaffRefund)
                                             <button type="button" 
                                                     @click="openRefundRequest({{ json_encode([
                                                         'id' => $item->id,
@@ -425,6 +443,7 @@
                                                 <span>Yêu cầu hoàn tiền</span>
                                             </button>
                                         @endif
+
                                     </div>
                                 </td>
                             </tr>
