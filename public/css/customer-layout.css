@@ -2127,3 +2127,53 @@ html {
         transform: translateY(-1px);
         box-shadow: 0 6px 20px rgba(224, 138, 30, 0.45);
     }
+
+    /* SweetAlert2 Toast Customization (Dấu x đóng thông báo, bỏ thanh chạy) */
+    .swal2-popup.swal2-toast {
+        box-shadow: 0 10px 30px rgba(62, 39, 35, 0.16) !important;
+        border: 1px solid #EAD8C7 !important;
+        border-radius: 18px !important;
+        padding: 14px 18px !important;
+        position: relative !important;
+    }
+
+    .swal2-popup.swal2-toast .swal2-title {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #2B1810 !important;
+        line-height: 1.45 !important;
+        padding-right: 26px !important;
+    }
+
+    .swal2-popup.swal2-toast .swal2-close {
+        font-size: 22px !important;
+        line-height: 1 !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #8D6E63 !important;
+        background: transparent !important;
+        position: absolute !important;
+        top: 8px !important;
+        right: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    .swal2-popup.swal2-toast .swal2-close:hover {
+        color: #2B1810 !important;
+        background: #EFE6DD !important;
+        transform: rotate(90deg) !important;
+    }
+
+    .swal2-popup.swal2-toast .swal2-timer-progress-bar {
+        display: none !important;
+        height: 0 !important;
+        opacity: 0 !important;
+    }
