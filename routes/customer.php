@@ -28,6 +28,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/vouchers', [CustomerVoucherController::class, 'index'])
             ->middleware(['role:CUSTOMER,STAFF'])
             ->name('vouchers.index');
+        Route::get('/vouchers/{code}/conditions', [CustomerVoucherController::class, 'conditions'])
+            ->middleware(['role:CUSTOMER,STAFF'])
+            ->name('vouchers.conditions');
 
         // ==========================================
         // CÁC CHỨC NĂNG DÀNH RIÊNG CHO KHÁCH HÀNG (role: CUSTOMER)
@@ -61,6 +64,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
             Route::get('/payment/momo/redirect/{order}', [PaymentController::class, 'redirectToMomo'])->name('payment.momo.redirect');
             Route::post('/payment/confirm/{order}', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
             Route::post('/payment/retry/{order}', [PaymentController::class, 'retryPayment'])->name('payment.retry');
+            Route::post('/payment/refresh-qr/{order}', [PaymentController::class, 'refreshQr'])->name('payment.refresh-qr');
         });
 
         // 4. Wishlist (Kim Tuyến)

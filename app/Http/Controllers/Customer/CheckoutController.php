@@ -280,7 +280,7 @@ class CheckoutController extends Controller
         $now = now();
         $rawVouchers = Voucher::where('status', 'ACTIVE')
             ->where('end_date', '>=', $now)
-            ->with(['categories:id,name', 'products:id,name'])
+            ->with(['categories:id,name', 'products:id,name', 'productVariants.product:id,name'])
             ->select($voucherFields)
             ->orderBy('id', 'desc')
             ->get();
@@ -314,6 +314,12 @@ class CheckoutController extends Controller
                 $scopeText = 'Sản phẩm chỉ định';
             }
 
+            $isPercent = in_array($v->discount_type, ['PERCENT', 'PERCENTAGE']);
+            $discountDisplay = $isPercent ? ((int)$v->discount_value . '%') : (number_format($v->discount_value, 0, ',', '.') . 'đ');
+            $discountSubtext = ($isPercent && (float)$v->max_discount_value > 0) 
+                ? ('Tối đa ' . number_format($v->max_discount_value, 0, ',', '.') . 'đ') 
+                : ($isPercent ? 'Giảm theo %' : 'Giảm trực tiếp');
+
             $v->user_used_count = $userUsed;
             $v->user_limit = $userLimit;
             $v->user_remaining = $userRemaining;
@@ -327,7 +333,25 @@ class CheckoutController extends Controller
             $v->inapplicable_reason = $inapplicableReason;
             $v->eligible_subtotal = $eligibleSubtotal;
             $v->expected_discount = $expectedDiscount;
+            $v->expected_discount_formatted = number_format($expectedDiscount, 0, ',', '.') . 'đ';
             $v->scope_text = $scopeText;
+
+            // Formatted fields for Condition Modal
+            $v->discount_display = $discountDisplay;
+            $v->discount_subtext = $discountSubtext;
+            $v->min_order_formatted = number_format($v->min_order_value ?? 0, 0, ',', '.') . 'đ';
+            $v->max_discount_formatted = ((float)$v->max_discount_value > 0) ? (number_format($v->max_discount_value, 0, ',', '.') . 'đ') : null;
+            $v->start_date_formatted = $v->start_date?->format('H:i d/m/Y');
+            $v->end_date_formatted = $v->end_date?->format('H:i d/m/Y');
+            $v->category_names = $v->categories->pluck('name')->toArray();
+            $v->product_names = $v->products->pluck('name')->toArray();
+            $v->variant_details = $v->productVariants->map(fn($pv) => [
+                'id' => $pv->id,
+                'product_name' => $pv->product?->name,
+                'color' => $pv->color,
+                'size' => $pv->size,
+                'price' => number_format($pv->effective_price ?? ($pv->sale_price ?? $pv->price), 0, ',', '.') . 'đ',
+            ])->toArray();
 
             return $v;
         });
@@ -521,15 +545,16 @@ class CheckoutController extends Controller
                 return redirect()->route('customer.payment.vnpay.redirect', $order->id);
             }
 
-            // If MoMo, redirect directly to official MoMo Gateway
-            if ($rawMethod === 'MOMO') {
-                return redirect()->route('customer.payment.momo.redirect', $order->id);
+            // If MoMo / E_WALLET, redirect directly to MoMo Personal QR payment page
+            if (in_array($rawMethod, ['MOMO', 'E_WALLET'])) {
+                return redirect()->route('customer.payment.qr', $order->id)
+                    ->with('info', 'Đơn hàng #' . $order->order_code . ' đã tạo thành công! Vui lòng quét mã QR Ví MoMo để hoàn tất thanh toán.');
             }
 
             // If Bank Transfer, redirect to interactive payment gateway page
-            if (in_array($rawMethod, ['BANK_TRANSFER', 'E_WALLET'])) {
+            if ($rawMethod === 'BANK_TRANSFER') {
                 return redirect()->route('customer.payment.qr', $order->id)
-                    ->with('info', 'Đơn hàng ' . $order->order_code . ' đã tạo! Vui lòng hoàn tất thanh toán.');
+                    ->with('info', 'Đơn hàng #' . $order->order_code . ' đã tạo! Vui lòng hoàn tất chuyển khoản VietQR.');
             }
 
             return redirect()->route('customer.checkout.success', $order->id)

@@ -1,4 +1,4 @@
-@props(['status', 'method' => null])
+@props(['status', 'method' => null, 'orderStatus' => null])
 
 @php
     $isCodPending = ($method === 'COD' && $status === 'PENDING');
@@ -11,11 +11,13 @@
         'REFUNDED' => 'bg-purple-100 text-purple-800',
     ];
 
+    $failedLabel = ($orderStatus && $orderStatus !== 'CANCELLED') ? 'Thất bại' : 'Đã hủy';
+
     $labels = [
         'UNPAID' => 'Chưa thanh toán',
         'PENDING' => $isCodPending ? 'Thu tiền khi giao hàng (COD)' : 'Chờ xác nhận',
         'PAID' => 'Đã thanh toán',
-        'FAILED' => 'Thất bại',
+        'FAILED' => $failedLabel,
         'REFUNDED' => 'Đã hoàn tiền',
     ];
 @endphp

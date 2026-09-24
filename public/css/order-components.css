@@ -878,3 +878,124 @@ table.data-table tbody tr:hover {
         height: 28px;
     }
 }
+
+/* ==========================================================================
+   GHN EXPRESS TRACKING BANNER (Staff & Customer views)
+   ========================================================================== */
+.ghn-banner-card {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #FFF9F5 0%, #FFF3EC 100%);
+    border: 1px solid #FFD9C2;
+    border-left: 4px solid #F26522;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(242, 101, 34, 0.06);
+}
+
+.ghn-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ghn-banner-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #F26522 0%, #D84E0E 100%);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    box-shadow: 0 4px 10px rgba(242, 101, 34, 0.28);
+}
+
+.ghn-banner-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ghn-banner-tag {
+    font-size: 11px;
+    font-weight: 800;
+    color: #F26522;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ghn-banner-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    font-weight: 800;
+    color: #3E2723;
+    background: #FFFFFF;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid #FFCCA8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.ghn-banner-location {
+    font-size: 12px;
+    color: #6D4C41;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ghn-banner-location strong {
+    color: #3E2723;
+    font-weight: 700;
+}
+
+.ghn-banner-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    background: #F26522;
+    color: #FFFFFF !important;
+    font-weight: 700;
+    font-size: 12px;
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(242, 101, 34, 0.28);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.ghn-banner-btn:hover {
+    background: #D84E0E;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(242, 101, 34, 0.38);
+}
+
+.ghn-banner-btn i {
+    font-size: 13px;
+    color: #FFFFFF;
+}
+
+@media (max-width: 640px) {
+    .ghn-banner-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .ghn-banner-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+

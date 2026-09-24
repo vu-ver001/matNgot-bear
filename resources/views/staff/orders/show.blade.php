@@ -6,7 +6,7 @@
 @endsection
 
 @section('content')
-<div x-data="{ openApproveModal: false, openRejectModal: false, openRefundRequestModal: false }">
+<div x-data="{ openApproveModal: false, openRejectModal: false, openRefundRequestModal: false, showGhnModal: false, copiedGhn: false }">
     <!-- Header Breadcrumb & Actions -->
     <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div class="flex items-center gap-3">
@@ -66,11 +66,24 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             <h3 class="text-base sm:text-lg font-bold text-rose-900">Khách hàng yêu cầu hủy đơn hàng này</h3>
                             <span class="px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-900 font-extrabold text-xs">CẦN XỬ LÝ</span>
+                            @if($order->cancelRequestHoursRemaining() <= 2)
+                                <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-xs animate-pulse">
+                                    <i class="fa-solid fa-hourglass-end mr-1"></i>SẮP HẾT HẠN ({{ $order->cancelRequestTimeRemainingText() }})
+                                </span>
+                            @else
+                                <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-xs">
+                                    <i class="fa-regular fa-clock mr-1"></i>Hạn xử lý: {{ $order->cancelRequestTimeRemainingText() }}
+                                </span>
+                            @endif
                         </div>
                         <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1">
-                            Thời gian gửi yêu cầu: <strong>{{ $order->cancel_requested_at?->format('d/m/Y H:i:s') }}</strong>
-                            ({{ $order->cancel_requested_at?->diffForHumans() }})
+                            Thời gian gửi: <strong>{{ $order->cancel_requested_at?->format('d/m/Y H:i:s') }}</strong>
+                            · Hạn chót xử lý (24h): <strong class="text-rose-700">{{ $order->cancelRequestExpiresAt()?->format('H:i - d/m/Y') }}</strong>
                         </p>
+                        <div class="mt-2 p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed flex items-start gap-2">
+                            <i class="fa-solid fa-shield-halved text-amber-600 mt-0.5 shrink-0"></i>
+                            <span><strong>Quy định xử lý:</strong> Nhân viên bắt buộc xử lý yêu cầu này trong vòng <strong>24 giờ</strong>. Nếu quá 24 giờ không duyệt, hệ thống sẽ <strong>tự động từ chối hủy</strong> và đơn hàng tiếp tục được giao cho khách.</span>
+                        </div>
                         <div class="mt-2 p-3 bg-white rounded-xl border border-rose-200 text-xs sm:text-sm">
                             <span class="font-bold text-[#2B1810]">Lý do khách hàng muốn hủy:</span>
                             <p class="text-rose-800 mt-1 font-medium italic">"{{ $order->cancel_request_reason }}"</p>
@@ -461,19 +474,21 @@
         <div class="lg:col-span-2 space-y-6">
             <!-- Thông tin người nhận & vận chuyển -->
             <div class="panel-card mb-0">
-                <div class="panel-header flex items-center justify-between">
+                <div class="panel-header flex items-center justify-between flex-wrap gap-2">
                     <div class="panel-title">
                         <i class="fa-solid fa-truck-ramp-box"></i>
                         Thông tin nhận hàng & Vận chuyển
                     </div>
-                    @if ($order->customer_id)
-                        <a href="{{ route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]) }}"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer"
-                           title="Mở cuộc trò chuyện hỗ trợ khách hàng cho đơn này">
-                            <i class="fa-solid fa-comments"></i>
-                            <span>Nhắn tin cho khách</span>
-                        </a>
-                    @endif
+                    <div class="flex items-center gap-2">
+                        @if ($order->customer_id)
+                            <a href="{{ route('staff.support.index', ['customer_id' => $order->customer_id, 'order_id' => $order->id]) }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer"
+                               title="Mở cuộc trò chuyện hỗ trợ khách hàng cho đơn này">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Nhắn tin cho khách</span>
+                            </a>
+                        @endif
+                    </div>
                 </div>
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
@@ -494,7 +509,7 @@
                     </div>
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
                         <dt class="text-xs font-bold text-[#8E8076] uppercase">Phương thức thanh toán</dt>
-                        <dd class="font-bold text-[#4E342E] mt-0.5">{{ $order->payment_method }}</dd>
+                        <dd class="font-bold text-[#4E342E] mt-0.5">{{ $order->payment_method_label }}</dd>
                     </div>
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
                         <dt class="text-xs font-bold text-[#8E8076] uppercase">Hình thức giao hàng</dt>
@@ -514,6 +529,36 @@
                         </div>
                     @endif
                 </dl>
+
+                {{-- Box thông tin vận đơn GHN Express --}}
+                @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
+                    @php $ghn = $order->ghn_tracking; @endphp
+                    <div class="ghn-banner-card" style="margin-top: 16px; padding: 14px 18px; background: linear-gradient(135deg, #FFF9F5 0%, #FFF3EC 100%); border: 1px solid #FFD9C2; border-left: 4px solid #F26522; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; box-shadow: 0 2px 8px rgba(242, 101, 34, 0.06);">
+                        <div class="ghn-banner-left" style="display: flex; align-items: center; gap: 14px;">
+                            <div class="ghn-banner-icon" style="width: 44px; height: 44px; min-width: 44px; border-radius: 12px; background: linear-gradient(135deg, #F26522 0%, #D84E0E 100%); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 10px rgba(242, 101, 34, 0.28);">
+                                <i class="fa-solid fa-truck-fast"></i>
+                            </div>
+                            <div>
+                                <div class="ghn-banner-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span class="ghn-banner-tag" style="font-size: 11px; font-weight: 800; color: #F26522; text-transform: uppercase; letter-spacing: 0.5px;">VẬN ĐƠN GHN EXPRESS:</span>
+                                    <span class="ghn-banner-code" style="font-family: monospace; font-size: 13px; font-weight: 800; color: #3E2723; background: #FFFFFF; padding: 2px 8px; border-radius: 6px; border: 1px solid #FFCCA8; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                                        {{ $ghn['tracking_code'] }}
+                                    </span>
+                                </div>
+                                <div class="ghn-banner-location" style="font-size: 12px; color: #6D4C41; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
+                                    <i class="fa-solid fa-location-dot" style="color: #F26522; font-size: 12px;"></i>
+                                    <span>Vị trí bưu kiện: <strong style="color: #3E2723; font-weight: 700;">{{ $ghn['current_location'] }}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" @click="showGhnModal = true"
+                                class="ghn-banner-btn"
+                                style="display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; background: #F26522; color: #FFFFFF !important; font-weight: 700; font-size: 12px; border-radius: 10px; border: none; box-shadow: 0 2px 8px rgba(242, 101, 34, 0.28); cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
+                            <i class="fa-solid fa-route" style="color: #FFFFFF; font-size: 13px;"></i>
+                            <span style="color: #FFFFFF;">Theo dõi vận chuyển</span>
+                        </button>
+                    </div>
+                @endif
             </div>
 
             <!-- Danh sách sản phẩm đặt mua -->
@@ -661,7 +706,20 @@
                         <tbody>
                             @forelse ($order->payments as $payment)
                                 <tr>
-                                    <td class="font-bold text-[#4E342E]">{{ $payment->method }}</td>
+                                    <td class="font-bold text-[#4E342E]">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            @if($payment->method === 'CARD')
+                                                <i class="fa-solid fa-credit-card text-blue-600"></i>
+                                            @elseif($payment->method === 'BANK_TRANSFER')
+                                                <i class="fa-solid fa-building-columns text-emerald-600"></i>
+                                            @elseif($payment->method === 'COD')
+                                                <i class="fa-solid fa-money-bill-wave text-amber-600"></i>
+                                            @else
+                                                <i class="fa-solid fa-wallet text-purple-600"></i>
+                                            @endif
+                                            <span>{{ $payment->method_label }}</span>
+                                        </span>
+                                    </td>
                                     <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
                                     <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
                                     <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>
@@ -810,6 +868,8 @@
                 </div>
             @endif
         </div>
-    </div>
+    {{-- Modal Tra cứu hành trình GHN --}}
+    <x-ghn-tracking-modal :order="$order" />
 </div>
 @endsection
+

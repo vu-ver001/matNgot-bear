@@ -12,6 +12,7 @@ use App\Services\VnpayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -54,7 +55,62 @@ class PaymentController extends Controller
         $returnUrl = route('payment.vnpay.return');
         $vnpayGatewayUrl = $this->vnpayService->createPaymentUrl($order, $returnUrl, request()->ip() ?? '127.0.0.1');
 
-        return view('customer.payment.qr', compact('order', 'paymentConfig', 'vietQrUrl', 'momoQrUrl', 'vnpayQrUrl', 'vnpayGatewayUrl', 'transferContent', 'amount'));
+        // Quản lý thời gian tồn tại 15 phút của mã QR (lưu cố định theo phiên thanh toán, không bị reset khi F5)
+        $cacheKey = "payment_qr_expires_at_{$order->id}";
+        $qrExpiresAt = Cache::get($cacheKey);
+
+        if (! $qrExpiresAt) {
+            $qrExpiresAt = now()->addMinutes(15)->timestamp;
+            Cache::put($cacheKey, $qrExpiresAt, now()->addHours(24));
+        }
+
+        $remainingSeconds = max(0, $qrExpiresAt - now()->timestamp);
+        $isQrExpired = ($remainingSeconds <= 0);
+
+        return view('customer.payment.qr', compact(
+            'order',
+            'paymentConfig',
+            'vietQrUrl',
+            'momoQrUrl',
+            'vnpayQrUrl',
+            'vnpayGatewayUrl',
+            'transferContent',
+            'amount',
+            'remainingSeconds',
+            'qrExpiresAt',
+            'isQrExpired'
+        ));
+    }
+
+    /**
+     * Refresh / Re-generate 15-minute QR Payment session for the order.
+     */
+    public function refreshQr(Order $order): JsonResponse
+    {
+        if ($this->orderService->checkAndCancelIfExpired($order) || ! $order->canPayOnline()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đơn hàng đã hết hạn thanh toán 24 giờ hoặc không thể thanh toán online.',
+            ], 400);
+        }
+
+        $newExpiresAt = now()->addMinutes(15)->timestamp;
+        $cacheKey = "payment_qr_expires_at_{$order->id}";
+        Cache::put($cacheKey, $newExpiresAt, now()->addHours(24));
+
+        $vietQrUrl = $this->vietQrService->generateQrUrl($order);
+        $momoQrUrl = $this->momoService->generateQrUrl($order);
+        $vnpayQrUrl = $this->vnpayService->generateQrUrl($order);
+
+        return response()->json([
+            'success' => true,
+            'remainingSeconds' => 900,
+            'expiresAt' => $newExpiresAt,
+            'vietQrUrl' => $vietQrUrl,
+            'momoQrUrl' => $momoQrUrl,
+            'vnpayQrUrl' => $vnpayQrUrl,
+            'message' => 'Đã làm mới mã QR thành công! Thời gian thanh toán: 15 phút.',
+        ]);
     }
 
     /**
@@ -79,7 +135,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Redirect customer directly to official MoMo Payment Gateway.
+     * Redirect customer directly to MoMo Personal QR payment page.
      */
     public function redirectToMomo(Order $order): RedirectResponse
     {
@@ -88,21 +144,13 @@ class PaymentController extends Controller
                 ->with('error', "Đơn hàng #{$order->order_code} đã quá thời hạn thanh toán 24 giờ và đã tự động bị hủy.");
         }
 
-        $returnUrl = route('payment.momo.return');
-        $ipnUrl = route('payment.momo.ipn');
-        $momoRes = $this->momoService->createGatewayPayment($order, $returnUrl, $ipnUrl);
-
-        if (!empty($momoRes['success']) && !empty($momoRes['payUrl'])) {
-            Log::info("👛 [MOMO REDIRECT] Khách hàng chuyển hướng sang cổng MoMo cho đơn hàng #{$order->order_code}", [
-                'order_id' => $order->id,
-                'amount' => $order->total_amount,
-                'payUrl' => $momoRes['payUrl'],
-            ]);
-            return redirect()->away($momoRes['payUrl']);
-        }
+        Log::info("👛 [MOMO QR REDIRECT] Khách hàng chuyển sang thanh toán mã QR Ví MoMo cá nhân cho đơn hàng #{$order->order_code}", [
+            'order_id' => $order->id,
+            'amount' => $order->total_amount,
+        ]);
 
         return redirect()->route('customer.payment.qr', $order->id)
-            ->with('info', $momoRes['message'] ?? 'Chuyển sang chế độ quét mã QR MoMo.');
+            ->with('info', "Vui lòng quét mã QR Ví MoMo cá nhân để thanh toán đơn hàng #{$order->order_code}.");
     }
 
     /**
@@ -532,7 +580,8 @@ class PaymentController extends Controller
         }
 
         if ($method === 'E_WALLET') {
-            return $this->redirectToMomo($order);
+            return redirect()->route('customer.payment.qr', $order->id)
+                ->with('info', "Vui lòng quét mã QR Ví MoMo cá nhân để thanh toán đơn hàng #{$order->order_code}.");
         }
 
         return redirect()->route('customer.payment.qr', $order->id);

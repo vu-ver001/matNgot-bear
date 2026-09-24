@@ -101,4 +101,114 @@ class VoucherController extends Controller
             'isAuthenticated' => auth()->check(),
         ]);
     }
+
+    /**
+     * Tra cứu chi tiết điều kiện sử dụng của voucher (dành cho Khách hàng & Nhân viên tư vấn).
+     */
+    public function conditions(Request $request, string $code): \Illuminate\Http\JsonResponse
+    {
+        $code = trim($code);
+        $voucher = Voucher::where('code', $code)
+            ->where('status', 'ACTIVE')
+            ->with([
+                'categories:id,name',
+                'products:id,name,price',
+                'productVariants.product:id,name',
+            ])
+            ->first();
+
+        if (!$voucher) {
+            return response()->json([
+                'success' => false,
+                'message' => "Không tìm thấy mã voucher [{$code}] hoặc voucher đã tạm ngưng.",
+            ], 404);
+        }
+
+        $now = now();
+        $userId = auth()->id();
+        $subtotal = (float) $request->input('subtotal', 0);
+        $shippingFee = (float) $request->input('shipping_fee', 30000);
+        $cartItems = $request->input('cart_items', []);
+
+        $userUsed = $userId ? $voucher->countUsedByCustomer($userId) : 0;
+        $userLimit = ($voucher->usage_limit_per_user !== null && (int)$voucher->usage_limit_per_user > 0) ? (int)$voucher->usage_limit_per_user : null;
+        $userRemaining = $userLimit !== null ? max(0, $userLimit - $userUsed) : null;
+
+        $globalLimit = (int) ($voucher->usage_limit ?? 0);
+        $globalUsed = (int) ($voucher->used_count ?? 0);
+        $globalRemaining = $globalLimit > 0 ? max(0, $globalLimit - $globalUsed) : null;
+
+        $isUpcoming = $voucher->start_date > $now;
+        $isExpired = $voucher->end_date < $now;
+        $isGlobalExhausted = $globalLimit > 0 && $globalUsed >= $globalLimit;
+        $isUserExhausted = $userLimit !== null && $userUsed >= $userLimit;
+
+        // Đánh giá điều kiện thực tế với đơn hàng nếu có truyền subtotal hoặc cart_items
+        $validation = [
+            'valid' => true,
+            'message' => 'Mã voucher hợp lệ.',
+        ];
+        if ($userId) {
+            $validation = $voucher->validateForCustomer($userId, $subtotal, $shippingFee, $cartItems);
+        }
+
+        $isPercent = in_array($voucher->discount_type, ['PERCENT', 'PERCENTAGE']);
+        $discountDisplay = $isPercent
+            ? ((int)$voucher->discount_value . '%')
+            : (number_format($voucher->discount_value, 0, ',', '.') . 'đ');
+        $discountSubtext = ($isPercent && (float)$voucher->max_discount_value > 0)
+            ? ('Tối đa ' . number_format($voucher->max_discount_value, 0, ',', '.') . 'đ')
+            : ($isPercent ? 'Giảm theo %' : 'Giảm trực tiếp');
+
+        return response()->json([
+            'success' => true,
+            'voucher' => [
+                'id' => $voucher->id,
+                'code' => $voucher->code,
+                'voucher_type' => $voucher->voucher_type,
+                'type_label' => $voucher->voucher_type === 'SHIPPING' ? 'Miễn phí vận chuyển (Freeship)' : 'Giảm giá đơn hàng',
+                'discount_type' => $voucher->discount_type,
+                'discount_value' => (float)$voucher->discount_value,
+                'discount_display' => $discountDisplay,
+                'discount_subtext' => $discountSubtext,
+                'min_order_value' => (float)$voucher->min_order_value,
+                'min_order_formatted' => number_format($voucher->min_order_value ?? 0, 0, ',', '.') . 'đ',
+                'max_discount_value' => (float)$voucher->max_discount_value,
+                'max_discount_formatted' => ((float)$voucher->max_discount_value > 0) ? (number_format($voucher->max_discount_value, 0, ',', '.') . 'đ') : null,
+                'start_date' => $voucher->start_date?->format('H:i d/m/Y'),
+                'end_date' => $voucher->end_date?->format('H:i d/m/Y'),
+                'is_upcoming' => $isUpcoming,
+                'is_expired' => $isExpired,
+                'is_global_exhausted' => $isGlobalExhausted,
+                'is_user_exhausted' => $isUserExhausted,
+                'usage_limit' => $globalLimit > 0 ? $globalLimit : null,
+                'used_count' => $globalUsed,
+                'remaining_count' => $globalRemaining,
+                'limit_per_user' => $userLimit,
+                'user_used_count' => $userUsed,
+                'user_remaining' => $userRemaining,
+                'apply_scope' => $voucher->apply_scope,
+                'apply_scope_label' => match($voucher->apply_scope) {
+                    'CATEGORY' => 'Danh mục chỉ định',
+                    'PRODUCT' => 'Sản phẩm chỉ định',
+                    default => 'Toàn bộ sản phẩm'
+                },
+                'categories' => $voucher->categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values(),
+                'products' => $voucher->products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'price' => number_format($p->price, 0, ',', '.') . 'đ'])->values(),
+                'variants' => $voucher->productVariants->map(fn($v) => [
+                    'id' => $v->id,
+                    'product_id' => $v->product_id,
+                    'product_name' => $v->product?->name,
+                    'color' => $v->color,
+                    'size' => $v->size,
+                    'price' => number_format($v->effective_price ?? ($v->sale_price ?? $v->price), 0, ',', '.') . 'đ',
+                ])->values(),
+                'copy_url' => route('products.index', ['voucher' => $voucher->code]),
+                'is_applicable' => (bool) ($validation['valid'] ?? false),
+                'inapplicable_reason' => !($validation['valid'] ?? false) ? ($validation['message'] ?? 'Không đủ điều kiện áp dụng') : null,
+                'expected_discount' => (float) ($validation['discount_amount'] ?? 0),
+                'expected_discount_formatted' => isset($validation['discount_amount']) ? number_format($validation['discount_amount'], 0, ',', '.') . 'đ' : null,
+            ],
+        ]);
+    }
 }
