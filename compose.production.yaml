@@ -1,0 +1,135 @@
+name: matngotbear-production
+
+services:
+  db:
+    image: mysql:8.4
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max-connections=200
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:?Set DB_DATABASE in .env.production}
+      MYSQL_USER: ${DB_USERNAME:?Set DB_USERNAME in .env.production}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env.production}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env.production}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks:
+      - backend
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      target: app
+    env_file:
+      - ${APP_ENV_FILE:-.env.production}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - storage_data:/var/www/html/storage
+    expose:
+      - "9000"
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(extension_loaded(\"pdo_mysql\") ? 0 : 1);'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
+      - storage_data:/var/www/html/storage:ro
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://127.0.0.1/up || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - backend
+      - edge
+    restart: unless-stopped
+
+  queue:
+    build:
+      context: .
+      target: app
+    env_file:
+      - ${APP_ENV_FILE:-.env.production}
+    command: ["php", "artisan", "queue:work", "database", "--sleep=3", "--tries=3", "--timeout=90", "--max-time=3600"]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - storage_data:/var/www/html/storage
+    networks:
+      - backend
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      target: app
+    env_file:
+      - ${APP_ENV_FILE:-.env.production}
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - storage_data:/var/www/html/storage
+    networks:
+      - backend
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.10-alpine
+    env_file:
+      - ${APP_ENV_FILE:-.env.production}
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+    restart: unless-stopped
+
+networks:
+  backend:
+    internal: true
+  edge:
+
+volumes:
+  db_data:
+    name: matngotbear_prod_db_data
+  storage_data:
+    name: matngotbear_prod_storage_data
+  caddy_data:
+    name: matngotbear_prod_caddy_data
+  caddy_config:
+    name: matngotbear_prod_caddy_config

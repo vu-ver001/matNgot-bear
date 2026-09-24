@@ -59,12 +59,6 @@ return [
         'origin_lng' => env('SHOP_ORIGIN_LNG', 105.7628),
     ],
 
-    'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', 'http://localhost:8000/auth/google/callback'),
-    ],
-
     'vnpay' => [
         'tmn_code' => env('VNPAY_TMN_CODE', 'DKEKANL1'),
         'hash_secret' => env('VNPAY_HASH_SECRET', 'A36K9YROGJFCDMLD8MKRXUE2Q4AKM6TV'),

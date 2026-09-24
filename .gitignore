@@ -1,8 +1,10 @@
 *.log
 .DS_Store
 .env
+.env.docker
 .env.backup
 .env.production
+!.env.production.example
 .phpactor.json
 .phpunit.result.cache
 /.codex
@@ -21,6 +23,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/backups/
 /vendor
 _ide_helper.php
 Homestead.json
