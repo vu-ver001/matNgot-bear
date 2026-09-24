@@ -34,8 +34,7 @@
                         $tabs = [
                             '' => ['label' => 'Tất cả', 'count' => $stats['total'] ?? null],
                             'PENDING' => ['label' => 'Chờ xác nhận', 'count' => $stats['pending'] ?? 0],
-                            'CONFIRMED' => ['label' => 'Đã xác nhận', 'count' => $stats['confirmed'] ?? 0],
-                            'PREPARING' => ['label' => 'Chờ lấy hàng', 'count' => $stats['preparing'] ?? 0],
+                            'PREPARING' => ['label' => 'Đang chuẩn bị', 'count' => ($stats['preparing'] ?? 0) + ($stats['confirmed'] ?? 0)],
                             'SHIPPING' => ['label' => 'Đang giao hàng', 'count' => $stats['shipping'] ?? 0],
                             'COMPLETED' => ['label' => 'Đã giao', 'count' => $stats['completed'] ?? 0],
                             'RETURNED' => ['label' => 'Trả hàng', 'count' => $stats['returned'] ?? 0],
@@ -89,7 +88,7 @@
                                         </a>
                                     </div>
 
-                                    <div class="flex items-center gap-2 sm:gap-3 flex-wrap md:justify-end min-w-0">
+                                    <div class="flex items-center gap-2 sm:gap-3 md:justify-end min-w-0">
                                         <div class="order-delivery-status text-xs sm:text-[12.5px] min-w-0">
                                             <i class="fa-solid fa-truck-fast text-emerald-600 shrink-0"></i>
                                             <span class="break-words leading-tight">{{ $card['order']['deliveryStatus'] }}</span>
@@ -221,7 +220,7 @@
                                             <button type="button" 
                                                     @click="openReturnModal = true" 
                                                     class="btn-card-action text-rose-700! hover:bg-rose-50 border border-rose-200 cursor-pointer">
-                                                <i class="fa-solid fa-arrow-rotate-left"></i> Trả hàng / Hoàn tiền
+                                                <i class="fa-solid fa-arrow-rotate-left"></i> Hoàn hàng / Đổi trả
                                             </button>
                                             @include('customer.orders.partials.return-request-modal', ['order' => $order])
                                         @endif
@@ -307,21 +306,53 @@
 
                                                             {{-- Modal Body --}}
                                                             <div class="p-6 space-y-4 text-xs">
-                                                                @if($order->payment_status === 'PAID')
+                                                                @php
+                                                                    $isPendingPaidDirectToAdmin = ($order->order_status === 'PENDING' && $order->payment_status === 'PAID');
+                                                                @endphp
+
+                                                                @if($isPendingPaidDirectToAdmin)
+                                                                    <div class="p-3.5 bg-sky-50 rounded-2xl border border-sky-200 space-y-2">
+                                                                        <div class="flex items-center gap-2 text-sky-900 font-bold text-xs">
+                                                                            <i class="fa-solid fa-shield-halved text-sky-600"></i>
+                                                                            <span>Đơn trực tuyến đã thanh toán ({{ number_format($order->total_amount, 0, ',', '.') }}đ)</span>
+                                                                        </div>
+                                                                        <p class="text-[11.5px] text-[#5C3219] leading-relaxed">
+                                                                            Đơn hàng chưa được xác nhận. Yêu cầu hủy và hoàn tiền của bạn sẽ được <strong>gửi thẳng lên Quản trị viên (Admin)</strong> để xử lý chuyển khoản hoàn lại 100% số tiền vào STK bạn cung cấp bên dưới.
+                                                                        </p>
+                                                                        <div class="pt-1 text-[11px] text-sky-800 font-medium">
+                                                                            💡 Vui lòng nhập số tài khoản ngân hàng để Admin hoàn tiền cho bạn:
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {{-- Form STK hoàn tiền --}}
+                                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-200">
+                                                                        <div class="sm:col-span-2">
+                                                                            <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Tên ngân hàng <span class="text-rose-500">*</span></label>
+                                                                            <input type="text" name="refund_bank_name" required placeholder="Ví dụ: Vietcombank, MB Bank..."
+                                                                                   class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500">
+                                                                        </div>
+                                                                        <div>
+                                                                            <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Số tài khoản <span class="text-rose-500">*</span></label>
+                                                                            <input type="text" name="refund_bank_account" required placeholder="Nhập số tài khoản..."
+                                                                                   class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500">
+                                                                        </div>
+                                                                        <div>
+                                                                            <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Tên chủ tài khoản <span class="text-rose-500">*</span></label>
+                                                                            <input type="text" name="refund_account_holder" required placeholder="NGUYEN VAN A"
+                                                                                   class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500 uppercase">
+                                                                        </div>
+                                                                    </div>
+                                                                @elseif($order->payment_status === 'PAID')
                                                                     <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 space-y-2">
                                                                         <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
                                                                             <i class="fa-solid fa-wallet text-amber-600"></i>
-                                                                            <span>Đơn hàng đã thanh toán ({{ number_format($order->total_amount, 0, ',', '.') }}đ)</span>
+                                                                            <span>Đơn hàng đã thanh toán ({{ number_format($order->total_amount, 0, ',', '.') }}đ) - Đang chuẩn bị hàng</span>
                                                                         </div>
                                                                         <p class="text-[11.5px] text-[#7D6B5D] leading-relaxed">
-                                                                            @if($isDirectCancel)
-                                                                                Đơn hàng đang ở trạng thái <strong>Chờ xác nhận</strong> nên sẽ được <strong>hủy ngay</strong>. Shop sẽ sớm liên hệ SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% số tiền cho bạn.
-                                                                            @else
-                                                                                Đơn hàng đã xác nhận, yêu cầu hủy sẽ được nhân viên xem xét. Khi được hủy, shop sẽ liên hệ qua SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% tiền cho bạn.
-                                                                            @endif
+                                                                            Đơn hàng đang ở trạng thái <strong>Đang chuẩn bị</strong>. Cửa hàng sẽ kiểm tra: nếu đơn <strong>chưa giao cho bên vận chuyển</strong> thì Shop sẽ chấp nhận hủy đơn và hoàn lại 100% tiền vào STK bạn cung cấp. Nếu đã bàn giao hàng cho shipper, Shop xin phép từ chối hủy.
                                                                         </p>
                                                                         <div class="pt-1 text-[11px] text-amber-800 font-medium">
-                                                                            💡 Bạn có thể điền trước STK bên dưới để nhân viên hoàn tiền nhanh hơn:
+                                                                            💡 Vui lòng nhập STK ngân hàng nhận tiền hoàn nếu đơn được hủy thành công:
                                                                         </div>
                                                                     </div>
 
@@ -329,7 +360,7 @@
                                                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-200">
                                                                         <div class="sm:col-span-2">
                                                                             <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Tên ngân hàng</label>
-                                                                            <input type="text" name="refund_bank_name" placeholder="Ví dụ: Vietcombank, MB Bank..."
+                                                                            <input type="text" name="refund_bank_name" list="vietnam_banks_list_idx" placeholder="Chọn hoặc nhập: Vietcombank, MB Bank..."
                                                                                    class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500">
                                                                         </div>
                                                                         <div>
@@ -343,13 +374,29 @@
                                                                                    class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500 uppercase">
                                                                         </div>
                                                                     </div>
+
+                                                                    <datalist id="vietnam_banks_list_idx">
+                                                                        <option value="MB Bank (Ngân hàng Quân Đội)">
+                                                                        <option value="Vietcombank (Ngoại thương)">
+                                                                        <option value="Techcombank">
+                                                                        <option value="VietinBank">
+                                                                        <option value="BIDV">
+                                                                        <option value="ACB">
+                                                                        <option value="VPBank">
+                                                                        <option value="TPBank">
+                                                                        <option value="Sacombank">
+                                                                        <option value="VIB">
+                                                                        <option value="HDBank">
+                                                                        <option value="MSB">
+                                                                        <option value="Agribank">
+                                                                    </datalist>
                                                                 @else
                                                                     <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[#7D6B5D] text-[11.5px] leading-relaxed">
                                                                         <i class="fa-solid fa-circle-info text-amber-600 mr-1"></i>
                                                                         @if($isDirectCancel)
                                                                             Đơn hàng đang chờ nhân viên xác nhận và chưa thanh toán. Đơn sẽ được <strong>hủy ngay lập tức</strong> sau khi bạn xác nhận.
                                                                         @else
-                                                                            Đơn hàng đã được xác nhận. Yêu cầu hủy đơn sẽ được gửi đến nhân viên cửa hàng để xem xét.
+                                                                            Đơn hàng đang ở trạng thái <strong>Đang chuẩn bị hàng</strong>. Cửa hàng sẽ kiểm tra: nếu đơn <strong>chưa giao cho bên vận chuyển</strong> thì Shop sẽ chấp nhận hủy đơn cho bạn. Nếu hàng <strong>đã giao cho bên vận chuyển</strong>, Shop xin phép từ chối hủy.
                                                                         @endif
                                                                     </div>
                                                                 @endif
@@ -394,8 +441,16 @@
                                                                 </button>
                                                                 <button type="submit"
                                                                         class="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition flex items-center gap-2">
-                                                                    <i class="fa-solid {{ $isDirectCancel ? 'fa-ban' : 'fa-paper-plane' }} text-[10px]"></i>
-                                                                    <span>{{ $isDirectCancel ? 'Xác nhận hủy đơn ngay' : 'Gửi yêu cầu hủy' }}</span>
+                                                                    @if($isDirectCancel)
+                                                                        <i class="fa-solid fa-ban text-[10px]"></i>
+                                                                        <span>Xác nhận hủy đơn ngay</span>
+                                                                    @elseif($isPendingPaidDirectToAdmin)
+                                                                        <i class="fa-solid fa-shield-halved text-[10px]"></i>
+                                                                        <span>Gửi yêu cầu hủy & hoàn tiền lên Admin</span>
+                                                                    @else
+                                                                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                                                                        <span>Gửi yêu cầu hủy cho Shop</span>
+                                                                    @endif
                                                                 </button>
                                                             </div>
                                                         </form>

@@ -79,7 +79,10 @@ class OrderController extends Controller
             $stats[strtolower($status)] = $count;
         }
 
-        return view('admin.orders.index', compact('orders', 'stats', 'selectedCustomer'));
+        $pendingCancelRequestsCount = Order::where('cancel_request_status', 'PENDING')->count();
+        $needRefundCount = Order::where('order_status', 'CANCELLED')->where('payment_status', 'PAID')->count();
+
+        return view('admin.orders.index', compact('orders', 'stats', 'selectedCustomer', 'pendingCancelRequestsCount', 'needRefundCount'));
     }
 
     public function bulkUpdateStatus(Request $request)

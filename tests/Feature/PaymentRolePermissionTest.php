@@ -136,11 +136,43 @@ class PaymentRolePermissionTest extends TestCase
     }
 
     /**
+     * Đơn hàng COD (tiền mặt khi nhận hàng) KHÔNG ĐƯỢC phép xác nhận (+Bill) thủ công.
+     */
+    public function test_staff_cannot_manual_confirm_cod_payment()
+    {
+        Storage::fake('public');
+        $order = $this->createDummyOrder();
+        $payment = Payment::create([
+            'order_id' => $order->id,
+            'method' => 'COD',
+            'status' => 'PENDING',
+            'amount' => 230000,
+        ]);
+
+        $file = UploadedFile::fake()->image('bill_ck.jpg');
+        $response = $this->actingAs($this->staff)->post(route('staff.payments.manualConfirm', $payment->id), [
+            'reason' => 'Cố tình xác nhận đơn COD qua bill',
+            'proof_image' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+
+        $payment->refresh();
+        $this->assertEquals('PENDING', $payment->status);
+    }
+
+    /**
      * Quy định 3: Staff tạo yêu cầu hoàn tiền (Refund request)
      */
     public function test_staff_can_request_refund()
     {
         $order = $this->createDummyOrder();
+        $order->update([
+            'payment_status' => 'PAID',
+            'cancel_request_status' => 'PENDING',
+            'cancel_requested_at' => now(),
+        ]);
         $payment = Payment::create([
             'order_id' => $order->id,
             'method' => 'BANK_TRANSFER',
@@ -509,4 +541,61 @@ class PaymentRolePermissionTest extends TestCase
         $this->assertEquals('APPROVED', $refundReq->status);
         $this->assertEquals('REFUNDED', $order->payment_status);
     }
+
+    /**
+     * Nhân viên KHÔNG ĐƯỢC phép yêu cầu hoàn tiền cho đơn bình thường (không có yêu cầu hủy / không bị hủy)
+     * hoặc đơn PENDING chưa từng được xác nhận trước đó.
+     */
+    public function test_staff_cannot_request_refund_for_normal_or_unconfirmed_order()
+    {
+        // TH1: Đơn đang xử lý bình thường (PREPARING) nhưng khách không hề yêu cầu hủy
+        $order1 = $this->createDummyOrder();
+        $order1->update([
+            'order_status' => 'PREPARING',
+            'payment_status' => 'PAID',
+            'cancel_request_status' => 'NONE',
+        ]);
+        $payment1 = Payment::create([
+            'order_id' => $order1->id,
+            'method' => 'BANK_TRANSFER',
+            'status' => 'PAID',
+            'amount' => 230000,
+            'paid_at' => now(),
+        ]);
+
+        $this->assertFalse($order1->canStaffRequestRefund());
+
+        $response1 = $this->actingAs($this->staff)->post(route('staff.payments.requestRefund', $payment1->id), [
+            'amount' => 230000,
+            'reason' => 'Cố tình hoàn tiền đơn bình thường',
+        ]);
+        $response1->assertRedirect();
+        $response1->assertSessionHas('error');
+
+        // TH2: Đơn PENDING (chưa xác nhận) dù khách yêu cầu hủy cũng không do nhân viên gửi refund (Admin xử lý trực tiếp)
+        $order2 = $this->createDummyOrder();
+        $order2->update([
+            'order_status' => 'PENDING',
+            'payment_status' => 'PAID',
+            'confirmed_at' => null,
+            'cancel_request_status' => 'PENDING',
+        ]);
+        $payment2 = Payment::create([
+            'order_id' => $order2->id,
+            'method' => 'BANK_TRANSFER',
+            'status' => 'PAID',
+            'amount' => 230000,
+            'paid_at' => now(),
+        ]);
+
+        $this->assertFalse($order2->canStaffRequestRefund());
+
+        $response2 = $this->actingAs($this->staff)->post(route('staff.payments.requestRefund', $payment2->id), [
+            'amount' => 230000,
+            'reason' => 'Nhân viên gửi refund đơn PENDING',
+        ]);
+        $response2->assertRedirect();
+        $response2->assertSessionHas('error');
+    }
 }
+

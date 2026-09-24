@@ -144,8 +144,14 @@
                             💳
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm sm:text-base text-[#4E342E]">Đơn hàng đang chờ thanh toán</h4>
+                            <h4 class="font-bold text-sm sm:text-base text-[#4E342E]">Đơn hàng chưa hoàn tất thanh toán</h4>
                             <p class="text-xs text-[#795548] mt-0.5">Số tiền cần thanh toán: <strong class="text-[#C45E1B] font-bold">{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong></p>
+                            @if($order->paymentExpiresAt())
+                                <p class="text-[11px] text-amber-800 font-medium mt-1 flex items-center gap-1.5">
+                                    <i class="fa-regular fa-clock text-amber-600"></i>
+                                    <span>Hạn thanh toán: <strong>{{ $order->paymentExpiresAt()->format('H:i - d/m/Y') }}</strong> (tự động hủy sau 24h đặt hàng)</span>
+                                </p>
+                            @endif
                         </div>
                     </div>
                     <div class="shrink-0 w-full sm:w-auto">

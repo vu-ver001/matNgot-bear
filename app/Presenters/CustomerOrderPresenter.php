@@ -111,7 +111,7 @@ class CustomerOrderPresenter
             $deliveryStatus = 'Đang xử lý yêu cầu Trả hàng / Hoàn tiền từ bạn';
         } elseif ($isWaitingConfirmation) {
             $statusLabel = 'Chờ bạn xác nhận';
-            $deliveryStatus = 'Kiện hàng đã giao thành công. Vui lòng kiểm tra và xác nhận "Đã nhận được hàng".';
+            $deliveryStatus = 'Kiện hàng đã giao thành công. Vui lòng xác nhận "Đã nhận được hàng"';
         } elseif ($order->order_status === 'COMPLETED' && $order->isCustomerConfirmed()) {
             $statusLabel = 'Hoàn thành';
             $deliveryStatus = 'Đơn hàng đã giao thành công và hoàn tất.';
