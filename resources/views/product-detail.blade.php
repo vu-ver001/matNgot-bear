@@ -627,6 +627,8 @@
                                 @if($relDiscountPct > 0)
                                     <span class="card-badge-sale">-{{ $relDiscountPct }}%</span>
                                 @endif
+                            @elseif($rel->is_hot)
+                                <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
                             @endif
                             <button type="button" class="btn-wishlist-card" data-product-id="{{ $rel->id }}" onclick="toggleWishlist({ id: {{ $rel->id }}, name: '{{ addslashes($rel->name) }}', price: {{ $relRegularPrice }}, sale_price: {{ ($relSalePrice !== null) ? (float)$relSalePrice : 'null' }}, image_url: '{{ $relImgUrl }}' }, event)" title="Lưu vào yêu thích">
                                 <i class="fa-regular fa-heart"></i>
@@ -645,14 +647,37 @@
                             <div>
                                 <div class="product-card-prices">
                                     @if($relSale)
-                                        <span class="price-current">{{ number_format($relSalePrice, 0, ',', '.') }} đ</span>
+                                        <span class="price-current" style="color: #D32F2F; font-weight: 800;">{{ number_format($relSalePrice, 0, ',', '.') }} đ</span>
                                         <span class="price-old">{{ number_format($relRegularPrice, 0, ',', '.') }} đ</span>
                                     @else
                                         <span class="price-current" style="color: var(--primary-dark);">{{ number_format($relRegularPrice, 0, ',', '.') }} đ</span>
                                     @endif
                                 </div>
                                 <div class="product-card-footer">
-                                    <span><i class="fa-solid fa-ruler"></i> {{ $rel->size ?? 'Free size' }}</span>
+                                    <div class="product-card-meta">
+                                        @if(($rel->reviews_count ?? 0) > 0)
+                                            <span class="rating-badge-pill" title="Đánh giá {{ number_format($rel->avg_rating, 1) }} sao">
+                                                <i class="fa-solid fa-star"></i> {{ number_format($rel->avg_rating, 1) }}
+                                            </span>
+                                        @else
+                                            <span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                                                <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                                            </span>
+                                        @endif
+                                        <span class="sold-count-text">Đã bán {{ $rel->sold_count ?? 0 }}</span>
+                                    </div>
+                                    @php
+                                        $relStock = $rel->variants->isNotEmpty() ? $rel->variants->sum('stock_quantity') : ($rel->stock_quantity ?? 0);
+                                    @endphp
+                                    @if($relStock > 0)
+                                        <button type="button" class="btn-add-cart-quick" onclick="addToCart({{ $rel->id }}, '{{ addslashes($rel->name) }}')" title="Thêm vào giỏ hàng">
+                                            <i class="fa-solid fa-plus"></i>
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </div>

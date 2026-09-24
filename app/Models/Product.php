@@ -46,6 +46,7 @@ class Product extends Model
         'available_colors',
         'has_pending_orders',
         'has_been_ordered',
+        'is_hot',
     ];
 
     /**
@@ -103,6 +104,29 @@ class Product extends Model
         }
         $avg = $this->reviews()->where('is_hidden', false)->avg('rating');
         return $avg ? round((float) $avg, 1) : 5.0;
+    }
+
+    /**
+     * Xác định sản phẩm có nằm trong Top 10 sản phẩm bán chạy nhất hệ thống (và sold_count > 0).
+     */
+    public function getIsHotAttribute(): bool
+    {
+        if ((int)($this->sold_count ?? 0) <= 0) {
+            return false;
+        }
+
+        static $top10ProductIds = null;
+        if ($top10ProductIds === null) {
+            $top10ProductIds = static::where('status', 'ACTIVE')
+                ->where('sold_count', '>', 0)
+                ->orderByDesc('sold_count')
+                ->orderByDesc('id')
+                ->limit(10)
+                ->pluck('id')
+                ->toArray();
+        }
+
+        return in_array($this->id, $top10ProductIds, true);
     }
 
     public function getAvailableSizesAttribute(): array
