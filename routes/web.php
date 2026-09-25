@@ -62,8 +62,8 @@ if (app()->environment(['local', 'testing'])) {
         if (! $user) {
             // Fallback: Tạo user demo nếu chưa có
             $defaults = [
-                'ADMIN' => ['email' => 'admin@matngotbear.com', 'name' => 'Quản Trị Viên (Admin)'],
-                'STAFF' => ['email' => 'staff1@matngotbear.com', 'name' => 'Nhân Viên CSKH (Staff)'],
+                'ADMIN' => ['email' => 'admin@matngotbear.com', 'name' => 'Quản Trị Viên'],
+                'STAFF' => ['email' => 'staff1@matngotbear.com', 'name' => 'Nhân Viên CSKH'],
                 'CUSTOMER' => ['email' => 'customer@matngot.com', 'name' => 'Nguyễn Văn Khách'],
             ];
             $def = $defaults[$roleEnum] ?? $defaults['CUSTOMER'];

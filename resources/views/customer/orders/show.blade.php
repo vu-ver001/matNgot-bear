@@ -900,21 +900,21 @@
 
                     <ol class="relative border-l-2 border-amber-200 ml-3 space-y-5 my-2">
                         @forelse ($order->statusHistories->sortBy('changed_at') as $history)
+                            @php
+                                $displayTitle = $history->display_title;
+                                $isCancelEvent = str_contains($displayTitle, 'hủy') || str_contains($displayTitle, 'huỷ');
+                                $isRejectEvent = str_contains($displayTitle, 'Từ chối');
+                            @endphp
                             <li class="ml-5">
-                                <span class="absolute flex items-center justify-center w-5 h-5 rounded-full -left-2.5 ring-4 ring-white {{ $loop->last ? 'bg-amber-500 text-white' : 'bg-amber-200 text-amber-800' }}">
-                                    <i class="fa-solid fa-check text-[9px]"></i>
+                                <span class="absolute flex items-center justify-center w-5 h-5 rounded-full -left-2.5 ring-4 ring-white 
+                                    @if($isRejectEvent) bg-rose-100 text-rose-700
+                                    @elseif($isCancelEvent) bg-amber-100 text-amber-800
+                                    @elseif($loop->last) bg-amber-500 text-white
+                                    @else bg-amber-200 text-amber-800 @endif">
+                                    <i class="fa-solid {{ $history->display_icon }}"></i>
                                 </span>
                                 <div class="text-xs font-extrabold text-[#4E342E]">
-                                    {{ $history->to_status ? match ($history->to_status) {
-                                        'PENDING' => 'Đơn hàng được tạo',
-                                        'CONFIRMED' => 'Đang chuẩn bị hàng',
-                                        'PREPARING' => 'Đang chuẩn bị hàng',
-                                        'SHIPPING' => 'Đang giao hàng',
-                                        'COMPLETED' => 'Đã giao thành công',
-                                        'CANCELLED' => 'Đơn hàng đã hủy',
-                                        'RETURNED' => 'Đã trả hàng / hoàn tiền',
-                                        default => $history->to_status,
-                                    } : '' }}
+                                    {{ $displayTitle }}
                                 </div>
                                 <div class="text-[11px] text-[#8E8076] mt-0.5">
                                     {{ $history->changed_at->format('d/m/Y H:i') }}
