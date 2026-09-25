@@ -714,7 +714,7 @@ class OrderManagementTest extends TestCase
         $this->assertDatabaseHas('order_status_histories', [
             'order_id' => $order->id,
             'to_status' => 'SHIPPING',
-            'note' => 'Shop bắt đầu giao hàng thủ công.',
+            'note' => 'Shop bắt đầu giao hàng.',
         ]);
     }
 
@@ -931,4 +931,3 @@ class OrderManagementTest extends TestCase
         $this->assertContains('PREPARING', $codOrder->allowedNextStatuses());
     }
 }
-

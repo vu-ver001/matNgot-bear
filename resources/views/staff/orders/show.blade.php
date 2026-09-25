@@ -805,6 +805,9 @@
                                         </span>
                                     </td>
                                     <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
+                                    <td>
+                                        <x-payment-status-badge :status="$payment->status" :method="$payment->method" />
+                                    </td>
                                     <td class="text-xs text-[#795548] font-mono">
                                         @if ($payment->status === 'PAID' && $payment->transaction_ref)
                                             {{ $payment->transaction_ref }}
@@ -821,7 +824,7 @@
                                     </td>
                                     <td class="text-right">
                                         @if ($payment->method === 'COD')
-                                            <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/60 inline-block">
+                                            <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-0.5 py-1 rounded-lg border border-amber-200/60 inline-block">
                                                 Thu khi giao hàng
                                             </span>
                                         @elseif ($payment->status === 'PENDING')
@@ -867,7 +870,7 @@
                 @if (in_array($order->order_status, ['CANCELLED', 'RETURNED']))
                     <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl text-xs text-[#795548]">
                         <i class="fa-solid fa-lock text-gray-500 mr-1"></i>
-                        Đơn hàng đã kết thúc ở trạng thái <strong>{{ $order->order_status }}</strong>, không thể cập nhật thêm.
+                        Đơn hàng đã kết thúc ở trạng thái <strong>{{ \App\Models\OrderStatusHistory::statusLabel($order->order_status) }}</strong>, không thể cập nhật thêm.
                     </div>
                 @else
                     @if ($order->payment_status === 'FAILED')
@@ -935,12 +938,21 @@
 
                 <ol class="relative border-l-2 border-amber-200 ml-3 space-y-5 my-2">
                     @forelse ($order->statusHistories->sortBy('changed_at') as $history)
+                        @php
+                            $displayTitle = $history->display_title;
+                            $isCancelEvent = str_contains($displayTitle, 'hủy') || str_contains($displayTitle, 'huỷ');
+                            $isRejectEvent = str_contains($displayTitle, 'Từ chối');
+                        @endphp
                         <li class="ml-5">
-                            <span class="absolute flex items-center justify-center w-5 h-5 rounded-full -left-2.5 ring-4 ring-white {{ $loop->last ? 'bg-amber-500 text-white' : 'bg-amber-200 text-amber-800' }}">
-                                <i class="fa-solid fa-check text-[9px]"></i>
+                            <span class="absolute flex items-center justify-center w-5 h-5 rounded-full -left-2.5 ring-4 ring-white 
+                                @if($isRejectEvent) bg-rose-100 text-rose-700
+                                @elseif($isCancelEvent) bg-amber-100 text-amber-800
+                                @elseif($loop->last) bg-amber-500 text-white
+                                @else bg-amber-200 text-amber-800 @endif">
+                                <i class="fa-solid {{ $history->display_icon }}"></i>
                             </span>
                             <div class="text-xs font-extrabold text-[#4E342E]">
-                                {{ $history->from_status ? "{$history->from_status} → " : '' }}{{ $history->to_status }}
+                                <span>{{ $displayTitle }}</span>
                             </div>
                             <div class="text-[11px] text-[#8E8076] mt-0.5">
                                 {{ $history->changed_at->format('d/m/Y H:i') }}

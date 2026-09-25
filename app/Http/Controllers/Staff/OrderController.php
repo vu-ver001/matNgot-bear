@@ -91,7 +91,7 @@ class OrderController extends Controller
                 $validated['order_ids'],
                 $targetStatus,
                 $changedBy,
-                'Cập nhật trạng thái hàng loạt bởi ' . (auth()->user()->full_name ?? auth()->user()->name ?? 'Nhân viên')
+                'Cập nhật trạng thái hàng loạt bởi '.(auth()->user()->full_name ?? auth()->user()->name ?? 'Nhân viên')
             );
 
             $statusLabels = [
@@ -107,12 +107,13 @@ class OrderController extends Controller
                 if ($result['skipped'] > 0) {
                     $msg .= " (Bỏ qua {$result['skipped']} đơn do trạng thái không phù hợp).";
                 }
+
                 return redirect()->back()->with('success', $msg);
             }
 
             return redirect()->back()->with('error', "Không có đơn hàng nào hợp lệ để chuyển sang trạng thái '{$label}'.");
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Lỗi khi thao tác hàng loạt: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Lỗi khi thao tác hàng loạt: '.$e->getMessage());
         }
     }
 
@@ -149,7 +150,7 @@ class OrderController extends Controller
                 $validated['order_status'],
                 auth()->id(),
                 $validated['cancel_reason'] ?? match ($validated['order_status']) {
-                    'SHIPPING' => 'Shop bắt đầu giao hàng thủ công.',
+                    'SHIPPING' => 'Shop bắt đầu giao hàng.',
                     'COMPLETED' => 'Shop xác nhận đã giao hàng thành công.',
                     default => null,
                 },
