@@ -210,7 +210,7 @@ class ProductPublicController extends Controller
             'price_asc'   => $query->orderByRaw("({$effectivePriceSql}) ASC"),
             'price_desc'  => $query->orderByRaw("({$effectivePriceSql}) DESC"),
             'best_seller' => $query->orderByDesc('sold_count'),
-            default       => $query->orderByDesc('created_at'),
+            default       => $query->orderByDesc('created_at')->orderByDesc('id'),
         };
 
 

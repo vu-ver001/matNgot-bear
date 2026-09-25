@@ -45,6 +45,7 @@ class ProductController extends Controller
             ->withAvg(['reviews as avg_rating' => fn($q) => $q->where('is_hidden', false)], 'rating')
             ->withCount(['reviews' => fn($q) => $q->where('is_hidden', false)])
             ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->take(8)
             ->get();
 

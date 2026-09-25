@@ -185,16 +185,33 @@
                 </div>
             </div>
 
-            <!-- Thumbnails -->
-            <div class="gallery-thumbs-row">
-                @foreach($galleryList as $index => $gUrl)
-                    <div class="gallery-thumb-item {{ ($gUrl === $initialImg || ($index === 0 && empty($initialImg))) ? 'active' : '' }}" 
-                         data-img-url="{{ $gUrl }}" 
-                         onclick="switchMainImage('{{ $gUrl }}', this);"
-                         title="Bấm để xem chi tiết ảnh">
-                        <img src="{{ $gUrl }}" alt="Thumbnail {{ $index + 1 }}" onerror="this.src='https://placehold.co/100x100?text=Gau'">
-                    </div>
-                @endforeach
+            <!-- Thumbnails Slider (Hiển thị nút < > khi có trên 6 ảnh) -->
+            @php
+                $hasThumbsSlider = $galleryList->count() > 6;
+            @endphp
+            <div class="gallery-thumbs-slider-wrap {{ $hasThumbsSlider ? 'has-slider' : '' }}">
+                @if($hasThumbsSlider)
+                    <button type="button" class="gallery-thumb-nav-btn prev" id="thumbNavPrev" onclick="slideThumbnails(-1)" aria-label="Xem ảnh trước" title="Xem ảnh trước">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                @endif
+
+                <div class="gallery-thumbs-row" id="galleryThumbsTrack">
+                    @foreach($galleryList as $index => $gUrl)
+                        <div class="gallery-thumb-item {{ ($gUrl === $initialImg || ($index === 0 && empty($initialImg))) ? 'active' : '' }}" 
+                             data-img-url="{{ $gUrl }}" 
+                             onclick="switchMainImage('{{ $gUrl }}', this);"
+                             title="Bấm để xem chi tiết ảnh">
+                            <img src="{{ $gUrl }}" alt="Thumbnail {{ $index + 1 }}" onerror="this.src='https://placehold.co/100x100?text=Gau'">
+                        </div>
+                    @endforeach
+                </div>
+
+                @if($hasThumbsSlider)
+                    <button type="button" class="gallery-thumb-nav-btn next" id="thumbNavNext" onclick="slideThumbnails(1)" aria-label="Xem ảnh tiếp theo" title="Xem ảnh tiếp theo">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                @endif
             </div>
         </div>
 
@@ -870,13 +887,45 @@
         }
     });
 
+    function slideThumbnails(dir) {
+        const track = document.getElementById('galleryThumbsTrack');
+        if (!track) return;
+        const firstItem = track.querySelector('.gallery-thumb-item');
+        const itemWidth = firstItem ? firstItem.getBoundingClientRect().width : (track.clientWidth / 6);
+        const gap = 8;
+        const scrollStep = (itemWidth + gap) * 3;
+        track.scrollBy({ left: dir * scrollStep, behavior: 'smooth' });
+        setTimeout(updateThumbNavButtons, 350);
+    }
+
+    function updateThumbNavButtons() {
+        const track = document.getElementById('galleryThumbsTrack');
+        const prevBtn = document.getElementById('thumbNavPrev');
+        const nextBtn = document.getElementById('thumbNavNext');
+        if (!track || !prevBtn || !nextBtn) return;
+
+        const maxScrollLeft = track.scrollWidth - track.clientWidth;
+        if (maxScrollLeft <= 2) {
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+            return;
+        }
+
+        prevBtn.disabled = track.scrollLeft <= 4;
+        nextBtn.disabled = track.scrollLeft >= maxScrollLeft - 4;
+    }
+
     function switchMainImage(url, thumbEl) {
         if (!url) return;
         const mainImg = document.getElementById('main-preview-img');
         if (mainImg) mainImg.src = url;
         activeImageUrl = url;
         document.querySelectorAll('.gallery-thumb-item').forEach(el => el.classList.remove('active'));
-        if (thumbEl) thumbEl.classList.add('active');
+        if (thumbEl) {
+            thumbEl.classList.add('active');
+            thumbEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        }
+        setTimeout(updateThumbNavButtons, 300);
     }
 
     function syncGalleryThumbnail(url) {
@@ -905,6 +954,7 @@
 
         if (matchedThumb) {
             matchedThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            setTimeout(updateThumbNavButtons, 300);
         }
     }
 
@@ -1720,6 +1770,13 @@
     document.addEventListener('DOMContentLoaded', () => {
         updateVariantOptionsState('color');
         matchVariantAndUpdate();
+
+        const thumbsTrack = document.getElementById('galleryThumbsTrack');
+        if (thumbsTrack) {
+            thumbsTrack.addEventListener('scroll', updateThumbNavButtons, { passive: true });
+            setTimeout(updateThumbNavButtons, 250);
+        }
+        window.addEventListener('resize', updateThumbNavButtons);
     });
 </script>
 
