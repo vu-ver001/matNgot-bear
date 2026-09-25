@@ -79,7 +79,10 @@ class OrderController extends Controller
             $stats[strtolower($status)] = $count;
         }
 
-        return view('admin.orders.index', compact('orders', 'stats', 'selectedCustomer'));
+        $pendingCancelRequestsCount = Order::where('cancel_request_status', 'PENDING')->count();
+        $needRefundCount = Order::where('order_status', 'CANCELLED')->where('payment_status', 'PAID')->count();
+
+        return view('admin.orders.index', compact('orders', 'stats', 'selectedCustomer', 'pendingCancelRequestsCount', 'needRefundCount'));
     }
 
     public function bulkUpdateStatus(Request $request)
@@ -153,7 +156,7 @@ class OrderController extends Controller
                 $validated['order_status'],
                 auth()->id(),
                 $validated['cancel_reason'] ?? match ($validated['order_status']) {
-                    'SHIPPING' => 'Shop bắt đầu giao hàng thủ công.',
+                    'SHIPPING' => 'Shop bắt đầu giao hàng.',
                     'COMPLETED' => 'Shop xác nhận đã giao hàng thành công.',
                     default => null,
                 },

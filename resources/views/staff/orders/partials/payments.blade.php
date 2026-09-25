@@ -31,7 +31,7 @@
                                 </td>
                                 <td data-label="Xử lý" class="text-right">
                                     @if ($payment->method === 'COD')
-                                        <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/60 inline-block">
+                                        <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-0.5 py-1 rounded-lg border border-amber-200/60 inline-block">
                                             Thu khi giao hàng
                                         </span>
                                     @elseif ($payment->status === 'PENDING')

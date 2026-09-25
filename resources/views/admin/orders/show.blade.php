@@ -137,7 +137,7 @@
             <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openApproveModal = false"></div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-rose-200" @click.stop>
+                <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-rose-200" @click.stop>
                     <form method="POST" action="{{ route('admin.orders.approve_cancel', $order) }}">
                         @csrf
                         <div class="p-6 sm:p-7">
@@ -158,16 +158,89 @@
                                 </div>
 
                                 @if($order->payment_status === 'PAID')
-                                    <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-300 space-y-1.5">
-                                        <div class="font-bold text-amber-900 flex items-center gap-1.5 text-xs">
-                                            <i class="fa-solid fa-hand-holding-dollar text-amber-600"></i>
-                                            <span>LƯU Ý ĐƠN HÀNG ĐÃ THANH TOÁN</span>
+                                    @if($order->refund_bank_account && $order->refund_bank_name)
+                                        {{-- Khối quét mã QR hoàn tiền chuyển khoản --}}
+                                        <div class="p-4 bg-gradient-to-br from-amber-50/90 to-orange-50/50 rounded-2xl border-2 border-amber-300 shadow-sm space-y-3">
+                                            <div class="flex items-center justify-between gap-2 pb-2 border-b border-amber-200">
+                                                <div class="font-extrabold text-amber-950 flex items-center gap-2 text-xs sm:text-sm">
+                                                    <i class="fa-solid fa-qrcode text-amber-600 text-base"></i>
+                                                    <span>QUÉT MÃ VIETQR HOÀN TIỀN CHO KHÁCH</span>
+                                                </div>
+                                                <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-[11px]">Napas 24/7</span>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-center">
+                                                {{-- Cột QR Code --}}
+                                                <div class="sm:col-span-5 flex flex-col items-center justify-center p-2.5 bg-white rounded-xl border border-amber-200 shadow-xs">
+                                                    <img src="{{ $order->refund_viet_qr_url }}" 
+                                                         alt="VietQR Hoàn tiền" 
+                                                         class="w-36 h-36 object-contain rounded-lg shadow-2xs"
+                                                         onerror="this.src='https://placehold.co/150x150/fff7ed/ea580c?text=QR+Loi'">
+                                                    <div class="text-[10.5px] font-bold text-[#8C4A19] mt-1.5 flex items-center gap-1 text-center">
+                                                        <i class="fa-solid fa-camera text-xs"></i>
+                                                        <span>Quét bằng App Ngân hàng</span>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Cột Thông tin chuyển khoản --}}
+                                                <div class="sm:col-span-7 space-y-2 text-xs">
+                                                    <div class="flex justify-between items-center py-1 border-b border-amber-200/60">
+                                                        <span class="text-[#7D6B5D]">Số tiền hoàn:</span>
+                                                        <span class="font-black text-rose-600 text-base">{{ number_format($order->total_amount, 0, ',', '.') }} đ</span>
+                                                    </div>
+                                                    <div class="flex justify-between items-center py-1 border-b border-amber-200/60">
+                                                        <span class="text-[#7D6B5D]">Ngân hàng:</span>
+                                                        <strong class="text-[#2B1810] font-bold">{{ $order->refund_bank_name }}</strong>
+                                                    </div>
+                                                    <div class="flex justify-between items-center py-1 border-b border-amber-200/60">
+                                                        <span class="text-[#7D6B5D]">Số tài khoản:</span>
+                                                        <div class="flex items-center gap-1.5">
+                                                            <strong class="font-mono text-amber-900 font-bold text-sm">{{ $order->refund_bank_account }}</strong>
+                                                            <button type="button" 
+                                                                    onclick="navigator.clipboard.writeText('{{ $order->refund_bank_account }}'); alert('Đã sao chép số tài khoản: {{ $order->refund_bank_account }}');"
+                                                                    class="text-[#E08A1E] hover:text-[#B87309] text-xs cursor-pointer p-0.5" title="Sao chép STK">
+                                                                <i class="fa-regular fa-copy"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex justify-between items-center py-1 border-b border-amber-200/60">
+                                                        <span class="text-[#7D6B5D]">Chủ tài khoản:</span>
+                                                        <strong class="text-[#2B1810] uppercase font-bold">{{ $order->refund_account_holder ?: '—' }}</strong>
+                                                    </div>
+                                                    <div class="flex justify-between items-center py-1">
+                                                        <span class="text-[#7D6B5D]">Nội dung CK:</span>
+                                                        <strong class="text-[#2B1810] font-mono text-[11px]">Hoan tien don {{ $order->order_code }}</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="pt-2 text-[11px] text-amber-900 leading-relaxed bg-white/70 p-2.5 rounded-lg border border-amber-200/60">
+                                                👉 <strong>Hướng dẫn:</strong> Quét mã QR trên app ngân hàng để chuyển trả lại <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong> cho khách, sau đó bấm <strong>"Xác nhận duyệt hủy"</strong> bên dưới.
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Ghi chú hoàn tiền (Mã GD / Tham chiếu)</label>
+                                                <input type="text" name="refund_note" placeholder="Ví dụ: Đã chuyển khoản qua App MB lúc {{ now()->format('H:i') }}..."
+                                                       class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500 bg-white">
+                                            </div>
                                         </div>
-                                        <p class="text-[#786B61] leading-relaxed">
-                                            Số tiền cần hoàn: <strong class="text-amber-800 text-sm font-extrabold">{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>.
-                                            Vui lòng liên hệ SĐT <strong>{{ $order->recipient_phone }}</strong> để lấy STK chuyển trả tiền cho khách.
-                                        </p>
-                                    </div>
+                                    @else
+                                        <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-300 space-y-1.5">
+                                            <div class="font-bold text-amber-900 flex items-center gap-1.5 text-xs">
+                                                <i class="fa-solid fa-hand-holding-dollar text-amber-600"></i>
+                                                <span>LƯU Ý ĐƠN HÀNG ĐÃ THANH TOÁN</span>
+                                            </div>
+                                            <p class="text-[#786B61] leading-relaxed">
+                                                Số tiền cần hoàn: <strong class="text-amber-800 text-sm font-extrabold">{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>.
+                                                Khách hàng chưa điền sẵn STK trong yêu cầu, vui lòng liên hệ SĐT <strong>{{ $order->recipient_phone }}</strong> để lấy STK chuyển trả tiền cho khách.
+                                            </p>
+                                            <div class="mt-2">
+                                                <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Ghi chú hoàn tiền</label>
+                                                <input type="text" name="refund_note" placeholder="Nhập ghi chú chuyển tiền hoàn..."
+                                                       class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500 bg-white">
+                                            </div>
+                                        </div>
+                                    @endif
                                 @else
                                     <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-[#786B61]">
                                         Sau khi chấp nhận, đơn hàng sẽ chuyển sang trạng thái <strong>Đã hủy</strong> và toàn bộ sản phẩm sẽ được tự động hoàn lại vào kho.
@@ -578,12 +651,26 @@
                                         </span>
                                     </td>
                                     <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
-                                    <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
-                                    <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>
-                                    <td class="text-xs text-[#8E8076]">{{ $payment->paid_at?->format('d/m/Y H:i') ?? $payment->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <x-payment-status-badge :status="$payment->status" :method="$payment->method" />
+                                    </td>
+                                    <td class="text-xs text-[#795548] font-mono">
+                                        @if ($payment->status === 'PAID' && $payment->transaction_ref)
+                                            {{ $payment->transaction_ref }}
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-xs">
+                                        @if ($payment->paid_at)
+                                            <span class="font-medium text-[#4E342E]">{{ $payment->paid_at->format('d/m/Y H:i') }}</span>
+                                        @else
+                                            <span class="text-gray-400 italic">Chưa thanh toán</span>
+                                        @endif
+                                    </td>
                                     <td class="text-right">
                                         @if ($payment->method === 'COD')
-                                            <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/60 inline-block">
+                                            <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-0.5 py-1 rounded-lg border border-amber-200/60 inline-block">
                                                 Thu khi giao hàng
                                             </span>
                                         @elseif ($payment->status === 'PENDING')
@@ -629,9 +716,26 @@
                 @if (in_array($order->order_status, ['CANCELLED', 'RETURNED']))
                     <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl text-xs text-[#795548]">
                         <i class="fa-solid fa-lock text-gray-500 mr-1"></i>
-                        Đơn hàng đã kết thúc ở trạng thái <strong>{{ $order->order_status }}</strong>, không thể cập nhật thêm.
+                        Đơn hàng đã kết thúc ở trạng thái <strong>{{ \App\Models\OrderStatusHistory::statusLabel($order->order_status) }}</strong>, không thể cập nhật thêm.
                     </div>
                 @else
+                    @if ($order->payment_status === 'FAILED')
+                        <div class="mb-4 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-xmark text-rose-600 text-sm mt-0.5 shrink-0"></i>
+                            <div>
+                                <strong class="font-bold">Đơn hàng thanh toán thất bại:</strong>
+                                <p class="text-stone-600 mt-0.5">Giao dịch thanh toán trực tuyến của đơn hàng này không thành công. Nhân viên/admin không được phép xác nhận đơn hàng này.</p>
+                            </div>
+                        </div>
+                    @elseif ($order->payment_method !== 'COD' && $order->payment_status !== 'PAID')
+                        <div class="mb-4 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+                            <i class="fa-solid fa-clock text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                            <div>
+                                <strong class="font-bold">Đơn hàng chưa thanh toán:</strong>
+                                <p class="text-stone-600 mt-0.5">Khách hàng chọn thanh toán trực tuyến nhưng chưa hoàn tất thanh toán. Chỉ có thể xác nhận đơn sau khi thanh toán thành công.</p>
+                            </div>
+                        </div>
+                    @endif
                     <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" x-data="{ status: '' }">
                         @csrf
                         @method('PATCH')
@@ -639,7 +743,7 @@
                             <label class="block text-xs font-bold text-[#795548] uppercase mb-1.5">Chuyển sang trạng thái:</label>
                             <select name="order_status" x-model="status" class="select-control" required>
                                 <option value="" disabled>Chọn trạng thái mới</option>
-                                @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Đang giao hàng', 'COMPLETED' => 'Đã giao thành công', 'RETURNED' => 'Trả hàng / Hoàn tiền', 'CANCELLED' => 'Hủy đơn hàng'] as $value => $label)
+                                @foreach (['PENDING' => 'Chờ xác nhận', 'PREPARING' => 'Đang chuẩn bị', 'SHIPPING' => 'Đang giao hàng', 'COMPLETED' => 'Đã giao', 'RETURNED' => 'Trả hàng / Hoàn tiền', 'CANCELLED' => 'Hủy đơn hàng'] as $value => $label)
                                     @if (in_array($value, $order->allowedNextStatuses(), true))
                                         <option value="{{ $value }}">{{ $label }}</option>
                                     @endif
@@ -680,12 +784,21 @@
 
                 <ol class="relative border-l-2 border-amber-200 ml-3 space-y-5 my-2">
                     @forelse ($order->statusHistories->sortBy('changed_at') as $history)
+                        @php
+                            $displayTitle = $history->display_title;
+                            $isCancelEvent = str_contains($displayTitle, 'hủy') || str_contains($displayTitle, 'huỷ');
+                            $isRejectEvent = str_contains($displayTitle, 'Từ chối');
+                        @endphp
                         <li class="ml-5">
-                            <span class="absolute flex items-center justify-center w-5 h-5 rounded-full -left-2.5 ring-4 ring-white {{ $loop->last ? 'bg-amber-500 text-white' : 'bg-amber-200 text-amber-800' }}">
-                                <i class="fa-solid fa-check text-[9px]"></i>
+                            <span class="absolute flex items-center justify-center w-5 h-5 rounded-full -left-2.5 ring-4 ring-white 
+                                @if($isRejectEvent) bg-rose-100 text-rose-700
+                                @elseif($isCancelEvent) bg-amber-100 text-amber-800
+                                @elseif($loop->last) bg-amber-500 text-white
+                                @else bg-amber-200 text-amber-800 @endif">
+                                <i class="fa-solid {{ $history->display_icon }}"></i>
                             </span>
                             <div class="text-xs font-extrabold text-[#4E342E]">
-                                {{ $history->from_status ? "{$history->from_status} → " : '' }}{{ $history->to_status }}
+                                <span>{{ $displayTitle }}</span>
                             </div>
                             <div class="text-[11px] text-[#8E8076] mt-0.5">
                                 {{ $history->changed_at->format('d/m/Y H:i') }}

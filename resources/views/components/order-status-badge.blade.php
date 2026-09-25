@@ -29,10 +29,10 @@
 
     $labels = [
         'PENDING' => 'Chờ xác nhận',
-        'CONFIRMED' => 'Đã xác nhận',
-        'PREPARING' => 'Đang đóng gói',
+        'CONFIRMED' => 'Đang chuẩn bị',
+        'PREPARING' => 'Đang chuẩn bị',
         'SHIPPING' => 'Đang giao hàng',
-        'COMPLETED' => 'Hoàn thành',
+        'COMPLETED' => 'Đã giao',
         'CANCELLED' => 'Đã hủy',
         'RETURNED' => 'Trả hàng',
     ];

@@ -4,7 +4,7 @@
     $isCodPending = ($method === 'COD' && $status === 'PENDING');
 
     $colors = [
-        'UNPAID' => 'bg-gray-100 text-gray-700',
+        'UNPAID' => 'bg-amber-100 text-amber-800 border border-amber-200',
         'PENDING' => $isCodPending ? 'bg-amber-100 text-amber-800' : 'bg-yellow-100 text-yellow-800',
         'PAID' => 'bg-green-100 text-green-800',
         'FAILED' => 'bg-red-100 text-red-800',
@@ -14,7 +14,7 @@
     $failedLabel = ($orderStatus && $orderStatus !== 'CANCELLED') ? 'Thất bại' : 'Đã hủy';
 
     $labels = [
-        'UNPAID' => 'Chưa thanh toán',
+        'UNPAID' => 'Chờ thanh toán',
         'PENDING' => $isCodPending ? 'Thu tiền khi giao hàng (COD)' : 'Chờ xác nhận',
         'PAID' => 'Đã thanh toán',
         'FAILED' => $failedLabel,

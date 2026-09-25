@@ -66,7 +66,7 @@
                     {{ $order->order_status === 'COMPLETED' ? 'Đơn hàng đã được giao thành công đến bạn' : 'Đơn hàng đang trên đường giao đến bạn' }}
                 </h4>
                 <p class="text-xs sm:text-sm text-[#2D6A4F] mt-0.5">
-                    Quý khách vui lòng kiểm tra kiện hàng và bấm xác nhận khi đã nhận được hàng đầy đủ!
+                    Quý khách vui lòng kiểm tra kiện hàng và bấm xác nhận khi đã nhận được hàng đầy đủ (Hệ thống sẽ tự động xác nhận Đã nhận hàng sau 7 ngày).
                 </p>
             </div>
         </div>
@@ -94,7 +94,7 @@
                 <button type="button" @click="openReturnModal = true"
                         class="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 font-bold text-xs sm:text-sm rounded-xl border border-rose-200 hover:border-rose-300 shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-arrow-rotate-left text-rose-500"></i>
-                    <span>TRẢ HÀNG / HOÀN TIỀN</span>
+                    <span>HOÀN HÀNG / ĐỔI TRẢ</span>
                 </button>
                 @include('customer.orders.partials.return-request-modal', ['order' => $order])
             @endif

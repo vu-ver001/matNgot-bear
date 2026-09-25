@@ -663,6 +663,26 @@ table.data-table tbody tr:hover {
     white-space: nowrap;
 }
 
+.btn-card-action:disabled,
+.btn-card-action.disabled,
+.btn-card-disabled {
+    opacity: 0.42 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+    pointer-events: auto !important;
+    filter: grayscale(20%);
+}
+
+.btn-card-action:disabled:hover,
+.btn-card-action.disabled:hover,
+.btn-card-disabled:hover {
+    opacity: 0.42 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+}
+
 .btn-card-primary {
     background: linear-gradient(135deg, #E08A1E 0%, #B87309 100%) !important;
     color: #FFFFFF !important;
