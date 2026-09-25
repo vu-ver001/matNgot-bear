@@ -1,5 +1,5 @@
 <x-customer-account-layout title="Chi tiết đơn hàng" :flush="true">
-    <div class="orders-ui" x-data="{ showGhnModal: false, copiedGhn: false }">
+    <div class="orders-ui">
         {{-- Header Breadcrumb & Actions --}}
         <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div class="flex items-center gap-3">
@@ -451,6 +451,12 @@
                         <p class="text-xs sm:text-sm text-[#2D6A4F] mt-0.5">
                             Vui lòng kiểm tra sản phẩm. Bấm <strong>"Đã nhận được hàng"</strong> để hoàn tất và mở khóa Đánh giá, hoặc bấm <strong>"Yêu cầu Trả hàng / Hoàn tiền"</strong> nếu có sự cố.
                         </p>
+                        @if($order->autoConfirmDeadline())
+                            <p class="text-[11px] text-amber-900 font-medium mt-1 flex items-center gap-1.5">
+                                <i class="fa-regular fa-clock text-amber-700"></i>
+                                <span>Hệ thống sẽ tự động xác nhận <strong>"Đã nhận hàng"</strong> vào <strong>{{ $order->autoConfirmDeadline()->format('H:i - d/m/Y') }}</strong> (sau 7 ngày kể từ khi giao hàng).</span>
+                            </p>
+                        @endif
                     </div>
                 </div>
 
@@ -469,7 +475,7 @@
                     <button type="button" @click="openReturnModal = true"
                             class="w-full sm:w-auto px-4 py-3 bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 font-bold text-xs sm:text-sm rounded-xl border border-rose-200 hover:border-rose-300 shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
                         <i class="fa-solid fa-arrow-rotate-left text-rose-500"></i>
-                        <span>TRẢ HÀNG / HOÀN TIỀN</span>
+                        <span>HOÀN HÀNG / ĐỔI TRẢ</span>
                     </button>
                 </div>
 
@@ -525,31 +531,6 @@
             <div class="py-2">
                 <x-order-timeline :status="$order->order_status" />
             </div>
-
-            {{-- Dải hiển thị Vị trí bưu kiện thực tế qua các kho GHN --}}
-            @if(!in_array($order->order_status, ['CANCELLED', 'RETURNED']))
-                @php $ghn = $order->ghn_tracking; @endphp
-                <div class="mt-4 pt-3.5 border-t border-amber-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs" style="border-top: 1px solid rgba(251, 191, 36, 0.4);">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-8 h-8 rounded-xl bg-orange-100 text-[#F26522] flex items-center justify-center font-bold text-sm shrink-0" style="width: 36px; height: 36px; min-width: 36px; border-radius: 10px; background: #FFEDD5; color: #F26522; display: flex; align-items: center; justify-content: center; font-size: 16px;">
-                            <i class="fa-solid fa-location-dot" style="color: #F26522;"></i>
-                        </span>
-                        <div>
-                            <div class="text-[#786B61] text-[11px]" style="color: #786B61; font-size: 11px;">Vị trí bưu kiện hiện tại (Giao Hàng Nhanh):</div>
-                            <div class="font-bold text-[#4E342E] text-xs sm:text-[13px] mt-0.5" style="color: #4E342E; font-weight: 700;">{{ $ghn['current_location'] }}</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" @click="showGhnModal = true"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-[#795548] hover:text-[#4E342E] font-bold text-xs rounded-xl border border-amber-200 transition cursor-pointer"
-                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #FFF7ED; color: #C2410C; font-weight: 700; font-size: 12px; border-radius: 10px; border: 1px solid #FED7AA; cursor: pointer; transition: all 0.2s;">
-                            <i class="fa-solid fa-boxes-packing" style="color: #F26522;"></i>
-                            <span>Thông tin vận chuyển</span>
-                            <i class="fa-solid fa-chevron-right text-[10px]" style="color: #A8988A; font-size: 10px;"></i>
-                        </button>
-                    </div>
-                </div>
-            @endif
         </div>
 
         {{-- 2. Grid Nội Dung Chính --}}
@@ -811,25 +792,6 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
-                        <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
-                            <dt class="text-xs font-bold text-[#8E8076] uppercase">Phương thức thanh toán</dt>
-                            <dd class="font-bold text-[#4E342E] mt-0.5">
-                                {{ match ($order->payment_method) {
-                                    'COD' => 'Thanh toán khi nhận hàng (COD)',
-                                    'BANK_TRANSFER' => 'Chuyển khoản VietQR (MB Bank)',
-                                    'CARD' => 'Cổng thanh toán VNPAY',
-                                    'E_WALLET' => 'Ví điện tử',
-                                    default => $order->payment_method,
-                                } }}
-                            </dd>
-                        </div>
-                        <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
-                            <dt class="text-xs font-bold text-[#8E8076] uppercase">Trạng thái thanh toán</dt>
-                            <dd class="mt-0.5"><x-payment-status-badge :status="$order->payment_status" /></dd>
-                        </div>
-                    </div>
-
                     @if ($order->payments && $order->payments->isNotEmpty())
                         <div class="table-container mb-2">
                             <table class="data-table">
@@ -838,8 +800,8 @@
                                         <th>Phương Thức</th>
                                         <th class="text-right">Số Tiền</th>
                                         <th>Trạng Thái</th>
-                                        <th>Mã GD</th>
-                                        <th>Thời Gian</th>
+                                        <th>Mã Giao Dịch</th>
+                                        <th>Thời Gian Thanh Toán</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -861,12 +823,43 @@
                                             </td>
                                             <td class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
                                             <td><x-payment-status-badge :status="$payment->status" :method="$payment->method" /></td>
-                                            <td class="text-xs text-[#795548] font-mono">{{ $payment->transaction_ref ?? '—' }}</td>
-                                            <td class="text-xs text-[#8E8076]">{{ $payment->paid_at?->format('d/m/Y H:i') ?? $payment->created_at->format('d/m/Y H:i') }}</td>
+                                            <td class="text-xs text-[#795548] font-mono">
+                                                @if ($payment->status === 'PAID' && $payment->transaction_ref)
+                                                    {{ $payment->transaction_ref }}
+                                                @else
+                                                    <span class="text-gray-400">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-xs">
+                                                @if ($payment->paid_at)
+                                                    <span class="font-medium text-[#4E342E]">{{ $payment->paid_at->format('d/m/Y H:i') }}</span>
+                                                @else
+                                                    <span class="text-gray-400 italic">Chưa thanh toán</span>
+                                                @endif
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+                    @else
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
+                            <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
+                                <dt class="text-xs font-bold text-[#8E8076] uppercase">Phương thức thanh toán</dt>
+                                <dd class="font-bold text-[#4E342E] mt-0.5">
+                                    {{ match ($order->payment_method) {
+                                        'COD' => 'Thanh toán khi nhận hàng (COD)',
+                                        'BANK_TRANSFER' => 'Chuyển khoản VietQR (MB Bank)',
+                                        'CARD' => 'Cổng thanh toán VNPAY',
+                                        'E_WALLET' => 'Ví điện tử',
+                                        default => $order->payment_method,
+                                    } }}
+                                </dd>
+                            </div>
+                            <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100/60">
+                                <dt class="text-xs font-bold text-[#8E8076] uppercase">Trạng thái thanh toán</dt>
+                                <dd class="mt-0.5"><x-payment-status-badge :status="$order->payment_status" /></dd>
+                            </div>
                         </div>
                     @endif
 
@@ -908,21 +901,21 @@
 
                     <ol class="relative border-l-2 border-amber-200 ml-3 space-y-5 my-2">
                         @forelse ($order->statusHistories->sortBy('changed_at') as $history)
+                            @php
+                                $displayTitle = $history->display_title;
+                                $isCancelEvent = str_contains($displayTitle, 'hủy') || str_contains($displayTitle, 'huỷ');
+                                $isRejectEvent = str_contains($displayTitle, 'Từ chối');
+                            @endphp
                             <li class="ml-5">
-                                <span class="absolute flex items-center justify-center w-5 h-5 rounded-full -left-2.5 ring-4 ring-white {{ $loop->last ? 'bg-amber-500 text-white' : 'bg-amber-200 text-amber-800' }}">
-                                    <i class="fa-solid fa-check text-[9px]"></i>
+                                <span class="absolute flex items-center justify-center w-5 h-5 rounded-full -left-2.5 ring-4 ring-white 
+                                    @if($isRejectEvent) bg-rose-100 text-rose-700
+                                    @elseif($isCancelEvent) bg-amber-100 text-amber-800
+                                    @elseif($loop->last) bg-amber-500 text-white
+                                    @else bg-amber-200 text-amber-800 @endif">
+                                    <i class="fa-solid {{ $history->display_icon }}"></i>
                                 </span>
                                 <div class="text-xs font-extrabold text-[#4E342E]">
-                                    {{ $history->to_status ? match ($history->to_status) {
-                                        'PENDING' => 'Đơn hàng được tạo',
-                                        'CONFIRMED' => 'Đã xác nhận đơn hàng',
-                                        'PREPARING' => 'Đang đóng gói',
-                                        'SHIPPING' => 'Đang giao hàng',
-                                        'COMPLETED' => 'Giao hàng thành công',
-                                        'CANCELLED' => 'Đơn hàng đã hủy',
-                                        'RETURNED' => 'Đã trả hàng / hoàn tiền',
-                                        default => $history->to_status,
-                                    } : '' }}
+                                    {{ $displayTitle }}
                                 </div>
                                 <div class="text-[11px] text-[#8E8076] mt-0.5">
                                     {{ $history->changed_at->format('d/m/Y H:i') }}
@@ -992,21 +985,53 @@
                                             {{-- Modal Body --}}
                                             <div class="p-6 space-y-4 text-xs">
                                                 {{-- Cảnh báo thanh toán & hoàn tiền --}}
-                                                @if($order->payment_status === 'PAID')
+                                                @php
+                                                    $isPendingPaidDirectToAdmin = ($order->order_status === 'PENDING' && $order->payment_status === 'PAID');
+                                                @endphp
+
+                                                @if($isPendingPaidDirectToAdmin)
+                                                    <div class="p-3.5 bg-sky-50 rounded-2xl border border-sky-200 space-y-2">
+                                                        <div class="flex items-center gap-2 text-sky-900 font-bold text-xs">
+                                                            <i class="fa-solid fa-shield-halved text-sky-600"></i>
+                                                            <span>Đơn trực tuyến đã thanh toán ({{ number_format($order->total_amount, 0, ',', '.') }}đ)</span>
+                                                        </div>
+                                                        <p class="text-[11.5px] text-[#5C3219] leading-relaxed">
+                                                            Đơn hàng chưa được xác nhận. Yêu cầu hủy và hoàn tiền của bạn sẽ được <strong>gửi thẳng lên Quản trị viên (Admin)</strong> để xử lý chuyển khoản hoàn lại 100% số tiền theo thông tin tài khoản bạn cung cấp bên dưới.
+                                                        </p>
+                                                        <div class="pt-1 text-[11px] text-sky-800 font-medium">
+                                                            💡 Vui lòng nhập số tài khoản ngân hàng để Admin hoàn tiền cho bạn:
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Form STK hoàn tiền --}}
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-200">
+                                                        <div class="sm:col-span-2">
+                                                            <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Tên ngân hàng <span class="text-rose-500">*</span></label>
+                                                            <input type="text" name="refund_bank_name" required placeholder="Ví dụ: Vietcombank, MB Bank, Techcombank..."
+                                                                   class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Số tài khoản <span class="text-rose-500">*</span></label>
+                                                            <input type="text" name="refund_bank_account" required placeholder="Nhập số tài khoản..."
+                                                                   class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Tên chủ tài khoản <span class="text-rose-500">*</span></label>
+                                                            <input type="text" name="refund_account_holder" required placeholder="NGUYEN VAN A"
+                                                                   class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500 uppercase">
+                                                        </div>
+                                                    </div>
+                                                @elseif($order->payment_status === 'PAID')
                                                     <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 space-y-2">
                                                         <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
                                                             <i class="fa-solid fa-wallet text-amber-600"></i>
-                                                            <span>Đơn hàng đã thanh toán ({{ number_format($order->total_amount, 0, ',', '.') }}đ)</span>
+                                                            <span>Đơn hàng đã thanh toán ({{ number_format($order->total_amount, 0, ',', '.') }}đ) - Đang chuẩn bị hàng</span>
                                                         </div>
                                                         <p class="text-[11.5px] text-[#7D6B5D] leading-relaxed">
-                                                            @if($isDirectCancel)
-                                                                Đơn hàng đang ở trạng thái <strong>Chờ xác nhận</strong> nên sẽ được <strong>hủy ngay</strong>. Shop sẽ sớm liên hệ SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% số tiền cho bạn.
-                                                            @else
-                                                                Đơn hàng đã xác nhận, yêu cầu hủy sẽ được nhân viên xem xét trong tối đa 24 giờ. Quá 24h chưa được duyệt, yêu cầu sẽ tự động hết hạn và đơn hàng tiếp tục được giao. Khi duyệt hủy thành công, shop sẽ liên hệ qua SĐT <strong>{{ $order->recipient_phone }}</strong> để hoàn lại 100% tiền cho bạn.
-                                                            @endif
+                                                            Đơn hàng đang ở trạng thái <strong>Đang chuẩn bị</strong>. Cửa hàng sẽ kiểm tra: nếu đơn <strong>chưa giao cho bên vận chuyển</strong>, Shop sẽ chấp nhận hủy đơn và hoàn lại 100% tiền vào STK bạn cung cấp. Trường hợp hàng <strong>đã giao cho bên vận chuyển</strong>, Shop xin phép từ chối hủy.
                                                         </p>
                                                         <div class="pt-1 text-[11px] text-amber-800 font-medium">
-                                                            💡 Bạn có thể điền trước STK bên dưới để nhân viên hoàn tiền nhanh hơn:
+                                                            💡 Vui lòng nhập STK ngân hàng nhận tiền hoàn nếu đơn được hủy thành công:
                                                         </div>
                                                     </div>
 
@@ -1014,7 +1039,7 @@
                                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-200">
                                                         <div class="sm:col-span-2">
                                                             <label class="block text-[11px] font-bold text-[#2B1810] mb-1">Tên ngân hàng</label>
-                                                            <input type="text" name="refund_bank_name" placeholder="Ví dụ: Vietcombank, MB Bank, Techcombank..."
+                                                            <input type="text" name="refund_bank_name" list="vietnam_banks_list" placeholder="Chọn hoặc nhập: Vietcombank, MB Bank, Techcombank..."
                                                                    class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500">
                                                         </div>
                                                         <div>
@@ -1028,13 +1053,29 @@
                                                                    class="w-full rounded-xl border-gray-300 text-xs px-3 py-2 focus:border-amber-500 focus:ring-amber-500 uppercase">
                                                         </div>
                                                     </div>
+
+                                                    <datalist id="vietnam_banks_list">
+                                                        <option value="MB Bank (Ngân hàng Quân Đội)">
+                                                        <option value="Vietcombank (Ngoại thương)">
+                                                        <option value="Techcombank">
+                                                        <option value="VietinBank">
+                                                        <option value="BIDV">
+                                                        <option value="ACB">
+                                                        <option value="VPBank">
+                                                        <option value="TPBank">
+                                                        <option value="Sacombank">
+                                                        <option value="VIB">
+                                                        <option value="HDBank">
+                                                        <option value="MSB">
+                                                        <option value="Agribank">
+                                                    </datalist>
                                                 @else
                                                     <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[#7D6B5D] text-[11.5px] leading-relaxed">
                                                         <i class="fa-solid fa-circle-info text-amber-600 mr-1"></i>
                                                         @if($isDirectCancel)
                                                             Đơn hàng đang chờ nhân viên xác nhận và chưa thanh toán. Đơn sẽ được <strong>hủy ngay lập tức</strong> sau khi bạn xác nhận.
                                                         @else
-                                                            Đơn hàng đã được xác nhận. Yêu cầu hủy đơn sẽ được gửi đến nhân viên cửa hàng để xem xét trong tối đa 24 giờ. Quá 24h chưa được duyệt, yêu cầu sẽ tự động hết hạn và đơn hàng tiếp tục được chuẩn bị để giao.
+                                                            Đơn hàng đang ở trạng thái <strong>Đang chuẩn bị hàng</strong>. Cửa hàng sẽ kiểm tra: nếu đơn <strong>chưa giao cho bên vận chuyển</strong> thì Shop sẽ chấp nhận hủy đơn cho bạn. Nếu hàng <strong>đã giao cho bên vận chuyển</strong>, Shop xin phép từ chối hủy.
                                                         @endif
                                                     </div>
                                                 @endif
@@ -1079,8 +1120,16 @@
                                                 </button>
                                                 <button type="submit" 
                                                         class="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer">
-                                                    <i class="fa-solid {{ $isDirectCancel ? 'fa-ban' : 'fa-paper-plane' }} text-[10px]"></i>
-                                                    <span>{{ $isDirectCancel ? 'Xác nhận hủy đơn ngay' : 'Gửi yêu cầu hủy' }}</span>
+                                                    @if($isDirectCancel)
+                                                        <i class="fa-solid fa-ban text-[10px]"></i>
+                                                        <span>Xác nhận hủy đơn ngay</span>
+                                                    @elseif($isPendingPaidDirectToAdmin)
+                                                        <i class="fa-solid fa-shield-halved text-[10px]"></i>
+                                                        <span>Gửi yêu cầu hủy & hoàn tiền lên Admin</span>
+                                                    @else
+                                                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                                                        <span>Gửi yêu cầu hủy cho Shop</span>
+                                                    @endif
                                                 </button>
                                             </div>
                                         </form>
@@ -1173,9 +1222,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- Modal Tra Cứu Hành Trình GHN --}}
-        <x-ghn-tracking-modal :order="$order" />
     </div>
 </x-customer-account-layout>
 

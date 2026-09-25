@@ -253,16 +253,7 @@
                         <li class="ml-6">
                             <span class="absolute flex items-center justify-center w-6 h-6 rounded-full -left-3 ring-8 ring-white {{ $loop->last ? 'bg-amber-500' : 'bg-amber-100' }}"></span>
                             <p class="text-sm {{ $loop->last ? 'font-bold text-[#2C1408]' : 'font-medium text-[#795548]' }}">
-                                {{ $history->to_status ? match ($history->to_status) {
-                                    'PENDING' => 'Đơn hàng được tạo',
-                                    'CONFIRMED' => 'Đã xác nhận đơn hàng',
-                                    'PREPARING' => 'Đang đóng gói',
-                                    'SHIPPING' => 'Đang giao hàng',
-                                    'COMPLETED' => 'Giao hàng thành công',
-                                    'CANCELLED' => 'Đơn hàng đã hủy',
-                                    'RETURNED' => 'Đã trả hàng',
-                                    default => $history->to_status,
-                                } : '' }}
+                                {{ $history->display_title }}
                             </p>
                             <p class="text-xs text-[#795548] mt-0.5">{{ $history->changed_at->format('d/m/Y H:i') }}
                                 @if ($isStaff && $history->changedByUser)

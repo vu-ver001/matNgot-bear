@@ -91,7 +91,7 @@ class OrderCustomerConfirmationTest extends TestCase
         $response = $this->get(route('customer.orders.index'));
         $response->assertOk();
         $response->assertSee('Đã nhận được hàng');
-        $response->assertSee('Trả hàng / Hoàn tiền');
+        $response->assertSee('Hoàn hàng / Đổi trả');
         $response->assertDontSee(route('customer.orders.review', $order), false);
     }
 
@@ -170,4 +170,36 @@ class OrderCustomerConfirmationTest extends TestCase
             'tab' => 'pending',
         ]));
     }
+
+    public function test_delivered_order_auto_confirmed_after_7_days(): void
+    {
+        $order = $this->createDeliveredOrder();
+        // Giả lập đơn hàng đã giao cách đây 8 ngày
+        $order->update([
+            'completed_at' => now()->subDays(8),
+            'customer_confirmed_at' => null,
+        ]);
+
+        $this->assertTrue($order->isCustomerConfirmed());
+        $this->assertFalse($order->isDeliveredWaitingConfirmation());
+
+        // Kiểm tra OrderService auto-complete
+        $orderService = app(\App\Services\OrderService::class);
+        $count = $orderService->autoCompleteDeliveredOrders();
+        $this->assertSame(1, $count);
+
+        $order->refresh();
+        $this->assertNotNull($order->customer_confirmed_at);
+
+        // Đơn đã giao cách đây 5 ngày (< 7 ngày) -> Chưa auto confirm
+        $recentOrder = $this->createDeliveredOrder();
+        $recentOrder->update([
+            'completed_at' => now()->subDays(5),
+            'customer_confirmed_at' => null,
+        ]);
+
+        $this->assertFalse($recentOrder->isCustomerConfirmed());
+        $this->assertTrue($recentOrder->isDeliveredWaitingConfirmation());
+    }
 }
+

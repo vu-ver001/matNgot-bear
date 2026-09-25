@@ -530,9 +530,9 @@ class CheckoutController extends Controller
             Payment::create([
                 'order_id' => $order->id,
                 'method' => $dbPaymentMethod,
-                'status' => $dbPaymentMethod === 'COD' ? 'PENDING' : 'PENDING',
+                'status' => 'PENDING',
                 'amount' => $order->total_amount,
-                'transaction_ref' => 'TXN' . strtoupper(uniqid()),
+                'transaction_ref' => null,
             ]);
 
             // Delete purchased items from cart

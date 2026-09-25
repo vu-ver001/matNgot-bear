@@ -416,7 +416,7 @@
                                 <td class="py-3.5 px-4 text-[11px] text-[#786B61] whitespace-nowrap">
                                     <div>{{ $item->created_at ? $item->created_at->format('d/m/Y H:i') : '—' }}</div>
                                     @if ($item->paid_at)
-                                        <div class="text-[10px] text-emerald-600 font-medium whitespace-nowrap">Trả lúc: {{ $item->paid_at->format('H:i d/m') }}</div>
+                                        <div class="text-[10px] text-emerald-600 font-medium whitespace-nowrap">Thanh toán lúc: {{ $item->paid_at->format('H:i d/m') }}</div>
                                     @endif
                                 </td>
 
@@ -468,8 +468,8 @@
                                                 </form>
                                             @endif
 
-                                            {{-- Manual Confirm (Admin Toàn quyền) --}}
-                                            @if ($item->status === 'PENDING')
+                                            {{-- Manual Confirm (Admin Toàn quyền - Chỉ áp dụng cho thanh toán online/chuyển khoản) --}}
+                                            @if ($item->status === 'PENDING' && $item->method !== 'COD')
                                                 <button type="button" 
                                                         @click="openConfirm({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
                                                         class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-xs shadow-xs transition"

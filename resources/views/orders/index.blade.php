@@ -6,26 +6,16 @@
     $currentTab = (string) request('tab', '');
 
     if ($currentStatus === 'PENDING') {
-        $bulkTargetStatus = 'CONFIRMED';
-        $bulkActionLabel = 'Chấp nhận đơn hàng loạt';
-        $bulkActionIcon = 'fa-solid fa-circle-check';
-        $bulkConfirmTitle = 'Xác nhận chấp nhận đơn hàng loạt?';
-        $bulkConfirmText = 'Bạn có chắc chắn muốn chấp nhận :count đơn hàng đã chọn sang trạng thái "Đã xác nhận"?';
-        $bulkConfirmButtonText = '<i class="fa-solid fa-circle-check mr-1"></i> Đồng ý chấp nhận';
-        $bulkConfirmColor = '#B87309';
-        $bulkCountLabel = 'chờ xác nhận';
-        $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('CONFIRMED'))->pluck('id')->values()->all();
-    } elseif ($currentStatus === 'CONFIRMED') {
         $bulkTargetStatus = 'PREPARING';
         $bulkActionLabel = 'Chuẩn bị hàng loạt';
         $bulkActionIcon = 'fa-solid fa-box-open';
         $bulkConfirmTitle = 'Xác nhận chuẩn bị hàng loạt?';
-        $bulkConfirmText = 'Bạn có chắc chắn muốn chuyển :count đơn hàng đã chọn sang trạng thái "Chờ lấy hàng"?';
+        $bulkConfirmText = 'Bạn có chắc chắn muốn chuyển :count đơn hàng đã chọn sang trạng thái "Đang chuẩn bị"?';
         $bulkConfirmButtonText = '<i class="fa-solid fa-box-open mr-1"></i> Bắt đầu chuẩn bị';
-        $bulkConfirmColor = '#2563EB';
-        $bulkCountLabel = 'chờ chuẩn bị';
+        $bulkConfirmColor = '#B87309';
+        $bulkCountLabel = 'chờ xác nhận';
         $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('PREPARING'))->pluck('id')->values()->all();
-    } elseif ($currentStatus === 'PREPARING') {
+    } elseif ($currentStatus === 'CONFIRMED' || $currentStatus === 'PREPARING') {
         $bulkTargetStatus = 'SHIPPING';
         $bulkActionLabel = 'Giao hàng loạt';
         $bulkActionIcon = 'fa-solid fa-truck-fast';
@@ -46,16 +36,16 @@
         $bulkCountLabel = 'đang giao';
         $bulkActionableOrderIds = $orders->filter(fn ($o) => $o->canTransitionTo('COMPLETED'))->pluck('id')->values()->all();
     } else {
-        $pendingIds = $orders->filter(fn ($o) => $o->canTransitionTo('CONFIRMED'))->pluck('id')->values()->all();
+        $pendingIds = $orders->filter(fn ($o) => $o->canTransitionTo('PREPARING'))->pluck('id')->values()->all();
         $preparingIds = $orders->filter(fn ($o) => $o->canTransitionTo('SHIPPING'))->pluck('id')->values()->all();
 
         if (count($pendingIds) > 0) {
-            $bulkTargetStatus = 'CONFIRMED';
-            $bulkActionLabel = 'Chấp nhận đơn hàng loạt';
-            $bulkActionIcon = 'fa-solid fa-circle-check';
-            $bulkConfirmTitle = 'Xác nhận chấp nhận đơn hàng loạt?';
-            $bulkConfirmText = 'Bạn có chắc chắn muốn chấp nhận :count đơn hàng chờ xác nhận đã chọn?';
-            $bulkConfirmButtonText = '<i class="fa-solid fa-circle-check mr-1"></i> Đồng ý chấp nhận';
+            $bulkTargetStatus = 'PREPARING';
+            $bulkActionLabel = 'Chuẩn bị hàng loạt';
+            $bulkActionIcon = 'fa-solid fa-box-open';
+            $bulkConfirmTitle = 'Xác nhận chuẩn bị hàng loạt?';
+            $bulkConfirmText = 'Bạn có chắc chắn muốn chuyển :count đơn hàng chờ xác nhận đã chọn sang "Đang chuẩn bị"?';
+            $bulkConfirmButtonText = '<i class="fa-solid fa-box-open mr-1"></i> Đồng ý chuẩn bị';
             $bulkConfirmColor = '#B87309';
             $bulkCountLabel = 'chờ xác nhận';
             $bulkActionableOrderIds = $pendingIds;
@@ -70,12 +60,12 @@
             $bulkCountLabel = 'có thể giao';
             $bulkActionableOrderIds = $preparingIds;
         } else {
-            $bulkTargetStatus = 'CONFIRMED';
-            $bulkActionLabel = 'Chấp nhận đơn hàng loạt';
-            $bulkActionIcon = 'fa-solid fa-circle-check';
-            $bulkConfirmTitle = 'Xác nhận chấp nhận đơn hàng loạt?';
-            $bulkConfirmText = 'Bạn có chắc chắn muốn chấp nhận :count đơn hàng đã chọn?';
-            $bulkConfirmButtonText = '<i class="fa-solid fa-circle-check mr-1"></i> Đồng ý chấp nhận';
+            $bulkTargetStatus = 'PREPARING';
+            $bulkActionLabel = 'Chuẩn bị hàng loạt';
+            $bulkActionIcon = 'fa-solid fa-box-open';
+            $bulkConfirmTitle = 'Xác nhận chuẩn bị hàng loạt?';
+            $bulkConfirmText = 'Bạn có chắc chắn muốn chuyển :count đơn hàng đã chọn?';
+            $bulkConfirmButtonText = '<i class="fa-solid fa-box-open mr-1"></i> Đồng ý chuẩn bị';
             $bulkConfirmColor = '#B87309';
             $bulkCountLabel = 'hợp lệ';
             $bulkActionableOrderIds = [];
@@ -116,8 +106,7 @@
         $tabs = [
             '' => ['label' => 'Tất cả', 'count' => $stats['total'] ?? null],
             'PENDING' => ['label' => 'Chờ xác nhận', 'count' => $stats['pending'] ?? 0],
-            'CONFIRMED' => ['label' => 'Đã xác nhận', 'count' => $stats['confirmed'] ?? 0],
-            'PREPARING' => ['label' => 'Chờ lấy hàng', 'count' => $stats['preparing'] ?? 0],
+            'PREPARING' => ['label' => 'Đang chuẩn bị', 'count' => ($stats['preparing'] ?? 0) + ($stats['confirmed'] ?? 0)],
             'SHIPPING' => ['label' => 'Đang giao hàng', 'count' => $stats['shipping'] ?? 0],
             'COMPLETED' => ['label' => 'Đã giao', 'count' => $stats['completed'] ?? 0],
             'RETURNED' => ['label' => 'Trả hàng', 'count' => $stats['returned'] ?? 0],

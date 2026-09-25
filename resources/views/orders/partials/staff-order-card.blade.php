@@ -211,10 +211,17 @@
             @if($order->hasPendingCancelRequest())
                 @php
                     $isUrgent = ($order->cancelRequestHoursRemaining() !== null && $order->cancelRequestHoursRemaining() <= 2);
+                    $isPendingOnlineDirectToAdmin = ($order->order_status === 'PENDING' && $order->payment_status === 'PAID');
                 @endphp
-                <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action {{ $isUrgent ? 'bg-rose-700 hover:bg-rose-800 animate-pulse' : 'bg-rose-600 hover:bg-rose-700' }} text-white! text-xs font-bold" title="Xử lý yêu cầu hủy đơn (Thời hạn 24h)">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Duyệt hủy ({{ $order->cancelRequestTimeRemainingText() }})
-                </a>
+                @if(($isStaff ?? false) && $isPendingOnlineDirectToAdmin)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300" title="Yêu cầu hủy và hoàn tiền của đơn này được chuyển thẳng Admin xử lý">
+                        <i class="fa-solid fa-clock"></i> Chờ Admin xử lý hoàn tiền
+                    </span>
+                @else
+                    <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action {{ $isUrgent ? 'bg-rose-700 hover:bg-rose-800 animate-pulse' : 'bg-rose-600 hover:bg-rose-700' }} text-white! text-xs font-bold" title="Xử lý yêu cầu hủy đơn (Thời hạn 24h)">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Duyệt hủy ({{ $order->cancelRequestTimeRemainingText() }})
+                    </a>
+                @endif
             @elseif($order->needsRefund())
                 <a href="{{ route($routePrefix . '.show', $order) }}" class="btn-card-action bg-amber-600 hover:bg-amber-700 text-white! text-xs font-bold" title="Xử lý hoàn tiền cho khách">
                     <i class="fa-solid fa-hand-holding-dollar"></i> Hoàn tiền
@@ -231,21 +238,29 @@
             <!-- Chuyển trạng thái từng bước nhanh -->
             @if(in_array($order->order_status, ['PENDING', 'CONFIRMED', 'PREPARING']))
                 @if($order->order_status === 'PENDING')
-                    <form action="{{ route($routePrefix . '.updateStatus', $order) }}" method="POST" class="inline">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="order_status" value="CONFIRMED">
-                        <button type="submit" class="btn-card-action btn-card-blue text-xs" title="Xác nhận đơn">
-                            <i class="fa-solid fa-circle-check"></i> Xác nhận
+                    @if($order->canTransitionTo('PREPARING'))
+                        <form action="{{ route($routePrefix . '.updateStatus', $order) }}" method="POST" class="inline">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="order_status" value="PREPARING">
+                            <button type="submit" class="btn-card-action btn-card-blue text-xs" title="Chuẩn bị hàng">
+                                <i class="fa-solid fa-box-open"></i> Xác nhận
+                            </button>
+                        </form>
+                    @else
+                        <button type="button" disabled
+                                class="btn-card-action btn-card-blue text-xs" 
+                                title="{{ $order->payment_status === 'FAILED' ? 'Đơn hàng thanh toán thất bại - Không thể chuẩn bị đơn' : 'Đơn hàng trực tuyến chưa thanh toán - Không thể chuẩn bị đơn' }}">
+                            <i class="fa-solid fa-box-open"></i> Xác nhận
                         </button>
-                    </form>
+                    @endif
                 @elseif($order->order_status === 'CONFIRMED')
                     <form action="{{ route($routePrefix . '.updateStatus', $order) }}" method="POST" class="inline">
                         @csrf
                         @method('PATCH')
                         <input type="hidden" name="order_status" value="PREPARING">
                         <button type="submit" class="btn-card-action btn-card-primary text-xs" title="Chuẩn bị hàng">
-                            <i class="fa-solid fa-box-open"></i> Chuẩn bị hàng
+                            <i class="fa-solid fa-box-open"></i> Xác nhận
                         </button>
                     </form>
                 @elseif($order->order_status === 'PREPARING')
@@ -254,7 +269,7 @@
                             @csrf
                             @method('PATCH')
                             <input type="hidden" name="order_status" value="SHIPPING">
-                            <button type="submit" class="btn-card-action btn-card-primary text-xs" title="Bắt đầu giao hàng thủ công">
+                            <button type="submit" class="btn-card-action btn-card-primary text-xs" title="Bắt đầu giao hàng">
                                 <i class="fa-solid fa-truck-fast"></i> Bắt đầu giao hàng
                             </button>
                         </form>
@@ -269,8 +284,8 @@
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="order_status" value="COMPLETED">
-                    <button type="submit" class="btn-card-action btn-card-emerald text-xs" title="Xác nhận hoàn thành">
-                        <i class="fa-solid fa-circle-check"></i> Đã giao thành công
+                    <button type="submit" class="btn-card-action btn-card-emerald text-xs" title="Xác nhận đã giao">
+                        <i class="fa-solid fa-circle-check"></i> Đã giao
                     </button>
                 </form>
             @endif
