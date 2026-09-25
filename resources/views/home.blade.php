@@ -507,7 +507,7 @@
                             @if($discountPct > 0)
                                 <span class="card-badge-sale">-{{ $discountPct }}%</span>
                             @endif
-                        @else
+                        @elseif($product->is_hot)
                             <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
                         @endif
                         <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($hasSale && $salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
@@ -602,6 +602,8 @@
                             @if($discountPct > 0)
                                 <span class="card-badge-sale">-{{ $discountPct }}%</span>
                             @endif
+                        @elseif($product->is_hot)
+                            <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
                         @endif
                         <button type="button" class="btn-wishlist-card" data-product-id="{{ $product->id }}" onclick="toggleWishlist({ id: {{ $product->id }}, name: '{{ addslashes($product->name) }}', price: {{ $regularPrice }}, sale_price: {{ ($hasSale && $salePrice !== null) ? (float)$salePrice : 'null' }}, image_url: '{{ $imgUrl }}' }, event)" title="Lưu vào yêu thích">
                             <i class="fa-regular fa-heart"></i>
