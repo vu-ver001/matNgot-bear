@@ -447,6 +447,7 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             <h4 class="text-base font-black text-[#1B4332]">Đơn hàng đã được giao thành công đến bạn!</h4>
                             <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-[11px]">CHỜ BẠN XÁC NHẬN</span>
+                        </div>
                         <p class="text-xs sm:text-sm text-[#2D6A4F] mt-0.5">
                             Vui lòng kiểm tra sản phẩm. Bấm <strong>"Đã nhận được hàng"</strong> để hoàn tất và mở khóa Đánh giá, hoặc bấm <strong>"Yêu cầu Trả hàng / Hoàn tiền"</strong> nếu có sự cố.
                         </p>
