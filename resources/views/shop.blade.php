@@ -541,6 +541,7 @@
 
                 return `
                     <div class="product-grid-item">
+                        <div class="product-photo-wrap">
                             ${isOnSale ? `
                                 <span class="card-badge-flashsale"><i class="fa-solid fa-bolt"></i> SALE</span>
                                 ${discountPct > 0 ? `<span class="card-badge-sale">-${discountPct}%</span>` : ''}
