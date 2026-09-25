@@ -1003,27 +1003,6 @@
     gap: 6px;
 }
 
-.btn-helpful-like {
-    background: transparent;
-    border: 1px solid var(--border);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.btn-helpful-like:hover,
-.btn-helpful-like.liked {
-    background: #FFF8E7;
-    border-color: var(--honey);
-    color: var(--honey-dark);
-}
 
 .review-empty-state {
     text-align: center;

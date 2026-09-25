@@ -19,7 +19,7 @@
                 name="search" 
                 id="headerSearchInput"
                 class="search-input" 
-                placeholder="Tìm kiếm gấu bông yêu thích (Teddy, Capybara, Loopy...)"
+                placeholder="Tìm kiếm theo tên gấu bông (Teddy, Capybara, Bơ...)"
                 value="{{ request('search') }}"
                 autocomplete="off"
             >
@@ -31,7 +31,7 @@
         <!-- Live Search Suggestions Dropdown -->
         <div class="header-search-dropdown" id="headerSearchDropdown">
             <div class="search-dropdown-header">
-                <span><i class="fa-solid fa-paw" style="color: var(--honey-dark);"></i> Gấu bông gợi ý cho bạn</span>
+                <span><i class="fa-solid fa-paw" style="color: var(--honey-dark);"></i> Gợi ý theo tên sản phẩm</span>
                 <span class="search-count-tag" id="searchCountTag">0 kết quả</span>
             </div>
             <div class="search-dropdown-list" id="searchDropdownList">
@@ -161,10 +161,6 @@
                             <span><i class="fa-solid fa-gauge-high" style="color: #8D6E63; margin-right: 8px;"></i> Quản Lý Admin</span>
                             <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
                         </a>
-                        <a href="{{ route('admin.orders.index') }}" class="dropdown-item">
-                            <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 8px;"></i> Quản Lý Đơn Hàng</span>
-                            <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
-                        </a>
                     @elseif($userRole === 'STAFF')
                         <a href="{{ route('staff.orders.index') }}" class="dropdown-item">
                             <span><i class="fa-solid fa-boxes-packing" style="color: #8D6E63; margin-right: 8px;"></i> Bảng Xử Lý</span>
@@ -225,6 +221,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function removeVietnameseTones(str) {
+        if (!str) return '';
+        return str
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/Đ/g, 'D')
+            .toLowerCase();
+    }
+
     function doSearch(keyword) {
         keyword = keyword.trim();
         if (keyword.length < 1) {
@@ -244,7 +250,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                const items = res.data || [];
+                // Lọc chặt chẽ: Chỉ giữ lại các sản phẩm có TÊN chứa từ khóa
+                const rawItems = res.data || [];
+                const cleanKeyword = removeVietnameseTones(keyword);
+                const items = rawItems.filter(item => {
+                    const cleanName = removeVietnameseTones(item.name || '');
+                    return cleanName.includes(cleanKeyword);
+                });
+
                 currentSelectedIndex = -1;
 
                 if (items.length === 0) {
@@ -252,8 +265,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     searchDropdownList.innerHTML = `
                         <div class="search-dropdown-empty">
                             <i class="fa-solid fa-box-open"></i>
-                            <p>Không tìm thấy gấu bông "${escapeHtml(keyword)}"</p>
-                            <span>Thử tìm với tên gọi khác như: Teddy, Capybara, Bơ, Loopy...</span>
+                            <p>Không tìm thấy tên gấu bông "${escapeHtml(keyword)}"</p>
+                            <span>Vui lòng kiểm tra lại tên sản phẩm (ví dụ: Teddy, Capybara, Bơ, Loopy...)</span>
                         </div>
                     `;
                 } else {
