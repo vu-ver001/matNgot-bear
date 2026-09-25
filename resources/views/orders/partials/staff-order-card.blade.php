@@ -244,14 +244,14 @@
                             @method('PATCH')
                             <input type="hidden" name="order_status" value="PREPARING">
                             <button type="submit" class="btn-card-action btn-card-blue text-xs" title="Chuẩn bị hàng">
-                                <i class="fa-solid fa-box-open"></i> Chuẩn bị hàng
+                                <i class="fa-solid fa-box-open"></i> Xác nhận
                             </button>
                         </form>
                     @else
                         <button type="button" disabled
                                 class="btn-card-action btn-card-blue text-xs" 
                                 title="{{ $order->payment_status === 'FAILED' ? 'Đơn hàng thanh toán thất bại - Không thể chuẩn bị đơn' : 'Đơn hàng trực tuyến chưa thanh toán - Không thể chuẩn bị đơn' }}">
-                            <i class="fa-solid fa-box-open"></i> Chuẩn bị hàng
+                            <i class="fa-solid fa-box-open"></i> Xác nhận
                         </button>
                     @endif
                 @elseif($order->order_status === 'CONFIRMED')
@@ -260,7 +260,7 @@
                         @method('PATCH')
                         <input type="hidden" name="order_status" value="PREPARING">
                         <button type="submit" class="btn-card-action btn-card-primary text-xs" title="Chuẩn bị hàng">
-                            <i class="fa-solid fa-box-open"></i> Chuẩn bị hàng
+                            <i class="fa-solid fa-box-open"></i> Xác nhận
                         </button>
                     </form>
                 @elseif($order->order_status === 'PREPARING')
