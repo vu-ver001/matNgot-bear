@@ -107,6 +107,9 @@ class ChatController extends Controller
         $headerStatus = $this->chatService->getCustomerChatHeaderStatus($activeCase);
         $replyMessage = $message->relationLoaded('autoReply') ? $message->autoReply : null;
 
+        $conversation = $message->conversation ?? $this->chatService->getOrCreateCustomerConversation($customer);
+        $this->chatService->markMessagesAsReadForCustomer($conversation);
+
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
