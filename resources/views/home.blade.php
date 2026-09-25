@@ -246,11 +246,17 @@
                                     <div class="feature-sub">chân thành</div>
                                 </div>
                             </div>
+                            @php
+                                $coupleCategory = $categories->first(function($c) {
+                                    $n = mb_strtoupper($c->name, 'UTF-8');
+                                    return str_contains($n, 'COUPLE') || str_contains($n, 'ĐÔI');
+                                });
+                                $coupleCatId = $coupleCategory ? $coupleCategory->id : 11;
+                            @endphp
                             <div class="hero-btn-actions">
-                                <a href="{{ route('products.index', ['search' => 'Couple']) }}" class="btn-hero-primary">
+                                <a href="{{ route('products.index', ['category_id' => $coupleCatId]) }}#catalog-layout" class="btn-hero-primary">
                                     <i class="fa-solid fa-bag-shopping"></i> CHỌN QUÀ TẶNG
                                 </a>
-                               
                             </div>
                             <div class="hero-bottom-doodle">
                                 <span class="doodle-bear">💕</span>

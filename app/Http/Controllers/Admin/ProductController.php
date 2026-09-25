@@ -35,9 +35,20 @@ class ProductController extends Controller
                   $q->whereHas('order', fn ($oq) => $oq->whereIn('order_status', ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING']));
               }]);
 
-        // Tìm kiếm theo tên sản phẩm
+        // Tìm kiếm CHỈ THEO TÊN GẤU BÔNG VÀ MÃ SỐ ID
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->input('search') . '%');
+            $search = trim($request->input('search'));
+            $cleanId = ltrim($search, '#');
+
+            $query->where(function ($q) use ($search, $cleanId) {
+                // 1. Tìm theo tên gấu bông
+                $q->where('name', 'like', "%{$search}%");
+
+                // 2. Tìm theo mã số ID
+                if (is_numeric($cleanId)) {
+                    $q->orWhere('id', (int) $cleanId);
+                }
+            });
         }
 
         // Lọc theo danh mục
@@ -738,18 +749,23 @@ class ProductController extends Controller
             $q->select('id', 'name', 'category_id', 'status');
         }, 'product.category:id,name'])->whereHas('product');
 
-        // Tìm kiếm theo tên cha, SKU con, kích thước, màu sắc, ID cha
+        // Tìm kiếm CHỈ THEO TÊN GẤU BÔNG VÀ MÃ SỐ ID
         if ($request->filled('search')) {
             $kw = trim($request->input('search'));
-            $query->where(function($q) use ($kw) {
-                $q->where('sku', 'like', "%{$kw}%")
-                  ->orWhere('size', 'like', "%{$kw}%")
-                  ->orWhere('color', 'like', "%{$kw}%")
-                  ->orWhere('product_id', $kw)
-                  ->orWhereHas('product', function($pq) use ($kw) {
-                      $pq->where('name', 'like', "%{$kw}%")
-                         ->orWhere('id', $kw);
-                  });
+            $cleanId = ltrim($kw, '#');
+
+            $query->where(function($q) use ($kw, $cleanId) {
+                // 1. Tìm theo tên gấu bông (sản phẩm cha)
+                $q->whereHas('product', function($pq) use ($kw) {
+                    $pq->where('name', 'like', "%{$kw}%");
+                });
+
+                // 2. Tìm theo mã số ID (ID sản phẩm cha hoặc ID biến thể con)
+                if (is_numeric($cleanId)) {
+                    $idNum = (int) $cleanId;
+                    $q->orWhere('product_id', $idNum)
+                      ->orWhere('id', $idNum);
+                }
             });
         }
 

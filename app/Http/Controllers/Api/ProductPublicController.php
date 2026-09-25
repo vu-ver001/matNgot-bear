@@ -25,17 +25,16 @@ class ProductPublicController extends Controller
                 'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ]);
 
-        // 1. Tìm kiếm từ khóa thông minh (Không phân biệt hoa/thường, hỗ trợ cả không dấu và gần đúng)
+        // 1. Tìm kiếm từ khóa (Chỉ tìm theo TÊN sản phẩm)
         if ($request->filled('search')) {
             $keyword = trim($request->input('search'));
             $keywordNoAccent = self::removeVietnameseAccents($keyword);
             $words = preg_split('/\s+/', $keyword, -1, PREG_SPLIT_NO_EMPTY);
 
-            // Tìm kiếm các ID khớp theo cả tiếng Việt không dấu
+            // Tìm kiếm các ID khớp theo cả tiếng Việt không dấu (CHỈ XÉT TÊN SẢN PHẨM)
             $unaccentMatchedIds = Product::where('status', 'ACTIVE')->get()->filter(function ($p) use ($keywordNoAccent, $words) {
                 $nameNoAccent = self::removeVietnameseAccents($p->name);
-                $descNoAccent = self::removeVietnameseAccents($p->description ?? '');
-                if (str_contains($nameNoAccent, $keywordNoAccent) || str_contains($descNoAccent, $keywordNoAccent)) {
+                if (str_contains($nameNoAccent, $keywordNoAccent)) {
                     return true;
                 }
                 if (count($words) > 1) {
@@ -53,11 +52,8 @@ class ProductPublicController extends Controller
             })->pluck('id')->toArray();
 
             $query->where(function ($q) use ($keyword, $words, $unaccentMatchedIds) {
-                $q->where('name', 'like', "%{$keyword}%")
-                  ->orWhere('description', 'like', "%{$keyword}%")
-                  ->orWhereHas('category', function ($cq) use ($keyword) {
-                      $cq->where('name', 'like', "%{$keyword}%");
-                  });
+                // Chỉ tìm kiếm theo TÊN sản phẩm (name)
+                $q->where('name', 'like', "%{$keyword}%");
 
                 if (!empty($unaccentMatchedIds)) {
                     $q->orWhereIn('id', $unaccentMatchedIds);
@@ -352,7 +348,7 @@ class ProductPublicController extends Controller
                 $score += 80;
             }
 
-            // 3. Tên khớp từng từ
+            // 3. Tên khớp các từ trong từ khóa (toàn bộ từ phải có trong tên)
             if (count($words) > 1) {
                 $wordsMatchedCount = 0;
                 foreach ($words as $w) {
@@ -364,31 +360,10 @@ class ProductPublicController extends Controller
                 }
                 if ($wordsMatchedCount === count($words)) {
                     $score += 70;
-                } elseif ($wordsMatchedCount > 0) {
-                    $score += $wordsMatchedCount * 15;
                 }
             }
 
-            // 4. Danh mục khớp
-            if (str_contains($catNoAccent, $keywordNoAccent) || mb_stripos($catName, $keyword) !== false) {
-                $score += 40;
-            }
-
-            // 5. Mô tả khớp
-            if (str_contains($descNoAccent, $keywordNoAccent) || mb_stripos($desc, $keyword) !== false) {
-                $score += 20;
-            }
-
-            // 6. Biến thể màu sắc / size khớp
-            if ($p->variants) {
-                foreach ($p->variants as $v) {
-                    if (mb_stripos($v->color, $keyword) !== false || str_contains(self::removeVietnameseAccents($v->color), $keywordNoAccent)) {
-                        $score += 15;
-                        break;
-                    }
-                }
-            }
-
+            // CHỈ TÌM THEO TÊN SẢN PHẨM: Tuyệt đối không tính điểm cho danh mục, mô tả, màu sắc hay biến thể
             $p->search_score = $score;
             return $p;
         })->filter(fn($p) => $p->search_score > 0)

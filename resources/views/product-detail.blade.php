@@ -587,9 +587,6 @@
                                     <i class="fa-solid fa-paw" style="color: var(--honey);"></i> Phân loại: {{ $revVText }}
                                 </div>
                             @endif
-                            <button type="button" class="btn-helpful-like" onclick="this.classList.toggle('liked'); const countSpan = this.querySelector('span'); if(countSpan) { let n = parseInt(countSpan.innerText) || 0; countSpan.innerText = this.classList.contains('liked') ? n + 1 : Math.max(0, n - 1); }">
-                                <i class="fa-regular fa-thumbs-up"></i> Hữu ích (<span>0</span>)
-                            </button>
                         </div>
                     </div>
                 @empty

@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\View::composer('*', function ($view) {
             if (auth()->check()) {
                 $realCartCount = \App\Models\CartItem::where('user_id', auth()->id())->count();
-                $realWishlistCount = \App\Models\WishlistItem::where('user_id', auth()->id())->count();
+                $realWishlistCount = \App\Models\WishlistItem::where('user_id', auth()->id())->whereHas('product')->count();
             } else {
                 $guestCart = session()->get('guest_cart', []);
                 $realCartCount = count($guestCart);
