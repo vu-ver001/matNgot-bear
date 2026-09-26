@@ -7,6 +7,7 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\OrderStatusHistory;
+use App\Models\PaymentRefundRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\OrderService;
@@ -476,5 +477,51 @@ class OrderController extends Controller
         $matches = $query->limit(2)->get();
 
         return $matches->count() === 1 ? $matches->first() : null;
+    }
+
+    /**
+     * Khách hàng tự cập nhật/bổ sung thông tin số tài khoản ngân hàng để nhận hoàn tiền
+     */
+    public function updateRefundAccount(Request $request, Order $order)
+    {
+        if ($order->customer_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($order->order_status !== 'CANCELLED' && ! $order->needsRefund()) {
+            return back()->with('error', 'Đơn hàng này không ở trạng thái cần cập nhật thông tin hoàn tiền.');
+        }
+
+        $validated = $request->validate([
+            'refund_bank_name' => 'required|string|max:100',
+            'refund_bank_account' => 'required|string|max:50',
+            'refund_account_holder' => 'required|string|max:100',
+        ], [
+            'refund_bank_name.required' => 'Vui lòng chọn hoặc nhập tên ngân hàng nhận tiền.',
+            'refund_bank_account.required' => 'Vui lòng nhập số tài khoản ngân hàng.',
+            'refund_account_holder.required' => 'Vui lòng nhập tên chủ tài khoản.',
+        ]);
+
+        $order->update($validated);
+
+        // Đồng bộ vào PaymentRefundRequest nếu có
+        PaymentRefundRequest::where('order_id', $order->id)
+            ->where('status', 'PENDING')
+            ->update([
+                'bank_name' => $validated['refund_bank_name'],
+                'bank_account' => $validated['refund_bank_account'],
+                'account_holder' => $validated['refund_account_holder'],
+            ]);
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'from_status' => $order->order_status,
+            'to_status' => $order->order_status,
+            'changed_by' => auth()->id(),
+            'note' => "Khách hàng đã cập nhật thông tin nhận hoàn tiền: {$validated['refund_bank_name']} - {$validated['refund_bank_account']} ({$validated['refund_account_holder']})",
+            'changed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Đã lưu thông tin tài khoản nhận tiền hoàn thành công! Shop sẽ sớm đối soát và chuyển khoản cho bạn.');
     }
 }

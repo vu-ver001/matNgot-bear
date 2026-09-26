@@ -39,25 +39,104 @@
             $canPayOnline = $order->canPayOnline();
         @endphp
 
-        {{-- Banner thông báo Đơn đã hủy nhưng đã thanh toán online - Chờ shop liên hệ hoàn tiền --}}
-        @if($order->order_status === 'CANCELLED' && $order->payment_status === 'PAID')
+        @php
+            $isShopRejected = $order->order_status === 'CANCELLED' && !str_contains($order->cancel_reason ?? '', '24') && (
+                str_contains($order->cancel_reason ?? '', 'từ chối') || 
+                str_contains($order->cancel_reason ?? '', 'Cửa hàng') || 
+                str_contains($order->cancel_reason ?? '', 'Shop') || 
+                ($order->cancelled_by && $order->cancelledByUser?->role !== 'CUSTOMER')
+            );
+        @endphp
+
+        {{-- Banner thông báo Đơn đã hủy nhưng đã thanh toán online (Khách tự hủy hoặc hệ thống hủy) --}}
+        @if($order->order_status === 'CANCELLED' && $order->payment_status === 'PAID' && !$isShopRejected)
             <div class="mb-6 bg-gradient-to-r from-amber-500/10 via-amber-100/80 to-orange-500/10 border-2 border-amber-400 rounded-2xl p-5 sm:p-6 shadow-sm">
                 <div class="flex items-start gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shrink-0 shadow-md shadow-amber-500/30">
                         💸
                     </div>
-                    <div>
+                    <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h4 class="text-base font-black text-[#2C1408]">Đơn hàng đã hủy - Đang đợi shop liên hệ hoàn tiền</h4>
+                            <h4 class="text-base font-black text-[#2C1408]">Đơn hàng đã hủy - Đang đợi shop đối soát hoàn tiền</h4>
                             <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-[11px]">CHỜ HOÀN TIỀN</span>
                         </div>
                         <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1 leading-relaxed">
-                            Đơn hàng của bạn đã được hủy thành công. Do đơn hàng đã được thanh toán online số tiền <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>, nhân viên của <strong>Mật Ngọt Bear</strong> sẽ sớm liên hệ qua SĐT <strong>{{ $order->recipient_phone }}</strong> để lấy thông tin STK và chuyển khoản hoàn lại 100% tiền cho bạn.
+                            Đơn hàng của bạn đã hủy thành công. Số tiền đã thanh toán <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong> sẽ được Mật Ngọt Bear chuyển khoản hoàn lại 100% cho bạn.
                         </p>
+
                         @if($order->refund_bank_account)
-                            <div class="mt-2.5 inline-flex items-center gap-2 p-2.5 bg-white/90 rounded-xl border border-amber-300 text-xs text-amber-900">
-                                <i class="fa-solid fa-building-columns text-amber-600"></i>
-                                <span>Thông tin STK bạn đã cung cấp: <strong>{{ $order->refund_bank_name }}</strong> - <strong>{{ $order->refund_bank_account }}</strong> ({{ $order->refund_account_holder }})</span>
+                            <div class="mt-3 p-3.5 bg-white rounded-xl border border-amber-300 text-xs text-amber-950" x-data="{ showEditBank: false }">
+                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-circle-check text-emerald-600 text-base shrink-0"></i>
+                                        <span>STK nhận hoàn tiền: <strong>{{ $order->refund_bank_name }}</strong> - <strong class="font-mono text-sm text-amber-900">{{ $order->refund_bank_account }}</strong> ({{ $order->refund_account_holder }})</span>
+                                    </div>
+                                    <button type="button" @click="showEditBank = !showEditBank" class="text-amber-800 font-bold hover:underline cursor-pointer text-xs flex items-center gap-1">
+                                        <i class="fa-solid fa-pen-to-square"></i> Đổi STK khác
+                                    </button>
+                                </div>
+
+                                <form x-show="showEditBank" x-cloak action="{{ route('customer.orders.update_refund_account', $order) }}" method="POST" class="mt-3 pt-3 border-t border-amber-200 space-y-3">
+                                    @csrf
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Ngân hàng</label>
+                                            <select name="refund_bank_name" class="w-full text-xs p-2 rounded-xl border border-amber-300 bg-white" required>
+                                                @foreach(['MB Bank', 'Vietcombank', 'Techcombank', 'BIDV', 'VietinBank', 'ACB', 'TPBank', 'VPBank', 'Sacombank', 'HDBank', 'MSB', 'OCB', 'VIB', 'Agribank', 'Khác'] as $bank)
+                                                    <option value="{{ $bank }}" {{ ($order->refund_bank_name ?? '') === $bank ? 'selected' : '' }}>{{ $bank }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Số tài khoản</label>
+                                            <input type="text" name="refund_bank_account" value="{{ $order->refund_bank_account }}" required class="w-full text-xs p-2 rounded-xl border border-amber-300 bg-white font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Chủ tài khoản</label>
+                                            <input type="text" name="refund_account_holder" value="{{ $order->refund_account_holder }}" required class="w-full text-xs p-2 rounded-xl border border-amber-300 bg-white uppercase">
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end gap-2">
+                                        <button type="button" @click="showEditBank = false" class="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 rounded-lg cursor-pointer">Hủy</button>
+                                        <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg cursor-pointer">Cập nhật</button>
+                                    </div>
+                                </form>
+                            </div>
+                        @else
+                            <div class="mt-3 p-4 bg-white rounded-2xl border-2 border-amber-300 shadow-xs">
+                                <div class="flex items-center gap-2 text-amber-900 font-bold text-xs sm:text-sm mb-1">
+                                    <i class="fa-solid fa-building-columns text-amber-700"></i>
+                                    <span>Vui lòng cung cấp số tài khoản để Shop chuyển khoản hoàn tiền:</span>
+                                </div>
+                                <p class="text-xs text-[#7D6B5D] mb-3">Shop cần thông tin STK của bạn để chuyển khoản lại <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>.</p>
+
+                                <form action="{{ route('customer.orders.update_refund_account', $order) }}" method="POST" class="space-y-3">
+                                    @csrf
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Ngân hàng <span class="text-rose-600">*</span></label>
+                                            <select name="refund_bank_name" class="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white" required>
+                                                <option value="">-- Chọn ngân hàng --</option>
+                                                @foreach(['MB Bank', 'Vietcombank', 'Techcombank', 'BIDV', 'VietinBank', 'ACB', 'TPBank', 'VPBank', 'Sacombank', 'HDBank', 'MSB', 'OCB', 'VIB', 'Agribank', 'Khác'] as $bank)
+                                                    <option value="{{ $bank }}" {{ ($order->refund_bank_name ?? '') === $bank ? 'selected' : '' }}>{{ $bank }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Số tài khoản <span class="text-rose-600">*</span></label>
+                                            <input type="text" name="refund_bank_account" value="{{ $order->refund_bank_account }}" required placeholder="Nhập STK nhận tiền..." class="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Chủ tài khoản <span class="text-rose-600">*</span></label>
+                                            <input type="text" name="refund_account_holder" value="{{ $order->refund_account_holder ?: $order->recipient_name }}" required placeholder="TÊN CHỦ TÀI KHOẢN" class="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white uppercase">
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                            <i class="fa-solid fa-paper-plane"></i> Lưu thông tin nhận tiền
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         @endif
                     </div>
@@ -94,6 +173,119 @@
                     <p class="text-xs text-rose-700 mt-1 leading-relaxed">
                         Do đơn hàng chưa được thanh toán thành công trong vòng 24 giờ kể từ thời điểm đặt hàng, hệ thống đã tự động hủy đơn và hoàn lại số lượng tồn kho sản phẩm. Bạn có thể bấm nút <strong>"Mua lại đơn hàng"</strong> bên dưới để tạo đơn mới.
                     </p>
+                </div>
+            </div>
+        @endif
+
+        {{-- Banner thông báo Đơn hàng bị Cửa hàng từ chối tiếp nhận --}}
+        @if($isShopRejected)
+            <div class="mb-6 bg-gradient-to-r from-rose-500/10 via-rose-50 to-red-500/10 border-2 border-rose-300 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-rose-600/30">
+                        <i class="fa-solid fa-ban"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h4 class="text-base font-black text-[#2C1408]">Đơn hàng đã bị Cửa hàng từ chối tiếp nhận</h4>
+                            <span class="px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-900 font-extrabold text-[11px]">CỬA HÀNG TỪ CHỐI</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-[#7D6B5D] mt-1 leading-relaxed">
+                            Rất tiếc, cửa hàng không thể tiếp nhận và chuẩn bị đơn hàng này cho bạn.
+                        </p>
+
+                        <!-- Khối lý do từ chối -->
+                        <div class="mt-3 p-3.5 bg-white/95 rounded-xl border border-rose-200 shadow-2xs">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-rose-800 uppercase">
+                                <i class="fa-solid fa-circle-exclamation text-rose-600"></i>
+                                <span>Lý do từ chối từ cửa hàng:</span>
+                            </div>
+                            <p class="text-sm text-rose-700 font-semibold mt-1 italic leading-relaxed">
+                                "{{ str_replace(['Cửa hàng từ chối: ', 'Shop từ chối tiếp nhận đơn: ', 'Shop từ chối: '], '', $order->cancel_reason ?? 'Cửa hàng không thể đáp ứng đơn hàng vào thời điểm này') }}"
+                            </p>
+                        </div>
+
+                        @if($order->payment_status === 'PAID')
+                            @if($order->refund_bank_account)
+                                <div class="mt-3 p-3.5 bg-white rounded-xl border border-amber-300 text-xs text-amber-950" x-data="{ showEditBank: false }">
+                                    <div class="flex items-center justify-between flex-wrap gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-circle-check text-emerald-600 text-base shrink-0"></i>
+                                            <span>STK nhận hoàn tiền ({{ number_format($order->total_amount, 0, ',', '.') }}đ): <strong>{{ $order->refund_bank_name }}</strong> - <strong class="font-mono text-sm text-amber-900">{{ $order->refund_bank_account }}</strong> ({{ $order->refund_account_holder }})</span>
+                                        </div>
+                                        <button type="button" @click="showEditBank = !showEditBank" class="text-amber-800 font-bold hover:underline cursor-pointer text-xs flex items-center gap-1">
+                                            <i class="fa-solid fa-pen-to-square"></i> Đổi STK khác
+                                        </button>
+                                    </div>
+
+                                    <form x-show="showEditBank" x-cloak action="{{ route('customer.orders.update_refund_account', $order) }}" method="POST" class="mt-3 pt-3 border-t border-amber-200 space-y-3">
+                                        @csrf
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Ngân hàng</label>
+                                                <select name="refund_bank_name" class="w-full text-xs p-2 rounded-xl border border-amber-300 bg-white" required>
+                                                    @foreach(['MB Bank', 'Vietcombank', 'Techcombank', 'BIDV', 'VietinBank', 'ACB', 'TPBank', 'VPBank', 'Sacombank', 'HDBank', 'MSB', 'OCB', 'VIB', 'Agribank', 'Khác'] as $bank)
+                                                        <option value="{{ $bank }}" {{ ($order->refund_bank_name ?? '') === $bank ? 'selected' : '' }}>{{ $bank }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Số tài khoản</label>
+                                                <input type="text" name="refund_bank_account" value="{{ $order->refund_bank_account }}" required class="w-full text-xs p-2 rounded-xl border border-amber-300 bg-white font-mono">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Chủ tài khoản</label>
+                                                <input type="text" name="refund_account_holder" value="{{ $order->refund_account_holder }}" required class="w-full text-xs p-2 rounded-xl border border-amber-300 bg-white uppercase">
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-end gap-2">
+                                            <button type="button" @click="showEditBank = false" class="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 rounded-lg cursor-pointer">Hủy</button>
+                                            <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg cursor-pointer">Cập nhật</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            @else
+                                <div class="mt-3 p-4 bg-white rounded-2xl border-2 border-amber-300 shadow-xs">
+                                    <div class="flex items-center gap-2 text-amber-900 font-bold text-xs sm:text-sm mb-1">
+                                        <i class="fa-solid fa-building-columns text-amber-700"></i>
+                                        <span>Cung cấp số tài khoản nhận tiền hoàn ({{ number_format($order->total_amount, 0, ',', '.') }}đ):</span>
+                                    </div>
+                                    <p class="text-xs text-[#7D6B5D] mb-3">Đơn hàng này bạn đã thanh toán trực tuyến. Vui lòng cung cấp số tài khoản để Shop chuyển khoản hoàn lại 100% tiền cho bạn.</p>
+
+                                    <form action="{{ route('customer.orders.update_refund_account', $order) }}" method="POST" class="space-y-3">
+                                        @csrf
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Ngân hàng <span class="text-rose-600">*</span></label>
+                                                <select name="refund_bank_name" class="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white" required>
+                                                    <option value="">-- Chọn ngân hàng --</option>
+                                                    @foreach(['MB Bank', 'Vietcombank', 'Techcombank', 'BIDV', 'VietinBank', 'ACB', 'TPBank', 'VPBank', 'Sacombank', 'HDBank', 'MSB', 'OCB', 'VIB', 'Agribank', 'Khác'] as $bank)
+                                                        <option value="{{ $bank }}" {{ ($order->refund_bank_name ?? '') === $bank ? 'selected' : '' }}>{{ $bank }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Số tài khoản <span class="text-rose-600">*</span></label>
+                                                <input type="text" name="refund_bank_account" value="{{ $order->refund_bank_account }}" required placeholder="Nhập STK nhận tiền..." class="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white font-mono">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-[#4E342E] uppercase mb-1">Chủ tài khoản <span class="text-rose-600">*</span></label>
+                                                <input type="text" name="refund_account_holder" value="{{ $order->refund_account_holder ?: $order->recipient_name }}" required placeholder="TÊN CHỦ TÀI KHOẢN" class="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white uppercase">
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-end">
+                                            <button type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                                <i class="fa-solid fa-paper-plane"></i> Lưu thông tin nhận tiền
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            @endif
+                        @else
+                            <p class="text-xs text-[#8E8076] mt-2.5">
+                                Quý khách có thể xem và chọn các sản phẩm tương tự khác trên website hoặc liên hệ bộ phận hỗ trợ khách hàng của Mật Ngọt Bear để được tư vấn thêm.
+                            </p>
+                        @endif
+                    </div>
                 </div>
             </div>
         @endif

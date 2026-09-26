@@ -24,7 +24,9 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->grou
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     Route::post('/orders/{order}/approve-cancel', [OrderController::class, 'approveCancel'])->name('orders.approve_cancel');
     Route::post('/orders/{order}/reject-cancel', [OrderController::class, 'rejectCancel'])->name('orders.reject_cancel');
+    Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
     Route::post('/orders/{order}/request-refund', [OrderController::class, 'requestRefund'])->name('orders.request_refund');
+    Route::post('/orders/{order}/update-refund-account', [OrderController::class, 'updateRefundAccount'])->name('orders.update_refund_account');
 
     // Quản lý thanh toán & Đối soát theo phân quyền Nhân viên vận hành
     Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');

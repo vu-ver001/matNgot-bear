@@ -178,6 +178,14 @@
                                     </div>
                                 </div>
 
+                                {{-- Hiển thị lý do hủy/từ chối ngay trên card --}}
+                                @if($order->order_status === 'CANCELLED' && $order->cancel_reason)
+                                    <div class="px-5 py-2.5 bg-rose-50/70 border-b border-rose-100 flex items-center gap-2 text-xs text-rose-800">
+                                        <i class="fa-solid fa-circle-exclamation text-rose-600 shrink-0"></i>
+                                        <span><strong>Lý do từ chối / hủy:</strong> {{ $order->cancel_reason }}</span>
+                                    </div>
+                                @endif
+
                                 <!-- 4. Actions Footer -->
                                 <div class="order-card-footer flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div class="flex items-center gap-2">
