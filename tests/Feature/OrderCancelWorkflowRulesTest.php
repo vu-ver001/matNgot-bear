@@ -256,5 +256,106 @@ class OrderCancelWorkflowRulesTest extends TestCase
         $order->refresh();
         $this->assertSame('CANCELLED', $order->order_status);
     }
+
+    /**
+     * TH 4: Nhân viên từ chối đơn hàng đang chờ xác nhận (PENDING) với lý do bắt buộc.
+     * Kiểm tra trạng thái sang CANCELLED, hoàn lại tồn kho, lưu lý do và ghi nhận lịch sử.
+     */
+    public function test_staff_can_reject_pending_order_with_reason(): void
+    {
+        $initialStock = $this->product->fresh()->stock_quantity; // Ban đầu sau khi tạo đơn
+        $order = $this->createTestOrder('COD', 'UNPAID', 'PENDING');
+        $this->product->decrement('stock_quantity', 1);
+
+        $this->actingAs($this->staff);
+
+        // Trường hợp không nhập lý do -> Bị lỗi validation
+        $failResponse = $this->post(route('staff.orders.reject', $order), [
+            'reject_reason' => '',
+        ]);
+        $failResponse->assertSessionHasErrors('reject_reason');
+        $this->assertSame('PENDING', $order->fresh()->order_status);
+
+        // Nhập lý do hợp lệ
+        $rejectReason = 'Sản phẩm còn lại trong kho bị lỗi kiểm định chất lượng (dính bẩn/rách), shop xin phép từ chối để đảm bảo quyền lợi cho bạn';
+        $response = $this->post(route('staff.orders.reject', $order), [
+            'reject_reason' => $rejectReason,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $order->refresh();
+        $this->assertSame('CANCELLED', $order->order_status);
+        $this->assertStringContainsString($rejectReason, $order->cancel_reason);
+        $this->assertSame($this->staff->id, $order->cancelled_by);
+
+        // Kiểm tra tồn kho được hoàn lại
+        $this->assertTrue($order->stock_restored);
+
+        // Kiểm tra trang chi tiết đơn hàng của khách hàng hiển thị rõ ràng lý do từ chối
+        $this->actingAs($this->customer);
+        $customerViewResponse = $this->get(route('customer.orders.show', $order));
+        $customerViewResponse->assertOk();
+        $customerViewResponse->assertSee('Đơn hàng đã bị Cửa hàng từ chối tiếp nhận');
+        $customerViewResponse->assertSee($rejectReason);
+    }
+
+    /**
+     * TH 5: Đơn hàng thanh toán online (PAID) bị shop từ chối -> tự động tạo PaymentRefundRequest
+     * Khách hàng có thể tự nhập STK nhận tiền hoàn qua trang chi tiết đơn hàng.
+     * Nhân viên cũng có thể cập nhật STK cho khách nếu khách báo qua hotline.
+     */
+    public function test_paid_order_rejected_by_staff_allows_customer_and_staff_to_update_bank_account(): void
+    {
+        $order = $this->createTestOrder('BANK_TRANSFER', 'PAID', 'PENDING');
+
+        // 1. Staff từ chối đơn
+        $this->actingAs($this->staff);
+        $rejectResponse = $this->post(route('staff.orders.reject', $order), [
+            'reject_reason' => 'Không đủ số lượng giao kịp cho khách',
+        ]);
+        $rejectResponse->assertSessionHas('success');
+
+        $order->refresh();
+        $this->assertSame('CANCELLED', $order->order_status);
+
+        // Kiểm tra đã tự động tạo PaymentRefundRequest
+        $refundReq = \App\Models\PaymentRefundRequest::where('order_id', $order->id)->first();
+        $this->assertNotNull($refundReq);
+        $this->assertSame('PENDING', $refundReq->status);
+        $this->assertNull($order->refund_bank_account);
+
+        // 2. Khách hàng vào trang đơn hàng và nhập thông tin STK
+        $this->actingAs($this->customer);
+        $customerUpdate = $this->post(route('customer.orders.update_refund_account', $order), [
+            'refund_bank_name' => 'Vietcombank',
+            'refund_bank_account' => '0123456789',
+            'refund_account_holder' => 'NGUYEN VAN A',
+        ]);
+        $customerUpdate->assertSessionHas('success');
+
+        $order->refresh();
+        $refundReq->refresh();
+        $this->assertSame('Vietcombank', $order->refund_bank_name);
+        $this->assertSame('0123456789', $order->refund_bank_account);
+        $this->assertSame('NGUYEN VAN A', $order->refund_account_holder);
+        $this->assertSame('0123456789', $refundReq->bank_account);
+
+        // 3. Nhân viên gọi cho khách xác minh và có thể điều chỉnh lại STK nếu khách báo sai
+        $this->actingAs($this->staff);
+        $staffUpdate = $this->post(route('staff.orders.update_refund_account', $order), [
+            'refund_bank_name' => 'MB Bank',
+            'refund_bank_account' => '999988887777',
+            'refund_account_holder' => 'NGUYEN VAN A',
+        ]);
+        $staffUpdate->assertSessionHas('success');
+
+        $order->refresh();
+        $refundReq->refresh();
+        $this->assertSame('MB Bank', $order->refund_bank_name);
+        $this->assertSame('999988887777', $order->refund_bank_account);
+        $this->assertSame('999988887777', $refundReq->bank_account);
+    }
 }
 

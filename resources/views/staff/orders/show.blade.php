@@ -6,7 +6,7 @@
 @endsection
 
 @section('content')
-<div x-data="{ openApproveModal: false, openRejectModal: false, openRefundRequestModal: false }">
+<div x-data="{ openApproveModal: false, openRejectModal: false, openRefundRequestModal: false, openRejectOrderModal: false, rejectReason: '' }">
     <!-- Header Breadcrumb & Actions -->
     <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div class="flex items-center gap-3">
@@ -51,6 +51,44 @@
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
+        </div>
+    @endif
+
+    {{-- KHỐI HÀNH ĐỘNG DÀNH CHO ĐƠN HÀNG MỚI (PENDING) --}}
+    @if ($order->order_status === 'PENDING')
+        <div class="mb-6 bg-gradient-to-r from-amber-500/10 via-amber-100/60 to-orange-500/10 border-2 border-amber-300 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-start sm:items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-amber-500/30">
+                    <i class="fa-solid fa-bell-concierge"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="text-base font-extrabold text-[#2B1810]">Đơn hàng mới - Chờ nhân viên xác nhận</h3>
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-xs">CHỜ XỬ LÝ</span>
+                    </div>
+                    <p class="text-xs text-[#7D6B5D] mt-0.5">
+                        Kiểm tra số lượng tồn kho và thông tin giao hàng của khách. Bấm <strong>Xác nhận</strong> để chuẩn bị đơn, hoặc <strong>Từ chối đơn</strong> (kèm lý do) nếu không thể đáp ứng.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 w-full md:w-auto shrink-0 justify-end flex-wrap">
+                @if ($order->canTransitionTo('PREPARING'))
+                    <form method="POST" action="{{ route('staff.orders.updateStatus', $order) }}" class="inline">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="order_status" value="PREPARING">
+                        <button type="submit" class="btn btn-primary btn-sm flex items-center gap-1.5 shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Xác Nhận Đơn Hàng</span>
+                        </button>
+                    </form>
+                @endif
+                <button type="button" @click="openRejectOrderModal = true" class="btn btn-sm bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-ban"></i>
+                    <span>Từ Chối Đơn</span>
+                </button>
+            </div>
         </div>
     @endif
 
@@ -360,6 +398,84 @@
         </div>
     @endif
 
+    {{-- POPUP MODAL TỪ CHỐI ĐƠN HÀNG (PENDING) DÀNH CHO SHOP --}}
+    @if ($order->order_status === 'PENDING')
+        <div x-show="openRejectOrderModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openRejectOrderModal = false"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-rose-200" @click.stop>
+                    <form method="POST" action="{{ route('staff.orders.reject', $order) }}">
+                        @csrf
+                        <div class="p-6 sm:p-7">
+                            <div class="flex items-center gap-3.5 mb-4 pb-4 border-b border-gray-100">
+                                <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl shrink-0">
+                                    <i class="fa-solid fa-ban"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base sm:text-lg font-black text-[#2B1810]">Từ chối đơn hàng #{{ $order->order_code }}</h3>
+                                    <p class="text-xs text-[#7D6B5D] mt-0.5">Đơn sẽ bị hủy và gửi thông báo lý do tới khách hàng</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3.5 text-xs text-[#5C3219]">
+                                <div>
+                                    <label class="block font-bold text-[#2B1810] mb-1.5 uppercase">
+                                        Lý do từ chối đơn hàng <span class="text-rose-500">*</span>
+                                    </label>
+                                    
+                                    <!-- Gợi ý nhanh -->
+                                    <div class="mb-2 flex flex-wrap gap-1.5">
+                                        <button type="button" @click="rejectReason = 'Sản phẩm còn lại trong kho bị lỗi kiểm định chất lượng (dính bẩn/rách), shop xin phép từ chối để đảm bảo quyền lợi cho bạn'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                            Hàng lỗi kiểm định
+                                        </button>
+                                        <button type="button" @click="rejectReason = 'Không thể liên hệ với bạn qua Số điện thoại để xác nhận đơn hàng'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                            Không nghe máy
+                                        </button>
+                                        <button type="button" @click="rejectReason = 'Thông tin địa chỉ hoặc số điện thoại nhận hàng không đầy đủ/chính xác'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                            Sai thông tin
+                                        </button>
+                                        <button type="button" @click="rejectReason = 'Địa chỉ nhận hàng nằm ngoài khu vực đối tác vận chuyển có thể giao'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                            Khu vực không hỗ trợ
+                                        </button>
+                                        <button type="button" @click="rejectReason = 'Khách hàng liên hệ qua hotline yêu cầu hủy đơn'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                            Khách yêu cầu hủy
+                                        </button>
+                                    </div>
+
+                                    <textarea name="reject_reason" 
+                                              x-model="rejectReason"
+                                              rows="3" 
+                                              required 
+                                              minlength="3" 
+                                              maxlength="500"
+                                              placeholder="Nhập lý do chi tiết để khách hàng được rõ nguyên nhân..."
+                                              class="w-full rounded-xl border border-gray-300 text-xs p-3 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none"></textarea>
+                                    <p class="text-[11px] text-gray-500 mt-1 italic">* Lý do này sẽ hiển thị trực tiếp cho khách hàng trên trang chi tiết đơn hàng.</p>
+                                </div>
+
+                                @if($order->payment_status === 'PAID')
+                                    <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                                        <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0"></i>
+                                        <span>Đơn hàng đã thanh toán <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>. Sau khi từ chối, hệ thống sẽ tự động tạo yêu cầu hoàn tiền để Admin đối soát hoàn trả lại khách.</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-4 flex justify-end gap-2.5 border-t border-gray-100">
+                            <button type="button" @click="openRejectOrderModal = false" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+                                Đóng
+                            </button>
+                            <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-ban"></i> Xác nhận từ chối đơn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- KHỐI CẢNH BÁO 2: Cần hoàn tiền cho khách (Đơn đã hủy & đã thanh toán) --}}
     @if($order->needsRefund())
         @php
@@ -457,26 +573,81 @@
                     </button>
                 </div>
 
-                @if($order->refund_bank_account || $order->refund_bank_name)
-                    <div class="mt-4 p-3.5 bg-white rounded-xl border border-amber-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div>
-                            <span class="text-[#7D6B5D] block font-medium">Ngân hàng:</span>
-                            <strong class="text-[#2B1810] text-sm">{{ $order->refund_bank_name ?: '—' }}</strong>
+                <div class="mt-4 p-3.5 bg-white rounded-xl border border-amber-200 text-xs" x-data="{ openStaffEditBankModal: false }">
+                    <div class="flex items-center justify-between flex-wrap gap-2 mb-2 pb-2 border-b border-gray-100">
+                        <span class="font-bold text-[#2B1810] flex items-center gap-1.5 uppercase text-[11px]">
+                            <i class="fa-solid fa-building-columns text-amber-600"></i>
+                            Thông tin tài khoản nhận hoàn tiền của khách
+                        </span>
+                        <button type="button" @click="openStaffEditBankModal = true" class="text-amber-800 font-bold hover:underline flex items-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-pen-to-square"></i> {{ $order->refund_bank_account ? 'Đổi STK khác' : 'Nhập STK khách báo' }}
+                        </button>
+                    </div>
+
+                    @if($order->refund_bank_account || $order->refund_bank_name)
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <span class="text-[#7D6B5D] block font-medium">Ngân hàng:</span>
+                                <strong class="text-[#2B1810] text-sm">{{ $order->refund_bank_name ?: '—' }}</strong>
+                            </div>
+                            <div>
+                                <span class="text-[#7D6B5D] block font-medium">Số tài khoản:</span>
+                                <strong class="text-amber-800 font-mono text-sm tracking-wide">{{ $order->refund_bank_account ?: '—' }}</strong>
+                            </div>
+                            <div>
+                                <span class="text-[#7D6B5D] block font-medium">Chủ tài khoản:</span>
+                                <strong class="text-[#2B1810] uppercase text-sm">{{ $order->refund_account_holder ?: '—' }}</strong>
+                            </div>
                         </div>
-                        <div>
-                            <span class="text-[#7D6B5D] block font-medium">Số tài khoản:</span>
-                            <strong class="text-amber-800 font-mono text-sm tracking-wide">{{ $order->refund_bank_account ?: '—' }}</strong>
+                    @else
+                        <div class="p-2.5 bg-amber-50/70 rounded-lg text-amber-900 flex items-center justify-between gap-2 flex-wrap">
+                            <span>💡 Khách hàng chưa điền STK trên web. Bạn có thể gọi tới <strong>{{ $order->recipient_phone }}</strong> để hỏi rồi bấm nút <strong>"Nhập STK khách báo"</strong>.</span>
                         </div>
-                        <div>
-                            <span class="text-[#7D6B5D] block font-medium">Chủ tài khoản:</span>
-                            <strong class="text-[#2B1810] uppercase text-sm">{{ $order->refund_account_holder ?: '—' }}</strong>
+                    @endif
+
+                    {{-- MODAL NHẬP STK KHÁCH DÀNH CHO STAFF --}}
+                    <div x-show="openStaffEditBankModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+                        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                            <div class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" @click="openStaffEditBankModal = false"></div>
+                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                            <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-amber-300" @click.stop>
+                                <form method="POST" action="{{ route('staff.orders.update_refund_account', $order) }}">
+                                    @csrf
+                                    <div class="p-6">
+                                        <div class="flex items-center gap-3 mb-4 pb-3 border-b border-gray-100">
+                                            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg">
+                                                <i class="fa-solid fa-building-columns"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-sm text-[#2B1810]">Cập nhật STK nhận hoàn tiền của khách</h4>
+                                                <p class="text-[11px] text-[#7D6B5D]">Mã đơn: #{{ $order->order_code }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block font-bold text-[11px] uppercase mb-1">Ngân hàng <span class="text-rose-600">*</span></label>
+                                                <input type="text" name="refund_bank_name" value="{{ $order->refund_bank_name }}" required placeholder="VD: MB Bank, Vietcombank..." class="input-control text-xs">
+                                            </div>
+                                            <div>
+                                                <label class="block font-bold text-[11px] uppercase mb-1">Số tài khoản <span class="text-rose-600">*</span></label>
+                                                <input type="text" name="refund_bank_account" value="{{ $order->refund_bank_account }}" required placeholder="Nhập số tài khoản..." class="input-control text-xs font-mono">
+                                            </div>
+                                            <div>
+                                                <label class="block font-bold text-[11px] uppercase mb-1">Tên chủ tài khoản <span class="text-rose-600">*</span></label>
+                                                <input type="text" name="refund_account_holder" value="{{ $order->refund_account_holder ?: $order->recipient_name }}" required placeholder="TÊN CHỦ TÀI KHOẢN" class="input-control text-xs uppercase">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50 px-6 py-3.5 flex justify-end gap-2 border-t border-gray-100">
+                                        <button type="button" @click="openStaffEditBankModal = false" class="px-3.5 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer">Đóng</button>
+                                        <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs cursor-pointer">Lưu thông tin</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                @else
-                    <div class="mt-3 p-3 bg-white/80 rounded-xl border border-amber-200 text-xs text-amber-900">
-                        💡 Khách hàng chưa điền sẵn STK khi hủy. Vui lòng gọi điện tới <strong>{{ $order->recipient_phone }}</strong> để xin STK ngân hàng trước khi gửi yêu cầu lên Admin.
-                    </div>
-                @endif
+                </div>
             </div>
 
             {{-- POPUP Gửi yêu cầu hoàn tiền lên Admin --}}
