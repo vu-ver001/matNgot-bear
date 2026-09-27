@@ -211,6 +211,32 @@ class OrderController extends Controller
     }
 
     /**
+     * Nhân viên chủ động từ chối đơn hàng mới (PENDING).
+     * Bắt buộc nhập lý do từ chối để gửi thông báo rõ ràng cho khách hàng.
+     */
+    public function rejectOrder(Request $request, Order $order)
+    {
+        if ($order->order_status !== 'PENDING') {
+            return redirect()->back()->with('error', 'Chỉ có thể từ chối đơn hàng đang ở trạng thái chờ xác nhận.');
+        }
+
+        $validated = $request->validate([
+            'reject_reason' => 'required|string|min:3|max:500',
+        ], [
+            'reject_reason.required' => 'Vui lòng nhập lý do từ chối đơn hàng.',
+            'reject_reason.min' => 'Lý do từ chối cần có ít nhất 3 ký tự.',
+        ]);
+
+        try {
+            $this->orderService->rejectOrderByShop($order, auth()->id(), $validated['reject_reason']);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Không thể từ chối đơn hàng: ' . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', "Đã từ chối đơn hàng #{$order->order_code}. Lý do đã được cập nhật gửi tới khách hàng.");
+    }
+
+    /**
      * Nhân viên gửi yêu cầu hoàn tiền lên Admin phê duyệt
      */
     public function requestRefund(Request $request, Order $order)
@@ -289,5 +315,43 @@ class OrderController extends Controller
         ]);
 
         return redirect()->back()->with('success', "Đã gửi yêu cầu hoàn tiền cho đơn #{$order->order_code} lên Admin thành công! Đang chờ Admin phê duyệt & chuyển khoản.");
+    }
+
+    /**
+     * Nhân viên cập nhật thông tin số tài khoản của khách hàng
+     */
+    public function updateRefundAccount(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'refund_bank_name' => 'required|string|max:100',
+            'refund_bank_account' => 'required|string|max:50',
+            'refund_account_holder' => 'required|string|max:100',
+        ], [
+            'refund_bank_name.required' => 'Vui lòng chọn hoặc nhập tên ngân hàng.',
+            'refund_bank_account.required' => 'Vui lòng nhập số tài khoản ngân hàng.',
+            'refund_account_holder.required' => 'Vui lòng nhập tên chủ tài khoản.',
+        ]);
+
+        $order->update($validated);
+
+        PaymentRefundRequest::where('order_id', $order->id)
+            ->where('status', 'PENDING')
+            ->update([
+                'bank_name' => $validated['refund_bank_name'],
+                'bank_account' => $validated['refund_bank_account'],
+                'account_holder' => $validated['refund_account_holder'],
+            ]);
+
+        $userName = auth()->user()->full_name ?? auth()->user()->name ?? 'Nhân viên';
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'from_status' => $order->order_status,
+            'to_status' => $order->order_status,
+            'changed_by' => auth()->id(),
+            'note' => "{$userName} đã cập nhật thông tin STK hoàn tiền của khách: {$validated['refund_bank_name']} - {$validated['refund_bank_account']} ({$validated['refund_account_holder']})",
+            'changed_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Đã lưu thông tin tài khoản ngân hàng của khách hàng thành công!');
     }
 }

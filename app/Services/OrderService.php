@@ -713,6 +713,89 @@ class OrderService
         });
     }
 
+    /**
+     * Shop (Nhân viên / Admin) chủ động từ chối đơn hàng đang chờ xác nhận (PENDING).
+     * Bắt buộc có lý do từ chối để thông báo minh bạch cho khách hàng.
+     */
+    public function rejectOrderByShop(Order $order, int $userId, string $reason): Order
+    {
+        return DB::transaction(function () use ($order, $userId, $reason) {
+            $currentOrder = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($currentOrder->order_status !== 'PENDING') {
+                throw new \Exception('Chỉ có thể từ chối đơn hàng đang ở trạng thái chờ xác nhận.');
+            }
+
+            $cleanReason = trim($reason);
+            if (blank($cleanReason)) {
+                throw new \Exception('Vui lòng nhập lý do từ chối đơn hàng.');
+            }
+
+            $formattedReason = 'Cửa hàng từ chối: ' . $cleanReason;
+            $oldStatus = $currentOrder->order_status;
+
+            $updateData = [
+                'order_status' => 'CANCELLED',
+                'cancel_reason' => $formattedReason,
+                'cancelled_by' => $userId,
+                'cancelled_at' => now(),
+            ];
+
+            // Nếu đơn hàng chưa thanh toán (COD hoặc chuyển khoản/thẻ chưa trả tiền), đánh dấu FAILED
+            if ($currentOrder->payment_status !== 'PAID' && $currentOrder->payment_status !== 'REFUNDED') {
+                $updateData['payment_status'] = 'FAILED';
+                Payment::where('order_id', $currentOrder->id)
+                    ->where('status', 'PENDING')
+                    ->update([
+                        'status' => 'FAILED',
+                        'note' => 'Đơn hàng bị cửa hàng từ chối: ' . $cleanReason,
+                    ]);
+            }
+
+            $currentOrder->update($updateData);
+
+            $user = \App\Models\User::find($userId);
+            $userName = $user ? ($user->full_name ?? $user->name ?? 'Nhân viên') : 'Nhân viên';
+
+            OrderStatusHistory::create([
+                'order_id' => $currentOrder->id,
+                'from_status' => $oldStatus,
+                'to_status' => 'CANCELLED',
+                'changed_by' => $userId,
+                'note' => "{$userName} đã từ chối tiếp nhận đơn hàng. Lý do: {$cleanReason}",
+                'changed_at' => now(),
+            ]);
+
+            // Hoàn lại tồn kho và voucher
+            if (! $currentOrder->stock_restored) {
+                $this->restoreStock($currentOrder);
+                $this->restoreVoucherUsage($currentOrder);
+                $currentOrder->update(['stock_restored' => true]);
+            }
+
+            // Nếu đơn đã thanh toán online thành công, tự động tạo yêu cầu hoàn tiền cho Admin
+            if ($currentOrder->payment_status === 'PAID') {
+                $payment = $currentOrder->payments->where('status', 'PAID')->first() ?? $currentOrder->latestPayment;
+                if ($payment) {
+                    PaymentRefundRequest::firstOrCreate(
+                        ['order_id' => $currentOrder->id, 'status' => 'PENDING'],
+                        [
+                            'payment_id' => $payment->id,
+                            'requested_by' => $userId,
+                            'amount' => $currentOrder->total_amount,
+                            'reason' => 'Cửa hàng từ chối đơn hàng đã thanh toán: ' . $cleanReason,
+                            'bank_name' => $currentOrder->refund_bank_name ?? 'MB',
+                            'bank_account' => $currentOrder->refund_bank_account ?? '',
+                            'account_holder' => $currentOrder->refund_account_holder ?? '',
+                        ]
+                    );
+                }
+            }
+
+            return $currentOrder->fresh();
+        });
+    }
+
     public function updateStatus(
         Order $order,
         string $newStatus,

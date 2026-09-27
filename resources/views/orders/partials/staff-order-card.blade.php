@@ -243,7 +243,7 @@
                             @csrf
                             @method('PATCH')
                             <input type="hidden" name="order_status" value="PREPARING">
-                            <button type="submit" class="btn-card-action btn-card-blue text-xs" title="Chuẩn bị hàng">
+                            <button type="submit" class="btn-card-action btn-card-blue text-xs" title="Xác nhận và chuẩn bị hàng">
                                 <i class="fa-solid fa-box-open"></i> Xác nhận
                             </button>
                         </form>
@@ -254,6 +254,94 @@
                             <i class="fa-solid fa-box-open"></i> Xác nhận
                         </button>
                     @endif
+
+                    <!-- Nút & Modal Từ chối đơn hàng cho Nhân viên/Admin -->
+                    <div x-data="{ openRejectOrderModal: false, reasonText: '' }" class="inline">
+                        <button type="button" 
+                                @click="openRejectOrderModal = true" 
+                                class="btn-card-action bg-rose-50 hover:bg-rose-100 text-rose-700! border border-rose-300 text-xs font-bold transition"
+                                title="Từ chối đơn hàng này">
+                            <i class="fa-solid fa-ban text-rose-600"></i> Từ chối
+                        </button>
+
+                        <div x-show="openRejectOrderModal" 
+                             x-cloak 
+                             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs text-left"
+                             @click.self="openRejectOrderModal = false"
+                             @keydown.escape.window="openRejectOrderModal = false"
+                             style="display: none;">
+                            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-rose-200 space-y-4" @click.stop>
+                                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg shrink-0">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-base font-bold text-[#2C1408]">Từ chối đơn #{{ $order->order_code }}</h4>
+                                            <p class="text-xs text-[#7D6B5D]">Đơn sẽ bị hủy và thông báo lý do tới khách hàng</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="openRejectOrderModal = false" class="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
+                                        <i class="fa-solid fa-xmark text-lg"></i>
+                                    </button>
+                                </div>
+
+                                <form action="{{ route($routePrefix . '.reject', $order) }}" method="POST" class="space-y-4">
+                                    @csrf
+                                    <div>
+                                        <label class="block text-xs font-bold text-[#2B1810] uppercase mb-1.5">
+                                            Lý do từ chối đơn hàng <span class="text-rose-600">*</span>
+                                        </label>
+                                        
+                                        <!-- Gợi ý chọn nhanh lý do phổ biến -->
+                                        <div class="mb-2 flex flex-wrap gap-1.5">
+                                            <button type="button" @click="reasonText = 'Sản phẩm còn lại trong kho bị lỗi kiểm định chất lượng (dính bẩn/rách), shop xin phép từ chối để đảm bảo quyền lợi cho bạn'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                                Hàng lỗi
+                                            </button>
+                                            <button type="button" @click="reasonText = 'Không thể liên hệ với bạn qua Số điện thoại để xác nhận đơn hàng'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                                Không nghe máy
+                                            </button>
+                                            <button type="button" @click="reasonText = 'Thông tin địa chỉ hoặc số điện thoại nhận hàng không đầy đủ/chính xác'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                                Sai thông tin
+                                            </button>
+                                            <button type="button" @click="reasonText = 'Địa chỉ nhận hàng nằm ngoài khu vực đối tác vận chuyển có thể giao'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                                Khu vực không hỗ trợ
+                                            </button>
+                                            <button type="button" @click="reasonText = 'Khách hàng liên hệ qua hotline yêu cầu hủy đơn'" class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition cursor-pointer">
+                                                Khách yêu cầu hủy
+                                            </button>
+                                        </div>
+
+                                        <textarea name="reject_reason" 
+                                                  x-model="reasonText"
+                                                  rows="3" 
+                                                  required 
+                                                  minlength="3" 
+                                                  maxlength="500"
+                                                  placeholder="Nhập lý do chi tiết để khách hàng được biết..."
+                                                  class="w-full text-xs p-3 rounded-xl border border-gray-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none"></textarea>
+                                        <p class="text-[11px] text-gray-500 mt-1 italic">* Lý do này sẽ hiển thị trực tiếp cho khách hàng trên trang chi tiết đơn hàng.</p>
+                                    </div>
+
+                                    @if($order->payment_status === 'PAID')
+                                        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                                            <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0"></i>
+                                            <span>Đơn hàng đã thanh toán <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>. Sau khi từ chối, hệ thống sẽ tự động tạo lệnh hoàn tiền để chuyển lại cho khách.</span>
+                                        </div>
+                                    @endif
+
+                                    <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-gray-100">
+                                        <button type="button" @click="openRejectOrderModal = false" class="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition cursor-pointer">
+                                            Đóng
+                                        </button>
+                                        <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                            <i class="fa-solid fa-ban"></i> Xác nhận từ chối đơn
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 @elseif($order->order_status === 'CONFIRMED')
                     <form action="{{ route($routePrefix . '.updateStatus', $order) }}" method="POST" class="inline">
                         @csrf

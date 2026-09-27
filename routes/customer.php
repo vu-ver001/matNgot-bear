@@ -88,6 +88,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('/orders/{order}/confirm-received', [OrderController::class, 'confirmReceived'])->name('orders.confirm_received');
         Route::post('/orders/{order}/request-return', [OrderController::class, 'requestReturn'])->name('orders.request_return');
         Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
+        Route::post('/orders/{order}/update-refund-account', [OrderController::class, 'updateRefundAccount'])->name('orders.update_refund_account');
     });
 
     // 5. Profile
