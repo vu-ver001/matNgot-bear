@@ -380,11 +380,11 @@ class PaymentController extends Controller
             'sepay_active' => $request->has('sepay_active') ? 1 : 0,
 
             // MoMo
-            'momo_partner_code' => trim($validated['momo_partner_code'] ?? 'MOMO'),
+            'momo_partner_code' => trim($validated['momo_partner_code'] ?? ''),
             'momo_access_key' => trim($validated['momo_access_key'] ?? ''),
             'momo_secret_key' => trim($validated['momo_secret_key'] ?? ''),
-            'momo_phone' => trim($validated['momo_phone'] ?? '0377466205'),
-            'momo_name' => strtoupper(trim($validated['momo_name'] ?? 'NGUYỄN NGỌC ANH')),
+            'momo_phone' => trim($validated['momo_phone'] ?? ''),
+            'momo_name' => strtoupper(trim($validated['momo_name'] ?? '')),
             'momo_active' => $request->has('momo_active') ? 1 : 0,
         ]);
 

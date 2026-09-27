@@ -323,7 +323,7 @@
                             <div>
                                 <label class="block text-[11px] font-bold text-[#5C3219] mb-1">Access Key</label>
                                 <input type="text" name="momo_access_key" value="{{ old('momo_access_key', $settings['momo_access_key']) }}"
-                                       placeholder="F8BBA842ECF85"
+                                       placeholder="Nhập MoMo access key"
                                        class="w-full py-2 px-2.5 text-xs font-mono rounded-xl border border-[#EBDDCD] focus:border-[#A50064] bg-white">
                             </div>
 

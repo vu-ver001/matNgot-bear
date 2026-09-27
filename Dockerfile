@@ -13,6 +13,7 @@ RUN apt-get update \
         libjpeg62-turbo-dev \
         libonig-dev \
         libpng-dev \
+        libpq-dev \
         libzip-dev \
         unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -23,6 +24,7 @@ RUN apt-get update \
         intl \
         mbstring \
         pdo_mysql \
+        pdo_pgsql \
         pcntl \
         zip \
     && rm -rf /var/lib/apt/lists/*
@@ -85,3 +87,23 @@ COPY --from=app /var/www/html/public /var/www/html/public
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /var/www/html
+
+# Render runs one container per web service. Keep the existing `web` target for
+# Docker Compose, and provide a combined PHP-FPM + Nginx target for Render.
+FROM app AS render
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nginx gettext-base \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /etc/nginx/sites-enabled/default
+
+COPY docker/render-nginx.conf.template /etc/nginx/templates/matngotbear.conf.template
+COPY docker/render-entrypoint.sh /usr/local/bin/render-entrypoint.sh
+
+RUN sed -i 's/\r$//' /usr/local/bin/render-entrypoint.sh \
+    && chmod +x /usr/local/bin/render-entrypoint.sh
+
+EXPOSE 10000
+
+ENTRYPOINT ["render-entrypoint.sh"]
+CMD []
