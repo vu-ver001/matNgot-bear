@@ -194,7 +194,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit"
-                                            class="btn btn-sm {{ $review->is_hidden ? 'btn-success' : 'btn-danger' }}"
+                                            class="btn btn-sm {{ $review->is_hidden ? 'btn-success' : 'btn-honey' }}"
                                             title="{{ $review->is_hidden ? 'Hiển thị công khai' : 'Tạm ẩn đánh giá' }}">
                                         <i class="fa-solid {{ $review->is_hidden ? 'fa-eye' : 'fa-eye-slash' }} text-xs"></i>
                                         {{ $review->is_hidden ? 'Hiện lại' : 'Ẩn đi' }}
