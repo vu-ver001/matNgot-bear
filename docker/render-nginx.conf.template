@@ -32,7 +32,7 @@ server {
         fastcgi_read_timeout 120s;
     }
 
-    location ~ /\. (?!well-known).* {
+    location ~ /\.(?!well-known).* {
         deny all;
     }
 }
