@@ -189,16 +189,29 @@
                             {{ $review->created_at->format('d/m/Y H:i') }}
                         </td>
                         <td class="text-right">
-                            <form method="POST" action="{{ route('admin.reviews.destroy', $review) }}">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit"
-                                        class="btn btn-sm {{ $review->is_hidden ? 'btn-success' : 'btn-danger' }}"
-                                        title="{{ $review->is_hidden ? 'Hiển thị công khai' : 'Tạm ẩn đánh giá' }}">
-                                    <i class="fa-solid {{ $review->is_hidden ? 'fa-eye' : 'fa-eye-slash' }} text-xs"></i>
-                                    {{ $review->is_hidden ? 'Hiện lại' : 'Ẩn đi' }}
-                                </button>
-                            </form>
+                            <div class="flex items-center justify-end gap-2">
+                                <form method="POST" action="{{ route('admin.reviews.toggle', $review) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit"
+                                            class="btn btn-sm {{ $review->is_hidden ? 'btn-success' : 'btn-danger' }}"
+                                            title="{{ $review->is_hidden ? 'Hiển thị công khai' : 'Tạm ẩn đánh giá' }}">
+                                        <i class="fa-solid {{ $review->is_hidden ? 'fa-eye' : 'fa-eye-slash' }} text-xs"></i>
+                                        {{ $review->is_hidden ? 'Hiện lại' : 'Ẩn đi' }}
+                                    </button>
+                                </form>
+
+                                <form method="POST"
+                                      action="{{ route('admin.reviews.destroy', $review) }}"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này không?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Xóa đánh giá">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                        Xóa
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
