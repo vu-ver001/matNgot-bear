@@ -45,8 +45,8 @@ return [
     ],
 
     'ghn' => [
-        'api_token' => env('GHN_API_TOKEN', '37da7db1-ace3-11f1-9ab8-22efcf8aa1f7'),
-        'shop_id' => (int) env('GHN_SHOP_ID', 6658154),
+        'api_token' => env('GHN_API_TOKEN'),
+        'shop_id' => (int) env('GHN_SHOP_ID', 0),
         'origin_district_id' => (int) env('GHN_ORIGIN_DISTRICT_ID', 1482),
         'origin_ward_code' => env('GHN_ORIGIN_WARD_CODE', '11007'),
         'api_url' => env('GHN_API_URL', 'https://online-gateway.ghn.vn/shiip/public-api'),
@@ -60,8 +60,8 @@ return [
     ],
 
     'vnpay' => [
-        'tmn_code' => env('VNPAY_TMN_CODE', 'DKEKANL1'),
-        'hash_secret' => env('VNPAY_HASH_SECRET', 'A36K9YROGJFCDMLD8MKRXUE2Q4AKM6TV'),
+        'tmn_code' => env('VNPAY_TMN_CODE', ''),
+        'hash_secret' => env('VNPAY_HASH_SECRET', ''),
         'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
         'merchant_name' => env('VNPAY_MERCHANT_NAME', 'MẬT NGỌT BEAR'),
         'return_url' => env('VNPAY_RETURN_URL'),
@@ -77,7 +77,7 @@ return [
     'vietqr' => [
         'bank_code' => env('VIETQR_BANK_CODE', 'MB'),
         'bank_name' => env('VIETQR_BANK_NAME', 'MB Bank (Ngân hàng Quân Đội)'),
-        'account_number' => env('VIETQR_ACCOUNT_NUMBER', '0377466205'),
-        'account_name' => env('VIETQR_ACCOUNT_NAME', 'NGUYỄN NGỌC ANH'),
+        'account_number' => env('VIETQR_ACCOUNT_NUMBER', ''),
+        'account_name' => env('VIETQR_ACCOUNT_NAME', ''),
     ],
 ];

@@ -14,8 +14,8 @@ class PaymentSettingService
         return [
             'vietqr_bank_code' => PaymentSetting::get('vietqr_bank_code', config('services.vietqr.bank_code', env('VIETQR_BANK_CODE', 'MB'))),
             'vietqr_bank_name' => PaymentSetting::get('vietqr_bank_name', config('services.vietqr.bank_name', env('VIETQR_BANK_NAME', 'MB Bank (Ngân hàng Quân Đội)'))),
-            'vietqr_account_number' => PaymentSetting::get('vietqr_account_number', config('services.vietqr.account_number', env('VIETQR_ACCOUNT_NUMBER', '0377466205'))),
-            'vietqr_account_name' => PaymentSetting::get('vietqr_account_name', config('services.vietqr.account_name', env('VIETQR_ACCOUNT_NAME', 'NGUYỄN NGỌC ANH'))),
+            'vietqr_account_number' => PaymentSetting::get('vietqr_account_number', config('services.vietqr.account_number', env('VIETQR_ACCOUNT_NUMBER', ''))) ?? '',
+            'vietqr_account_name' => PaymentSetting::get('vietqr_account_name', config('services.vietqr.account_name', env('VIETQR_ACCOUNT_NAME', ''))) ?? '',
             'sepay_api_key' => PaymentSetting::get('sepay_api_key', config('services.sepay.api_key', env('SEPAY_API_KEY', ''))),
             'sepay_webhook_token' => PaymentSetting::get('sepay_webhook_token', config('services.sepay.webhook_token', env('SEPAY_WEBHOOK_TOKEN', ''))),
             'sepay_active' => (bool) PaymentSetting::get('sepay_active', true),

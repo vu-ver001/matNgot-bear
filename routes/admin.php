@@ -60,7 +60,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
 
     // 5. Quản lý đánh giá (Anh Vũ)
     Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
-    Route::patch('/reviews/{review}/toggle', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+    Route::patch('/reviews/{review}/toggle', [ReviewController::class, 'toggle'])->name('reviews.toggle');
+    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
     // 6. Voucher management (Ngọc Anh)
     Route::post('/vouchers/{id}/extend', [VoucherController::class, 'restore'])->name('vouchers.extend');
