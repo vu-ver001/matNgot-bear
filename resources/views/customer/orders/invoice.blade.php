@@ -136,7 +136,7 @@
                 </div>
                 <p class="text-xs text-[#7D6B5D] mt-1 font-medium italic">Thế giới gấu bông & Quà tặng ngọt ngào</p>
                 <div class="text-xs text-[#6B5A4D] space-y-1 mt-3">
-                    <p><i class="fa-solid fa-location-dot w-4 text-[#E08A1E]"></i> 123 Đường Cầu Giấy, Hà Nội</p>
+                    <p><i class="fa-solid fa-location-dot w-4 text-[#E08A1E]"></i> Số 41A, P. Phú Diễn, Hà Nội</p>
                     <p><i class="fa-solid fa-phone w-4 text-[#E08A1E]"></i> Hotline: <strong>0377.466.205</strong></p>
                     <p><i class="fa-solid fa-envelope w-4 text-[#E08A1E]"></i> contact@matngotbear.vn</p>
                 </div>
@@ -193,8 +193,6 @@
                             Chuyển khoản QR (MB Bank)
                         @elseif($order->payment_method === 'CARD')
                             Cổng thanh toán VNPAY (ATM/Visa/QR)
-                        @elseif($order->payment_method === 'E_WALLET')
-                            Ví điện tử MoMo
                         @else
                             Thanh toán khi nhận hàng (COD)
                         @endif

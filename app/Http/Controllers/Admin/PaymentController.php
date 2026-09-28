@@ -355,14 +355,6 @@ class PaymentController extends Controller
             'sepay_api_key' => 'nullable|string|max:255',
             'sepay_webhook_token' => 'nullable|string|max:255',
             'sepay_active' => 'nullable|boolean',
-
-            // MoMo Gateway & Wallet
-            'momo_partner_code' => 'nullable|string|max:50',
-            'momo_access_key' => 'nullable|string|max:100',
-            'momo_secret_key' => 'nullable|string|max:100',
-            'momo_phone' => 'nullable|string|max:20',
-            'momo_name' => 'nullable|string|max:100',
-            'momo_active' => 'nullable|boolean',
         ], [
             'vietqr_bank_code.required' => 'Mã ngân hàng VietQR không được để trống.',
             'vietqr_bank_name.required' => 'Tên ngân hàng không được để trống.',
@@ -378,18 +370,10 @@ class PaymentController extends Controller
             'sepay_api_key' => trim($validated['sepay_api_key'] ?? ''),
             'sepay_webhook_token' => trim($validated['sepay_webhook_token'] ?? ''),
             'sepay_active' => $request->has('sepay_active') ? 1 : 0,
-
-            // MoMo
-            'momo_partner_code' => trim($validated['momo_partner_code'] ?? 'MOMO'),
-            'momo_access_key' => trim($validated['momo_access_key'] ?? ''),
-            'momo_secret_key' => trim($validated['momo_secret_key'] ?? ''),
-            'momo_phone' => trim($validated['momo_phone'] ?? '0377466205'),
-            'momo_name' => strtoupper(trim($validated['momo_name'] ?? 'NGUYỄN NGỌC ANH')),
-            'momo_active' => $request->has('momo_active') ? 1 : 0,
         ]);
 
         return redirect()->route('admin.payments.settings')
-            ->with('success', 'Đã lưu cấu hình tài khoản VietQR, SePAY và Ví MoMo thành công! Áp dụng tức thì.');
+            ->with('success', 'Đã lưu cấu hình tài khoản VietQR và SePAY thành công! Áp dụng tức thì.');
     }
 
     /**

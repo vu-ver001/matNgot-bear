@@ -68,17 +68,6 @@ return [
         'ipn_url' => env('VNPAY_IPN_URL'),
     ],
 
-    'momo' => [
-        'partner_code' => env('MOMO_PARTNER_CODE', 'MOMO'),
-        'access_key' => env('MOMO_ACCESS_KEY', 'F8BBA842ECF85'),
-        'secret_key' => env('MOMO_SECRET_KEY', 'K951B6PE1waDMi640xX08PD3vg6EkVlz'),
-        'endpoint' => env('MOMO_ENDPOINT', 'https://test-payment.momo.vn/v2/gateway/api/create'),
-        'redirect_url' => env('MOMO_REDIRECT_URL'),
-        'ipn_url' => env('MOMO_IPN_URL'),
-        'phone' => env('MOMO_PHONE', '0377466205'),
-        'name' => env('MOMO_NAME', 'NGUYỄN NGỌC ANH'),
-    ],
-
     'sepay' => [
         'api_key' => env('SEPAY_API_KEY', ''),
         // Chấp nhận cả 2 tên biến do .env mẫu cũ dùng SECRET, code settings dùng TOKEN.
