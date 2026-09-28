@@ -1,6 +1,6 @@
 @extends('layouts.customer')
 
-@section('title', $order->payment_method === 'E_WALLET' ? 'Thanh Toán Ví MoMo - Mật Ngọt Bear' : 'Thanh Toán QR - Mật Ngọt Bear')
+@section('title', $order->payment_method === 'CARD' ? 'Thanh Toán Cổng VNPAY - Mật Ngọt Bear' : 'Thanh Toán Chuyển Khoản QR - Mật Ngọt Bear')
 
 @section('content')
     <div class="py-4 sm:py-6 bg-[#FAF6EE] min-h-[calc(100vh-100px)] pb-12 font-sans" x-data="paymentGateway({
@@ -8,9 +8,7 @@
         amount: {{ $amount }},
         remainingSeconds: {{ $remainingSeconds }},
         expireMinutes: 15,
-        defaultTab: '{{ $order->payment_method === 'E_WALLET' ? 'qr' : 'default' }}',
-        qrUrl: '{{ $order->payment_method === 'E_WALLET' ? $momoQrUrl : ($order->payment_method === 'CARD' ? $vnpayQrUrl : $vietQrUrl) }}',
-        momoQrUrl: '{{ $momoQrUrl }}',
+        qrUrl: '{{ $order->payment_method === 'CARD' ? $vnpayQrUrl : $vietQrUrl }}',
         vietQrUrl: '{{ $vietQrUrl }}',
         vnpayQrUrl: '{{ $vnpayQrUrl }}'
     })">
@@ -45,12 +43,10 @@
                 
                 {{-- Top Header --}}
                 <div class="px-5 py-3.5 sm:px-8 sm:py-4 text-white flex flex-col sm:flex-row items-center justify-between gap-3
-                     {{ $order->payment_method === 'CARD' ? 'bg-gradient-to-r from-[#003B73] via-[#005BAA] to-[#003B73]' : ($order->payment_method === 'E_WALLET' ? 'bg-gradient-to-r from-[#800040] via-[#A50064] to-[#D82D8B]' : 'bg-gradient-to-r from-[#5C3219] via-[#7E4A28] to-[#5C3219]') }}">
+                     {{ $order->payment_method === 'CARD' ? 'bg-gradient-to-r from-[#003B73] via-[#005BAA] to-[#003B73]' : 'bg-gradient-to-r from-[#5C3219] via-[#7E4A28] to-[#5C3219]' }}">
                     <div class="flex items-center gap-3.5">
                         <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-xl shrink-0 border border-white/20 shadow-inner">
-                            @if($order->payment_method === 'E_WALLET')
-                                <i class="fa-solid fa-wallet text-[#FFB2D9]"></i>
-                            @elseif($order->payment_method === 'CARD')
+                            @if($order->payment_method === 'CARD')
                                 <i class="fa-solid fa-qrcode text-[#64B5F6]"></i>
                             @else
                                 <i class="fa-solid fa-building-columns text-[#F6D89B]"></i>
@@ -60,19 +56,12 @@
                             <div class="text-[11px] font-bold uppercase tracking-widest text-[#FCE4EC] flex items-center gap-2">
                                 @if($order->payment_method === 'CARD')
                                     <span>Cổng thanh toán điện tử VNPAY</span>
-                                @elseif($order->payment_method === 'E_WALLET')
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-black uppercase tracking-wider">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                        Ví MoMo Cá Nhân 24/7
-                                    </span>
                                 @else
                                     <span>Chuyển khoản trực tuyến 24/7</span>
                                 @endif
                             </div>
                             <h1 class="text-lg sm:text-xl font-black mt-0.5 tracking-tight">
-                                @if($order->payment_method === 'E_WALLET')
-                                    Thanh toán qua Ví MoMo: {{ $paymentConfig['momo_phone'] }} ({{ $paymentConfig['momo_name'] }})
-                                @elseif($order->payment_method === 'CARD')
+                                @if($order->payment_method === 'CARD')
                                     Thanh toán qua Cổng VNPAY-QR
                                 @else
                                     Chuyển khoản VietQR Napas 24/7
@@ -89,163 +78,13 @@
                              x-text="isExpired ? 'Trạng thái phiên' : 'Thời gian thanh toán còn lại'">Thời gian thanh toán còn lại</div>
                         <div class="text-lg sm:text-xl font-black font-mono tracking-wider transition-colors duration-200"
                              :class="isExpired ? 'text-rose-300' : 'text-[#F6D89B]'"
-                             x-text="formattedTime">15:00</div>
-                    </div>
-                </div>
-
-                {{-- MoMo Payment Method Selector Tabs (Only when E_WALLET) --}}
-                @if($order->payment_method === 'E_WALLET')
-                    <div class="bg-[#FFF5F8] border-b border-[#FAD2E1] px-5 py-2 sm:px-8 flex flex-wrap items-center justify-between gap-2.5">
-                        <div class="text-xs font-bold text-[#A50064] flex items-center gap-1.5">
-                            <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
-                            <span>Cách thức thanh toán MoMo:</span>
-                        </div>
-                        <div class="inline-flex rounded-xl p-0.5 bg-white border border-[#FAD2E1] shadow-2xs">
-                            <button type="button" 
-                                    @click="momoTab = 'qr'" 
-                                    :class="momoTab === 'qr' ? 'bg-gradient-to-r from-[#A50064] to-[#D82D8B] text-white shadow-xs font-extrabold' : 'text-[#786B61] hover:text-[#A50064] font-medium'"
-                                    class="px-3 py-1 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
-                                <i class="fa-solid fa-qrcode text-[11px]"></i>
-                                <span>Quét mã QR MoMo</span>
-                                <span class="hidden sm:inline-block text-[9px] px-1.5 py-0.2 rounded-full" :class="momoTab === 'qr' ? 'bg-white/20 text-white' : 'bg-pink-100 text-[#A50064]'">Nhanh nhất</span>
-                            </button>
-                            <button type="button" 
-                                    @click="momoTab = 'phone'" 
-                                    :class="momoTab === 'phone' ? 'bg-gradient-to-r from-[#A50064] to-[#D82D8B] text-white shadow-xs font-extrabold' : 'text-[#786B61] hover:text-[#A50064] font-medium'"
-                                    class="px-3 py-1 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
-                                <i class="fa-solid fa-mobile-screen-button text-[11px]"></i>
-                                <span>Chuyển qua SĐT MoMo</span>
-                            </button>
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Body content --}}
+                                    {{-- Body content --}}
                 <div class="p-4 sm:p-6 lg:p-7 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start">
                     
                     {{-- Left Column: QR Code Image & Scan Guide --}}
-                    <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl border text-center
-                         {{ $order->payment_method === 'E_WALLET' ? 'bg-gradient-to-b from-[#FFF5F8] to-white border-[#FAD2E1]' : 'bg-[#FAF6EE] border-[#EBDDCD]' }}">
+                    <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl border text-center bg-[#FAF6EE] border-[#EBDDCD]">
                         
-                        @if($order->payment_method === 'E_WALLET')
-                            {{-- View 1: MoMo QR Mode --}}
-                            <div x-show="momoTab === 'qr'" class="w-full flex flex-col items-center">
-                                {{-- Authentic MoMo QR Header Badge --}}
-                                <div class="w-full bg-gradient-to-r from-[#A50064] to-[#D82D8B] text-white py-2 px-3 rounded-xl mb-2.5 flex items-center justify-between shadow-xs">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-6 h-6 rounded-lg bg-white text-[#A50064] font-black text-xs flex items-center justify-center shadow-xs">M</span>
-                                        <div class="text-left">
-                                            <div class="text-[11px] font-black tracking-wider uppercase leading-tight">VÍ ĐIỆN TỬ MOMO CÁ NHÂN</div>
-                                            <div class="text-[10px] text-pink-100 font-medium">Chuyển tiền MoMo thật 24/7</div>
-                                        </div>
-                                    </div>
-                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping"></span>
-                                        Sẵn sàng
-                                    </span>
-                                </div>
-
-                                {{-- QR Code Box with MoMo Branding --}}
-                                <div class="relative bg-white p-3 rounded-2xl shadow-md border-2 border-[#FAD2E1] group overflow-hidden inline-block">
-                                    <div class="relative">
-                                        <img :src="qrUrl" alt="MoMo QR Code 0377466205 Nguyen Ngoc Anh" 
-                                             :class="isExpired ? 'filter blur-[4px] opacity-20 grayscale select-none' : ''"
-                                             class="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-xl mx-auto transition duration-300 group-hover:scale-[1.01]">
-                                        
-                                        {{-- Center MoMo Logo Pill --}}
-                                        <div x-show="!isExpired" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <div class="w-8 h-8 rounded-lg bg-[#A50064] text-white font-black text-[9px] flex flex-col items-center justify-center shadow-md border-2 border-white leading-none">
-                                                <span>mo</span><span>mo</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    {{-- Hover zoom button --}}
-                                    <button type="button" @click="isZoomed = true" x-show="!isExpired"
-                                            class="absolute bottom-4 right-4 bg-white/95 hover:bg-white text-[#A50064] p-1.5 rounded-lg shadow-md border border-pink-200 text-xs transition cursor-pointer"
-                                            title="Phóng to mã QR">
-                                        <i class="fa-solid fa-magnifying-glass-plus"></i>
-                                    </button>
-
-                                    {{-- Expired Overlay --}}
-                                    <div x-show="isExpired" x-cloak 
-                                         class="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 bg-white/92 backdrop-blur-xs text-center">
-                                        <div class="w-11 h-11 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-lg mb-1.5 shadow-xs border border-rose-200 animate-pulse">
-                                            <i class="fa-solid fa-clock-rotate-left"></i>
-                                        </div>
-                                        <div class="font-extrabold text-sm text-[#2C1408]">Mã QR đã hết hạn</div>
-                                        <div class="text-[11px] text-gray-500 mt-0.5 max-w-[200px] leading-tight">Thời gian thanh toán 15 phút đã kết thúc. Vui lòng bấm tạo mã mới.</div>
-                                        <button type="button" @click="refreshQrSession()" :disabled="isRefreshing"
-                                                class="mt-2.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#A50064] to-[#D82D8B] hover:from-[#8F0057] hover:to-[#C2237B] text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition transform hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50">
-                                            <i class="fa-solid fa-arrows-rotate text-xs" :class="isRefreshing ? 'animate-spin' : ''"></i>
-                                            <span x-text="isRefreshing ? 'Đang làm mới...' : 'Lấy mã QR mới'">Lấy mã QR mới</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- Quick utility buttons under QR --}}
-                                <div class="mt-2.5 flex items-center gap-2">
-                                    <button type="button" @click="isExpired ? refreshQrSession() : downloadQr(qrUrl, 'momo_qr_{{ $order->order_code }}.png')"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#FAD2E1] hover:border-[#A50064] text-[#A50064] hover:bg-[#FFF5F8] text-xs font-bold transition shadow-2xs cursor-pointer">
-                                        <i class="fa-solid text-[11px]" :class="isExpired ? 'fa-arrows-rotate' : 'fa-download'"></i>
-                                        <span x-text="isExpired ? 'Làm mới mã' : 'Tải ảnh QR'">Tải ảnh QR</span>
-                                    </button>
-                                    <button type="button" @click="isZoomed = true" x-show="!isExpired"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#FAD2E1] hover:border-[#A50064] text-[#A50064] hover:bg-[#FFF5F8] text-xs font-bold transition shadow-2xs cursor-pointer">
-                                        <i class="fa-solid fa-expand text-[11px]"></i>
-                                        <span>Xem lớn</span>
-                                    </button>
-                                </div>
-
-                                {{-- Compact Help note --}}
-                                <div class="mt-3 p-2.5 rounded-xl bg-white border border-[#FAD2E1] text-[11px] text-[#786B61] text-left w-full space-y-1 leading-relaxed">
-                                    <div class="font-bold text-[#A50064] flex items-center gap-1">
-                                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
-                                        <span>Quét bằng ứng dụng Ví MoMo:</span>
-                                    </div>
-                                    <p class="text-[#5C3219] leading-snug">
-                                        Mở <strong>App Ví MoMo</strong> ➔ Chọn <strong>"Quét mã"</strong> ➔ Hướng camera vào mã trên. Hệ thống MoMo tự động nhận diện người nhận <strong>0377466205 (NGUYỄN NGỌC ANH)</strong> và số tiền.
-                                    </p>
-                                </div>
-                            </div>
-
-                            {{-- View 2: MoMo Phone Manual Mode --}}
-                            <div x-show="momoTab === 'phone'" x-cloak class="w-full flex flex-col items-center">
-                                <div class="w-full bg-gradient-to-r from-[#A50064] to-[#D82D8B] text-white py-2.5 px-4 rounded-xl mb-3 text-center shadow-xs">
-                                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1 text-base">
-                                        <i class="fa-solid fa-mobile-screen-button"></i>
-                                    </div>
-                                    <div class="text-xs font-black uppercase tracking-wider">Chuyển Đến Ví MoMo Cá Nhân</div>
-                                    <div class="text-[10px] text-pink-100">Chuyển trực tiếp qua số điện thoại MoMo</div>
-                                </div>
-
-                                <div class="w-full bg-white p-3.5 rounded-xl border border-[#FAD2E1] space-y-2.5 text-left">
-                                    <div class="flex items-center justify-between pb-2 border-b border-pink-100">
-                                        <span class="text-xs text-[#786B61]">SĐT Ví MoMo:</span>
-                                        <span class="font-mono font-black text-base text-[#A50064]">{{ $paymentConfig['momo_phone'] }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between pb-2 border-b border-pink-100">
-                                        <span class="text-xs text-[#786B61]">Người nhận:</span>
-                                        <span class="font-bold text-xs text-[#2C1408]">{{ $paymentConfig['momo_name'] }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between pb-2 border-b border-pink-100">
-                                        <span class="text-xs text-[#786B61]">Số tiền:</span>
-                                        <span class="font-black text-sm text-[#E08A1E]">{{ number_format($amount, 0, ',', '.') }}đ</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-xs text-[#786B61]">Lời nhắn:</span>
-                                        <span class="font-mono font-bold text-xs text-rose-600 bg-rose-50 px-2 py-0.5 rounded">{{ $transferContent }}</span>
-                                    </div>
-                                </div>
-
-                                <button type="button" @click="momoTab = 'qr'" 
-                                        class="mt-3 text-xs font-bold text-[#A50064] hover:underline flex items-center gap-1 cursor-pointer">
-                                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                                    <span>Quay lại Quét mã QR</span>
-                                </button>
-                            </div>
-
-                        @elseif($order->payment_method === 'CARD')
+                        @if($order->payment_method === 'CARD')
                             {{-- VNPAY Card --}}
                             <div class="relative bg-white p-3 rounded-2xl shadow-md border border-[#EBDDCD] overflow-hidden inline-block">
                                 <img :src="vnpayQrUrl" alt="VNPAY QR Code" 
@@ -313,19 +152,17 @@
                     <div class="lg:col-span-7 space-y-3">
                         
                         {{-- Amount Highlight Card --}}
-                        <div class="rounded-2xl p-3 sm:p-4 border flex items-center justify-between shadow-2xs
-                             {{ $order->payment_method === 'E_WALLET' ? 'bg-gradient-to-r from-[#FFF5F8] via-[#FFF0F5] to-[#FFE4EE] border-[#FAD2E1]' : 'bg-[#FFF8E7] border-[#F4B860]/40' }}">
+                        <div class="rounded-2xl p-3 sm:p-4 border flex items-center justify-between shadow-2xs bg-[#FFF8E7] border-[#F4B860]/40">
                             <div>
-                                <div class="text-xs font-semibold {{ $order->payment_method === 'E_WALLET' ? 'text-[#800040]' : 'text-[#786B61]' }}">
+                                <div class="text-xs font-semibold text-[#786B61]">
                                     Số tiền cần thanh toán:
                                 </div>
-                                <div class="text-2xl sm:text-3xl font-black tracking-tight mt-0.5 {{ $order->payment_method === 'E_WALLET' ? 'text-[#A50064]' : 'text-[#E08A1E]' }}">
+                                <div class="text-2xl sm:text-3xl font-black tracking-tight mt-0.5 text-[#E08A1E]">
                                     {{ number_format($amount, 0, ',', '.') }}đ
                                 </div>
                             </div>
                             <button type="button" @click="copyText('{{ $amount }}', 'Số tiền')" 
-                                    class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white border text-xs font-bold transition shadow-2xs flex items-center gap-1.5 cursor-pointer
-                                    {{ $order->payment_method === 'E_WALLET' ? 'border-[#FAD2E1] text-[#A50064] hover:bg-[#FFF5F8]' : 'border-[#EBDDCD] text-[#5C3219] hover:bg-[#FAF6EE]' }}">
+                                    class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white border text-xs font-bold transition shadow-2xs flex items-center gap-1.5 cursor-pointer border-[#EBDDCD] text-[#5C3219] hover:bg-[#FAF6EE]">
                                 <i class="fa-regular fa-copy text-[11px]"></i>
                                 <span>Sao chép số tiền</span>
                             </button>
@@ -350,47 +187,7 @@
                                 </div>
                             </div>
 
-                            @if($order->payment_method === 'E_WALLET')
-                                {{-- MoMo Specific details --}}
-                                <div class="flex items-center justify-between text-sm py-1.5 border-b border-[#F0E6D8]">
-                                    <span class="text-[#786B61] font-medium text-xs sm:text-sm">Hình thức:</span>
-                                    <span class="font-bold text-[#A50064] flex items-center gap-1.5 text-xs sm:text-sm">
-                                        <i class="fa-solid fa-wallet text-sm"></i> Ví MoMo cá nhân (chuyển thật 24/7)
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between text-sm py-1.5 border-b border-[#F0E6D8]">
-                                    <span class="text-[#786B61] font-medium text-xs sm:text-sm">Số điện thoại Ví MoMo:</span>
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-mono font-bold text-base text-[#2C1408]">{{ $paymentConfig['momo_phone'] }}</span>
-                                        <button type="button" @click="copyText('{{ $paymentConfig['momo_phone'] }}', 'Số điện thoại')" 
-                                                class="text-[#A50064] hover:text-[#D82D8B] text-xs font-bold transition px-2 py-0.5 rounded bg-pink-50 hover:bg-pink-100 cursor-pointer flex items-center gap-1" title="Sao chép số điện thoại">
-                                            <i class="fa-regular fa-copy"></i>
-                                            <span>Chép SĐT</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between text-sm py-1.5 border-b border-[#F0E6D8]">
-                                    <span class="text-[#786B61] font-medium text-xs sm:text-sm">Chủ tài khoản Ví:</span>
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold text-[#2C1408] uppercase text-xs sm:text-sm">{{ $paymentConfig['momo_name'] }}</span>
-                                        <button type="button" @click="copyText('{{ $paymentConfig['momo_name'] }}', 'Tên chủ ví')" 
-                                                class="text-[#A50064] hover:text-[#D82D8B] text-xs font-bold transition px-2 py-0.5 rounded bg-pink-50 hover:bg-pink-100 cursor-pointer flex items-center gap-1" title="Sao chép tên chủ ví">
-                                            <i class="fa-regular fa-copy"></i>
-                                            <span>Chép tên</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- Action Deep Link --}}
-                                <div class="pt-1">
-                                    <a href="momo://" 
-                                       class="w-full bg-gradient-to-r from-[#A50064] via-[#D82D8B] to-[#C2185B] hover:opacity-95 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md shadow-[#A50064]/20 tracking-wide">
-                                        <i class="fa-solid fa-mobile-screen-button text-sm"></i>
-                                        <span>MỞ ỨNG DỤNG VÍ MOMO TRÊN ĐIỆN THOẠI ➔</span>
-                                    </a>
-                                </div>
-
-                            @elseif($order->payment_method === 'CARD')
+                            @if($order->payment_method === 'CARD')
                                 {{-- VNPAY Specific details --}}
                                 <div class="flex items-center justify-between text-sm py-1.5 border-b border-[#F0E6D8]">
                                     <span class="text-[#786B61] font-medium text-xs sm:text-sm">Cổng thanh toán:</span>
@@ -471,13 +268,13 @@
                         class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center transition cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
-                <div class="text-xs font-black text-[#A50064] uppercase tracking-wider mb-2">Mã QR Thanh Toán MoMo</div>
+                <div class="text-xs font-black text-[#8C4A19] uppercase tracking-wider mb-2">Mã QR Chuyển Khoản VietQR</div>
                 <img :src="qrUrl" alt="QR Code Large" class="w-64 h-64 mx-auto object-contain rounded-2xl border border-gray-100 shadow-sm">
                 <div class="mt-3 text-xs text-gray-600 font-medium">
-                    Quét bằng ứng dụng Ví MoMo hoặc App Ngân hàng
+                    Quét bằng ứng dụng Ngân hàng (MB Bank, Vietcombank, Techcombank...)
                 </div>
-                <button type="button" @click="downloadQr(qrUrl, 'qr_{{ $order->order_code }}.png')"
-                        class="mt-3 w-full py-2 px-3 rounded-xl bg-[#FFF5F8] text-[#A50064] border border-[#FAD2E1] font-bold text-xs hover:bg-[#FFE4EE] transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <button type="button" @click="downloadQr(qrUrl, 'vietqr_{{ $order->order_code }}.png')"
+                        class="mt-3 w-full py-2 px-3 rounded-xl bg-amber-50 text-[#8C4A19] border border-amber-200 font-bold text-xs hover:bg-amber-100 transition flex items-center justify-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-download"></i>
                     <span>Tải ảnh này về máy</span>
                 </button>
@@ -504,10 +301,8 @@
                 isPaid: false,
                 isRefreshing: false,
                 allowLeave: false,
-                momoTab: config.defaultTab || 'qr',
                 isZoomed: false,
                 qrUrl: config.qrUrl,
-                momoQrUrl: config.momoQrUrl || config.qrUrl,
                 vietQrUrl: config.vietQrUrl || config.qrUrl,
                 vnpayQrUrl: config.vnpayQrUrl || config.qrUrl,
 
@@ -573,17 +368,13 @@
                     .then(data => {
                         if (data && data.success) {
                             this.timeLeft = data.remainingSeconds || 900;
-                            if (data.momoQrUrl) {
-                                this.momoQrUrl = data.momoQrUrl;
-                                if (this.momoTab === 'qr') this.qrUrl = data.momoQrUrl;
-                            }
                             if (data.vietQrUrl) {
                                 this.vietQrUrl = data.vietQrUrl;
-                                if (config.defaultTab !== 'qr') this.qrUrl = data.vietQrUrl;
+                                this.qrUrl = data.vietQrUrl;
                             }
                             if (data.vnpayQrUrl) {
                                 this.vnpayQrUrl = data.vnpayQrUrl;
-                                if (config.defaultTab !== 'qr') this.qrUrl = data.vnpayQrUrl;
+                                this.qrUrl = data.vnpayQrUrl;
                             }
 
                             this.startTimer();
@@ -852,7 +643,7 @@
                             const a = document.createElement('a');
                             a.style.display = 'none';
                             a.href = blobUrl;
-                            a.download = filename || 'momo_qr.png';
+                            a.download = filename || 'payment_qr.png';
                             document.body.appendChild(a);
                             a.click();
                             window.URL.revokeObjectURL(blobUrl);

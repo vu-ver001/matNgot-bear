@@ -238,8 +238,6 @@
                                 <span style="font-weight: 700; color: #4E342E;">
                                     @if($order->payment_method === 'CARD')
                                         Cổng VNPAY (ATM/Visa/QR)
-                                    @elseif($order->payment_method === 'E_WALLET')
-                                        Ví MoMo
                                     @elseif($order->payment_method === 'BANK_TRANSFER')
                                         Chuyển khoản VietQR
                                     @else

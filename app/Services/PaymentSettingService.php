@@ -20,17 +20,6 @@ class PaymentSettingService
             'sepay_webhook_token' => PaymentSetting::get('sepay_webhook_token', config('services.sepay.webhook_token', env('SEPAY_WEBHOOK_TOKEN', ''))),
             'sepay_active' => (bool) PaymentSetting::get('sepay_active', true),
             'webhook_url' => url('/api/payment/webhook'),
-
-            // MoMo Gateway & Wallet
-            'momo_partner_code' => PaymentSetting::get('momo_partner_code', config('services.momo.partner_code', env('MOMO_PARTNER_CODE', ''))) ?? '',
-            'momo_access_key' => PaymentSetting::get('momo_access_key', config('services.momo.access_key', env('MOMO_ACCESS_KEY', ''))) ?? '',
-            'momo_secret_key' => PaymentSetting::get('momo_secret_key', config('services.momo.secret_key', env('MOMO_SECRET_KEY', ''))) ?? '',
-            'momo_endpoint' => PaymentSetting::get('momo_endpoint', config('services.momo.endpoint', env('MOMO_ENDPOINT', 'https://test-payment.momo.vn/v2/gateway/api/create'))),
-            'momo_phone' => PaymentSetting::get('momo_phone', config('services.momo.phone', env('MOMO_PHONE', ''))) ?? '',
-            'momo_name' => PaymentSetting::get('momo_name', config('services.momo.name', env('MOMO_NAME', ''))) ?? '',
-            'momo_active' => (bool) PaymentSetting::get('momo_active', true),
-            'momo_return_url' => route('payment.momo.return'),
-            'momo_ipn_url' => route('payment.momo.ipn'),
         ];
     }
 

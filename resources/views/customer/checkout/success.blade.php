@@ -97,8 +97,6 @@
                             💵 Khi nhận hàng (COD)
                         @elseif($order->payment_method === 'CARD')
                             💳 VNPAY / Thẻ
-                        @elseif($order->payment_method === 'E_WALLET')
-                            👛 Ví MoMo
                         @else
                             🏦 Chuyển khoản VietQR
                         @endif
@@ -136,8 +134,8 @@
                 </div>
             </div>
 
-            {{-- Unpaid Online Order Notice (VietQR / VNPay / MoMo) --}}
-            @if(in_array($order->payment_method, ['BANK_TRANSFER', 'CARD', 'E_WALLET']) && in_array($order->payment_status, ['UNPAID', 'PENDING']))
+            {{-- Unpaid Online Order Notice (VietQR / VNPay) --}}
+            @if(in_array($order->payment_method, ['BANK_TRANSFER', 'CARD']) && in_array($order->payment_status, ['UNPAID', 'PENDING']))
                 <div class="mx-6 sm:mx-8 mt-6 bg-gradient-to-r from-[#FFF8E7] via-[#FFF3D6] to-[#FFF8E7] border border-[#F6D89B] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
                     <div class="flex items-center gap-3.5">
                         <div class="w-10 h-10 rounded-xl bg-[#E08A1E] text-white flex items-center justify-center text-lg shrink-0 shadow-xs">

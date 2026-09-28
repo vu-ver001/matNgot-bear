@@ -103,7 +103,7 @@ class OrderCancelWorkflowRulesTest extends TestCase
      */
     public function test_pending_paid_online_order_cancel_request_routed_directly_to_admin(): void
     {
-        $order = $this->createTestOrder('E_WALLET', 'PAID', 'PENDING');
+        $order = $this->createTestOrder('BANK_TRANSFER', 'PAID', 'PENDING');
 
         $this->assertFalse($order->canCancelDirectly());
         $this->assertTrue($order->canRequestCancel());
