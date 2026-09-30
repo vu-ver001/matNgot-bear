@@ -1,3 +1,4 @@
+{{-- Component: Thẻ sản phẩm trong danh sách yêu thích (WishlistKT) --}}
 @php
     $regularPrice = (float) ($item['price'] ?? 0);
     $salePrice = !empty($item['sale_price']) ? (float) $item['sale_price'] : null;
@@ -16,6 +17,7 @@
 
 <div class="product-card" data-wishlist-card data-product-id="{{ $item['product_id'] }}">
     <div class="product-card-img-wrap">
+        {{-- Huy hiệu trạng thái tồn kho hoặc phần trăm giảm giá --}}
         <div class="wishlist-card-badges">
             @if ($isInactive)
                 <span class="wishlist-stock-badge is-unavailable">Ngừng bán</span>
@@ -28,6 +30,7 @@
             @endif
         </div>
 
+        {{-- Nút trái tim đỏ để bỏ sản phẩm khỏi danh sách yêu thích --}}
         <form method="POST" action="{{ route('customer.wishlist.destroy', $item['product_id']) }}" data-wishlist-remove-form style="position: absolute; top: 10px; right: 10px; z-index: 10; margin: 0;">
             @csrf
             @method('DELETE')
@@ -39,6 +42,7 @@
             </button>
         </form>
 
+        {{-- Ảnh đại diện sản phẩm --}}
         <a href="{{ route('products.show', $item['product_id']) }}">
             <img src="{{ $imgUrl }}" alt="{{ $item['product_name'] }}" class="product-card-img" onerror="this.src='https://placehold.co/600x600/f5e6ca/7c4a2d?text=Gau+Bong'">
         </a>

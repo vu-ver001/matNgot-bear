@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+// Chức năng: Bàn làm việc chat hỗ trợ đa luồng cho Nhân viên & Quản trị viên (ChatKT)
 class StaffChatController extends Controller
 {
     public function __construct(
@@ -20,7 +21,7 @@ class StaffChatController extends Controller
     ) {}
 
     /**
-     * Hiển thị bảng điều khiển Hỗ trợ khách hàng dành cho Nhân viên (Staff) và Quản trị viên (Admin).
+     * [Giao diện / API] Hiển thị bàn làm việc chat CSKH (lọc theo tab, tìm kiếm, phân công và chat thời gian thực).
      */
     public function index(Request $request): View|JsonResponse
     {

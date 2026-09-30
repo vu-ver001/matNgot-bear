@@ -4,12 +4,13 @@ namespace App\Support\PasswordKT;
 
 use Illuminate\Validation\Rules\Password;
 
+// Chức năng: Bộ quy tắc và thông báo lỗi mật khẩu dùng chung cho toàn hệ thống (PasswordRulesKT)
 class PasswordRulesKT
 {
     /**
-     * Quy tắc kiểm tra mật khẩu chuẩn hóa cho toàn hệ thống Mật Ngọt Bear (KT).
+     * Quy tắc kiểm tra mật khẩu chuẩn hóa cho toàn hệ thống Mật Ngọt Bear (KT):
      * - Tối thiểu 8 ký tự
-     * - Chữ hoa và chữ thường
+     * - Kết hợp chữ hoa và chữ thường
      * - Chữ số (0–9)
      * - Ký tự đặc biệt (!@#$%^&*)
      */

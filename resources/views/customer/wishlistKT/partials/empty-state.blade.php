@@ -1,4 +1,6 @@
+{{-- Component: Trạng thái trống khi chưa có sản phẩm yêu thích nào (WishlistKT) --}}
 <section class="wishlist-empty" aria-labelledby="wishlist-empty-title">
+    {{-- Hình minh họa chú gấu hoạt hình và trái tim bay --}}
     <div class="wishlist-empty-illustration" aria-hidden="true">
         <span class="wishlist-floating-heart">♥</span>
         <span class="wishlist-floating-heart is-small">♥</span>
@@ -17,6 +19,7 @@
     <h2 id="wishlist-empty-title">Chưa có bé gấu nào ở đây</h2>
     <p>Khám phá cửa hàng và nhấn vào trái tim để lưu lại những sản phẩm bạn yêu thích nhé.</p>
 
+    {{-- Nút dẫn về trang chủ tiếp tục khám phá sản phẩm --}}
     <a href="{{ route('home') }}" class="wishlist-explore-button">
         Tiếp tục khám phá
         <svg viewBox="0 0 20 20" aria-hidden="true">
