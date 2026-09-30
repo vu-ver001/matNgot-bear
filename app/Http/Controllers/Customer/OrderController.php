@@ -7,6 +7,7 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\OrderStatusHistory;
+use App\Models\PaymentRefundRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\OrderService;
@@ -29,6 +30,7 @@ class OrderController extends Controller
         }
 
         $this->orderService->cancelExpiredUnpaidOrders();
+        $this->orderService->autoCompleteDeliveredOrders();
 
         $query = Order::where('customer_id', auth()->id())->with(['latestPayment', 'details', 'reviews']);
 
@@ -104,6 +106,8 @@ class OrderController extends Controller
         }
 
         $this->orderService->checkAndCancelIfExpired($order);
+        $this->orderService->checkAndRejectIfCancelRequestExpired($order);
+        $this->orderService->checkAndAutoCompleteIfDeliveredExpired($order);
         $order->refresh();
 
         $order->load(['details.product.images', 'details.productVariant', 'payments', 'statusHistories', 'voucher', 'reviews']);
@@ -175,8 +179,11 @@ class OrderController extends Controller
             abort(403);
         }
 
-        if ($order->order_status !== 'PENDING' && ! $order->canRequestCancel()) {
-            return redirect()->back()->with('error', 'Bạn chỉ có thể hủy đơn hàng đang chờ xác nhận.');
+        if (! $order->canBeCancelledByCustomer()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Đơn hàng hiện tại không thể yêu cầu hủy.'], 400);
+            }
+            return redirect()->back()->with('error', 'Đơn hàng hiện tại không thể yêu cầu hủy.');
         }
 
         $validated = $request->validate([
@@ -186,38 +193,66 @@ class OrderController extends Controller
             'refund_account_holder' => 'nullable|string|max:100',
         ]);
 
-        $reason = !empty($validated['reason']) ? $validated['reason'] : 'Khách hàng hủy đơn hàng';
-
         try {
-            // Trường hợp 1: Đơn ở trạng thái Chờ xác nhận (PENDING) -> HỦY TRỰC TIẾP KHÔNG CẦN NHÂN VIÊN DUYỆT
-            // Kể cả đơn đã thanh toán online hay chưa thanh toán, trạng thái nhảy ngay sang ĐÃ HỦY
+            // Trường hợp 1: Đơn ở trạng thái Chờ xác nhận (PENDING) và CHƯA thanh toán -> HỦY TRỰC TIẾP
             if ($order->canCancelDirectly()) {
+                $reason = !empty($validated['reason']) ? $validated['reason'] : 'Khách hàng hủy đơn hàng';
                 $this->orderService->cancelOrder($order, auth()->id(), $reason, [
                     'refund_bank_name' => $validated['refund_bank_name'] ?? null,
                     'refund_bank_account' => $validated['refund_bank_account'] ?? null,
                     'refund_account_holder' => $validated['refund_account_holder'] ?? null,
                 ]);
 
-                $msg = 'Đơn hàng của bạn đã được hủy thành công.';
-                if ($order->payment_status === 'PAID') {
-                    $msg .= ' Do đơn hàng đã được thanh toán online, Mật Ngọt Bear sẽ sớm liên hệ qua số điện thoại để hoàn tiền lại cho bạn.';
+                if ($request->wantsJson() || $request->ajax()) {
+                    session()->flash('success', 'Đơn hàng #' . $order->order_code . ' đã được hủy thành công.');
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Đơn hàng #' . $order->order_code . ' đã được hủy thành công.',
+                        'redirect_url' => route('home'),
+                    ]);
                 }
 
-                return redirect()->back()->with('success', $msg);
+                if ($request->input('redirect_to') === 'home') {
+                    return redirect()->route('home')->with('success', 'Đơn hàng #' . $order->order_code . ' đã được hủy thành công.');
+                }
+
+                return redirect()->back()->with('success', 'Đơn hàng của bạn đã được hủy thành công.');
             }
 
-            // Trường hợp 2: Đơn đã được nhân viên xác nhận (CONFIRMED) nhưng chưa đóng gói -> CẦN NHÂN VIÊN XÁC NHẬN HỦY
+            // Trường hợp 2: Gửi yêu cầu hủy đơn (Bắt buộc nhập lý do)
             if ($order->canRequestCancel()) {
+                if (blank($validated['reason'] ?? null)) {
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json(['success' => false, 'message' => 'Vui lòng nhập lý do hủy đơn hàng.'], 422);
+                    }
+                    return redirect()->back()->with('error', 'Vui lòng nhập lý do hủy đơn hàng.');
+                }
+
+                $isPendingPaid = ($order->order_status === 'PENDING' && $order->payment_status === 'PAID');
+
                 $this->orderService->requestCancelOrder($order, $validated, auth()->id());
 
-                $msg = 'Yêu cầu hủy đơn hàng đã được gửi thành công và đang chờ nhân viên xác nhận.';
-                if ($order->payment_status === 'PAID') {
-                    $msg .= ' Do đơn hàng đã thanh toán, sau khi nhân viên duyệt hủy sẽ liên hệ với bạn để hoàn tiền.';
+                if ($isPendingPaid) {
+                    $msg = 'Yêu cầu hủy đơn hàng và hoàn tiền đã được gửi thẳng tới Quản trị viên (Admin) để xử lý hoàn tiền cho bạn.';
+                } else {
+                    $msg = 'Yêu cầu hủy đơn hàng đã được gửi tới cửa hàng. Nhân viên sẽ kiểm tra: nếu đơn chưa bàn giao cho bên vận chuyển sẽ chấp nhận hủy đơn cho bạn.';
+                }
+
+                if ($request->wantsJson() || $request->ajax()) {
+                    session()->flash('success', $msg);
+                    return response()->json([
+                        'success' => true,
+                        'message' => $msg,
+                        'redirect_url' => route('customer.orders.show', $order->id),
+                    ]);
                 }
 
                 return redirect()->back()->with('success', $msg);
             }
         } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -442,5 +477,51 @@ class OrderController extends Controller
         $matches = $query->limit(2)->get();
 
         return $matches->count() === 1 ? $matches->first() : null;
+    }
+
+    /**
+     * Khách hàng tự cập nhật/bổ sung thông tin số tài khoản ngân hàng để nhận hoàn tiền
+     */
+    public function updateRefundAccount(Request $request, Order $order)
+    {
+        if ($order->customer_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($order->order_status !== 'CANCELLED' && ! $order->needsRefund()) {
+            return back()->with('error', 'Đơn hàng này không ở trạng thái cần cập nhật thông tin hoàn tiền.');
+        }
+
+        $validated = $request->validate([
+            'refund_bank_name' => 'required|string|max:100',
+            'refund_bank_account' => 'required|string|max:50',
+            'refund_account_holder' => 'required|string|max:100',
+        ], [
+            'refund_bank_name.required' => 'Vui lòng chọn hoặc nhập tên ngân hàng nhận tiền.',
+            'refund_bank_account.required' => 'Vui lòng nhập số tài khoản ngân hàng.',
+            'refund_account_holder.required' => 'Vui lòng nhập tên chủ tài khoản.',
+        ]);
+
+        $order->update($validated);
+
+        // Đồng bộ vào PaymentRefundRequest nếu có
+        PaymentRefundRequest::where('order_id', $order->id)
+            ->where('status', 'PENDING')
+            ->update([
+                'bank_name' => $validated['refund_bank_name'],
+                'bank_account' => $validated['refund_bank_account'],
+                'account_holder' => $validated['refund_account_holder'],
+            ]);
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'from_status' => $order->order_status,
+            'to_status' => $order->order_status,
+            'changed_by' => auth()->id(),
+            'note' => "Khách hàng đã cập nhật thông tin nhận hoàn tiền: {$validated['refund_bank_name']} - {$validated['refund_bank_account']} ({$validated['refund_account_holder']})",
+            'changed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Đã lưu thông tin tài khoản nhận tiền hoàn thành công! Shop sẽ sớm đối soát và chuyển khoản cho bạn.');
     }
 }

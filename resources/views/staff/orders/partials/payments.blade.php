@@ -21,7 +21,7 @@
                         @forelse ($order->payments as $payment)
                             <tr>
                                 <td data-label="Giao dịch">
-                                    <div class="font-bold text-[#4E342E]">{{ $payment->method }}</div>
+                                    <div class="font-bold text-[#4E342E]">{{ $payment->method_label }}</div>
                                     <div class="text-xs text-[#795548] font-mono mt-1">{{ $payment->transaction_ref ?? '—' }}</div>
                                 </td>
                                 <td data-label="Số tiền" class="text-right font-extrabold text-amber-700">{{ number_format($payment->amount, 0, ',', '.') }} đ</td>
@@ -31,7 +31,7 @@
                                 </td>
                                 <td data-label="Xử lý" class="text-right">
                                     @if ($payment->method === 'COD')
-                                        <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/60 inline-block">
+                                        <span class="text-xs text-[#8E8076] italic bg-amber-50/80 px-0.5 py-1 rounded-lg border border-amber-200/60 inline-block">
                                             Thu khi giao hàng
                                         </span>
                                     @elseif ($payment->status === 'PENDING')

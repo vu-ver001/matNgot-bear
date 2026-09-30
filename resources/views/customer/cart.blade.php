@@ -3,19 +3,131 @@
 @section('title', 'Giỏ Hàng Của Bạn - Mật Ngọt Bear')
 
 @section('content')
+    <style>
+        .mn-cart-bottom-bar {
+            border-radius: 18px !important;
+        }
+        .mn-cart-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px !important;
+        }
+        .mn-btn-buy {
+            background-color: #BF5832 !important;
+            color: #FFFFFF !important;
+            font-weight: 800 !important;
+            font-size: 14px !important;
+            letter-spacing: 0.02em;
+            border-radius: 14px !important;
+            padding: 12px 28px !important;
+            box-shadow: 0 4px 14px rgba(191, 88, 50, 0.3) !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            border: none !important;
+        }
+        .mn-btn-buy:hover:not(:disabled) {
+            background-color: #A94824 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(191, 88, 50, 0.4) !important;
+        }
+        .mn-btn-buy:disabled {
+            background-color: #D9CBC2 !important;
+            color: #FFFFFF !important;
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+        .mn-btn-voucher-repo {
+            background-color: #FFF3EC !important;
+            color: #BA542D !important;
+            border: 1px solid #FADACD !important;
+            border-radius: 9999px !important;
+            padding: 7px 16px !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+        .mn-btn-voucher-repo:hover {
+            background-color: #FFE8DD !important;
+            border-color: #F7C6B3 !important;
+        }
+        .mn-cart-check.is-active {
+            background-color: #844B27 !important;
+            border-color: #844B27 !important;
+            color: #FFFFFF !important;
+        }
+        .mn-cart-check:not(.is-active) {
+            background-color: #FFFFFF !important;
+            border: 2px solid #D1C4B5 !important;
+        }
+        .mn-cart-check:not(.is-active):hover {
+            border-color: #844B27 !important;
+        }
+        @media (min-width: 768px) {
+            .mn-cart-header-cols {
+                display: flex !important;
+            }
+            .mn-cart-item-actions {
+                border-top: none !important;
+                padding-top: 0 !important;
+            }
+        }
+        @media (max-width: 767px) {
+            .mn-cart-header-cols {
+                display: none !important;
+            }
+        }
+        .mn-no-image-thumb {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #FAF5ED;
+            border-radius: 14px;
+            color: #A8988A;
+            border: 1px dashed #E2D3C4;
+            user-select: none;
+            padding: 4px;
+            text-align: center;
+        }
+        .mn-no-image-thumb i {
+            color: #B5A492;
+        }
+        .mn-no-image-thumb span {
+            font-size: 10px;
+            font-weight: 700;
+            color: #A8988A;
+            margin-top: 3px;
+            line-height: 1;
+        }
+    </style>
+
     {{-- Main Container --}}
-    <div class="py-10 bg-[#FAF6EE] min-h-[calc(100vh-140px)] pb-36 font-sans" x-data="cartComponent({{ json_encode(
+    <div class="pt-4 sm:pt-6 bg-[#FAF6EE] min-h-[calc(100vh-140px)] pb-36 font-sans" x-data="cartComponent({{ json_encode(
         $cartItems->map(function ($item) {
             $price = (float) $item->effective_price;
-            $imgUrl = $item->effective_image;
-            if (!str_starts_with($imgUrl, 'http') && !str_starts_with($imgUrl, 'data:')) {
-                $imgUrl = asset($imgUrl);
+            $rawImg = $item->effective_image;
+            if (!empty($rawImg)) {
+                $imgUrl = (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:'))
+                    ? $rawImg
+                    : asset(ltrim($rawImg, '/'));
+            } else {
+                $imgUrl = null;
             }
 
             $variants = ($item->product && $item->product->variants)
                 ? $item->product->variants->map(function ($v) use ($imgUrl) {
                     $vImg = !empty($v->image_url)
-                        ? ((str_starts_with($v->image_url, 'http') || str_starts_with($v->image_url, 'data:')) ? $v->image_url : asset($v->image_url))
+                        ? ((str_starts_with($v->image_url, 'http') || str_starts_with($v->image_url, 'data:')) ? $v->image_url : asset(ltrim($v->image_url, '/')))
                         : $imgUrl;
                     return [
                         'id' => $v->id,
@@ -46,30 +158,20 @@
         }),
     ) }})">
 
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {{-- 1. Page Title Section --}}
             <div class="flex items-center gap-3.5 mb-5 justify-between">
                 <div class="flex items-center gap-3">
-                    <div
-                        class="w-11 h-11 rounded-xl bg-[#5C3219] text-white flex items-center justify-center shadow-sm shrink-0">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
-                            </path>
-                        </svg>
-                    </div>
+                    <x-bear-cart-icon />
                     <div>
                         <h1 class="text-xl sm:text-2xl font-black text-[#2C1408] tracking-tight font-bold">Giỏ hàng Mật ngọt Bear</h1>
                         <p class="text-xs font-semibold text-[#786B61] mt-0.5">Kiểm tra danh sách gấu bông bạn đã chọn trước khi thanh toán</p>
                     </div>
                 </div>
-                {{-- Cart Pill Counter on Right --}}
-                <div
-                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#E08A1E] bg-[#FFFBF4] text-[#2C1408] font-bold text-xs shadow-2xs shrink-0">
-                    <svg class="w-3.5 h-3.5 text-[#E08A1E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
-                        </path>
+                {{-- Cart Pill Counter on Right (Matching Mockup) --}}
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#F2CBB2] bg-[#FFF8F2] text-[#2B1810] font-bold text-xs sm:text-[13px] shadow-2xs shrink-0 select-none">
+                    <svg class="w-4 h-4 text-[#BD551A]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     <span x-text="items.length + ' sản phẩm trong giỏ'">{{ $cartItems->count() }} sản phẩm trong giỏ</span>
                 </div>
@@ -188,9 +290,9 @@
                             @foreach($suggestedProducts as $prod)
                                 @php
                                     $pImg = $prod->images->firstWhere('is_primary', true) ?? $prod->images->first();
-                                    $pImgUrl = $pImg 
-                                        ? ((str_starts_with($pImg->image_url, 'data:') || str_starts_with($pImg->image_url, 'http')) ? $pImg->image_url : asset($pImg->image_url)) 
-                                        : 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=400&q=80';
+                                    $pImgUrl = (!empty($pImg) && !empty($pImg->image_url))
+                                        ? ((str_starts_with($pImg->image_url, 'data:') || str_starts_with($pImg->image_url, 'http')) ? $pImg->image_url : asset(ltrim($pImg->image_url, '/'))) 
+                                        : null;
                                     $pPrice = $prod->sale_price ?? $prod->price;
                                     $pHasDiscount = !empty($prod->sale_price) && $prod->sale_price < $prod->price;
                                     $pDiscount = $pHasDiscount && $prod->price > 0 ? round((($prod->price - $prod->sale_price) / $prod->price) * 100) : 0;
@@ -198,7 +300,19 @@
                                 <a href="{{ route('products.show', $prod->id) }}" 
                                    class="bg-white rounded-2xl p-3 border border-[#F0E6D8] hover:border-[#E08A1E] shadow-2xs hover:shadow-md transition group flex flex-col">
                                     <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-[#FAF6EE] mb-2.5">
-                                        <img src="{{ $pImgUrl }}" alt="{{ $prod->name }}" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300">
+                                        @if(!empty($pImgUrl))
+                                            <img src="{{ $pImgUrl }}" alt="{{ $prod->name }}" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="mn-no-image-thumb" style="display: none;">
+                                                <i class="fa-regular fa-image text-xl text-[#B5A492]"></i>
+                                                <span class="text-[9px] font-bold text-[#A8988A] mt-0.5">Không ảnh</span>
+                                            </div>
+                                        @else
+                                            <div class="mn-no-image-thumb">
+                                                <i class="fa-regular fa-image text-xl text-[#B5A492]"></i>
+                                                <span class="text-[9px] font-bold text-[#A8988A] mt-0.5">Không ảnh</span>
+                                            </div>
+                                        @endif
                                         @if($pHasDiscount)
                                             <span class="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-2xs">
                                                 -{{ $pDiscount }}%
@@ -234,38 +348,42 @@
                         <input type="hidden" name="selected_items[]" :value="itemId">
                     </template>
 
-                    {{-- 2. Table Header Bar (Row Header) --}}
-                    <div
-                        class="bg-white rounded-xl border border-[#F0E6D8] p-2.5 px-4 mb-3 grid grid-cols-12 gap-2 items-center text-xs font-bold text-[#786B61] tracking-wider uppercase shadow-xs">
-                        <div class="col-span-12 md:col-span-6 flex items-center gap-3.5">
-                            {{-- Custom Rounded Orange Checkbox --}}
+                    {{-- 2. Table Header Bar (White rounded card matching mockup) --}}
+                    <div class="bg-white rounded-2xl border border-[#F1E5D8] px-5 py-3.5 mb-2.5 flex items-center justify-between shadow-xs">
+                        {{-- Left: Checkbox + CHỌN TẤT CẢ --}}
+                        <div class="flex items-center gap-3">
                             <button type="button" @click="toggleSelectAll(!isAllSelected)"
-                                class="w-5 h-5 rounded-md flex items-center justify-center transition cursor-pointer shrink-0"
-                                :class="isAllSelected ? 'bg-[#E08A1E] text-white shadow-xs' : 'border-2 border-[#D1C4B5] bg-white hover:border-[#E08A1E]'">
-                                <svg x-show="isAllSelected" class="w-3.5 h-3.5 stroke-white" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                        d="M5 13l4 4L19 7"></path>
+                                class="mn-cart-check w-5 h-5 rounded-md flex items-center justify-center transition cursor-pointer shrink-0"
+                                :class="isAllSelected ? 'is-active' : ''">
+                                <svg x-show="isAllSelected" class="w-3.5 h-3.5 stroke-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </button>
-                            <span class="cursor-pointer font-bold text-[#5C3219] hover:text-[#E08A1E] text-xs transition"
+                            <span class="cursor-pointer font-bold text-[#2B1810] hover:text-[#844B27] text-xs sm:text-[13px] tracking-wide uppercase transition select-none"
                                 @click="toggleSelectAll(!isAllSelected)">
                                 CHỌN TẤT CẢ
                             </span>
                         </div>
-                        <div class="hidden md:block md:col-span-2 text-center text-[#786B61]">ĐƠN GIÁ</div>
-                        <div class="hidden md:block md:col-span-2 text-center text-[#786B61]">SỐ LƯỢNG</div>
-                        <div class="hidden md:block md:col-span-2 text-center text-[#786B61]">THÀNH TIỀN</div>
+
+                        {{-- Right: Column titles aligned on desktop --}}
+                        <div class="mn-cart-header-cols hidden md:flex items-center gap-3 sm:gap-6 text-xs font-bold text-[#7D6B5D] tracking-wider uppercase">
+                            <div class="w-28 sm:w-32 text-center">ĐƠN GIÁ</div>
+                            <div class="w-32 sm:w-36 text-center">SỐ LƯỢNG</div>
+                            <div class="w-32 sm:w-36 text-center">THÀNH TIỀN</div>
+                            <div class="w-10"></div>
+                        </div>
                     </div>
 
                     {{-- 3. Cart Items List --}}
-                    <div class="space-y-3">
+                    <div class="mn-cart-items-list mb-28">
                         @foreach ($cartItems as $item)
                             @php
                                 $product = $item->product;
                                 $variant = $item->variant;
                                 $rawImg = $item->effective_image;
-                                $imageUrl = (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset($rawImg);
+                                $imageUrl = !empty($rawImg) 
+                                    ? ((str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:')) ? $rawImg : asset(ltrim($rawImg, '/'))) 
+                                    : null;
                                 $price = $item->effective_price;
                                 $originalPrice = $variant ? $variant->price : $product->price;
                                 $hasDiscount = $price < $originalPrice;
@@ -275,212 +393,227 @@
                                 $effectiveStock = $item->effective_stock;
                             @endphp
 
-                            <div class="bg-white rounded-2xl p-3.5 md:p-4 transition-all duration-200 grid grid-cols-12 gap-3 items-center shadow-xs hover:shadow-md"
+                            <div class="bg-white rounded-2xl p-4 sm:p-5 transition-all duration-200 shadow-xs hover:shadow-md border flex flex-col md:flex-row md:items-center justify-between gap-4"
                                 x-show="hasItem({{ $item->id }})"
                                 x-transition:leave="transition ease-in duration-200"
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
-                                :class="isSelected({{ $item->id }}) ? 'border-2 border-[#E08A1E] bg-[#FFFDF9]' :
-                                    'border border-[#F0E6D8] hover:border-[#E08A1E]/50'">
+                                :class="isSelected({{ $item->id }}) ? 'border-[#E8CDBB] bg-[#FFFDF9]' : 'border-[#F1E5D8] hover:border-[#E8CDBB]'">
 
-                                {{-- Checkbox, Image & Product Info --}}
-                                <div class="col-span-12 md:col-span-6 flex items-center gap-3">
-                                    {{-- Custom Checkbox --}}
+                                {{-- Left Group: Checkbox + Thumbnail + Product Info --}}
+                                <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                    {{-- Custom Brown Checkbox --}}
                                     <button type="button"
                                         @click="toggleItem({{ $item->id }}, !isSelected({{ $item->id }}), '{{ addslashes($product->name) }}')"
-                                        class="w-5 h-5 rounded-md flex items-center justify-center transition cursor-pointer shrink-0"
-                                        :class="isSelected({{ $item->id }}) ? 'bg-[#E08A1E] text-white shadow-xs' :
-                                            'border-2 border-[#D1C4B5] bg-white hover:border-[#E08A1E]'">
+                                        class="mn-cart-check w-5 h-5 rounded-md flex items-center justify-center transition cursor-pointer shrink-0"
+                                        :class="isSelected({{ $item->id }}) ? 'is-active' : ''">
                                         <svg x-show="isSelected({{ $item->id }})"
                                             class="w-3.5 h-3.5 stroke-white" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                d="M5 13l4 4L19 7"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                         </svg>
                                     </button>
 
-                                    <div class="flex items-center gap-4 flex-1 min-w-0">
-                                        {{-- Image Thumbnail with Zoom & Sale Badge --}}
-                                        <a href="{{ route('products.show', $product->id) }}"
-                                            class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-[#EBDDCD] shrink-0 group block shadow-2xs overflow-hidden bg-white"
-                                            title="Xem chi tiết {{ $product->name }}">
-                                            <img :src="getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}'" alt="{{ $product->name }}"
-                                                class="w-full h-full object-cover object-center transform transition duration-300 group-hover:scale-105"
-                                                onerror="this.src='https://placehold.co/200x200/F7EFE9/5D4037?text=Gau+Bong'">
-                                            @if ($hasDiscount)
-                                                <span class="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-xs leading-none">
-                                                    -{{ $discountPercent }}%
-                                                </span>
-                                            @endif
-                                        </a>
+                                    {{-- Product Image --}}
+                                    <a href="{{ route('products.show', $product->id) }}"
+                                        class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-[#F0E6D8] shrink-0 group block shadow-2xs overflow-hidden bg-[#FAF6EE]"
+                                        title="Xem chi tiết {{ $product->name }}">
+                                        <div class="w-full h-full relative">
+                                            <img :src="getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}'" 
+                                                 x-show="Boolean(getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}')"
+                                                 alt="{{ $product->name }}"
+                                                 class="w-full h-full object-cover object-center transform transition duration-300 group-hover:scale-105"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="mn-no-image-thumb" 
+                                                 :style="Boolean(getItemImageUrl({{ $item->id }}) || '{{ $imageUrl }}') ? 'display: none;' : 'display: flex;'">
+                                                <i class="fa-regular fa-image text-xl sm:text-2xl"></i>
+                                                <span>Không ảnh</span>
+                                            </div>
+                                        </div>
+                                        @if ($hasDiscount)
+                                            <span class="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-xs leading-none">
+                                                -{{ $discountPercent }}%
+                                            </span>
+                                        @endif
+                                    </a>
 
-                                        <div class="flex-1 min-w-0">
-                                            {{-- Category Badge --}}
-                                            <span
-                                                class="inline-block px-2.5 py-0.5 bg-[#FFF9EE] text-[#E08A1E] border border-[#FDE68A] text-xs font-bold rounded-full mb-1.5">
-                                                🧸 {{ $product->category->name ?? 'Gấu Bông Teddy' }}
+                                    {{-- Title, Category Badge & Variant Chip --}}
+                                    <div class="flex-1 min-w-0">
+                                        {{-- Cute Category Badge --}}
+                                        <div class="mb-1.5">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-0.5 bg-[#FDECE7] text-[#BA5033] text-xs font-bold rounded-full">
+                                                <svg class="w-3.5 h-3.5 text-[#BA5033]" viewBox="0 0 24 24" fill="currentColor">
+                                                    <circle cx="6" cy="6" r="4"/>
+                                                    <circle cx="18" cy="6" r="4"/>
+                                                    <circle cx="12" cy="14" r="9"/>
+                                                    <circle cx="8.5" cy="12" r="1.5" fill="#FFFFFF"/>
+                                                    <circle cx="15.5" cy="12" r="1.5" fill="#FFFFFF"/>
+                                                    <ellipse cx="12" cy="16" rx="3" ry="2" fill="#FFFFFF"/>
+                                                    <ellipse cx="12" cy="15.5" rx="1.5" ry="1" fill="#BA5033"/>
+                                                </svg>
+                                                <span>{{ $product->category->name ?? 'Gấu Bông Hoạt Hình' }}</span>
+                                            </span>
+                                        </div>
+
+                                        {{-- Product Name --}}
+                                        <h3 class="font-extrabold text-[#2B1810] text-sm sm:text-base line-clamp-2 hover:text-[#BA5033] transition leading-snug">
+                                            <a href="{{ route('products.show', $product->id) }}" title="{{ $product->name }}">
+                                                {{ $product->name }}
+                                            </a>
+                                        </h3>
+
+                                        {{-- Variant Selector Button (Shopee style pill) --}}
+                                        <div class="mt-2">
+                                            @if ($variant || ($item->product->variants && $item->product->variants->count() > 0))
+                                                <button type="button"
+                                                    @click="openVariantSelector({{ $item->id }})"
+                                                    class="group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 border border-[#F5D8B8] bg-[#FFF9F2] hover:bg-[#FFF2E0] text-[#8C5E32] shadow-2xs hover:shadow-xs cursor-pointer"
+                                                    title="Bấm để đổi phân loại sản phẩm">
+                                                    <span class="text-[#E08A1E] text-xs">✨</span>
+                                                    <span>Phân loại:</span>
+                                                    <span class="font-bold text-[#5C3219]"
+                                                        x-text="getItemVariantDisplay({{ $item->id }}) || '{{ $variant ? ($variant->color . ' · ' . $variant->size) : 'Chọn phân loại' }}'">
+                                                        {{ $variant ? ($variant->color . ' · ' . $variant->size) : 'Chọn phân loại' }}
+                                                    </span>
+                                                    <svg class="w-3 h-3 text-[#8C5E32] group-hover:translate-y-0.5 transition-transform shrink-0 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                                    </svg>
+                                                </button>
+                                            @else
+                                                <div class="flex flex-wrap gap-2 text-xs font-semibold text-[#786B61]">
+                                                    @if ($product->size)
+                                                        <span class="bg-[#F3EDE3] px-2.5 py-1 rounded-md text-[#5C3219]">Size: {{ $product->size }}</span>
+                                                    @endif
+                                                    @if ($product->color)
+                                                        <span class="bg-[#F3EDE3] px-2.5 py-1 rounded-md text-[#5C3219]">Màu: {{ $product->color }}</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        {{-- Stock alert --}}
+                                        <template x-if="getItemStock({{ $item->id }}) <= 5">
+                                            <p class="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                                <span x-show="getItemStock({{ $item->id }}) <= 0">Phân loại này hiện đang tạm hết hàng</span>
+                                                <span x-show="getItemStock({{ $item->id }}) > 0">Chỉ còn <span x-text="getItemStock({{ $item->id }})"></span> sản phẩm trong kho</span>
+                                            </p>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                {{-- Right Group: Price, Quantity Stepper, Total, Delete Button --}}
+                                <div class="mn-cart-item-actions flex items-center justify-between md:justify-end gap-3 sm:gap-6 pt-3 md:pt-0 border-t md:border-t-0 border-[#F5EBE1]">
+                                    {{-- Unit Price --}}
+                                    <div class="w-28 sm:w-32 text-left md:text-center">
+                                        <span class="text-[11px] text-[#A8988A] block md:hidden font-medium">Đơn giá:</span>
+                                        <div class="font-extrabold text-[#D95F16] text-base sm:text-lg"
+                                            x-text="formatVND(getItemPrice({{ $item->id }}))">
+                                            {{ number_format($price, 0, ',', '.') }}đ
+                                        </div>
+                                        @if ($hasDiscount)
+                                            <div class="text-[11px] text-[#A8988A] line-through font-normal">
+                                                {{ number_format($originalPrice, 0, ',', '.') }}đ
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Capsule Quantity Stepper (Exact Mockup Style) --}}
+                                    <div class="w-32 sm:w-36 flex justify-center">
+                                        <div class="inline-flex items-center justify-between bg-[#FAF5F1] border border-[#F2DFD0] rounded-full px-2.5 py-1 w-28 sm:w-32 shadow-2xs">
+                                            <button type="button"
+                                                @click="updateQuantity({{ $item->id }}, getItemQuantity({{ $item->id }}) - 1)"
+                                                :disabled="getItemQuantity({{ $item->id }}) <= 1"
+                                                class="w-7 h-7 rounded-full flex items-center justify-center text-[#7D6B5D] hover:text-[#2B1810] font-bold text-base transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                                                −
+                                            </button>
+
+                                            <span class="font-bold text-[#2B1810] text-sm w-6 text-center select-none"
+                                                x-text="getItemQuantity({{ $item->id }})">
+                                                {{ $item->quantity }}
                                             </span>
 
-                                            {{-- Product Name --}}
-                                            <h3>
-                                                <a href="{{ route('products.show', $product->id) }}"
-                                                    class="font-black font-semibold text-[#2C1408] text-base truncate block hover:text-[#E08A1E] transition leading-snug"
-                                                    title="Xem chi tiết {{ $product->name }}">
-                                                    {{ $product->name }}
-                                                </a>
-                                            </h3>
-
-                                            {{-- Attributes / Shopee Variant Selector Button --}}
-                                            <div class="mt-2">
-                                                @if ($variant || ($item->product->variants && $item->product->variants->count() > 0))
-                                                    <button type="button"
-                                                        @click="openVariantSelector({{ $item->id }})"
-                                                        class="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-200 border border-[#FDE68A] bg-[#FFF8ED] hover:bg-[#FFF2D6] text-[#9A4A0A] hover:border-[#E08A1E] shadow-2xs hover:shadow-xs text-left cursor-pointer"
-                                                        title="Bấm để chọn phân loại khác như Shopee">
-                                                        <span class="text-[#D97706] group-hover:scale-110 transition-transform">✨</span>
-                                                        <span class="text-[#786B61] font-medium">Phân loại:</span>
-                                                        <span class="text-[#2C1408] font-bold"
-                                                            x-text="getItemVariantDisplay({{ $item->id }}) || '{{ $variant ? ($variant->color . ' · ' . $variant->size) : 'Chọn phân loại' }}'">
-                                                            {{ $variant ? ($variant->color . ' · ' . $variant->size) : 'Chọn phân loại' }}
-                                                        </span>
-                                                        <svg class="w-3.5 h-3.5 text-[#9A4A0A] group-hover:translate-y-0.5 transition-transform shrink-0 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
-                                                        </svg>
-                                                    </button>
-                                                @else
-                                                    <div class="flex flex-wrap gap-2 text-xs font-semibold text-[#786B61]">
-                                                        @if ($product->size)
-                                                            <span class="bg-[#F3EDE3] px-2.5 py-1 rounded-md text-[#5C3219]">
-                                                                Size: {{ $product->size }}
-                                                            </span>
-                                                        @endif
-                                                        @if ($product->color)
-                                                            <span class="bg-[#F3EDE3] px-2.5 py-1 rounded-md text-[#5C3219]">
-                                                                Màu: {{ $product->color }}
-                                                            </span>
-                                                        @endif
-                                                    </div>
-                                                @endif
-                                            </div>
-
-                                            {{-- Stock alert --}}
-                                            <template x-if="getItemStock({{ $item->id }}) <= 5">
-                                                <p class="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                                    <span x-show="getItemStock({{ $item->id }}) <= 0">Phân loại này hiện đang tạm hết hàng</span>
-                                                    <span x-show="getItemStock({{ $item->id }}) > 0">Chỉ còn <span x-text="getItemStock({{ $item->id }})"></span> sản phẩm trong kho</span>
-                                                </p>
-                                            </template>
+                                            <button type="button"
+                                                @click="updateQuantity({{ $item->id }}, getItemQuantity({{ $item->id }}) + 1)"
+                                                :disabled="getItemQuantity({{ $item->id }}) >= getItemStock({{ $item->id }})"
+                                                class="w-7 h-7 rounded-full flex items-center justify-center text-[#7D6B5D] hover:text-[#2B1810] font-bold text-base transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                                                +
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
 
-                                {{-- Price (Mobile & Desktop) --}}
-                                <div class="col-span-4 md:col-span-2 text-left md:text-center">
-                                    <span class="text-xs text-[#9CA3AF] block md:hidden">Đơn giá:</span>
-                                    <div class="font-bold text-[#E08A1E] text-base sm:text-lg"
-                                        x-text="formatVND(getItemPrice({{ $item->id }}))">
-                                        {{ number_format($price, 0, ',', '.') }}đ
-                                    </div>
-                                    @if ($hasDiscount)
-                                        <div class="text-xs text-[#9CA3AF] line-through font-normal mt-0.5">
-                                            {{ number_format($originalPrice, 0, ',', '.') }}đ
+                                    {{-- Line Total --}}
+                                    <div class="w-32 sm:w-36 text-right md:text-center">
+                                        <span class="text-[11px] text-[#A8988A] block md:hidden font-medium">Thành tiền:</span>
+                                        <div class="font-extrabold text-[#D95F16] text-base sm:text-lg"
+                                            x-text="formatVND(getItemLineTotal({{ $item->id }}))">
+                                            {{ number_format($price * $item->quantity, 0, ',', '.') }}đ
                                         </div>
-                                    @endif
-                                </div>
-
-                                {{-- Quantity Stepper --}}
-                                <div class="col-span-4 md:col-span-2 flex justify-center">
-                                    <div
-                                        class="inline-flex items-center gap-3 bg-[#FAF8F5] border border-[#EBDDCD] rounded-xl px-3 py-1.5 shadow-inner">
-                                        <button type="button"
-                                            @click="updateQuantity({{ $item->id }}, getItemQuantity({{ $item->id }}) - 1)"
-                                            :disabled="getItemQuantity({{ $item->id }}) <= 1"
-                                            class="text-gray-500 hover:text-[#2C1408] font-bold text-base transition disabled:opacity-30 disabled:cursor-not-allowed">
-                                            −
-                                        </button>
-
-                                        <span class="font-bold text-[#2C1408] text-sm w-5 text-center"
-                                            x-text="getItemQuantity({{ $item->id }})">{{ $item->quantity }}</span>
-
-                                        <button type="button"
-                                            @click="updateQuantity({{ $item->id }}, getItemQuantity({{ $item->id }}) + 1)"
-                                            :disabled="getItemQuantity({{ $item->id }}) >= getItemStock({{ $item->id }})"
-                                            class="text-gray-500 hover:text-[#2C1408] font-bold text-base transition disabled:opacity-30 disabled:cursor-not-allowed">
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- Line Total & Delete Action --}}
-                                <div class="col-span-4 md:col-span-2 flex items-center justify-end md:justify-around gap-2">
-                                    <div class="font-bold text-[#E08A1E] text-base sm:text-lg">
-                                        <span
-                                            x-text="formatVND(getItemLineTotal({{ $item->id }}))">{{ number_format($price * $item->quantity, 0, ',', '.') }}đ</span>
                                     </div>
 
-                                    <button type="button"
-                                        @click="deleteItem({{ $item->id }})"
-                                        class="text-gray-400 hover:text-rose-600 transition p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer"
-                                        title="Xóa sản phẩm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                            </path>
-                                        </svg>
-                                    </button>
+                                    {{-- Outline Trash Button with Lid --}}
+                                    <div class="w-10 flex justify-end">
+                                        <button type="button"
+                                            @click="deleteItem({{ $item->id }})"
+                                            class="text-[#A8988A] hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition cursor-pointer"
+                                            title="Xóa sản phẩm">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
 
                             </div>
                         @endforeach
                     </div>
 
-                    {{-- 4. Sticky Bottom Summary Bar --}}
-                    <div
-                        class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#F0E6D8] shadow-2xl py-3.5 px-4 sm:px-6 lg:px-8">
-                        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                    {{-- 4. Floating Rounded Bottom Summary Bar (Bo góc mềm mại, không bo tròn pill) --}}
+                    <div class="fixed bottom-4 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8">
+                        <div class="mn-cart-bottom-bar max-w-7xl mx-auto bg-white rounded-2xl border border-[#F1E5D8] shadow-xl p-3 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 
-                            {{-- Left Actions: Xóa tất cả & Kho voucher link --}}
-                            <div class="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-3">
+                            {{-- Left Actions: Xóa tất cả & Kho voucher pill button --}}
+                            <div class="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4 sm:gap-5 shrink-0">
+                                {{-- Clear All Button (không bị xuống dòng) --}}
                                 <button type="button" @click="clearAllCart()"
-                                    class="inline-flex items-center gap-1.5 text-xs text-[#786B61] hover:text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl font-medium transition border border-transparent hover:border-rose-200">
-                                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                        </path>
+                                    class="inline-flex items-center gap-1.5 text-xs sm:text-[13px] text-[#7D6B5D] hover:text-rose-600 transition font-medium cursor-pointer whitespace-nowrap shrink-0">
+                                    <svg class="w-4 h-4 text-rose-500 shrink-0" style="width: 17px; height: 17px; min-width: 17px; min-height: 17px;" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                    <span>Xóa tất cả</span>
+                                    <span class="whitespace-nowrap">Xóa tất cả</span>
                                 </button>
 
+                                {{-- Kho Voucher Pill Button --}}
                                 <a href="{{ route('customer.vouchers.index') }}" 
-                                   class="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#C2751D] hover:text-[#9A4A0A] font-bold bg-[#FFF9EE] border border-[#FDE68A] px-3 py-1.5 rounded-lg transition hover:shadow-2xs">
-                                    <span>🎟️</span>
-                                    <span>Kho voucher</span>
+                                   class="mn-btn-voucher-repo whitespace-nowrap shrink-0">
+                                    <svg class="w-4 h-4 text-[#D95F16] shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2 2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2 2 2 0 012-2 2 2 0 01-2-2V6z"/>
+                                    </svg>
+                                    <span class="whitespace-nowrap">Kho voucher</span>
                                 </a>
                             </div>
 
-                            {{-- Right Total & Buy Button --}}
-                            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-6">
+                            {{-- Right Total & Mua Hang Button --}}
+                            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-5 sm:gap-6">
+                                {{-- Vertical divider on desktop --}}
+                                <div class="hidden sm:block h-10 w-px bg-[#EBDCCC]"></div>
+
                                 <div class="text-right">
-                                    <div class="text-xs text-[#786B61] font-medium">
-                                        Tổng thanh toán (<span class="font-bold text-[#2C1408]"
-                                            x-text="selectedItems.length + ' sản phẩm'">{{ $cartItems->count() }} sản
-                                            phẩm</span>):
+                                    <div class="text-xs text-[#7D6B5D] font-medium">
+                                        Tổng thanh toán (<span class="font-bold text-[#2B1810]"
+                                            x-text="selectedItems.length + ' sản phẩm'">{{ $cartItems->count() }} sản phẩm</span>):
                                     </div>
-                                    <div class="text-2xl sm:text-3xl font-bold text-[#E08A1E] tracking-tight leading-none mt-1"
+                                    <div class="text-2xl sm:text-3xl font-black text-[#D95F16] tracking-tight leading-none mt-1"
                                         x-text="formatVND(selectedSubtotal)">
                                         {{ number_format($cartItems->sum(fn($i) => $i->effective_price * $i->quantity), 0, ',', '.') }}đ
                                     </div>
                                 </div>
 
                                 <button type="submit" :disabled="selectedItems.length === 0"
-                                    class="bg-gradient-to-r from-[#E08A1E] to-[#E67E17] hover:from-[#D17E17] hover:to-[#D1700F] text-white font-extrabold text-sm py-3.5 px-8 rounded-2xl shadow-lg shadow-[#E08A1E]/30 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center gap-2 shrink-0 tracking-wide uppercase">
+                                    class="mn-btn-buy">
                                     <span>MUA HÀNG</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                     </svg>
                                 </button>
                             </div>
@@ -516,10 +649,18 @@
                 
                 {{-- Header with Product Preview --}}
                 <div class="p-5 border-b border-[#F0E6D8] bg-[#FFFDF9] flex items-start gap-4 relative">
-                    <img :src="activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url" 
-                         :alt="activeVariantModal?.item?.name" 
-                         class="w-20 h-20 rounded-2xl object-cover border-2 border-[#EBDDCD] shadow-sm shrink-0 bg-white"
-                         onerror="this.src='https://placehold.co/200x200/F7EFE9/5D4037?text=Gau+Bong'">
+                    <div class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#EBDDCD] shadow-sm shrink-0 bg-white relative">
+                        <img :src="activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url" 
+                             :alt="activeVariantModal?.item?.name" 
+                             x-show="Boolean(activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url)"
+                             class="w-full h-full object-cover"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="mn-no-image-thumb" 
+                             :style="(activeVariantModal?.selectedVariant?.image_url || activeVariantModal?.item?.image_url) ? 'display: none;' : 'display: flex;'">
+                            <i class="fa-regular fa-image text-xl text-[#B5A492]"></i>
+                            <span class="text-[9px]">Không ảnh</span>
+                        </div>
+                    </div>
                     
                     <div class="flex-1 min-w-0 pr-6">
                         <h4 class="font-bold text-[#2C1408] text-sm sm:text-base line-clamp-1" x-text="activeVariantModal?.item?.name"></h4>

@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Services\MomoService;
 use App\Services\SepayService;
 use App\Services\VietQrService;
 use App\Services\VnpayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -19,7 +19,6 @@ use Illuminate\View\View;
 class PaymentController extends Controller
 {
     public function __construct(
-        protected MomoService $momoService,
         protected VnpayService $vnpayService,
         protected VietQrService $vietQrService,
         protected SepayService $sepayService,
@@ -40,7 +39,6 @@ class PaymentController extends Controller
 
         $paymentConfig = array_merge(
             $this->vietQrService->getConfig(),
-            $this->momoService->getConfig(),
             $this->vnpayService->getConfig()
         );
 
@@ -48,13 +46,64 @@ class PaymentController extends Controller
         $amount = (int) $order->total_amount;
 
         $vietQrUrl = $this->vietQrService->generateQrUrl($order);
-        $momoQrUrl = $this->momoService->generateQrUrl($order);
         $vnpayQrUrl = $this->vnpayService->generateQrUrl($order);
 
         $returnUrl = route('payment.vnpay.return');
         $vnpayGatewayUrl = $this->vnpayService->createPaymentUrl($order, $returnUrl, request()->ip() ?? '127.0.0.1');
 
-        return view('customer.payment.qr', compact('order', 'paymentConfig', 'vietQrUrl', 'momoQrUrl', 'vnpayQrUrl', 'vnpayGatewayUrl', 'transferContent', 'amount'));
+        // Quản lý thời gian tồn tại 15 phút của mã QR (lưu cố định theo phiên thanh toán, không bị reset khi F5)
+        $cacheKey = "payment_qr_expires_at_{$order->id}";
+        $qrExpiresAt = Cache::get($cacheKey);
+
+        if (! $qrExpiresAt) {
+            $qrExpiresAt = now()->addMinutes(15)->timestamp;
+            Cache::put($cacheKey, $qrExpiresAt, now()->addHours(24));
+        }
+
+        $remainingSeconds = max(0, $qrExpiresAt - now()->timestamp);
+        $isQrExpired = ($remainingSeconds <= 0);
+
+        return view('customer.payment.qr', compact(
+            'order',
+            'paymentConfig',
+            'vietQrUrl',
+            'vnpayQrUrl',
+            'vnpayGatewayUrl',
+            'transferContent',
+            'amount',
+            'remainingSeconds',
+            'qrExpiresAt',
+            'isQrExpired'
+        ));
+    }
+
+    /**
+     * Refresh / Re-generate 15-minute QR Payment session for the order.
+     */
+    public function refreshQr(Order $order): JsonResponse
+    {
+        if ($this->orderService->checkAndCancelIfExpired($order) || ! $order->canPayOnline()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đơn hàng đã hết hạn thanh toán 24 giờ hoặc không thể thanh toán online.',
+            ], 400);
+        }
+
+        $newExpiresAt = now()->addMinutes(15)->timestamp;
+        $cacheKey = "payment_qr_expires_at_{$order->id}";
+        Cache::put($cacheKey, $newExpiresAt, now()->addHours(24));
+
+        $vietQrUrl = $this->vietQrService->generateQrUrl($order);
+        $vnpayQrUrl = $this->vnpayService->generateQrUrl($order);
+
+        return response()->json([
+            'success' => true,
+            'remainingSeconds' => 900,
+            'expiresAt' => $newExpiresAt,
+            'vietQrUrl' => $vietQrUrl,
+            'vnpayQrUrl' => $vnpayQrUrl,
+            'message' => 'Đã làm mới mã QR thành công! Thời gian thanh toán: 15 phút.',
+        ]);
     }
 
     /**
@@ -76,33 +125,6 @@ class PaymentController extends Controller
         ]);
 
         return redirect()->away($paymentUrl);
-    }
-
-    /**
-     * Redirect customer directly to official MoMo Payment Gateway.
-     */
-    public function redirectToMomo(Order $order): RedirectResponse
-    {
-        if ($this->orderService->checkAndCancelIfExpired($order) || ! $order->canPayOnline()) {
-            return redirect()->route('customer.orders.show', $order->id)
-                ->with('error', "Đơn hàng #{$order->order_code} đã quá thời hạn thanh toán 24 giờ và đã tự động bị hủy.");
-        }
-
-        $returnUrl = route('payment.momo.return');
-        $ipnUrl = route('payment.momo.ipn');
-        $momoRes = $this->momoService->createGatewayPayment($order, $returnUrl, $ipnUrl);
-
-        if (!empty($momoRes['success']) && !empty($momoRes['payUrl'])) {
-            Log::info("👛 [MOMO REDIRECT] Khách hàng chuyển hướng sang cổng MoMo cho đơn hàng #{$order->order_code}", [
-                'order_id' => $order->id,
-                'amount' => $order->total_amount,
-                'payUrl' => $momoRes['payUrl'],
-            ]);
-            return redirect()->away($momoRes['payUrl']);
-        }
-
-        return redirect()->route('customer.payment.qr', $order->id)
-            ->with('info', $momoRes['message'] ?? 'Chuyển sang chế độ quét mã QR MoMo.');
     }
 
     /**
@@ -289,169 +311,6 @@ class PaymentController extends Controller
         return response()->json(['RspCode' => '00', 'Message' => 'Confirm Success']);
     }
 
-
-    /**
-     * Handle return response callback from MoMo Gateway (Browser redirect).
-     */
-    public function momoReturn(Request $request): RedirectResponse
-    {
-        $data = $request->all();
-        $isValidSignature = $this->momoService->verifyReturnSignature($data);
-        $orderId = $this->momoService->extractOrderId($data);
-        $resultCode = (int) ($data['resultCode'] ?? -1);
-        $transId = $data['transId'] ?? ('MOMO' . time());
-        $amount = (int) ($data['amount'] ?? 0);
-
-        Log::info("📥 [MOMO RETURN] Nhận phản hồi từ trình duyệt qua MoMo Return URL:", [
-            'order_id' => $orderId,
-            'result_code' => $resultCode,
-            'is_valid_signature' => $isValidSignature,
-            'amount' => $amount,
-        ]);
-
-        $order = $orderId ? Order::find($orderId) : null;
-
-        if (!$order) {
-            return redirect()->route('home')->with('error', 'Không tìm thấy đơn hàng cần thanh toán.');
-        }
-
-        $isAmountValid = ((int) $order->total_amount === $amount);
-
-        if ($isValidSignature && $resultCode === 0 && $isAmountValid) {
-            if ($order->payment_status !== 'PAID') {
-                DB::transaction(function () use ($order, $transId, $data) {
-                    $payment = Payment::firstOrCreate(
-                        ['order_id' => $order->id],
-                        [
-                            'method' => 'E_WALLET',
-                            'amount' => $order->total_amount,
-                            'status' => 'PENDING',
-                            'transaction_ref' => $transId,
-                        ]
-                    );
-
-                    $payment->update([
-                        'status' => 'PAID',
-                        'paid_at' => now(),
-                        'transaction_ref' => $transId,
-                        'gateway_response' => json_encode($data),
-                    ]);
-
-                    $order->update([
-                        'payment_status' => 'PAID',
-                    ]);
-                });
-            }
-
-            return redirect()->route('payment.result', $order->id)
-                ->with('success', 'Thanh toán thành công qua Ví MoMo!');
-        }
-
-        $errorMessage = $data['message'] ?? 'Giao dịch MoMo chưa hoàn tất hoặc bị hủy.';
-
-        // Khi thanh toán onl thất bại: Đơn hàng vẫn được tạo, trạng thái thanh toán là chưa thanh toán (UNPAID)
-        if ($order->payment_status !== 'PAID') {
-            $order->update([
-                'payment_status' => 'UNPAID',
-            ]);
-
-            Payment::updateOrCreate(
-                ['order_id' => $order->id],
-                [
-                    'method' => 'E_WALLET',
-                    'amount' => $order->total_amount,
-                    'status' => 'FAILED',
-                    'gateway_response' => json_encode($data),
-                ]
-            );
-        }
-
-        return redirect()->route('customer.orders.show', $order->id)
-            ->with('error', "Thanh toán qua Ví MoMo chưa hoàn tất ({$errorMessage}). Đơn hàng #{$order->order_code} đã được tạo với trạng thái 'Chưa thanh toán', bạn có thể bấm nút 'Thanh toán ngay' để thanh toán lại hoặc đổi phương thức.");
-    }
-
-    /**
-     * Handle Server-to-Server IPN from MoMo Gateway (Backend verification).
-     */
-    public function momoIpn(Request $request): JsonResponse
-    {
-        $data = $request->all();
-        $isValidSignature = $this->momoService->verifyIpnSignature($data);
-        $orderId = $this->momoService->extractOrderId($data);
-        $resultCode = (int) ($data['resultCode'] ?? -1);
-        $transId = $data['transId'] ?? ('MOMO' . time());
-        $amount = (int) ($data['amount'] ?? 0);
-
-        Log::info("🔔 [MOMO IPN] Server MoMo gọi Webhook IPN:", [
-            'order_id' => $orderId,
-            'result_code' => $resultCode,
-            'is_valid_signature' => $isValidSignature,
-            'amount' => $amount,
-        ]);
-
-        if (!$isValidSignature) {
-            Log::warning("⚠️ [MOMO IPN] Chữ ký MoMo không hợp lệ!", ['data' => $data]);
-            return response()->json(['message' => 'Invalid signature', 'resultCode' => 97], 400);
-        }
-
-        $order = $orderId ? Order::find($orderId) : null;
-        if (!$order) {
-            Log::warning("⚠️ [MOMO IPN] Không tìm thấy đơn hàng ID: {$orderId}");
-            return response()->json(['message' => 'Order not found', 'resultCode' => 1], 404);
-        }
-
-        if ((int) $order->total_amount !== $amount) {
-            Log::warning("⚠️ [MOMO IPN] Số tiền không khớp!", [
-                'expected' => $order->total_amount,
-                'received' => $amount,
-            ]);
-            return response()->json(['message' => 'Amount mismatch', 'resultCode' => 4], 400);
-        }
-
-        // Idempotency: Check if already paid
-        if ($order->payment_status === 'PAID') {
-            Log::info("ℹ️ [MOMO IPN] Đơn hàng #{$order->order_code} đã được xác nhận thanh toán trước đó (Idempotent).");
-            return response()->json(['message' => 'Order already confirmed', 'resultCode' => 0]);
-        }
-
-        if ($resultCode === 0) {
-            DB::transaction(function () use ($order, $transId, $data) {
-                $payment = Payment::firstOrCreate(
-                    ['order_id' => $order->id],
-                    [
-                        'method' => 'E_WALLET',
-                        'amount' => $order->total_amount,
-                        'status' => 'PENDING',
-                        'transaction_ref' => $transId,
-                    ]
-                );
-
-                $payment->update([
-                    'status' => 'PAID',
-                    'paid_at' => now(),
-                    'transaction_ref' => $transId,
-                    'gateway_response' => json_encode($data),
-                ]);
-
-                $order->update([
-                    'payment_status' => 'PAID',
-                ]);
-            });
-
-            Log::info("✅ [MOMO IPN SUCCESS] Đơn hàng #{$order->order_code} đã được cập nhật PAID thành công qua IPN.");
-            return response()->json(['message' => 'Success', 'resultCode' => 0]);
-        }
-
-        // Failed payment
-        $payment = Payment::firstOrCreate(
-            ['order_id' => $order->id],
-            ['method' => 'E_WALLET', 'amount' => $order->total_amount, 'status' => 'FAILED']
-        );
-        $payment->update(['status' => 'FAILED', 'gateway_response' => json_encode($data)]);
-
-        return response()->json(['message' => 'Payment failed', 'resultCode' => 0]);
-    }
-
     /**
      * Unified Payment Result Page (Displays real-time status from DB).
      */
@@ -493,7 +352,6 @@ class PaymentController extends Controller
         // Normalize method name
         $method = match ($rawMethod) {
             'VNPAY', 'CARD' => 'CARD',
-            'MOMO', 'E_WALLET' => 'E_WALLET',
             'COD' => 'COD',
             default => 'BANK_TRANSFER',
         };
@@ -529,10 +387,6 @@ class PaymentController extends Controller
 
         if ($method === 'CARD') {
             return $this->redirectToVnpay($order);
-        }
-
-        if ($method === 'E_WALLET') {
-            return $this->redirectToMomo($order);
         }
 
         return redirect()->route('customer.payment.qr', $order->id);
@@ -645,7 +499,7 @@ class PaymentController extends Controller
         // BƯỚC 10: KIỂM TRA CHỮ KÝ / API KEY / WEBHOOK SECRET (NẾU CÓ CẤU HÌNH)
         // ==============================================================
         $expectedApiKey = config('services.sepay.api_key', env('SEPAY_API_KEY', env('PAYMENT_WEBHOOK_SECRET', '')));
-        $expectedSecret = env('SEPAY_WEBHOOK_SECRET', '');
+        $expectedSecret = config('services.sepay.webhook_token', env('SEPAY_WEBHOOK_TOKEN', env('SEPAY_WEBHOOK_SECRET', '')));
         
         if (!empty($expectedApiKey) || !empty($expectedSecret)) {
             $authHeader = $request->header('Authorization', '');

@@ -45,8 +45,8 @@ return [
     ],
 
     'ghn' => [
-        'api_token' => env('GHN_API_TOKEN', '37da7db1-ace3-11f1-9ab8-22efcf8aa1f7'),
-        'shop_id' => (int) env('GHN_SHOP_ID', 6658154),
+        'api_token' => env('GHN_API_TOKEN'),
+        'shop_id' => (int) env('GHN_SHOP_ID', 0),
         'origin_district_id' => (int) env('GHN_ORIGIN_DISTRICT_ID', 1482),
         'origin_ward_code' => env('GHN_ORIGIN_WARD_CODE', '11007'),
         'api_url' => env('GHN_API_URL', 'https://online-gateway.ghn.vn/shiip/public-api'),
@@ -59,41 +59,25 @@ return [
         'origin_lng' => env('SHOP_ORIGIN_LNG', 105.7628),
     ],
 
-    'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', 'http://localhost:8000/auth/google/callback'),
-    ],
-
     'vnpay' => [
-        'tmn_code' => env('VNPAY_TMN_CODE', 'DKEKANL1'),
-        'hash_secret' => env('VNPAY_HASH_SECRET', 'A36K9YROGJFCDMLD8MKRXUE2Q4AKM6TV'),
+        'tmn_code' => env('VNPAY_TMN_CODE', ''),
+        'hash_secret' => env('VNPAY_HASH_SECRET', ''),
         'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
         'merchant_name' => env('VNPAY_MERCHANT_NAME', 'MẬT NGỌT BEAR'),
         'return_url' => env('VNPAY_RETURN_URL'),
         'ipn_url' => env('VNPAY_IPN_URL'),
     ],
 
-    'momo' => [
-        'partner_code' => env('MOMO_PARTNER_CODE', 'MOMO'),
-        'access_key' => env('MOMO_ACCESS_KEY', 'F8BBA842ECF85'),
-        'secret_key' => env('MOMO_SECRET_KEY', 'K951B6PE1waDMi640xX08PD3vg6EkVlz'),
-        'endpoint' => env('MOMO_ENDPOINT', 'https://test-payment.momo.vn/v2/gateway/api/create'),
-        'redirect_url' => env('MOMO_REDIRECT_URL'),
-        'ipn_url' => env('MOMO_IPN_URL'),
-        'phone' => env('MOMO_PHONE', '0377466205'),
-        'name' => env('MOMO_NAME', 'NGUYỄN NGỌC ANH'),
-    ],
-
     'sepay' => [
         'api_key' => env('SEPAY_API_KEY', ''),
-        'webhook_token' => env('SEPAY_WEBHOOK_TOKEN', ''),
+        // Chấp nhận cả 2 tên biến do .env mẫu cũ dùng SECRET, code settings dùng TOKEN.
+        'webhook_token' => env('SEPAY_WEBHOOK_TOKEN', env('SEPAY_WEBHOOK_SECRET', '')),
     ],
 
     'vietqr' => [
         'bank_code' => env('VIETQR_BANK_CODE', 'MB'),
         'bank_name' => env('VIETQR_BANK_NAME', 'MB Bank (Ngân hàng Quân Đội)'),
-        'account_number' => env('VIETQR_ACCOUNT_NUMBER', '0377466205'),
-        'account_name' => env('VIETQR_ACCOUNT_NAME', 'NGUYỄN NGỌC ANH'),
+        'account_number' => env('VIETQR_ACCOUNT_NUMBER', ''),
+        'account_name' => env('VIETQR_ACCOUNT_NAME', ''),
     ],
 ];

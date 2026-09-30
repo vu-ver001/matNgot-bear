@@ -24,7 +24,9 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->grou
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     Route::post('/orders/{order}/approve-cancel', [OrderController::class, 'approveCancel'])->name('orders.approve_cancel');
     Route::post('/orders/{order}/reject-cancel', [OrderController::class, 'rejectCancel'])->name('orders.reject_cancel');
+    Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
     Route::post('/orders/{order}/request-refund', [OrderController::class, 'requestRefund'])->name('orders.request_refund');
+    Route::post('/orders/{order}/update-refund-account', [OrderController::class, 'updateRefundAccount'])->name('orders.update_refund_account');
 
     // Quản lý thanh toán & Đối soát theo phân quyền Nhân viên vận hành
     Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
@@ -32,7 +34,9 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'role:STAFF'])->grou
     Route::post('/payments/{payment}/manual-confirm', [PaymentController::class, 'manualConfirm'])->name('payments.manualConfirm');
     Route::post('/payments/{payment}/refund-request', [PaymentController::class, 'requestRefund'])->name('payments.requestRefund');
     Route::post('/payments/{payment}/reconcile-cod', [PaymentController::class, 'reconcileCod'])->name('payments.reconcileCod');
+    Route::post('/payments/{payment}/unreconcile-cod', [PaymentController::class, 'unreconcileCod'])->name('payments.unreconcileCod');
     Route::post('/payments/bulk-reconcile-cod', [PaymentController::class, 'bulkReconcileCod'])->name('payments.bulkReconcileCod');
+    Route::post('/payments/bulk-unreconcile-cod', [PaymentController::class, 'bulkUnreconcileCod'])->name('payments.bulkUnreconcileCod');
     Route::get('/payments/cod-export', [PaymentController::class, 'codExport'])->name('payments.codExport');
 
     // Chức năng 5: Cấu hình cổng & API thanh toán -> Khóa hoàn toàn cho nhân viên

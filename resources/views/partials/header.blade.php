@@ -19,7 +19,7 @@
                 name="search" 
                 id="headerSearchInput"
                 class="search-input" 
-                placeholder="Tìm kiếm gấu bông yêu thích (Teddy, Capybara, Loopy...)"
+                placeholder="Tìm kiếm theo tên gấu bông (Teddy, Capybara, Bơ...)"
                 value="{{ request('search') }}"
                 autocomplete="off"
             >
@@ -31,7 +31,7 @@
         <!-- Live Search Suggestions Dropdown -->
         <div class="header-search-dropdown" id="headerSearchDropdown">
             <div class="search-dropdown-header">
-                <span><i class="fa-solid fa-paw" style="color: var(--honey-dark);"></i> Gấu bông gợi ý cho bạn</span>
+                <span><i class="fa-solid fa-paw" style="color: var(--honey-dark);"></i> Gợi ý theo tên sản phẩm</span>
                 <span class="search-count-tag" id="searchCountTag">0 kết quả</span>
             </div>
             <div class="search-dropdown-list" id="searchDropdownList">
@@ -64,13 +64,16 @@
             <!-- Wishlist (Yêu thích) -->
             @auth
                 <a href="{{ route('customer.wishlist.index') }}" class="utility-icon-btn {{ request()->routeIs('customer.wishlist*') ? 'active' : '' }}" id="wishlist-header-btn" title="Danh sách yêu thích">
+                    <i class="{{ ($realWishlistCount ?? 0) > 0 ? 'fa-solid' : 'fa-regular' }} fa-heart" id="header-wishlist-icon" style="font-size: 16px; color: {{ ($realWishlistCount ?? 0) > 0 ? '#E57373' : 'var(--honey-dark)' }};"></i>
+                    <span class="badge-count" id="wishlist-count" style="display: {{ ($realWishlistCount ?? 0) > 0 ? 'flex' : 'none' }};">{{ (int) ($realWishlistCount ?? 0) > 99 ? '99+' : (int) ($realWishlistCount ?? 0) }}</span>
+                </a>
             @endauth
             @guest
                 <a href="javascript:void(0)" onclick="if(typeof openAuthModal === 'function') { openAuthModal(); } else { window.location.href='{{ route('login') }}'; }" class="utility-icon-btn" id="wishlist-header-btn" title="Danh sách yêu thích">
+                    <i class="fa-regular fa-heart" id="header-wishlist-icon" style="font-size: 16px; color: var(--honey-dark);"></i>
+                    <span class="badge-count" id="wishlist-count" style="display: none;">0</span>
+                </a>
             @endguest
-                <i class="fa-solid fa-heart" style="font-size: 16px; color: #E57373;"></i>
-                <span class="badge-count" id="wishlist-count" style="display: {{ (auth()->check() && ($realWishlistCount ?? 0) > 0) ? 'flex' : 'none' }};">{{ (int) ($realWishlistCount ?? 0) > 99 ? '99+' : (int) ($realWishlistCount ?? 0) }}</span>
-            </a>
 
             <!-- Cart (Giỏ hàng) -->
             @auth
@@ -118,28 +121,37 @@
                 @php
                     $u = auth()->user();
                     $userRole = $u->role;
+                    $userName = $u->full_name ?? $u->name ?? 'Người dùng';
+                    $userInitial = mb_strtoupper(mb_substr(trim($userName), 0, 1, 'UTF-8'));
                     $avatarUrl = $u->avatar_url 
                         ?: ($u->avatar && file_exists(public_path('storage/' . $u->avatar)) ? asset('storage/' . $u->avatar) : null);
                     if (!$avatarUrl && $u->avatar && (str_starts_with($u->avatar, 'http://') || str_starts_with($u->avatar, 'https://'))) {
                         $avatarUrl = $u->avatar;
                     }
-                    if (!$avatarUrl) {
-                        $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($u->full_name ?: 'User') . '&background=EAD8C3&color=4A2E2B&bold=true';
-                    }
                 @endphp
 
                 <!-- 1 Icon Avatar của người đang đăng nhập -->
-                <a href="javascript:void(0)" class="header-user-avatar-btn" onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')" title="{{ $u->full_name }}">
-                    <img src="{{ $avatarUrl }}" alt="{{ $u->full_name }}" class="header-avatar-circle">
+                <a href="javascript:void(0)" class="header-user-avatar-btn" onclick="this.parentElement.querySelector('.dropdown-menu').classList.toggle('show')" title="{{ $userName }}">
+                    @if (!empty($avatarUrl))
+                        <img src="{{ $avatarUrl }}" alt="{{ $userName }}" class="header-avatar-circle">
+                    @else
+                        <span class="header-avatar-initial">{{ $userInitial }}</span>
+                    @endif
                 </a>
 
                 <!-- Khung Popup Người Dùng (Theo Ảnh 4) -->
                 <div class="dropdown-menu role-dropdown" style="right: 0; left: auto; min-width: 250px; border-radius: 18px; box-shadow: 0 12px 36px rgba(62, 39, 35, 0.12); padding: 6px 0; border: 1px solid var(--border-light); background: #FFFFFF;">
                     <!-- Header người dùng trong popup: Avatar + Họ tên + Email -->
                     <div style="padding: 14px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
-                        <img src="{{ $avatarUrl }}" alt="{{ $u->full_name }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #EAD8C3; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                        <div class="header-user-popup-avatar">
+                            @if (!empty($avatarUrl))
+                                <img src="{{ $avatarUrl }}" alt="{{ $userName }}">
+                            @else
+                                {{ $userInitial }}
+                            @endif
+                        </div>
                         <div style="min-width: 0; overflow: hidden; flex: 1;">
-                            <div style="font-weight: 700; font-size: 14px; color: #3E2723; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $u->full_name }}</div>
+                            <div style="font-weight: 700; font-size: 14px; color: #3E2723; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $userName }}</div>
                             <div style="font-size: 11.5px; color: #8D6E63; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;" title="{{ $u->email }}">{{ $u->email }}</div>
                         </div>
                     </div>
@@ -147,10 +159,6 @@
                     @if($userRole === 'ADMIN')
                         <a href="{{ route('admin.dashboard') }}" class="dropdown-item">
                             <span><i class="fa-solid fa-gauge-high" style="color: #8D6E63; margin-right: 8px;"></i> Quản Lý Admin</span>
-                            <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
-                        </a>
-                        <a href="{{ route('admin.orders.index') }}" class="dropdown-item">
-                            <span><i class="fa-solid fa-clipboard-list" style="color: #8D6E63; margin-right: 8px;"></i> Quản Lý Đơn Hàng</span>
                             <i class="fa-solid fa-arrow-right" style="font-size: 10px; color: var(--text-light);"></i>
                         </a>
                     @elseif($userRole === 'STAFF')
@@ -213,6 +221,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function removeVietnameseTones(str) {
+        if (!str) return '';
+        return str
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/Đ/g, 'D')
+            .toLowerCase();
+    }
+
     function doSearch(keyword) {
         keyword = keyword.trim();
         if (keyword.length < 1) {
@@ -232,7 +250,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                const items = res.data || [];
+                // Lọc chặt chẽ: Chỉ giữ lại các sản phẩm có TÊN chứa từ khóa
+                const rawItems = res.data || [];
+                const cleanKeyword = removeVietnameseTones(keyword);
+                const items = rawItems.filter(item => {
+                    const cleanName = removeVietnameseTones(item.name || '');
+                    return cleanName.includes(cleanKeyword);
+                });
+
                 currentSelectedIndex = -1;
 
                 if (items.length === 0) {
@@ -240,8 +265,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     searchDropdownList.innerHTML = `
                         <div class="search-dropdown-empty">
                             <i class="fa-solid fa-box-open"></i>
-                            <p>Không tìm thấy gấu bông "${escapeHtml(keyword)}"</p>
-                            <span>Thử tìm với tên gọi khác như: Teddy, Capybara, Bơ, Loopy...</span>
+                            <p>Không tìm thấy tên gấu bông "${escapeHtml(keyword)}"</p>
+                            <span>Vui lòng kiểm tra lại tên sản phẩm (ví dụ: Teddy, Capybara, Bơ, Loopy...)</span>
                         </div>
                     `;
                 } else {

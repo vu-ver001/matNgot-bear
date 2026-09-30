@@ -13,6 +13,23 @@
                     Đơn hàng đã kết thúc ở trạng thái <strong>{{ $order->order_status }}</strong>, không thể cập nhật thêm.
                 </div>
             @else
+                @if ($order->payment_status === 'FAILED')
+                    <div class="mb-4 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2.5">
+                        <i class="fa-solid fa-circle-xmark text-rose-600 text-sm mt-0.5 shrink-0"></i>
+                        <div>
+                            <strong class="font-bold">Đơn hàng thanh toán thất bại:</strong>
+                            <p class="text-stone-600 mt-0.5">Giao dịch thanh toán trực tuyến của đơn hàng này không thành công. Nhân viên/admin không được phép xác nhận đơn hàng này.</p>
+                        </div>
+                    </div>
+                @elseif ($order->payment_method !== 'COD' && $order->payment_status !== 'PAID')
+                    <div class="mb-4 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+                        <i class="fa-solid fa-clock text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                        <div>
+                            <strong class="font-bold">Đơn hàng chưa thanh toán:</strong>
+                            <p class="text-stone-600 mt-0.5">Khách hàng chọn thanh toán trực tuyến nhưng chưa hoàn tất thanh toán. Chỉ có thể xác nhận đơn sau khi thanh toán thành công.</p>
+                        </div>
+                    </div>
+                @endif
                 <form method="POST" action="{{ route('staff.orders.updateStatus', $order) }}" x-data="{ status: '' }">
                     @csrf
                     @method('PATCH')
@@ -20,7 +37,7 @@
                         <label class="block text-xs font-bold text-[#795548] uppercase mb-1.5">Chuyển sang trạng thái:</label>
                         <select name="order_status" x-model="status" class="select-control" required>
                             <option value="" disabled>Chọn trạng thái mới</option>
-                            @foreach (['PENDING' => 'Chờ xác nhận', 'CONFIRMED' => 'Đã xác nhận', 'PREPARING' => 'Đang đóng gói', 'SHIPPING' => 'Đang giao hàng', 'COMPLETED' => 'Đã giao thành công', 'RETURNED' => 'Trả hàng / Hoàn tiền', 'CANCELLED' => 'Hủy đơn hàng'] as $value => $label)
+                            @foreach (['PENDING' => 'Chờ xác nhận', 'PREPARING' => 'Đang chuẩn bị', 'SHIPPING' => 'Đang giao hàng', 'COMPLETED' => 'Đã giao', 'RETURNED' => 'Trả hàng / Hoàn tiền', 'CANCELLED' => 'Hủy đơn hàng'] as $value => $label)
                                 @if (in_array($value, $order->allowedNextStatuses(), true))
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endif

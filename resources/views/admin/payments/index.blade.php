@@ -3,7 +3,7 @@
 @section('page-title', 'Quản lý thanh toán & Đối soát dòng tiền')
 
 @section('content')
-<div class="px-2 sm:px-4 lg:px-6 max-w-7xl mx-auto font-sans" x-data="{
+<div class="mx-auto font-sans" x-data="{
     activeTab: '{{ $activeTab ?? 'transactions' }}',
     drawerOpen: false,
     selectedPayment: null,
@@ -39,75 +39,93 @@
     }
 }">
 
-    {{-- Breadcrumb & Header --}}
-    <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            {{-- <x-breadcrumb :items="[
-                ['label' => 'Trang chủ', 'url' => route('admin.dashboard')],
-                ['label' => 'Quản lý thanh toán & Đối soát']
-            ]" class="mb-2 text-xs" /> --}}
-            <h1 class="text-2xl sm:text-3xl font-black text-[#2C1408] tracking-tight flex items-center gap-2.5">
-                <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5C3219] to-[#8C5835] text-white flex items-center justify-center text-lg shadow-sm">
-                    💳
-                </span>
-                <span style="font-weight: 800;">Quản lý Thanh toán &amp; Đối soát</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-[#786B61] mt-1">
-                Xem toàn bộ dòng tiền, duyệt hoàn tiền kèm mã QR, đối soát công nợ COD &amp; cấu hình cổng thanh toán.
-            </p>
-        </div>
+    {{-- Header Banner --}}
+    <div class="relative overflow-hidden bg-[#FAF6F0] rounded-2xl border border-[#EBDDCD] shadow-2xs mb-4">
+        {{-- Decorative organic background shapes --}}
+        <div class="absolute -top-12 -right-12 w-40 h-40 bg-[#F2E5D5]/60 rounded-full blur-xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-[#F2E5D5]/60 rounded-full blur-xl pointer-events-none"></div>
 
-        {{-- Top Actions: Settings, Export CSV & Quick Links --}}
-        <div class="flex items-center gap-2.5 flex-wrap">
-            <a href="{{ route('admin.payments.settings') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EBDDCD] hover:border-[#E08A1E] text-[#5C3219] font-bold text-xs shadow-xs hover:shadow-sm transition">
-                <i class="fa-solid fa-sliders text-[#E08A1E]"></i>
-                <span>Cấu Hình Cổng &amp; API</span>
-            </a>
-            <a href="{{ route('admin.payments.export', request()->query()) }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EBDDCD] hover:border-emerald-600 text-emerald-800 font-bold text-xs shadow-xs hover:shadow-sm transition">
-                <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                <span>Xuất Báo Cáo</span>
-            </a>
-            <a href="{{ route('admin.orders.index') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5C3219] hover:bg-[#432310] text-white font-bold text-xs shadow-sm hover:shadow transition">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span>Xem Đơn Hàng</span>
-            </a>
+        <div class="relative z-10 p-3.5 sm:px-5 sm:py-3.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3.5">
+            {{-- Left: Icon + Vertical Divider + Titles --}}
+            <div class="flex items-center gap-3 sm:gap-3.5">
+                {{-- Brown Rounded Square Credit Card Icon --}}
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#A77B5A] to-[#8C623A] flex items-center justify-center text-white shadow-md shadow-[#8C623A]/25 shrink-0 border border-white/20">
+                    <svg class="w-5 h-5 text-white drop-shadow-2xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="3"/>
+                        <line x1="2" y1="10" x2="22" y2="10"/>
+                        <circle cx="17" cy="15" r="1.2" fill="currentColor"/>
+                    </svg>
+                </div>
+
+                {{-- Vertical Divider --}}
+                <div class="hidden sm:block h-8 w-[1.5px] bg-[#E2D4C7] rounded-full shrink-0"></div>
+
+                {{-- Title & Subtitle --}}
+                <div>
+                    <h1 class="text-base sm:text-lg font-black text-[#3A1E11] tracking-tight font-sans">
+                        Quản lý Thanh toán &amp; Đối soát
+                    </h1>
+                    <p class="text-[11px] sm:text-xs font-medium text-[#7D6E63] mt-0.5 max-w-2xl leading-relaxed">
+                        Xem toàn bộ dòng tiền, duyệt hoàn tiền kèm mã QR, đối soát công nợ COD &amp; cấu hình cổng thanh toán.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Right: Action Buttons Group --}}
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <a href="{{ route('admin.payments.settings') }}" 
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#EBDDCD] hover:border-[#A77B5A] hover:bg-[#FAF6EE] text-[#3A1E11] font-bold text-xs shadow-2xs transition">
+                    <i class="fa-solid fa-sliders text-[#A77B5A] text-xs"></i>
+                    <span>Cấu Hình Cổng &amp; API</span>
+                    <i class="fa-solid fa-chevron-right text-[9px] text-gray-400 ml-0.5"></i>
+                </a>
+                
+                <a href="{{ route('admin.payments.export', request()->query()) }}" 
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50/50 text-[#3A1E11] font-bold text-xs shadow-2xs transition">
+                    <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+                    <span>Xuất Báo Cáo</span>
+                </a>
+
+                <a href="{{ route('admin.orders.index') }}" 
+                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#A77B5A] to-[#8C623A] hover:from-[#986E4E] hover:to-[#7E552F] text-white font-bold text-xs shadow-md shadow-[#8C623A]/25 transition duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fa-solid fa-cart-shopping text-xs"></i>
+                    <span>Xem Đơn Hàng</span>
+                    <i class="fa-solid fa-chevron-right text-[9px] ml-0.5"></i>
+                </a>
+            </div>
         </div>
     </div>
 
-
     {{-- Navigation Tabs (Shopify Style) --}}
-    <div class="flex items-center gap-2 mb-6 border-b border-[#EBDDCD] pb-2 overflow-x-auto">
+    <div class="flex items-center gap-1.5 mb-4 border-b border-[#EBDDCD] pb-2 overflow-x-auto">
         <a href="{{ route('admin.payments.index', ['tab' => 'transactions']) }}" 
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition {{ ($activeTab ?? 'transactions') === 'transactions' ? 'bg-[#5C3219] text-white shadow-sm' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:bg-[#FFF9EE]' }}">
+           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition {{ ($activeTab ?? 'transactions') === 'transactions' ? 'bg-[#5C3219] text-white shadow-sm' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:bg-[#FFF9EE]' }}">
             <i class="fa-solid fa-list-check"></i>
             <span>Sổ Giao Dịch</span>
-            <span class="px-2 py-0.5 rounded-md text-[10px] {{ ($activeTab ?? 'transactions') === 'transactions' ? 'bg-white/20 text-white' : 'bg-[#FAF6EE] text-[#786B61]' }}">
+            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ ($activeTab ?? 'transactions') === 'transactions' ? 'bg-white/20 text-white' : 'bg-[#FAF6EE] text-[#786B61]' }}">
                 {{ $counts['ALL'] }}
             </span>
         </a>
 
         <a href="{{ route('admin.payments.index', ['tab' => 'refund_requests']) }}" 
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition {{ ($activeTab ?? 'transactions') === 'refund_requests' ? 'bg-[#5C3219] text-white shadow-sm' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:bg-[#FFF9EE]' }}">
+           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition {{ ($activeTab ?? 'transactions') === 'refund_requests' ? 'bg-[#5C3219] text-white shadow-sm' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:bg-[#FFF9EE]' }}">
             <i class="fa-solid fa-arrow-rotate-left text-purple-500"></i>
             <span>Duyệt Hoàn Tiền &amp; Quét Mã QR</span>
             @if ($counts['REFUND_REQUESTS'] > 0)
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white animate-pulse">
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white animate-pulse">
                     {{ $counts['REFUND_REQUESTS'] }} chờ duyệt
                 </span>
             @endif
         </a>
 
         <a href="{{ route('admin.payments.index', ['tab' => 'cod']) }}" 
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition {{ ($activeTab ?? 'transactions') === 'cod' ? 'bg-[#5C3219] text-white shadow-sm' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:bg-[#FFF9EE]' }}">
+           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition {{ ($activeTab ?? 'transactions') === 'cod' ? 'bg-[#5C3219] text-white shadow-sm' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:bg-[#FFF9EE]' }}">
             <i class="fa-solid fa-truck-fast text-blue-500"></i>
             <span>Đối Soát COD &amp; Công Nợ ĐVVC</span>
         </a>
 
         <a href="{{ route('admin.payments.settings') }}" 
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition bg-white border border-[#EBDDCD] text-[#5C3219] hover:border-[#E08A1E] hover:bg-[#FFF9EE] ml-auto">
+           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition bg-white border border-[#EBDDCD] text-[#5C3219] hover:border-[#E08A1E] hover:bg-[#FFF9EE] ml-auto">
             <i class="fa-solid fa-gear text-[#E08A1E]"></i>
             <span>Cấu Hình Ngân Hàng &amp; SePAY</span>
         </a>
@@ -116,81 +134,81 @@
     {{-- TAB 1: SỔ CÁI GIAO DỊCH --}}
     @if (($activeTab ?? 'transactions') === 'transactions')
         {{-- KPI Cards --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
             {{-- Total Paid (Thực thu) --}}
-            <div class="bg-white rounded-2xl p-5 border border-[#EBDDCD] shadow-xs relative overflow-hidden group hover:border-emerald-400 transition">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#786B61]">Thực Thu Thành Công</span>
-                    <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">
+            <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-[#EBDDCD] shadow-xs relative overflow-hidden group hover:border-emerald-400 transition">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61] truncate">Thực Thu Thành Công</span>
+                    <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
                         <i class="fa-solid fa-circle-check"></i>
                     </span>
                 </div>
-                <div class="text-2xl font-black text-emerald-600 tracking-tight">
+                <div class="text-lg sm:text-xl font-black text-emerald-600 tracking-tight">
                     {{ number_format($kpi['total_paid'], 0, ',', '.') }}đ
                 </div>
-                <p class="text-[11px] text-[#786B61] mt-1.5 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <p class="text-[10px] text-[#786B61] mt-1 flex items-center gap-1 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                     Tiền đã về tài khoản / Đã thu xong
                 </p>
             </div>
 
             {{-- Pending Payments --}}
-            <div class="bg-white rounded-2xl p-5 border border-[#EBDDCD] shadow-xs relative overflow-hidden group hover:border-amber-400 transition">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#786B61]">Chờ Thanh Toán</span>
-                    <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-base">
+            <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-[#EBDDCD] shadow-xs relative overflow-hidden group hover:border-amber-400 transition">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61] truncate">Chờ Thanh Toán</span>
+                    <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs shrink-0">
                         <i class="fa-solid fa-hourglass-half"></i>
                     </span>
                 </div>
-                <div class="text-2xl font-black text-[#E08A1E] tracking-tight">
+                <div class="text-lg sm:text-xl font-black text-[#E08A1E] tracking-tight">
                     {{ number_format($kpi['total_pending'], 0, ',', '.') }}đ
                 </div>
-                <p class="text-[11px] text-[#786B61] mt-1.5 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <p class="text-[10px] text-[#786B61] mt-1 flex items-center gap-1 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
                     Chờ quét VietQR hoặc chờ giao COD
                 </p>
             </div>
 
             {{-- Pending COD --}}
-            <div class="bg-white rounded-2xl p-5 border border-[#EBDDCD] shadow-xs relative overflow-hidden group hover:border-blue-400 transition">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#786B61]">COD Đang Luân Chuyển</span>
-                    <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base">
+            <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-[#EBDDCD] shadow-xs relative overflow-hidden group hover:border-blue-400 transition">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61] truncate">COD Đang Luân Chuyển</span>
+                    <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs shrink-0">
                         <i class="fa-solid fa-truck-fast"></i>
                     </span>
                 </div>
-                <div class="text-2xl font-black text-blue-600 tracking-tight">
+                <div class="text-lg sm:text-xl font-black text-blue-600 tracking-tight">
                     {{ number_format($kpi['total_cod_pending'], 0, ',', '.') }}đ
                 </div>
-                <p class="text-[11px] text-[#786B61] mt-1.5 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                <p class="text-[10px] text-[#786B61] mt-1 flex items-center gap-1 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
                     Tiền bưu cục / Shipper đang giữ
                 </p>
             </div>
 
             {{-- Total Refunded --}}
-            <div class="bg-white rounded-2xl p-5 border border-[#EBDDCD] shadow-xs relative overflow-hidden group hover:border-purple-400 transition">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#786B61]">Tiền Đã Hoàn Trả</span>
-                    <span class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-base">
+            <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-[#EBDDCD] shadow-xs relative overflow-hidden group hover:border-purple-400 transition">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61] truncate">Tiền Đã Hoàn Trả</span>
+                    <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs shrink-0">
                         <i class="fa-solid fa-arrow-rotate-left"></i>
                     </span>
                 </div>
-                <div class="text-2xl font-black text-purple-600 tracking-tight">
+                <div class="text-lg sm:text-xl font-black text-purple-600 tracking-tight">
                     {{ number_format($kpi['total_refunded'], 0, ',', '.') }}đ
                 </div>
-                <p class="text-[11px] text-[#786B61] mt-1.5 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                <p class="text-[10px] text-[#786B61] mt-1 flex items-center gap-1 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0"></span>
                     Đã hoàn tiền do đổi trả / hủy đơn
                 </p>
             </div>
         </div>
 
         {{-- Main Table Container --}}
-        <div class="bg-white rounded-3xl border border-[#EBDDCD] shadow-xs overflow-hidden">
+        <div class="bg-white rounded-2xl border border-[#EBDDCD] shadow-xs overflow-hidden">
             {{-- Status Tabs --}}
-            <div class="border-b border-[#F0E6D8] bg-[#FAF8F5] px-5 pt-3 overflow-x-auto">
-                <div class="flex items-center gap-2 min-w-max pb-3">
+            <div class="border-b border-[#F0E6D8] bg-[#FAF8F5] px-4 pt-2.5 overflow-x-auto">
+                <div class="flex items-center gap-1.5 min-w-max pb-2.5">
                     @php
                         $statusTabs = [
                             '' => ['label' => 'Tất cả giao dịch', 'count' => $counts['ALL']],
@@ -204,9 +222,9 @@
 
                     @foreach ($statusTabs as $stKey => $stData)
                         <a href="{{ route('admin.payments.index', array_merge(request()->except('status', 'p_page'), $stKey ? ['status' => $stKey] : [])) }}"
-                           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold text-xs transition {{ $currentStatus === $stKey ? 'bg-[#5C3219] text-white shadow-xs' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:border-[#E08A1E] hover:bg-[#FFF9EE]' }}">
+                           class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs transition {{ $currentStatus === $stKey ? 'bg-[#5C3219] text-white shadow-xs' : 'bg-white border border-[#EBDDCD] text-[#5C3219] hover:border-[#E08A1E] hover:bg-[#FFF9EE]' }}">
                             <span>{{ $stData['label'] }}</span>
-                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ $currentStatus === $stKey ? 'bg-white/20 text-white' : 'bg-[#FAF6EE] text-[#786B61]' }}">
+                            <span class="px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === $stKey ? 'bg-white/20 text-white' : 'bg-[#FAF6EE] text-[#786B61]' }}">
                                 {{ $stData['count'] }}
                             </span>
                         </a>
@@ -215,8 +233,8 @@
             </div>
 
             {{-- Smart Search & Filters --}}
-            <div class="p-5 border-b border-[#F0E6D8] bg-white">
-                <form method="GET" action="{{ route('admin.payments.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end">
+            <div class="p-3.5 sm:p-4 border-b border-[#F0E6D8] bg-white">
+                <form method="GET" action="{{ route('admin.payments.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-end">
                     <input type="hidden" name="tab" value="transactions">
                     @if (request('status'))
                         <input type="hidden" name="status" value="{{ request('status') }}">
@@ -224,21 +242,21 @@
 
                     {{-- Keyword Search --}}
                     <div class="lg:col-span-4">
-                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Tìm kiếm giao dịch</label>
+                        <label class="block text-[11px] font-bold text-[#5C3219] mb-1">Tìm kiếm giao dịch</label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 text-xs">
+                            <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-400 text-xs">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}"
                                    placeholder="Mã đơn / Mã GD / Tên / SĐT..."
-                                   class="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-[#EBDDCD] focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E] placeholder-gray-400">
+                                   class="w-full pl-8 pr-2.5 py-1.5 text-xs rounded-lg border border-[#EBDDCD] focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E] placeholder-gray-400">
                         </div>
                     </div>
 
                     {{-- Payment Method Filter --}}
                     <div class="lg:col-span-3">
-                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Phương thức</label>
-                        <select name="method" class="w-full py-2 px-3 text-xs rounded-xl border border-[#EBDDCD] focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E]">
+                        <label class="block text-[11px] font-bold text-[#5C3219] mb-1">Phương thức</label>
+                        <select name="method" class="w-full py-1.5 px-2.5 text-xs rounded-lg border border-[#EBDDCD] focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E]">
                             <option value="">-- Tất cả phương thức --</option>
                             <option value="BANK_TRANSFER" @selected(request('method') === 'BANK_TRANSFER')>Chuyển khoản (VietQR / SePAY)</option>
                             <option value="COD" @selected(request('method') === 'COD')>Tiền mặt (COD)</option>
@@ -249,8 +267,8 @@
 
                     {{-- Date Preset Filter --}}
                     <div class="lg:col-span-3">
-                        <label class="block text-xs font-bold text-[#5C3219] mb-1">Thời gian</label>
-                        <select name="date_preset" class="w-full py-2 px-3 text-xs rounded-xl border border-[#EBDDCD] focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E]">
+                        <label class="block text-[11px] font-bold text-[#5C3219] mb-1">Thời gian</label>
+                        <select name="date_preset" class="w-full py-1.5 px-2.5 text-xs rounded-lg border border-[#EBDDCD] focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E]">
                             <option value="">-- Tất cả thời gian --</option>
                             <option value="today" @selected(request('date_preset') === 'today')>Hôm nay</option>
                             <option value="yesterday" @selected(request('date_preset') === 'yesterday')>Hôm qua</option>
@@ -260,14 +278,14 @@
                     </div>
 
                     {{-- Buttons --}}
-                    <div class="lg:col-span-2 flex items-center gap-2">
+                    <div class="lg:col-span-2 flex items-center gap-1.5">
                         <button type="submit"
-                                class="flex-1 py-2 px-3 bg-[#E08A1E] hover:bg-[#C2751D] text-white text-xs font-extrabold rounded-xl shadow-xs hover:shadow transition flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-filter text-[11px]"></i>
+                                class="flex-1 py-1.5 px-2.5 bg-[#E08A1E] hover:bg-[#C2751D] text-white text-xs font-extrabold rounded-lg shadow-xs hover:shadow transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-filter text-[10px]"></i>
                             <span>Lọc Dữ Liệu</span>
                         </button>
                         <a href="{{ route('admin.payments.index', ['tab' => 'transactions']) }}"
-                           class="py-2 px-3 bg-[#FAF8F5] border border-[#EBDDCD] hover:border-gray-400 text-[#786B61] text-xs font-semibold rounded-xl transition"
+                           class="py-1.5 px-2.5 bg-[#FAF8F5] border border-[#EBDDCD] hover:border-gray-400 text-[#786B61] text-xs font-semibold rounded-lg transition"
                            title="Đặt lại bộ lọc">
                             <i class="fa-solid fa-arrow-rotate-right"></i>
                         </a>
@@ -277,17 +295,17 @@
 
             {{-- Transactions Table --}}
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[1050px] text-left text-xs text-[#2C1408]">
-                    <thead class="bg-[#FAF8F5] border-b border-[#F0E6D8] text-[11px] font-bold text-[#786B61] uppercase tracking-wider">
+                <table class="w-full min-w-[850px] text-left text-xs text-[#2C1408]">
+                    <thead class="bg-[#FAF8F5] border-b border-[#F0E6D8] text-[10px] font-bold text-[#786B61] uppercase tracking-wider">
                         <tr>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Mã GD / Đơn Hàng</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Khách Hàng</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Phương Thức</th>
-                            <th class="py-3.5 px-4 text-right whitespace-nowrap">Số Tiền</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Mã Tham Chiếu / Chứng Từ</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Trạng Thái</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Thời Gian</th>
-                            <th class="py-3.5 px-4 text-center whitespace-nowrap">Thao Tác</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Mã GD / Đơn Hàng</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Khách Hàng</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Phương Thức</th>
+                            <th class="py-2.5 px-3 text-right whitespace-nowrap">Số Tiền</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Mã Tham Chiếu / Chứng Từ</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Thời Gian</th>
+                            <th class="py-2.5 px-3 text-center whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#F0E6D8]">
@@ -302,10 +320,14 @@
                                     default => ['label' => $item->method, 'class' => 'bg-gray-50 text-gray-700 border-gray-200', 'icon' => 'fa-circle-dot'],
                                 };
 
+                                $isOrderCancelled = ($order && $order->order_status === 'CANCELLED');
+
                                 $statusBadge = match ($item->status) {
                                     'PAID' => ['label' => 'Đã thanh toán', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dot-emerald-500'],
-                                    'PENDING' => ['label' => 'Chờ thanh toán', 'class' => 'bg-amber-50 text-amber-700 border-amber-200 dot-amber-500'],
-                                    'FAILED' => ['label' => 'Thất bại', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500'],
+                                    'PENDING' => $isOrderCancelled
+                                        ? ['label' => 'Đã hủy', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500']
+                                        : ['label' => 'Chờ thanh toán', 'class' => 'bg-amber-50 text-amber-700 border-amber-200 dot-amber-500'],
+                                    'FAILED' => ['label' => $isOrderCancelled ? 'Đã hủy' : 'Thất bại', 'class' => 'bg-rose-50 text-rose-700 border-rose-200 dot-rose-500'],
                                     'REFUNDED' => ['label' => 'Đã hoàn tiền', 'class' => 'bg-purple-50 text-purple-700 border-purple-200 dot-purple-500'],
                                     default => ['label' => $item->status, 'class' => 'bg-gray-50 text-gray-700 border-gray-200 dot-gray-500'],
                                 };
@@ -313,87 +335,87 @@
 
                             <tr class="hover:bg-[#FFFDF9] transition group">
                                 {{-- Mã GD & Đơn hàng --}}
-                                <td class="py-3.5 px-4 font-semibold whitespace-nowrap">
-                                    <div class="font-bold text-[#5C3219]">#PAY-{{ str_pad($item->id, 5, '0', STR_PAD_LEFT) }}</div>
+                                <td class="py-2.5 px-3 font-semibold whitespace-nowrap">
+                                    <div class="font-bold text-xs text-[#5C3219]">#PAY-{{ str_pad($item->id, 5, '0', STR_PAD_LEFT) }}</div>
                                     @if ($order)
                                         <a href="{{ route('admin.orders.show', $order->id) }}" 
-                                           class="inline-flex items-center gap-1 text-[11px] font-bold text-[#E08A1E] hover:underline mt-0.5">
+                                           class="inline-flex items-center gap-1 text-[10px] font-bold text-[#E08A1E] hover:underline mt-0.5">
                                             <span>Đơn: {{ $order->order_code }}</span>
-                                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
                                         </a>
                                     @else
-                                        <span class="text-[11px] text-gray-400">Không có đơn</span>
+                                        <span class="text-[10px] text-gray-400">Không có đơn</span>
                                     @endif
                                 </td>
 
                                 {{-- Khách hàng --}}
-                                <td class="py-3.5 px-4">
-                                    <div class="font-bold text-[#2C1408] max-w-[170px] truncate" title="{{ $order?->recipient_name ?? $order?->customer?->full_name }}">
+                                <td class="py-2.5 px-3">
+                                    <div class="font-bold text-xs text-[#2C1408] max-w-[130px] truncate" title="{{ $order?->recipient_name ?? $order?->customer?->full_name }}">
                                         {{ $order?->recipient_name ?? $order?->customer?->full_name ?? 'Khách vãng lai' }}
                                     </div>
-                                    <div class="text-[11px] text-[#786B61] mt-0.5 flex items-center gap-1">
-                                        <i class="fa-solid fa-phone text-[10px] text-gray-400"></i>
+                                    <div class="text-[10px] text-[#786B61] mt-0.5 flex items-center gap-1">
+                                        <i class="fa-solid fa-phone text-[9px] text-gray-400"></i>
                                         <span>{{ $order?->recipient_phone ?? $order?->customer?->phone ?? '—' }}</span>
                                     </div>
                                 </td>
 
                                 {{-- Phương thức --}}
-                                <td class="py-3.5 px-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold whitespace-nowrap {{ $methodBadge['class'] }}">
+                                <td class="py-2.5 px-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-bold whitespace-nowrap {{ $methodBadge['class'] }}">
                                         <i class="fa-solid {{ $methodBadge['icon'] }}"></i>
                                         <span>{{ $methodBadge['label'] }}</span>
                                     </span>
                                 </td>
 
                                 {{-- Số tiền --}}
-                                <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                                    <div class="font-black text-sm text-[#2C1408]">
+                                <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                                    <div class="font-black text-xs sm:text-sm text-[#2C1408]">
                                         {{ number_format($item->amount, 0, ',', '.') }}đ
                                     </div>
                                 </td>
 
                                 {{-- Mã tham chiếu NH / Ảnh bill --}}
-                                <td class="py-3.5 px-4 text-[11px] whitespace-nowrap">
+                                <td class="py-2.5 px-3 text-[10px] whitespace-nowrap">
                                     @if ($item->transaction_ref)
-                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FAF6EE] border border-[#EBDDCD] text-[#5C3219] font-mono font-bold">
+                                        <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#FAF6EE] border border-[#EBDDCD] text-[#5C3219] font-mono font-bold">
                                             <span>{{ $item->transaction_ref }}</span>
                                         </div>
                                     @elseif ($item->proof_image)
                                         <a href="{{ $item->proof_image_url }}" target="_blank" 
-                                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold hover:bg-emerald-100 transition">
+                                           class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold hover:bg-emerald-100 transition">
                                             <i class="fa-solid fa-image"></i>
-                                            <span>Xem ảnh bill</span>
+                                            <span>Xem bill</span>
                                         </a>
                                     @else
                                         <span class="text-gray-400">—</span>
                                     @endif
 
                                     @if ($item->note)
-                                        <div class="text-[10px] text-gray-500 italic max-w-[150px] truncate mt-0.5" title="{{ $item->note }}">
-                                            Ghi chú: {{ $item->note }}
+                                        <div class="text-[9px] text-gray-500 italic max-w-[120px] truncate mt-0.5" title="{{ $item->note }}">
+                                            {{ $item->note }}
                                         </div>
                                     @endif
                                 </td>
 
                                 {{-- Trạng thái --}}
-                                <td class="py-3.5 px-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold whitespace-nowrap shrink-0 {{ $statusBadge['class'] }}">
+                                <td class="py-2.5 px-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold whitespace-nowrap shrink-0 {{ $statusBadge['class'] }}">
                                         <span class="w-1.5 h-1.5 rounded-full shrink-0 {{ str_replace('dot-', 'bg-', $statusBadge['class']) }}"></span>
                                         <span class="whitespace-nowrap">{{ $statusBadge['label'] }}</span>
                                     </span>
                                 </td>
 
                                 {{-- Thời gian --}}
-                                <td class="py-3.5 px-4 text-[11px] text-[#786B61] whitespace-nowrap">
+                                <td class="py-2.5 px-3 text-[10px] text-[#786B61] whitespace-nowrap">
                                     <div>{{ $item->created_at ? $item->created_at->format('d/m/Y H:i') : '—' }}</div>
                                     @if ($item->paid_at)
-                                        <div class="text-[10px] text-emerald-600 font-medium whitespace-nowrap">Trả lúc: {{ $item->paid_at->format('H:i d/m') }}</div>
+                                        <div class="text-[9px] text-emerald-600 font-medium whitespace-nowrap">{{ $item->paid_at->format('H:i d/m') }}</div>
                                     @endif
                                 </td>
 
                                 {{-- Thao tác --}}
-                                <td class="py-3.5 px-4 text-center whitespace-nowrap">
-                                    <div class="flex items-center justify-center gap-1.5">
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                                    <div class="flex items-center justify-center gap-1">
                                         {{-- Xem chi tiết drawer --}}
                                         <button type="button" 
                                                 @click="openDrawer({{ json_encode([
@@ -416,53 +438,60 @@
                                                     'paid_at' => $item->paid_at ? $item->paid_at->format('d/m/Y H:i:s') : '—',
                                                     'confirmed_by' => $item->confirmedByUser?->full_name ?? ($item->status === 'PAID' ? 'Hệ thống tự động' : '—'),
                                                 ]) }})"
-                                                class="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#EBDDCD] hover:border-[#E08A1E] text-[#5C3219] flex items-center justify-center text-xs transition"
+                                                class="w-7 h-7 rounded-lg bg-[#FAF8F5] border border-[#EBDDCD] hover:border-[#E08A1E] text-[#5C3219] flex items-center justify-center text-xs transition"
                                                 title="Xem chi tiết giao dịch">
                                             <i class="fa-solid fa-eye"></i>
                                         </button>
 
-                                        {{-- Realtime SePAY Check for Bank Transfer --}}
-                                        @if ($item->status === 'PENDING' && in_array($item->method, ['BANK_TRANSFER', 'E_WALLET']))
-                                            <form method="POST" action="{{ route('admin.payments.verifySepay', $item->id) }}" class="inline">
-                                                @csrf
-                                                <button type="submit" 
-                                                        class="w-8 h-8 rounded-lg bg-amber-500 hover:bg-[#C2751D] text-white flex items-center justify-center text-xs shadow-xs transition"
-                                                        title="Đối soát SePAY ngay">
-                                                    <i class="fa-solid fa-bolt"></i>
+                                        @if ($isOrderCancelled)
+                                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 text-gray-400 font-semibold text-[10px] cursor-not-allowed" title="Đơn hàng đã bị hủy">
+                                                <i class="fa-solid fa-ban text-[9px] text-rose-400"></i>
+                                                <span>Đã hủy</span>
+                                            </span>
+                                        @else
+                                            {{-- Realtime SePAY Check for Bank Transfer --}}
+                                            @if ($item->status === 'PENDING' && in_array($item->method, ['BANK_TRANSFER', 'E_WALLET']))
+                                                <form method="POST" action="{{ route('admin.payments.verifySepay', $item->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" 
+                                                            class="w-7 h-7 rounded-lg bg-amber-500 hover:bg-[#C2751D] text-white flex items-center justify-center text-xs shadow-xs transition"
+                                                            title="Đối soát SePAY ngay">
+                                                        <i class="fa-solid fa-bolt"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            {{-- Manual Confirm (Admin Toàn quyền - Chỉ áp dụng cho thanh toán online/chuyển khoản) --}}
+                                            @if ($item->status === 'PENDING' && $item->method !== 'COD')
+                                                <button type="button" 
+                                                        @click="openConfirm({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
+                                                        class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-xs shadow-xs transition"
+                                                        title="Xác nhận đã thu tiền">
+                                                    <i class="fa-solid fa-check"></i>
                                                 </button>
-                                            </form>
-                                        @endif
+                                            @endif
 
-                                        {{-- Manual Confirm (Admin Toàn quyền) --}}
-                                        @if ($item->status === 'PENDING')
-                                            <button type="button" 
-                                                    @click="openConfirm({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
-                                                    class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center text-xs shadow-xs transition"
-                                                    title="Xác nhận đã thu tiền">
-                                                <i class="fa-solid fa-check"></i>
-                                            </button>
-                                        @endif
-
-                                        {{-- Refund Action for Paid --}}
-                                        @if ($item->status === 'PAID')
-                                            <button type="button" 
-                                                    @click="openRefund({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
-                                                    class="w-8 h-8 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 flex items-center justify-center text-xs transition"
-                                                    title="Hoàn tiền trực tiếp">
-                                                <i class="fa-solid fa-arrow-rotate-left"></i>
-                                            </button>
+                                            {{-- Refund Action for Paid --}}
+                                            @if ($item->status === 'PAID')
+                                                <button type="button" 
+                                                        @click="openRefund({{ json_encode(['id' => $item->id, 'amount' => number_format($item->amount, 0, ',', '.') . 'đ', 'order_code' => $order?->order_code]) }})"
+                                                        class="w-7 h-7 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 flex items-center justify-center text-xs transition"
+                                                        title="Hoàn tiền trực tiếp">
+                                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                                </button>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="py-12 text-center text-[#786B61]">
-                                    <div class="w-16 h-16 rounded-full bg-[#FAF6EE] border border-[#EBDDCD] flex items-center justify-center text-3xl mx-auto mb-3">
+                                <td colspan="8" class="py-10 text-center text-[#786B61]">
+                                    <div class="w-12 h-12 rounded-full bg-[#FAF6EE] border border-[#EBDDCD] flex items-center justify-center text-2xl mx-auto mb-2">
                                         🧸
                                     </div>
-                                    <div class="font-bold text-sm text-[#2C1408]">Không tìm thấy bản ghi giao dịch nào</div>
-                                    <p class="text-xs text-[#786B61] mt-1">Hãy thử thay đổi điều kiện lọc hoặc từ khóa tìm kiếm.</p>
+                                    <div class="font-bold text-xs text-[#2C1408]">Không tìm thấy bản ghi giao dịch nào</div>
+                                    <p class="text-[11px] text-[#786B61] mt-0.5">Hãy thử thay đổi điều kiện lọc hoặc từ khóa tìm kiếm.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -472,7 +501,7 @@
 
             {{-- Pagination --}}
             @if ($payments->hasPages())
-                <div class="p-4 border-t border-[#F0E6D8] bg-[#FAF8F5]">
+                <div class="p-3 border-t border-[#F0E6D8] bg-[#FAF8F5]">
                     {{ $payments->links() }}
                 </div>
             @endif
@@ -481,51 +510,51 @@
 
     {{-- TAB 2: DUYỆT HOÀN TIỀN & QUÉT MÃ QR --}}
     @if (($activeTab ?? 'transactions') === 'refund_requests')
-        <div class="bg-white rounded-3xl border border-[#EBDDCD] shadow-xs overflow-hidden">
-            <div class="p-5 border-b border-[#F0E6D8] bg-[#FAF8F5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-lg">
+        <div class="bg-white rounded-2xl border border-[#EBDDCD] shadow-xs overflow-hidden">
+            <div class="p-3.5 sm:p-4 border-b border-[#F0E6D8] bg-[#FAF8F5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-sm shrink-0">
                         <i class="fa-solid fa-arrow-rotate-left"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-black text-[#2C1408]">Danh Sách Yêu Cầu Hoàn Tiền</h3>
-                        <p class="text-xs text-[#786B61]">Phê duyệt lệnh và quét mã VietQR Napas247 để chuyển tiền hoàn tức thì cho khách hàng.</p>
+                        <h3 class="text-sm sm:text-base font-black text-[#2C1408]">Danh Sách Yêu Cầu Hoàn Tiền</h3>
+                        <p class="text-[11px] text-[#786B61]">Phê duyệt lệnh và quét mã VietQR Napas247 để chuyển tiền hoàn tức thì cho khách hàng.</p>
                     </div>
                 </div>
 
                 {{-- Status Filter for Refund Requests --}}
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
                     <a href="{{ route('admin.payments.index', ['tab' => 'refund_requests']) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ !request('rf_status') ? 'bg-[#5C3219] text-white' : 'bg-white border border-[#EBDDCD] text-[#5C3219]' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ !request('rf_status') ? 'bg-[#5C3219] text-white' : 'bg-white border border-[#EBDDCD] text-[#5C3219]' }}">
                         Tất cả
                     </a>
                     <a href="{{ route('admin.payments.index', ['tab' => 'refund_requests', 'rf_status' => 'PENDING']) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('rf_status') === 'PENDING' ? 'bg-[#5C3219] text-white' : 'bg-white border border-[#EBDDCD] text-[#5C3219]' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ request('rf_status') === 'PENDING' ? 'bg-[#5C3219] text-white' : 'bg-white border border-[#EBDDCD] text-[#5C3219]' }}">
                         Chờ duyệt
                     </a>
                     <a href="{{ route('admin.payments.index', ['tab' => 'refund_requests', 'rf_status' => 'APPROVED']) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('rf_status') === 'APPROVED' ? 'bg-[#5C3219] text-white' : 'bg-white border border-[#EBDDCD] text-[#5C3219]' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ request('rf_status') === 'APPROVED' ? 'bg-[#5C3219] text-white' : 'bg-white border border-[#EBDDCD] text-[#5C3219]' }}">
                         Đã duyệt
                     </a>
                     <a href="{{ route('admin.payments.index', ['tab' => 'refund_requests', 'rf_status' => 'REJECTED']) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('rf_status') === 'REJECTED' ? 'bg-[#5C3219] text-white' : 'bg-white border border-[#EBDDCD] text-[#5C3219]' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ request('rf_status') === 'REJECTED' ? 'bg-[#5C3219] text-white' : 'bg-white border border-[#EBDDCD] text-[#5C3219]' }}">
                         Từ chối
                     </a>
                 </div>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[950px] text-left text-xs text-[#2C1408]">
-                    <thead class="bg-[#FAF8F5] border-b border-[#F0E6D8] text-[11px] font-bold text-[#786B61] uppercase tracking-wider">
+                <table class="w-full min-w-[850px] text-left text-xs text-[#2C1408]">
+                    <thead class="bg-[#FAF8F5] border-b border-[#F0E6D8] text-[10px] font-bold text-[#786B61] uppercase tracking-wider">
                         <tr>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Mã Yêu Cầu / Đơn</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Khách Hàng</th>
-                            <th class="py-3.5 px-4 text-right whitespace-nowrap">Số Tiền Hoàn</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Tài Khoản Khách Nhận</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Lý Do Hoàn</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Nhân Viên Yêu Cầu</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Trạng Thái</th>
-                            <th class="py-3.5 px-4 text-center whitespace-nowrap">Thao Tác</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Mã Yêu Cầu / Đơn</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Khách Hàng</th>
+                            <th class="py-2.5 px-3 text-right whitespace-nowrap">Số Tiền Hoàn</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Tài Khoản Khách Nhận</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Lý Do Hoàn</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Nhân Viên Yêu Cầu</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-2.5 px-3 text-center whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#F0E6D8]">
@@ -540,64 +569,64 @@
                                 };
                             @endphp
                             <tr class="hover:bg-[#FFFDF9] transition">
-                                <td class="py-3.5 px-4 whitespace-nowrap">
-                                    <div class="font-bold text-[#5C3219]">#RF-{{ str_pad($rf->id, 5, '0', STR_PAD_LEFT) }}</div>
+                                <td class="py-2.5 px-3 whitespace-nowrap">
+                                    <div class="font-bold text-xs text-[#5C3219]">#RF-{{ str_pad($rf->id, 5, '0', STR_PAD_LEFT) }}</div>
                                     @if ($rfOrder)
-                                        <a href="{{ route('admin.orders.show', $rfOrder->id) }}" class="text-[11px] font-bold text-[#E08A1E] hover:underline">
+                                        <a href="{{ route('admin.orders.show', $rfOrder->id) }}" class="text-[10px] font-bold text-[#E08A1E] hover:underline">
                                             Đơn: {{ $rfOrder->order_code }}
                                         </a>
                                     @endif
                                 </td>
 
-                                <td class="py-3.5 px-4">
-                                    <div class="font-bold text-[#2C1408]">{{ $rfOrder?->recipient_name ?? $rfOrder?->customer?->full_name ?? '—' }}</div>
-                                    <div class="text-[11px] text-[#786B61]">{{ $rfOrder?->recipient_phone ?? $rfOrder?->customer?->phone ?? '—' }}</div>
+                                <td class="py-2.5 px-3">
+                                    <div class="font-bold text-xs text-[#2C1408] max-w-[130px] truncate">{{ $rfOrder?->recipient_name ?? $rfOrder?->customer?->full_name ?? '—' }}</div>
+                                    <div class="text-[10px] text-[#786B61]">{{ $rfOrder?->recipient_phone ?? $rfOrder?->customer?->phone ?? '—' }}</div>
                                 </td>
 
-                                <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                                    <div class="font-black text-sm text-purple-700">
+                                <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                                    <div class="font-black text-xs sm:text-sm text-purple-700">
                                         {{ number_format($rf->amount, 0, ',', '.') }}đ
                                     </div>
                                 </td>
 
-                                <td class="py-3.5 px-4 text-xs">
+                                <td class="py-2.5 px-3 text-xs">
                                     @if ($rf->bank_account)
-                                        <div class="font-bold text-[#5C3219]">{{ $rf->bank_name }} - {{ $rf->bank_account }}</div>
-                                        <div class="text-[11px] text-[#786B61] uppercase">{{ $rf->account_holder }}</div>
+                                        <div class="font-bold text-xs text-[#5C3219]">{{ $rf->bank_name }} - {{ $rf->bank_account }}</div>
+                                        <div class="text-[10px] text-[#786B61] uppercase">{{ $rf->account_holder }}</div>
                                     @else
-                                        <span class="text-gray-400">Chưa cung cấp STK</span>
+                                        <span class="text-gray-400 text-[10px]">Chưa có STK</span>
                                     @endif
                                 </td>
 
-                                <td class="py-3.5 px-4 max-w-[200px]">
+                                <td class="py-2.5 px-3 max-w-[160px]">
                                     <div class="text-xs text-[#2C1408] truncate" title="{{ $rf->reason }}">{{ $rf->reason }}</div>
                                     @if ($rf->proof_image)
-                                        <a href="{{ Storage::disk('public')->url($rf->proof_image) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:underline mt-0.5">
+                                        <a href="{{ Storage::disk('public')->url($rf->proof_image) }}" target="_blank" class="inline-flex items-center gap-1 text-[9px] text-blue-600 hover:underline mt-0.5">
                                             <i class="fa-solid fa-image"></i>
-                                            <span>Xem ảnh chứng từ</span>
+                                            <span>Xem chứng từ</span>
                                         </a>
                                     @endif
                                 </td>
 
-                                <td class="py-3.5 px-4 whitespace-nowrap">
-                                    <div class="font-semibold text-[#2C1408]">{{ $rf->requestedByUser?->full_name ?? 'Nhân viên' }}</div>
+                                <td class="py-2.5 px-3 whitespace-nowrap">
+                                    <div class="font-semibold text-xs text-[#2C1408]">{{ $rf->requestedByUser?->full_name ?? 'Nhân viên' }}</div>
                                     <div class="text-[10px] text-[#786B61]">{{ $rf->created_at->format('d/m/Y H:i') }}</div>
                                 </td>
 
-                                <td class="py-3.5 px-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full border text-[11px] font-bold {{ $rfStatusBadge['class'] }}">
+                                <td class="py-2.5 px-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold {{ $rfStatusBadge['class'] }}">
                                         {{ $rfStatusBadge['label'] }}
                                     </span>
                                     @if ($rf->admin_note)
-                                        <div class="text-[10px] text-gray-500 mt-1 italic max-w-[140px] truncate" title="{{ $rf->admin_note }}">
+                                        <div class="text-[9px] text-gray-500 mt-0.5 italic max-w-[120px] truncate" title="{{ $rf->admin_note }}">
                                             Admin: {{ $rf->admin_note }}
                                         </div>
                                     @endif
                                 </td>
 
-                                <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap">
                                     @if ($rf->status === 'PENDING')
-                                        <div class="flex items-center justify-center gap-1.5">
+                                        <div class="flex items-center justify-center gap-1">
                                             {{-- Quét mã VietQR & Phê duyệt --}}
                                             <button type="button" 
                                                     @click="openQrRefund({{ json_encode([
@@ -612,9 +641,9 @@
                                                         'viet_qr_url' => $rf->viet_qr_url,
                                                         'requested_by' => $rf->requestedByUser?->full_name,
                                                     ]) }})"
-                                                    class="px-3 py-1.5 rounded-xl bg-[#5C3219] hover:bg-[#432310] text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5">
-                                                <i class="fa-solid fa-qrcode"></i>
-                                                <span>Quét QR &amp; Duyệt</span>
+                                                    class="px-2.5 py-1 rounded-lg bg-[#5C3219] hover:bg-[#432310] text-white font-bold text-xs shadow-xs transition flex items-center gap-1">
+                                                <i class="fa-solid fa-qrcode text-[10px]"></i>
+                                                <span>Quét QR</span>
                                             </button>
 
                                             {{-- Từ chối --}}
@@ -623,23 +652,23 @@
                                                         'id' => $rf->id,
                                                         'order_code' => $rfOrder?->order_code,
                                                     ]) }})"
-                                                    class="p-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition"
+                                                    class="w-7 h-7 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 flex items-center justify-center text-xs transition"
                                                     title="Từ chối yêu cầu">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </button>
                                         </div>
                                     @else
-                                        <span class="text-xs text-gray-400">Đã giải quyết</span>
+                                        <span class="text-[10px] text-gray-400">Đã giải quyết</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="py-12 text-center text-[#786B61]">
-                                    <div class="w-14 h-14 rounded-full bg-[#FAF6EE] flex items-center justify-center text-2xl mx-auto mb-2">
+                                <td colspan="8" class="py-10 text-center text-[#786B61]">
+                                    <div class="w-12 h-12 rounded-full bg-[#FAF6EE] flex items-center justify-center text-2xl mx-auto mb-2">
                                         ✨
                                     </div>
-                                    <div class="font-bold text-sm text-[#2C1408]">Không có yêu cầu hoàn tiền nào</div>
+                                    <div class="font-bold text-xs text-[#2C1408]">Không có yêu cầu hoàn tiền nào</div>
                                 </td>
                             </tr>
                         @endforelse
@@ -648,7 +677,7 @@
             </div>
 
             @if ($refundRequests->hasPages())
-                <div class="p-4 border-t border-[#F0E6D8] bg-[#FAF8F5]">
+                <div class="p-3 border-t border-[#F0E6D8] bg-[#FAF8F5]">
                     {{ $refundRequests->links() }}
                 </div>
             @endif
@@ -658,50 +687,50 @@
     {{-- TAB 3: ĐỐI SOÁT COD & CÔNG NỢ ĐVVC --}}
     @if (($activeTab ?? 'transactions') === 'cod')
         {{-- COD Debt KPI Cards --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-2xl p-5 border border-[#EBDDCD] shadow-xs">
-                <span class="text-xs font-bold uppercase tracking-wider text-[#786B61]">COD Đang Luân Chuyển</span>
-                <div class="text-2xl font-black text-blue-600 mt-1">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
+            <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-[#EBDDCD] shadow-xs">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61] truncate block">COD Đang Luân Chuyển</span>
+                <div class="text-lg sm:text-xl font-black text-blue-600 mt-1">
                     {{ number_format($codDebtSummary['cod_in_transit'], 0, ',', '.') }}đ
                 </div>
-                <p class="text-[11px] text-[#786B61] mt-1">Đơn hàng đang giao, Shipper giữ tiền</p>
+                <p class="text-[10px] text-[#786B61] mt-1 truncate">Đơn hàng đang giao, Shipper giữ tiền</p>
             </div>
 
-            <div class="bg-white rounded-2xl p-5 border border-[#EBDDCD] shadow-xs">
-                <span class="text-xs font-bold uppercase tracking-wider text-[#786B61]">COD Đã Đối Soát (Chờ Tiền Về)</span>
-                <div class="text-2xl font-black text-[#E08A1E] mt-1">
+            <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-[#EBDDCD] shadow-xs">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61] truncate block">COD Đã Đối Soát</span>
+                <div class="text-lg sm:text-xl font-black text-[#E08A1E] mt-1">
                     {{ number_format($codDebtSummary['cod_reconciled_pending_settle'], 0, ',', '.') }}đ
                 </div>
-                <p class="text-[11px] text-[#786B61] mt-1">Nhân viên đã đối soát, bưu cục chuẩn bị nộp</p>
+                <p class="text-[10px] text-[#786B61] mt-1 truncate">NV đã đối soát, bưu cục chuẩn bị nộp</p>
             </div>
 
-            <div class="bg-white rounded-2xl p-5 border border-[#EBDDCD] shadow-xs">
-                <span class="text-xs font-bold uppercase tracking-wider text-[#786B61]">COD Đã Nhận Về Tài Khoản</span>
-                <div class="text-2xl font-black text-emerald-600 mt-1">
+            <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-[#EBDDCD] shadow-xs">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61] truncate block">COD Đã Nhận Về TK</span>
+                <div class="text-lg sm:text-xl font-black text-emerald-600 mt-1">
                     {{ number_format($codDebtSummary['cod_settled'], 0, ',', '.') }}đ
                 </div>
-                <p class="text-[11px] text-[#786B61] mt-1">Tiền ĐVVC đã chuyển thành công về tài khoản shop</p>
+                <p class="text-[10px] text-[#786B61] mt-1 truncate">Tiền đã về tài khoản ngân hàng shop</p>
             </div>
 
-            <div class="bg-white rounded-2xl p-5 border border-[#EBDDCD] shadow-xs">
-                <span class="text-xs font-bold uppercase tracking-wider text-[#786B61]">Tổng Tiền COD Thực Thu</span>
-                <div class="text-2xl font-black text-[#5C3219] mt-1">
+            <div class="bg-white rounded-xl p-3 sm:p-3.5 border border-[#EBDDCD] shadow-xs">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-[#786B61] truncate block">Tổng Thu Hộ COD</span>
+                <div class="text-lg sm:text-xl font-black text-[#5C3219] mt-1">
                     {{ number_format($codDebtSummary['cod_total_delivered'], 0, ',', '.') }}đ
                 </div>
-                <p class="text-[11px] text-[#786B61] mt-1">Toàn bộ doanh thu thu hộ COD thành công</p>
+                <p class="text-[10px] text-[#786B61] mt-1 truncate">Doanh thu thu hộ COD thành công</p>
             </div>
         </div>
 
         {{-- COD Table --}}
-        <div class="bg-white rounded-3xl border border-[#EBDDCD] shadow-xs overflow-hidden" x-data="{ selectedCod: [] }">
-            <div class="p-5 border-b border-[#F0E6D8] bg-[#FAF8F5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg">
+        <div class="bg-white rounded-2xl border border-[#EBDDCD] shadow-xs overflow-hidden" x-data="{ selectedCod: [] }">
+            <div class="p-3.5 sm:p-4 border-b border-[#F0E6D8] bg-[#FAF8F5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-sm shrink-0">
                         <i class="fa-solid fa-truck-fast"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-black text-[#2C1408]">Quản Lý Đối Soát Đơn COD &amp; Nhận Tiền Về Tài Khoản</h3>
-                        <p class="text-xs text-[#786B61]">Admin theo dõi công nợ các đơn vị vận chuyển và chốt nhận tiền về tài khoản ngân hàng shop.</p>
+                        <h3 class="text-sm sm:text-base font-black text-[#2C1408]">Quản Lý Đối Soát Đơn COD &amp; Nhận Tiền Về Tài Khoản</h3>
+                        <p class="text-[11px] text-[#786B61]">Admin theo dõi công nợ các đơn vị vận chuyển và chốt nhận tiền về tài khoản ngân hàng shop.</p>
                     </div>
                 </div>
 
@@ -710,119 +739,119 @@
                     <template x-for="id in selectedCod" :key="id">
                         <input type="hidden" name="payment_ids[]" :value="id">
                     </template>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-building-columns"></i>
+                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-building-columns text-[10px]"></i>
                         <span>Chốt Nhận Tiền Về TK (<span x-text="selectedCod.length"></span> đơn)</span>
                     </button>
                 </form>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[950px] text-left text-xs text-[#2C1408]">
-                    <thead class="bg-[#FAF8F5] border-b border-[#F0E6D8] text-[11px] font-bold text-[#786B61] uppercase tracking-wider">
+                <table class="w-full min-w-[850px] text-left text-xs text-[#2C1408]">
+                    <thead class="bg-[#FAF8F5] border-b border-[#F0E6D8] text-[10px] font-bold text-[#786B61] uppercase tracking-wider">
                         <tr>
-                            <th class="py-3.5 px-4 w-10 text-center">
+                            <th class="py-2.5 px-3 w-8 text-center">
                                 <input type="checkbox" @click="selectedCod = selectedCod.length ? [] : {{ json_encode($codPayments->whereNotNull('cod_reconciled_at')->whereNull('cod_settled_at')->pluck('id')) }}" 
                                        class="rounded text-[#E08A1E] focus:ring-[#E08A1E]">
                             </th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Mã GD / Đơn Hàng</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Khách Hàng</th>
-                            <th class="py-3.5 px-4 text-right whitespace-nowrap">Tiền Thu Hộ COD</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Đối Soát (Nhân Viên)</th>
-                            <th class="py-3.5 px-4 whitespace-nowrap">Nhận Tiền Về TK (Admin)</th>
-                            <th class="py-3.5 px-4 text-center whitespace-nowrap">Thao Tác</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Mã GD / Đơn Hàng</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Khách Hàng</th>
+                            <th class="py-2.5 px-3 text-right whitespace-nowrap">Tiền Thu Hộ COD</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Đối Soát (Nhân Viên)</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Nhận Tiền Về TK (Admin)</th>
+                            <th class="py-2.5 px-3 text-center whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#F0E6D8]">
                         @forelse ($codPayments as $cp)
                             @php $cpOrder = $cp->order; @endphp
                             <tr class="hover:bg-[#FFFDF9] transition">
-                                <td class="py-3.5 px-4 text-center">
+                                <td class="py-2.5 px-3 text-center">
                                     @if (!$cp->cod_settled_at)
                                         @if ($cp->cod_reconciled_at)
                                             <input type="checkbox" value="{{ $cp->id }}" x-model="selectedCod" class="rounded text-[#E08A1E] focus:ring-[#E08A1E]">
                                         @else
-                                            <span class="text-gray-300" title="Chờ nhân viên đối soát với bưu tá"><i class="fa-solid fa-lock text-[11px]"></i></span>
+                                            <span class="text-gray-300" title="Chờ nhân viên đối soát với bưu tá"><i class="fa-solid fa-lock text-[10px]"></i></span>
                                         @endif
                                     @else
                                         <i class="fa-solid fa-check-double text-emerald-500"></i>
                                     @endif
                                 </td>
 
-                                <td class="py-3.5 px-4 whitespace-nowrap font-semibold">
-                                    <div class="font-bold text-[#5C3219]">#PAY-{{ str_pad($cp->id, 5, '0', STR_PAD_LEFT) }}</div>
+                                <td class="py-2.5 px-3 whitespace-nowrap font-semibold">
+                                    <div class="font-bold text-xs text-[#5C3219]">#PAY-{{ str_pad($cp->id, 5, '0', STR_PAD_LEFT) }}</div>
                                     @if ($cpOrder)
-                                        <a href="{{ route('admin.orders.show', $cpOrder->id) }}" class="text-[11px] font-bold text-[#E08A1E] hover:underline">
+                                        <a href="{{ route('admin.orders.show', $cpOrder->id) }}" class="text-[10px] font-bold text-[#E08A1E] hover:underline">
                                             Đơn: {{ $cpOrder->order_code }}
                                         </a>
                                     @endif
                                 </td>
 
-                                <td class="py-3.5 px-4">
-                                    <div class="font-bold text-[#2C1408]">{{ $cpOrder?->recipient_name ?? $cpOrder?->customer?->full_name ?? '—' }}</div>
-                                    <div class="text-[11px] text-[#786B61]">{{ $cpOrder?->recipient_phone ?? $cpOrder?->customer?->phone ?? '—' }}</div>
+                                <td class="py-2.5 px-3">
+                                    <div class="font-bold text-xs text-[#2C1408] max-w-[130px] truncate">{{ $cpOrder?->recipient_name ?? $cpOrder?->customer?->full_name ?? '—' }}</div>
+                                    <div class="text-[10px] text-[#786B61]">{{ $cpOrder?->recipient_phone ?? $cpOrder?->customer?->phone ?? '—' }}</div>
                                 </td>
 
-                                <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                                    <div class="font-black text-sm text-[#2C1408]">
+                                <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                                    <div class="font-black text-xs sm:text-sm text-[#2C1408]">
                                         {{ number_format($cp->amount, 0, ',', '.') }}đ
                                     </div>
                                 </td>
 
-                                <td class="py-3.5 px-4 whitespace-nowrap">
+                                <td class="py-2.5 px-3 whitespace-nowrap">
                                     @if ($cp->cod_reconciled_at)
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                            <i class="fa-solid fa-check"></i>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <i class="fa-solid fa-check text-[9px]"></i>
                                             <span>Đã đối soát ({{ $cp->cod_reconciled_at->format('d/m H:i') }})</span>
                                         </span>
-                                        <div class="text-[10px] text-gray-500 mt-0.5">NV: {{ $cp->reconciledByUser?->full_name ?? 'Nhân viên' }}</div>
+                                        <div class="text-[9px] text-gray-500 mt-0.5">NV: {{ $cp->reconciledByUser?->full_name ?? 'Nhân viên' }}</div>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                            <i class="fa-solid fa-clock"></i>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <i class="fa-solid fa-clock text-[9px]"></i>
                                             <span>Chưa đối soát với bưu tá</span>
                                         </span>
                                     @endif
                                 </td>
 
-                                <td class="py-3.5 px-4 whitespace-nowrap">
+                                <td class="py-2.5 px-3 whitespace-nowrap">
                                     @if ($cp->cod_settled_at)
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                            <i class="fa-solid fa-building-columns"></i>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                            <i class="fa-solid fa-building-columns text-[9px]"></i>
                                             <span>Đã nhận về TK ({{ $cp->cod_settled_at->format('d/m H:i') }})</span>
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-600">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600">
                                             Chưa nhận tiền
                                         </span>
                                     @endif
                                 </td>
 
-                                <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap">
                                     @if (!$cp->cod_settled_at)
                                         @if ($cp->cod_reconciled_at)
                                             <form method="POST" action="{{ route('admin.payments.markCodSettled', $cp->id) }}" class="inline">
                                                 @csrf
                                                 <button type="submit" 
-                                                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1">
-                                                    <i class="fa-solid fa-check"></i>
-                                                    <span>Nhận Tiền Về TK</span>
+                                                        class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1">
+                                                    <i class="fa-solid fa-check text-[10px]"></i>
+                                                    <span>Nhận Tiền</span>
                                                 </button>
                                             </form>
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-gray-100 text-gray-400 border border-dashed border-gray-300 cursor-not-allowed" title="Cần nhân viên đối soát với bưu tá trước">
-                                                <i class="fa-solid fa-lock text-[10px]"></i>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-gray-100 text-gray-400 border border-dashed border-gray-300 cursor-not-allowed" title="Cần nhân viên đối soát với bưu tá trước">
+                                                <i class="fa-solid fa-lock text-[9px]"></i>
                                                 <span>Chờ đối soát</span>
                                             </span>
                                         @endif
                                     @else
-                                        <span class="text-[11px] font-bold text-emerald-600">✓ Hoàn tất</span>
+                                        <span class="text-[10px] font-bold text-emerald-600">✓ Hoàn tất</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-12 text-center text-[#786B61]">
-                                    <div class="font-bold text-sm text-[#2C1408]">Không có đơn COD nào</div>
+                                <td colspan="7" class="py-10 text-center text-[#786B61]">
+                                    <div class="font-bold text-xs text-[#2C1408]">Không có đơn COD nào</div>
                                 </td>
                             </tr>
                         @endforelse
@@ -831,7 +860,7 @@
             </div>
 
             @if ($codPayments->hasPages())
-                <div class="p-4 border-t border-[#F0E6D8] bg-[#FAF8F5]">
+                <div class="p-3 border-t border-[#F0E6D8] bg-[#FAF8F5]">
                     {{ $codPayments->links() }}
                 </div>
             @endif

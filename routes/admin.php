@@ -35,6 +35,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     Route::post('/orders/{order}/approve-cancel', [OrderController::class, 'approveCancel'])->name('orders.approve_cancel');
     Route::post('/orders/{order}/reject-cancel', [OrderController::class, 'rejectCancel'])->name('orders.reject_cancel');
+    Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
+    Route::post('/orders/{order}/update-refund-account', [OrderController::class, 'updateRefundAccount'])->name('orders.update_refund_account');
     Route::post('/orders/{order}/confirm-refund', [OrderController::class, 'confirmRefund'])->name('orders.confirm_refund');
 
     // 3.1 Quản lý thanh toán & Đối soát dòng tiền
@@ -58,7 +60,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
 
     // 5. Quản lý đánh giá (Anh Vũ)
     Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
-    Route::patch('/reviews/{review}/toggle', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+    Route::patch('/reviews/{review}/toggle', [ReviewController::class, 'toggle'])->name('reviews.toggle');
+    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
     // 6. Voucher management (Ngọc Anh)
     Route::post('/vouchers/{id}/extend', [VoucherController::class, 'restore'])->name('vouchers.extend');
@@ -68,8 +71,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
     Route::resource('vouchers', VoucherController::class)->except(['show']);
 
     // 7. PHẦN CỦA KHÁNH VÂN: Quản lý Sản phẩm (Trang riêng)
-    Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-    Route::delete('/products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
     Route::resource('products', ProductController::class);
 
     // 8. PHẦN CỦA KHÁNH VÂN: Quản lý Danh mục (Trang riêng)

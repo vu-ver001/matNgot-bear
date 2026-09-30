@@ -1,0 +1,85 @@
+databases:
+  - name: matngotbear-demo-db
+    databaseName: matngotbear
+    user: matngotbear
+    plan: free
+    region: singapore
+
+services:
+  - type: web
+    name: matngotbear-demo
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /up
+    autoDeployTrigger: commit
+    initialDeployHook: php artisan db:seed --force
+    envVars:
+      - key: APP_NAME
+        value: "Mật Ngọt Bear"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: APP_TIMEZONE
+        value: Asia/Ho_Chi_Minh
+      - key: APP_LOCALE
+        value: vi
+      - key: APP_FALLBACK_LOCALE
+        value: vi
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: matngotbear-demo-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: FILESYSTEM_DISK
+        value: public
+      - key: MAIL_MAILER
+        value: log
+      - key: MIGRATE_ON_START
+        value: "true"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GHN_API_TOKEN
+        sync: false
+      - key: GHN_SHOP_ID
+        sync: false
+      - key: VIETQR_ACCOUNT_NUMBER
+        sync: false
+      - key: VIETQR_ACCOUNT_NAME
+        sync: false
+      - key: MOMO_PARTNER_CODE
+        sync: false
+      - key: MOMO_ACCESS_KEY
+        sync: false
+      - key: MOMO_SECRET_KEY
+        sync: false
+      - key: MOMO_PHONE
+        sync: false
+      - key: MOMO_NAME
+        sync: false
+      - key: VNPAY_TMN_CODE
+        sync: false
+      - key: VNPAY_HASH_SECRET
+        sync: false
+      - key: SEPAY_API_KEY
+        sync: false
+      - key: SEPAY_WEBHOOK_TOKEN
+        sync: false

@@ -94,4 +94,34 @@ class OrderDetail extends Model
     {
         return $this->belongsTo(ProductVariant::class)->withTrashed();
     }
+
+    /**
+     * Ảnh đại diện thực tế của chi tiết đơn hàng (gọi đúng theo CSDL, trả về null nếu không có ảnh).
+     */
+    public function getEffectiveImageAttribute(): ?string
+    {
+        if (!empty($this->variant_image_url)) {
+            return $this->variant_image_url;
+        }
+
+        if ($this->variant && !empty($this->variant->image_url)) {
+            return $this->variant->image_url;
+        }
+
+        if ($this->product) {
+            if ($this->product->relationLoaded('images')) {
+                $primary = $this->product->images->firstWhere('is_primary', true) ?? $this->product->images->first();
+                if ($primary && !empty($primary->image_url)) {
+                    return $primary->image_url;
+                }
+            } else {
+                $primary = $this->product->images()->firstWhere('is_primary', true) ?? $this->product->images()->first();
+                if ($primary && !empty($primary->image_url)) {
+                    return $primary->image_url;
+                }
+            }
+        }
+
+        return null;
+    }
 }

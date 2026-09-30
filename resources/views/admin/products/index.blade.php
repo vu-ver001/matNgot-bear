@@ -109,7 +109,7 @@
         <!-- Search Box -->
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" id="prod-search" class="input-control" placeholder="Tìm theo tên gấu bông, mã số ID, SKU..." oninput="onSearchInput()">
+            <input type="text" id="prod-search" class="input-control" placeholder="Tìm theo tên gấu bông, mã số ID..." oninput="onSearchInput()">
             <button type="button" id="prod-search-clear" class="search-clear-btn" onclick="clearSearch()" title="Xóa tìm kiếm">
                 <i class="fa-solid fa-xmark"></i>
             </button>

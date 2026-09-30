@@ -35,9 +35,20 @@ class ProductController extends Controller
                   $q->whereHas('order', fn ($oq) => $oq->whereIn('order_status', ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING']));
               }]);
 
-        // Tìm kiếm theo tên sản phẩm
+        // Tìm kiếm CHỈ THEO TÊN GẤU BÔNG VÀ MÃ SỐ ID
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->input('search') . '%');
+            $search = trim($request->input('search'));
+            $cleanId = ltrim($search, '#');
+
+            $query->where(function ($q) use ($search, $cleanId) {
+                // 1. Tìm theo tên gấu bông
+                $q->where('name', 'like', "%{$search}%");
+
+                // 2. Tìm theo mã số ID
+                if (is_numeric($cleanId)) {
+                    $q->orWhere('id', (int) $cleanId);
+                }
+            });
         }
 
         // Lọc theo danh mục
@@ -629,91 +640,6 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Khôi phục sản phẩm từ thùng rác (Restore).
-     * Hỗ trợ chọn lọc danh sách sản phẩm con (biến thể) cần khôi phục / kích hoạt lại.
-     */
-    public function restore(?Request $request = null, ?int $id = null): JsonResponse|RedirectResponse
-    {
-        $request = $request ?: request();
-        $productId = $id ?? (int) $request->route('id');
-
-        $product = Product::onlyTrashed()->with('variants')->findOrFail($productId);
-        $product->status = Product::STATUS_ACTIVE;
-        $product->restore();
-
-        // Xử lý các sản phẩm con (biến thể) được chọn khôi phục
-        if ($request->has('variant_ids')) {
-            $variantIds = (array) $request->input('variant_ids', []);
-            if (!empty($variantIds)) {
-                // Kích hoạt lại các biến thể được chọn
-                $product->variants()->whereIn('id', $variantIds)->update(['status' => 'ACTIVE']);
-                // Các biến thể không được chọn sẽ được giữ ở trạng thái ngừng bán (INACTIVE)
-                $product->variants()->whereNotIn('id', $variantIds)->update(['status' => 'INACTIVE']);
-            } else {
-                // Nếu người dùng cố ý bỏ chọn tất cả biến thể
-                $product->variants()->update(['status' => 'INACTIVE']);
-            }
-        } else {
-            // Mặc định khôi phục tất cả biến thể đang có
-            $product->variants()->update(['status' => 'ACTIVE']);
-        }
-
-        // Đồng bộ lại giá bán và tồn kho từ các biến thể còn hoạt động
-        $product->syncLowestPriceFromVariants();
-
-        $activeVariantsCount = $product->variants()->where('status', 'ACTIVE')->count();
-        if ($product->variants()->count() > 0) {
-            $msg = "Đã khôi phục sản phẩm [{$product->name}] cùng {$activeVariantsCount} sản phẩm con thành công!";
-        } else {
-            $msg = "Đã khôi phục sản phẩm [{$product->name}] thành công!";
-        }
-
-        if ($request->wantsJson() || $request->is('api/*')) {
-            return response()->json([
-                'success' => true,
-                'message' => $msg,
-                'data'    => $product->fresh(['variants', 'images']),
-            ]);
-        }
-
-        return back()->with('success', $msg);
-    }
-
-    /**
-     * Xóa vĩnh viễn sản phẩm khỏi hệ thống (Force Delete).
-     * Chỉ được phép nếu sản phẩm chưa từng phát sinh đơn hàng trong quá khứ.
-     */
-    public function forceDelete(int $id): JsonResponse|RedirectResponse
-    {
-        $product = Product::onlyTrashed()->findOrFail($id);
-
-        if ($product->hasBeenOrdered()) {
-            $msg = "Sản phẩm [{$product->name}] đã từng được đặt trong đơn hàng nên chỉ được phép xóa mềm, không thể xóa vĩnh viễn.";
-            if (request()->wantsJson() || request()->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $msg,
-                ], 422);
-            }
-            return back()->with('error', $msg);
-        }
-
-        $name = $product->name;
-        $product->images()->delete();
-        $product->variants()->delete();
-        $product->forceDelete();
-
-        $msg = "Đã xóa vĩnh viễn sản phẩm [{$name}] khỏi hệ thống!";
-        if (request()->wantsJson() || request()->is('api/*')) {
-            return response()->json([
-                'success' => true,
-                'message' => $msg,
-            ]);
-        }
-
-        return back()->with('success', $msg);
-    }
 
     /**
      * Chuyển đổi trạng thái kinh doanh của sản phẩm (ACTIVE <-> INACTIVE).
@@ -823,18 +749,23 @@ class ProductController extends Controller
             $q->select('id', 'name', 'category_id', 'status');
         }, 'product.category:id,name'])->whereHas('product');
 
-        // Tìm kiếm theo tên cha, SKU con, kích thước, màu sắc, ID cha
+        // Tìm kiếm CHỈ THEO TÊN GẤU BÔNG VÀ MÃ SỐ ID
         if ($request->filled('search')) {
             $kw = trim($request->input('search'));
-            $query->where(function($q) use ($kw) {
-                $q->where('sku', 'like', "%{$kw}%")
-                  ->orWhere('size', 'like', "%{$kw}%")
-                  ->orWhere('color', 'like', "%{$kw}%")
-                  ->orWhere('product_id', $kw)
-                  ->orWhereHas('product', function($pq) use ($kw) {
-                      $pq->where('name', 'like', "%{$kw}%")
-                         ->orWhere('id', $kw);
-                  });
+            $cleanId = ltrim($kw, '#');
+
+            $query->where(function($q) use ($kw, $cleanId) {
+                // 1. Tìm theo tên gấu bông (sản phẩm cha)
+                $q->whereHas('product', function($pq) use ($kw) {
+                    $pq->where('name', 'like', "%{$kw}%");
+                });
+
+                // 2. Tìm theo mã số ID (ID sản phẩm cha hoặc ID biến thể con)
+                if (is_numeric($cleanId)) {
+                    $idNum = (int) $cleanId;
+                    $q->orWhere('product_id', $idNum)
+                      ->orWhere('id', $idNum);
+                }
             });
         }
 
@@ -907,8 +838,6 @@ class ProductController extends Controller
             });
         })->count();
 
-        $trashed = Product::onlyTrashed()->count();
-
         return response()->json([
             'success' => true,
             'data' => [
@@ -916,7 +845,6 @@ class ProductController extends Controller
                 'active'   => $active,
                 'inactive' => $inactive,
                 'warning'  => $warning,
-                'trashed'  => $trashed,
             ]
         ]);
     }

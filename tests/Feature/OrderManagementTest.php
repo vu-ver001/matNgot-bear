@@ -294,7 +294,7 @@ class OrderManagementTest extends TestCase
 
         $this->actingAs($this->staff);
 
-        $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'PREPARING'])
+        $this->patch('/staff/orders/'.$order->id.'/status', ['order_status' => 'SHIPPING'])
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => 'PENDING']);
@@ -714,7 +714,7 @@ class OrderManagementTest extends TestCase
         $this->assertDatabaseHas('order_status_histories', [
             'order_id' => $order->id,
             'to_status' => 'SHIPPING',
-            'note' => 'Shop bắt đầu giao hàng thủ công.',
+            'note' => 'Shop bắt đầu giao hàng.',
         ]);
     }
 
@@ -773,7 +773,7 @@ class OrderManagementTest extends TestCase
             $response = $this->actingAs($user)->get('/'.strtolower($user->role).'/orders/'.$order->id)->assertOk();
             preg_match('/<select name="order_status".*?<\/select>/s', $response->getContent(), $matches);
             $this->assertNotEmpty($matches);
-            $this->assertStringContainsString('value="CONFIRMED"', $matches[0]);
+            $this->assertStringContainsString('value="PREPARING"', $matches[0]);
             $this->assertStringContainsString('value="CANCELLED"', $matches[0]);
             $this->assertStringNotContainsString('value="COMPLETED"', $matches[0]);
             $this->assertStringNotContainsString('value="PENDING"', $matches[0]);
@@ -861,5 +861,73 @@ class OrderManagementTest extends TestCase
         // Admin hitting customer.orders.show is redirected to admin.orders.show
         $this->actingAs($this->admin)->get(route('customer.orders.show', $order))
             ->assertRedirect(route('admin.orders.show', $order));
+    }
+
+    public function test_staff_and_admin_cannot_confirm_order_when_payment_status_is_failed(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $order->update([
+            'order_status' => 'PENDING',
+            'payment_status' => 'FAILED',
+            'payment_method' => 'CARD',
+        ]);
+
+        $this->assertFalse($order->canTransitionTo('CONFIRMED'));
+        $this->assertNotContains('CONFIRMED', $order->allowedNextStatuses());
+
+        // Staff tries to confirm via HTTP PATCH
+        $response = $this->actingAs($this->staff)->patch(route('staff.orders.updateStatus', $order), [
+            'order_status' => 'CONFIRMED',
+        ]);
+        $response->assertSessionHas('error');
+        $this->assertEquals('PENDING', $order->fresh()->order_status);
+
+        // Admin tries to confirm via HTTP PATCH
+        $adminResponse = $this->actingAs($this->admin)->patch(route('admin.orders.updateStatus', $order), [
+            'order_status' => 'CONFIRMED',
+        ]);
+        $adminResponse->assertSessionHas('error');
+        $this->assertEquals('PENDING', $order->fresh()->order_status);
+
+        // Service throws exception directly
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('thanh toán thất bại');
+        app(OrderService::class)->updateStatus($order, 'CONFIRMED', $this->staff->id);
+    }
+
+    public function test_staff_and_admin_cannot_confirm_order_when_online_order_is_unpaid(): void
+    {
+        $order = $this->createOrder($this->customer);
+        $order->update([
+            'order_status' => 'PENDING',
+            'payment_status' => 'UNPAID',
+            'payment_method' => 'CARD',
+        ]);
+
+        $this->assertFalse($order->canTransitionTo('CONFIRMED'));
+        $this->assertNotContains('CONFIRMED', $order->allowedNextStatuses());
+
+        // Staff tries to confirm via HTTP PATCH
+        $response = $this->actingAs($this->staff)->patch(route('staff.orders.updateStatus', $order), [
+            'order_status' => 'CONFIRMED',
+        ]);
+        $response->assertSessionHas('error');
+        $this->assertEquals('PENDING', $order->fresh()->order_status);
+
+        // Staff order list shows disabled button
+        $listResponse = $this->actingAs($this->staff)->get(route('staff.orders.index'));
+        $listResponse->assertOk();
+        $listResponse->assertSee('disabled', false);
+        $listResponse->assertSee('Đơn hàng trực tuyến chưa thanh toán - Không thể chuẩn bị đơn');
+
+        // COD order with UNPAID can still be confirmed/prepared
+        $codOrder = $this->createOrder($this->customer);
+        $codOrder->update([
+            'order_status' => 'PENDING',
+            'payment_status' => 'UNPAID',
+            'payment_method' => 'COD',
+        ]);
+        $this->assertTrue($codOrder->canTransitionTo('PREPARING'));
+        $this->assertContains('PREPARING', $codOrder->allowedNextStatuses());
     }
 }

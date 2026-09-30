@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class CartController extends Controller
@@ -17,7 +20,7 @@ class CartController extends Controller
      */
     protected function getUserId(): int
     {
-        return auth()->id() ?? \App\Models\User::where('role', 'CUSTOMER')->first()?->id ?? 1;
+        return auth()->id() ?? User::where('role', 'CUSTOMER')->first()?->id ?? 1;
     }
 
     /**
@@ -27,6 +30,7 @@ class CartController extends Controller
     {
         if (auth()->check() && auth()->user()->role !== 'CUSTOMER') {
             $roleLabel = auth()->user()->role === 'ADMIN' ? 'Quản trị viên (Admin)' : 'Nhân viên (Staff)';
+
             return redirect()->route('home')->with('error', "Tài khoản {$roleLabel} không sử dụng giỏ hàng để mua sắm. Vui lòng chuyển sang tài khoản Khách hàng.");
         }
 
@@ -67,7 +71,7 @@ class CartController extends Controller
      */
     public function store(Request $request): RedirectResponse|JsonResponse
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -75,6 +79,7 @@ class CartController extends Controller
                     'message' => 'Vui lòng đăng nhập tài khoản để thêm sản phẩm vào giỏ hàng.',
                 ], 401);
             }
+
             return redirect()->route('login')->with('info', 'Vui lòng đăng nhập tài khoản để thêm sản phẩm vào giỏ hàng.');
         }
 
@@ -88,6 +93,7 @@ class CartController extends Controller
                     'message' => $msg,
                 ], 403);
             }
+
             return back()->with('error', $msg);
         }
 
@@ -103,20 +109,22 @@ class CartController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Sản phẩm hiện đang ngưng kinh doanh.'], 400);
             }
+
             return back()->with('error', 'Sản phẩm hiện đang ngưng kinh doanh.');
         }
 
         $variant = null;
-        if (!empty($validated['product_variant_id'])) {
-            $variant = \App\Models\ProductVariant::where('id', $validated['product_variant_id'])
+        if (! empty($validated['product_variant_id'])) {
+            $variant = ProductVariant::where('id', $validated['product_variant_id'])
                 ->where('product_id', $product->id)
                 ->first();
 
-            if (!$variant || $variant->status !== 'ACTIVE') {
+            if (! $variant || $variant->status !== 'ACTIVE') {
                 $msg = 'Phiên bản sản phẩm được chọn không hợp lệ hoặc đã ngừng kinh doanh.';
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $msg], 400);
                 }
+
                 return back()->with('error', $msg);
             }
         }
@@ -127,6 +135,7 @@ class CartController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 400);
             }
+
             return back()->with('error', $msg);
         }
 
@@ -144,6 +153,7 @@ class CartController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 400);
             }
+
             return back()->with('error', $msg);
         }
 
@@ -193,6 +203,7 @@ class CartController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 400);
             }
+
             return back()->with('error', $msg);
         }
 
@@ -205,7 +216,7 @@ class CartController extends Controller
                 'success' => true,
                 'quantity' => $validated['quantity'],
                 'lineTotal' => $lineTotal,
-                'lineTotalFormatted' => number_format($lineTotal, 0, ',', '.') . 'đ',
+                'lineTotalFormatted' => number_format($lineTotal, 0, ',', '.').'đ',
             ]);
         }
 
@@ -213,7 +224,7 @@ class CartController extends Controller
     }
 
     /**
-     * Change variant of a cart item (Shopee style).
+     * Change variant of a cart item
      */
     public function updateVariant(Request $request, CartItem $cartItem): JsonResponse
     {
@@ -226,7 +237,7 @@ class CartController extends Controller
             'product_variant_id' => 'required|integer|exists:product_variants,id',
         ]);
 
-        $newVariant = \App\Models\ProductVariant::where('id', $validated['product_variant_id'])
+        $newVariant = ProductVariant::where('id', $validated['product_variant_id'])
             ->where('product_id', $cartItem->product_id)
             ->where('status', 'ACTIVE')
             ->first();
@@ -276,7 +287,7 @@ class CartController extends Controller
                 'line_total' => $mergedPrice * $combinedQty,
                 'stock_quantity' => $newVariant->stock_quantity,
                 'variant_display' => "{$newVariant->color} · {$newVariant->size}",
-                'image_url' => $existingItem->effective_image,
+                'image_url' => $this->formatImageUrl($existingItem->effective_image),
                 'cart_count' => $cartCount,
             ]);
         }
@@ -303,7 +314,7 @@ class CartController extends Controller
             'line_total' => $newPrice * $newQuantity,
             'stock_quantity' => $newVariant->stock_quantity,
             'variant_display' => "{$newVariant->color} · {$newVariant->size}",
-            'image_url' => $cartItem->effective_image,
+            'image_url' => $this->formatImageUrl($cartItem->effective_image),
             'cart_count' => $cartCount,
         ]);
     }
@@ -378,15 +389,15 @@ class CartController extends Controller
         ]);
 
         $userId = auth()->id() ?? $this->getUserId();
-        $userEmail = auth()->user()?->email ?? ('Khách vãng lai (ID: ' . $userId . ')');
+        $userEmail = auth()->user()?->email ?? ('Khách vãng lai (ID: '.$userId.')');
         $time = now()->format('d/m/Y H:i:s');
 
         if (($validated['action'] ?? '') === 'uncheck_all') {
-            \Illuminate\Support\Facades\Log::info("🛒 [CART LOG] Người dùng {$userEmail} đã BỎ CHỌN TẤT CẢ sản phẩm trong giỏ hàng lúc {$time}.");
+            Log::info("🛒 [CART LOG] Người dùng {$userEmail} đã BỎ CHỌN TẤT CẢ sản phẩm trong giỏ hàng lúc {$time}.");
         } else {
-            $productName = $validated['product_name'] ?? ('Mã giỏ: #' . ($validated['cart_item_id'] ?? ''));
+            $productName = $validated['product_name'] ?? ('Mã giỏ: #'.($validated['cart_item_id'] ?? ''));
             $remaining = $validated['remaining_count'] ?? 0;
-            \Illuminate\Support\Facades\Log::info("🛒 [CART LOG] Người dùng {$userEmail} đã BỎ TÍCH sản phẩm '{$productName}' (CartItem ID: {$validated['cart_item_id']}) lúc {$time}. Số sản phẩm còn được chọn: {$remaining}.");
+            Log::info("🛒 [CART LOG] Người dùng {$userEmail} đã BỎ TÍCH sản phẩm '{$productName}' (CartItem ID: {$validated['cart_item_id']}) lúc {$time}. Số sản phẩm còn được chọn: {$remaining}.");
         }
 
         return response()->json([
@@ -394,5 +405,16 @@ class CartController extends Controller
             'message' => 'Đã ghi nhận log bỏ tích sản phẩm thành công.',
             'logged_at' => $time,
         ]);
+    }
+
+    private function formatImageUrl(?string $rawImg): ?string
+    {
+        if (empty($rawImg)) {
+            return null;
+        }
+
+        return (str_starts_with($rawImg, 'http') || str_starts_with($rawImg, 'data:'))
+            ? $rawImg
+            : asset(ltrim($rawImg, '/'));
     }
 }

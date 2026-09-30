@@ -3,13 +3,16 @@
 @php
     $steps = [
         'PENDING' => 'Chờ xác nhận',
-        'CONFIRMED' => 'Đã xác nhận',
-        'PREPARING' => 'Đang đóng gói',
+        'PREPARING' => 'Đang chuẩn bị',
         'SHIPPING' => 'Đang giao hàng',
-        'COMPLETED' => 'Hoàn thành',
+        'COMPLETED' => 'Đã giao',
     ];
 
-    $currentIndex = array_search($status, array_keys($steps));
+    $normalizedStatus = $status === 'CONFIRMED' ? 'PREPARING' : $status;
+    $currentIndex = array_search($normalizedStatus, array_keys($steps));
+    if ($currentIndex === false) {
+        $currentIndex = -1;
+    }
 @endphp
 
 @if ($status === 'CANCELLED')

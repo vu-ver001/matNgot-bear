@@ -1364,8 +1364,9 @@
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            showCloseButton: true,
+            timer: 3500,
+            timerProgressBar: false,
             background: '#FAF6F0',
             color: '#3E2723',
             didOpen: (toast) => {

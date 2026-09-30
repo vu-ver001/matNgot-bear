@@ -185,16 +185,33 @@
                 </div>
             </div>
 
-            <!-- Thumbnails -->
-            <div class="gallery-thumbs-row">
-                @foreach($galleryList as $index => $gUrl)
-                    <div class="gallery-thumb-item {{ ($gUrl === $initialImg || ($index === 0 && empty($initialImg))) ? 'active' : '' }}" 
-                         data-img-url="{{ $gUrl }}" 
-                         onclick="switchMainImage('{{ $gUrl }}', this);"
-                         title="Bấm để xem chi tiết ảnh">
-                        <img src="{{ $gUrl }}" alt="Thumbnail {{ $index + 1 }}" onerror="this.src='https://placehold.co/100x100?text=Gau'">
-                    </div>
-                @endforeach
+            <!-- Thumbnails Slider (Hiển thị nút < > khi có trên 6 ảnh) -->
+            @php
+                $hasThumbsSlider = $galleryList->count() > 6;
+            @endphp
+            <div class="gallery-thumbs-slider-wrap {{ $hasThumbsSlider ? 'has-slider' : '' }}">
+                @if($hasThumbsSlider)
+                    <button type="button" class="gallery-thumb-nav-btn prev" id="thumbNavPrev" onclick="slideThumbnails(-1)" aria-label="Xem ảnh trước" title="Xem ảnh trước">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                @endif
+
+                <div class="gallery-thumbs-row" id="galleryThumbsTrack">
+                    @foreach($galleryList as $index => $gUrl)
+                        <div class="gallery-thumb-item {{ ($gUrl === $initialImg || ($index === 0 && empty($initialImg))) ? 'active' : '' }}" 
+                             data-img-url="{{ $gUrl }}" 
+                             onclick="switchMainImage('{{ $gUrl }}', this);"
+                             title="Bấm để xem chi tiết ảnh">
+                            <img src="{{ $gUrl }}" alt="Thumbnail {{ $index + 1 }}" onerror="this.src='https://placehold.co/100x100?text=Gau'">
+                        </div>
+                    @endforeach
+                </div>
+
+                @if($hasThumbsSlider)
+                    <button type="button" class="gallery-thumb-nav-btn next" id="thumbNavNext" onclick="slideThumbnails(1)" aria-label="Xem ảnh tiếp theo" title="Xem ảnh tiếp theo">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                @endif
             </div>
         </div>
 
@@ -214,27 +231,34 @@
             <h1 class="detail-product-title">{{ $product->name }}</h1>
 
             @php
-                $avgRating = $product->reviews_count > 0 ? round($product->avg_rating, 1) : 5.0;
-                $fullStars = floor($avgRating);
-                $hasHalf = ($avgRating - $fullStars) >= 0.5;
+                $hasReviews = ($product->reviews_count ?? 0) > 0;
+                $avgRating = $hasReviews ? round($product->avg_rating, 1) : 0;
+                $fullStars = $hasReviews ? floor($avgRating) : 0;
+                $hasHalf = $hasReviews && ($avgRating - $fullStars) >= 0.5;
             @endphp
 
             <!-- Rating & Sold -->
             <div class="detail-rating-row">
-                <a href="#reviews-section" class="stars-group" style="text-decoration: none;" title="Xem các đánh giá">
-                    @for($i = 1; $i <= 5; $i++)
-                        @if($i <= $fullStars)
-                            <i class="fa-solid fa-star"></i>
-                        @elseif($i == $fullStars + 1 && $hasHalf)
-                            <i class="fa-solid fa-star-half-stroke"></i>
-                        @else
-                            <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
-                        @endif
-                    @endfor
-                    <strong style="color: var(--text-main); margin-left: 4px;">{{ number_format($avgRating, 1) }}</strong>
-                </a>
-                <span>&bull;</span>
-                <a href="#reviews-section" style="color: var(--text-muted); font-weight: 700; text-decoration: underline;" title="Xem chi tiết đánh giá">{{ $product->reviews_count ?? 0 }} đánh giá</a>
+                @if($hasReviews)
+                    <a href="#reviews-section" class="stars-group" style="text-decoration: none;" title="Xem các đánh giá">
+                        @for($i = 1; $i <= 5; $i++)
+                            @if($i <= $fullStars)
+                                <i class="fa-solid fa-star"></i>
+                            @elseif($i == $fullStars + 1 && $hasHalf)
+                                <i class="fa-solid fa-star-half-stroke"></i>
+                            @else
+                                <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
+                            @endif
+                        @endfor
+                        <strong style="color: var(--text-main); margin-left: 4px;">{{ number_format($avgRating, 1) }}</strong>
+                    </a>
+                    <span>&bull;</span>
+                    <a href="#reviews-section" style="color: var(--text-muted); font-weight: 700; text-decoration: underline;" title="Xem chi tiết đánh giá">{{ $product->reviews_count ?? 0 }} đánh giá</a>
+                @else
+                    <span style="display: inline-flex; align-items: center; gap: 6px; color: #8D6E63; font-size: 13.5px; font-weight: 600;">
+                        <i class="fa-regular fa-star" style="color: #BDBDBD; font-size: 15px;"></i> Chưa có đánh giá
+                    </span>
+                @endif
                 <span>&bull;</span>
                 <span><i class="fa-solid fa-fire" style="color: #FF5722;"></i> Đã bán {{ $product->sold_count ?? 0 }} em gấu</span>
             </div>
@@ -455,19 +479,29 @@
             <div class="review-overview-card">
                 <!-- Left: Big Score -->
                 <div class="review-score-box">
-                    <div class="review-big-score">{{ number_format($avgRating, 1) }}</div>
-                    <div class="review-stars-large">
-                        @for($i = 1; $i <= 5; $i++)
-                            @if($i <= $fullStars)
-                                <i class="fa-solid fa-star"></i>
-                            @elseif($i == $fullStars + 1 && $hasHalf)
-                                <i class="fa-solid fa-star-half-stroke"></i>
-                            @else
+                    @if($hasReviews)
+                        <div class="review-big-score">{{ number_format($avgRating, 1) }}</div>
+                        <div class="review-stars-large">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= $fullStars)
+                                    <i class="fa-solid fa-star"></i>
+                                @elseif($i == $fullStars + 1 && $hasHalf)
+                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                @else
+                                    <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
+                                @endif
+                            @endfor
+                        </div>
+                        <div class="review-total-text">{{ $product->reviews_count }} lượt đánh giá</div>
+                    @else
+                        <div class="review-big-score" style="font-size: 1.5rem; color: #BDBDBD;">--</div>
+                        <div class="review-stars-large">
+                            @for($i = 1; $i <= 5; $i++)
                                 <i class="fa-regular fa-star" style="color: #D7CCC8;"></i>
-                            @endif
-                        @endfor
-                    </div>
-                    <div class="review-total-text">{{ $product->reviews_count }} lượt đánh giá</div>
+                            @endfor
+                        </div>
+                        <div class="review-total-text" style="color: #8D6E63;">Chưa có đánh giá nào</div>
+                    @endif
                 </div>
 
                 <!-- Center: Progress Bars Breakdown -->
@@ -570,9 +604,6 @@
                                     <i class="fa-solid fa-paw" style="color: var(--honey);"></i> Phân loại: {{ $revVText }}
                                 </div>
                             @endif
-                            <button type="button" class="btn-helpful-like" onclick="this.classList.toggle('liked'); const countSpan = this.querySelector('span'); if(countSpan) { let n = parseInt(countSpan.innerText) || 0; countSpan.innerText = this.classList.contains('liked') ? n + 1 : Math.max(0, n - 1); }">
-                                <i class="fa-regular fa-thumbs-up"></i> Hữu ích (<span>0</span>)
-                            </button>
                         </div>
                     </div>
                 @empty
@@ -610,6 +641,8 @@
                                 @if($relDiscountPct > 0)
                                     <span class="card-badge-sale">-{{ $relDiscountPct }}%</span>
                                 @endif
+                            @elseif($rel->is_hot)
+                                <span class="card-badge-hot"><i class="fa-solid fa-fire"></i> HOT</span>
                             @endif
                             <button type="button" class="btn-wishlist-card" data-product-id="{{ $rel->id }}" onclick="toggleWishlist({ id: {{ $rel->id }}, name: '{{ addslashes($rel->name) }}', price: {{ $relRegularPrice }}, sale_price: {{ ($relSalePrice !== null) ? (float)$relSalePrice : 'null' }}, image_url: '{{ $relImgUrl }}' }, event)" title="Lưu vào yêu thích">
                                 <i class="fa-regular fa-heart"></i>
@@ -628,14 +661,37 @@
                             <div>
                                 <div class="product-card-prices">
                                     @if($relSale)
-                                        <span class="price-current">{{ number_format($relSalePrice, 0, ',', '.') }} đ</span>
+                                        <span class="price-current" style="color: #D32F2F; font-weight: 800;">{{ number_format($relSalePrice, 0, ',', '.') }} đ</span>
                                         <span class="price-old">{{ number_format($relRegularPrice, 0, ',', '.') }} đ</span>
                                     @else
                                         <span class="price-current" style="color: var(--primary-dark);">{{ number_format($relRegularPrice, 0, ',', '.') }} đ</span>
                                     @endif
                                 </div>
                                 <div class="product-card-footer">
-                                    <span><i class="fa-solid fa-ruler"></i> {{ $rel->size ?? 'Free size' }}</span>
+                                    <div class="product-card-meta">
+                                        @if(($rel->reviews_count ?? 0) > 0)
+                                            <span class="rating-badge-pill" title="Đánh giá {{ number_format($rel->avg_rating, 1) }} sao">
+                                                <i class="fa-solid fa-star"></i> {{ number_format($rel->avg_rating, 1) }}
+                                            </span>
+                                        @else
+                                            <span class="rating-badge-pill" style="color: #8D6E63; background: #F5F0EA; border-color: #D7CCC8;" title="Chưa có đánh giá">
+                                                <i class="fa-regular fa-star" style="color: #BDBDBD;"></i> Chưa có đánh giá
+                                            </span>
+                                        @endif
+                                        <span class="sold-count-text">Đã bán {{ $rel->sold_count ?? 0 }}</span>
+                                    </div>
+                                    @php
+                                        $relStock = $rel->variants->isNotEmpty() ? $rel->variants->sum('stock_quantity') : ($rel->stock_quantity ?? 0);
+                                    @endphp
+                                    @if($relStock > 0)
+                                        <button type="button" class="btn-add-cart-quick" onclick="addToCart({{ $rel->id }}, '{{ addslashes($rel->name) }}')" title="Thêm vào giỏ hàng">
+                                            <i class="fa-solid fa-plus"></i>
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn-add-cart-quick" style="opacity: 0.5; background: #e5e5e5; color: #888; cursor: not-allowed;" onclick="if(!window.isCustomerAuthenticated) { openAuthModal(window.location.href, 'Đăng nhập để thêm vào giỏ hàng', 'Vui lòng đăng nhập tài khoản Mật Ngọt Bear để thêm sản phẩm vào giỏ hàng của bạn bạn nhé!'); } else { Toast.fire({icon: 'warning', title: 'Sản phẩm tạm hết hàng!'}); }" title="Tạm hết hàng">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -831,13 +887,45 @@
         }
     });
 
+    function slideThumbnails(dir) {
+        const track = document.getElementById('galleryThumbsTrack');
+        if (!track) return;
+        const firstItem = track.querySelector('.gallery-thumb-item');
+        const itemWidth = firstItem ? firstItem.getBoundingClientRect().width : (track.clientWidth / 6);
+        const gap = 8;
+        const scrollStep = (itemWidth + gap) * 3;
+        track.scrollBy({ left: dir * scrollStep, behavior: 'smooth' });
+        setTimeout(updateThumbNavButtons, 350);
+    }
+
+    function updateThumbNavButtons() {
+        const track = document.getElementById('galleryThumbsTrack');
+        const prevBtn = document.getElementById('thumbNavPrev');
+        const nextBtn = document.getElementById('thumbNavNext');
+        if (!track || !prevBtn || !nextBtn) return;
+
+        const maxScrollLeft = track.scrollWidth - track.clientWidth;
+        if (maxScrollLeft <= 2) {
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+            return;
+        }
+
+        prevBtn.disabled = track.scrollLeft <= 4;
+        nextBtn.disabled = track.scrollLeft >= maxScrollLeft - 4;
+    }
+
     function switchMainImage(url, thumbEl) {
         if (!url) return;
         const mainImg = document.getElementById('main-preview-img');
         if (mainImg) mainImg.src = url;
         activeImageUrl = url;
         document.querySelectorAll('.gallery-thumb-item').forEach(el => el.classList.remove('active'));
-        if (thumbEl) thumbEl.classList.add('active');
+        if (thumbEl) {
+            thumbEl.classList.add('active');
+            thumbEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        }
+        setTimeout(updateThumbNavButtons, 300);
     }
 
     function syncGalleryThumbnail(url) {
@@ -866,6 +954,7 @@
 
         if (matchedThumb) {
             matchedThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            setTimeout(updateThumbNavButtons, 300);
         }
     }
 
@@ -1681,6 +1770,13 @@
     document.addEventListener('DOMContentLoaded', () => {
         updateVariantOptionsState('color');
         matchVariantAndUpdate();
+
+        const thumbsTrack = document.getElementById('galleryThumbsTrack');
+        if (thumbsTrack) {
+            thumbsTrack.addEventListener('scroll', updateThumbNavButtons, { passive: true });
+            setTimeout(updateThumbNavButtons, 250);
+        }
+        window.addEventListener('resize', updateThumbNavButtons);
     });
 </script>
 

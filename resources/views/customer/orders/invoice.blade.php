@@ -89,7 +89,7 @@
         }
     </style>
 </head>
-<body class="py-6 sm:py-10 px-4">
+<body class="py-4 sm:py-6 px-4">
 
     @php
         $backUrl = route('customer.orders.show', $order);
@@ -103,7 +103,7 @@
     @endphp
 
     <!-- Top Action Toolbar (Hidden when printing) -->
-    <div class="max-w-3xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 no-print">
+    <div class="max-w-3xl mx-auto mb-4 flex flex-wrap items-center justify-between gap-4 no-print">
         <a href="{{ $backUrl }}" 
            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-amber-50 text-[#8C4A19] font-bold text-sm border border-[#E8D9C8] shadow-xs transition">
             <i class="fa-solid fa-arrow-left"></i>
@@ -120,7 +120,7 @@
     </div>
 
     <!-- Main Printable Invoice Card -->
-    <div class="invoice-wrapper max-w-3xl mx-auto bg-white rounded-3xl border border-[#EBDDCD] shadow-xl p-8 sm:p-12 relative overflow-hidden">
+    <div class="invoice-wrapper max-w-3xl mx-auto bg-white rounded-3xl border border-[#EBDDCD] shadow-xl p-6 sm:p-8 relative overflow-hidden">
         
         <!-- Watermark Bear Background -->
         <div class="absolute right-6 top-24 opacity-[0.03] select-none pointer-events-none text-9xl">
@@ -136,7 +136,7 @@
                 </div>
                 <p class="text-xs text-[#7D6B5D] mt-1 font-medium italic">Thế giới gấu bông & Quà tặng ngọt ngào</p>
                 <div class="text-xs text-[#6B5A4D] space-y-1 mt-3">
-                    <p><i class="fa-solid fa-location-dot w-4 text-[#E08A1E]"></i> 123 Đường Cầu Giấy, Hà Nội</p>
+                    <p><i class="fa-solid fa-location-dot w-4 text-[#E08A1E]"></i> Số 41A, P. Phú Diễn, Hà Nội</p>
                     <p><i class="fa-solid fa-phone w-4 text-[#E08A1E]"></i> Hotline: <strong>0377.466.205</strong></p>
                     <p><i class="fa-solid fa-envelope w-4 text-[#E08A1E]"></i> contact@matngotbear.vn</p>
                 </div>
@@ -193,8 +193,6 @@
                             Chuyển khoản QR (MB Bank)
                         @elseif($order->payment_method === 'CARD')
                             Cổng thanh toán VNPAY (ATM/Visa/QR)
-                        @elseif($order->payment_method === 'E_WALLET')
-                            Ví điện tử MoMo
                         @else
                             Thanh toán khi nhận hàng (COD)
                         @endif

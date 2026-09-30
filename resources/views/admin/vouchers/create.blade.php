@@ -479,17 +479,17 @@
 
                             <div>
                                 <label class="block text-xs font-bold text-[#2C1408] mb-1.5">
-                                    Lượt Dùng / Khách Hàng <span class="text-[11px] font-normal text-[#786B61]">(để trống = không giới hạn)</span>
+                                    Lượt Dùng / Khách Hàng
                                 </label>
                                 <input type="number" name="usage_limit_per_user" x-model="usage_limit_per_user" min="1" :max="usage_limit"
                                     placeholder="Không giới hạn"
                                     @input="if (usage_limit && usage_limit_per_user && Number(usage_limit_per_user) > Number(usage_limit)) usage_limit_per_user = usage_limit; if (usage_limit_per_user !== '' && Number(usage_limit_per_user) < 1) usage_limit_per_user = 1;"
                                     class="w-full bg-white border border-[#EBDDCD] rounded-xl px-4 py-2.5 text-sm font-bold text-[#2C1408] focus:border-[#E08A1E] focus:ring-0">
+                                <p class="text-xs text-[#786B61] mt-1" x-show="!usage_limit_per_user">
+                                    (Để trống = không giới hạn)
+                                </p>
                                 <p class="text-xs text-[#9CA3AF] mt-1" x-show="usage_limit_per_user">
                                     Từ 1 đến tối đa <span class="font-bold text-[#E08A1E]" x-text="usage_limit || 1"></span> lượt/khách.
-                                </p>
-                                <p class="text-xs text-[#10B981] mt-1 font-medium" x-show="!usage_limit_per_user">
-                                    Khách hàng có thể dùng thoải mái, không giới hạn lượt.
                                 </p>
                                 @error('usage_limit_per_user')
                                     <p class="text-xs text-rose-500 font-bold mt-1">{{ $message }}</p>

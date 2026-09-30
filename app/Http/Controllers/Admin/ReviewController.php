@@ -32,12 +32,22 @@ class ReviewController extends Controller
         return view('admin.reviews.index', compact('reviews', 'stats'));
     }
 
-    public function destroy(Review $review)
+    public function toggle(Review $review)
     {
         $review->update(['is_hidden' => !$review->is_hidden]);
 
         $status = $review->is_hidden ? 'ẩn' : 'hiện';
 
         return redirect()->back()->with('success', "Đã {$status} đánh giá thành công.");
+    }
+
+    /**
+     * Xóa mềm một đánh giá khỏi hệ thống.
+     */
+    public function destroy(Review $review)
+    {
+        $review->delete();
+
+        return redirect()->back()->with('success', 'Đã xóa đánh giá thành công.');
     }
 }

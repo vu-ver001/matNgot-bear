@@ -28,6 +28,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/vouchers', [CustomerVoucherController::class, 'index'])
             ->middleware(['role:CUSTOMER,STAFF'])
             ->name('vouchers.index');
+        Route::get('/vouchers/{code}/conditions', [CustomerVoucherController::class, 'conditions'])
+            ->middleware(['role:CUSTOMER,STAFF'])
+            ->name('vouchers.conditions');
 
         // ==========================================
         // CÁC CHỨC NĂNG DÀNH RIÊNG CHO KHÁCH HÀNG (role: CUSTOMER)
@@ -58,9 +61,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
             Route::get('/payment/status/{order}', [PaymentController::class, 'checkStatus'])->name('payment.status');
             Route::post('/payment/simulate/{order}', [PaymentController::class, 'simulatePayment'])->name('payment.simulate');
             Route::get('/payment/vnpay/redirect/{order}', [PaymentController::class, 'redirectToVnpay'])->name('payment.vnpay.redirect');
-            Route::get('/payment/momo/redirect/{order}', [PaymentController::class, 'redirectToMomo'])->name('payment.momo.redirect');
             Route::post('/payment/confirm/{order}', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
             Route::post('/payment/retry/{order}', [PaymentController::class, 'retryPayment'])->name('payment.retry');
+            Route::post('/payment/refresh-qr/{order}', [PaymentController::class, 'refreshQr'])->name('payment.refresh-qr');
         });
 
         // 4. Wishlist (Kim Tuyến)
@@ -84,6 +87,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('/orders/{order}/confirm-received', [OrderController::class, 'confirmReceived'])->name('orders.confirm_received');
         Route::post('/orders/{order}/request-return', [OrderController::class, 'requestReturn'])->name('orders.request_return');
         Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
+        Route::post('/orders/{order}/update-refund-account', [OrderController::class, 'updateRefundAccount'])->name('orders.update_refund_account');
     });
 
     // 5. Profile
@@ -110,15 +114,11 @@ Route::prefix('customer')->name('customer.')->group(function () {
 });
 
 // ==========================================
-// PUBLIC PAYMENT RETURN & IPN WEBHOOKS (VNPay & MoMo & Banking)
+// PUBLIC PAYMENT RETURN & IPN WEBHOOKS (VNPay & Banking)
 // ==========================================
 // VNPay Return & IPN
 Route::get('/payment/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('payment.vnpay.return');
 Route::match(['GET', 'POST'], '/payment/vnpay/ipn', [PaymentController::class, 'vnpayIpn'])->name('payment.vnpay.ipn');
-
-// MoMo Return & IPN
-Route::get('/payment/momo/return', [PaymentController::class, 'momoReturn'])->name('payment.momo.return');
-Route::post('/payment/momo/ipn', [PaymentController::class, 'momoIpn'])->name('payment.momo.ipn');
 
 // Unified Payment Result Page
 Route::get('/payment/result/{order}', [PaymentController::class, 'paymentResult'])->name('payment.result');

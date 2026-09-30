@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\OrderStatusHistory;
 use App\Models\Payment;
+use App\Models\PaymentRefundRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Voucher;
@@ -233,6 +234,16 @@ class OrderService
                 'cancelled_at' => now(),
             ];
 
+            if ($currentOrder->payment_status !== 'PAID') {
+                $updateData['payment_status'] = 'FAILED';
+                \App\Models\Payment::where('order_id', $currentOrder->id)
+                    ->where('status', 'PENDING')
+                    ->update([
+                        'status' => 'FAILED',
+                        'note' => 'Đơn hàng đã bị hủy: ' . $reason,
+                    ]);
+            }
+
             if (! empty($refundData['refund_bank_name'])) {
                 $updateData['refund_bank_name'] = $refundData['refund_bank_name'];
             }
@@ -325,6 +336,118 @@ class OrderService
     }
 
     /**
+     * Tự động kiểm tra và từ chối yêu cầu hủy nếu đã quá thời hạn xử lý 24 giờ.
+     * Trả về true nếu yêu cầu hủy vừa bị tự động từ chối.
+     */
+    public function checkAndRejectIfCancelRequestExpired(Order $order): bool
+    {
+        if ($order->isCancelRequestExpired()) {
+            DB::transaction(function () use ($order) {
+                $reason = 'Yêu cầu hủy đã quá thời hạn xử lý 24 giờ. Đơn hàng tiếp tục được chuẩn bị và giao hàng cho quý khách.';
+                $order->update([
+                    'cancel_request_status' => 'REJECTED',
+                    'cancel_rejection_reason' => $reason,
+                ]);
+
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'from_status' => $order->order_status,
+                    'to_status' => $order->order_status,
+                    'changed_by' => null,
+                    'note' => 'Hệ thống tự động từ chối yêu cầu hủy do quá thời hạn 24 giờ mà nhân viên chưa xử lý.',
+                    'changed_at' => now(),
+                ]);
+            });
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Quét và tự động từ chối tất cả yêu cầu hủy đơn hàng đã quá hạn 24 giờ mà nhân viên chưa xử lý.
+     * Trả về số lượng đơn đã được tự động từ chối.
+     */
+    public function autoRejectExpiredCancelRequests(): int
+    {
+        $expiredOrders = Order::query()
+            ->where('cancel_request_status', 'PENDING')
+            ->whereNotNull('cancel_requested_at')
+            ->where('cancel_requested_at', '<=', now()->subHours(24))
+            ->get();
+
+        $count = 0;
+        foreach ($expiredOrders as $order) {
+            try {
+                if ($this->checkAndRejectIfCancelRequestExpired($order)) {
+                    $count++;
+                }
+            } catch (\Throwable $e) {
+                Log::error("Lỗi khi tự động từ chối yêu cầu hủy đơn hàng #{$order->order_code}: " . $e->getMessage());
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Tự động kiểm tra và chuyển trạng thái "Đã nhận hàng" nếu đơn hàng đã giao quá 7 ngày mà khách chưa xác nhận.
+     * Trả về true nếu đơn vừa được tự động xác nhận.
+     */
+    public function checkAndAutoCompleteIfDeliveredExpired(Order $order, int $days = 7): bool
+    {
+        if ($order->order_status === 'COMPLETED' && is_null($order->customer_confirmed_at) && $order->completed_at) {
+            if ($order->completed_at->diffInDays(now()) >= $days) {
+                DB::transaction(function () use ($order, $days) {
+                    $order->update([
+                        'customer_confirmed_at' => now(),
+                    ]);
+
+                    OrderStatusHistory::create([
+                        'order_id' => $order->id,
+                        'from_status' => 'COMPLETED',
+                        'to_status' => 'COMPLETED',
+                        'changed_by' => null,
+                        'note' => "Hệ thống tự động chuyển trạng thái Đã nhận hàng sau {$days} ngày kể từ khi nhân viên giao hàng thành công.",
+                        'changed_at' => now(),
+                    ]);
+                });
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Quét và tự động xác nhận "Đã nhận hàng" cho tất cả đơn hàng đã giao quá 7 ngày mà khách chưa xác nhận.
+     * Trả về số lượng đơn được tự động hoàn tất.
+     */
+    public function autoCompleteDeliveredOrders(int $days = 7): int
+    {
+        $deliveredOrders = Order::query()
+            ->where('order_status', 'COMPLETED')
+            ->whereNull('customer_confirmed_at')
+            ->where('completed_at', '<=', now()->subDays($days))
+            ->get();
+
+        $count = 0;
+        foreach ($deliveredOrders as $order) {
+            try {
+                if ($this->checkAndAutoCompleteIfDeliveredExpired($order, $days)) {
+                    $count++;
+                }
+            } catch (\Throwable $e) {
+                Log::error("Lỗi khi tự động xác nhận đã nhận hàng cho đơn #{$order->order_code}: " . $e->getMessage());
+            }
+        }
+
+        return $count;
+    }
+
+    /**
      * Admin xác nhận đã chuyển tiền hoàn lại cho khách hàng
      */
      public function confirmRefundOrder(Order $order, int $adminId, ?string $refundNote = null): Order
@@ -363,7 +486,7 @@ class OrderService
     }
 
     /**
-     * Khách hàng gửi yêu cầu hủy đơn hàng (chờ nhân viên xác nhận)
+     * Khách hàng gửi yêu cầu hủy đơn hàng (chờ Shop/Admin xác nhận)
      */
     public function requestCancelOrder(Order $order, array $data, int $customerId): Order
     {
@@ -386,16 +509,55 @@ class OrderService
                 'refund_account_holder' => $data['refund_account_holder'] ?? null,
             ]);
 
-            $isPaidNotice = $order->payment_status === 'PAID' ? ' (Đơn đã thanh toán, chờ shop liên hệ hoàn tiền)' : '';
+            // Trường hợp 1: Đơn PENDING đã thanh toán online (VNPay/QR) -> Gửi yêu cầu hủy hoàn tiền thẳng lên Admin
+            if ($order->order_status === 'PENDING' && $order->payment_status === 'PAID') {
+                $payment = $order->payments->where('status', 'PAID')->first() ?? $order->latestPayment;
+                if (! $payment) {
+                    $payment = Payment::create([
+                        'order_id' => $order->id,
+                        'method' => $order->payment_method ?? 'BANK_TRANSFER',
+                        'status' => 'PAID',
+                        'amount' => $order->total_amount,
+                        'paid_at' => now(),
+                    ]);
+                }
 
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'from_status' => $order->order_status,
-                'to_status' => $order->order_status,
-                'changed_by' => $customerId,
-                'note' => 'Khách hàng gửi yêu cầu hủy đơn: '.$data['reason'].$isPaidNotice,
-                'changed_at' => now(),
-            ]);
+                PaymentRefundRequest::firstOrCreate(
+                    [
+                        'order_id' => $order->id,
+                        'status' => 'PENDING',
+                    ],
+                    [
+                        'payment_id' => $payment->id,
+                        'requested_by' => $customerId,
+                        'amount' => $order->total_amount,
+                        'reason' => 'Khách hàng yêu cầu hủy đơn trực tuyến chưa xác nhận: '.$data['reason'],
+                        'bank_name' => $data['refund_bank_name'] ?? $order->refund_bank_name ?? 'MB',
+                        'bank_account' => $data['refund_bank_account'] ?? $order->refund_bank_account ?? '',
+                        'account_holder' => $data['refund_account_holder'] ?? $order->refund_account_holder ?? '',
+                    ]
+                );
+
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'from_status' => $order->order_status,
+                    'to_status' => $order->order_status,
+                    'changed_by' => $customerId,
+                    'note' => 'Khách hàng yêu cầu hủy & hoàn tiền (Đơn trực tuyến chưa xác nhận - Gửi thẳng Admin xử lý): '.$data['reason'],
+                    'changed_at' => now(),
+                ]);
+            } else {
+                // Trường hợp 2: Đơn đang ở trạng thái PREPARING (Đang chuẩn bị) -> Gửi cho Shop xem xét
+                $paidNotice = $order->payment_status === 'PAID' ? ' (Đơn đã thanh toán, chờ Shop duyệt & hoàn tiền)' : '';
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'from_status' => $order->order_status,
+                    'to_status' => $order->order_status,
+                    'changed_by' => $customerId,
+                    'note' => 'Khách hàng gửi yêu cầu hủy đơn hàng (Đang chuẩn bị hàng): '.$data['reason'].$paidNotice,
+                    'changed_at' => now(),
+                ]);
+            }
 
             return $order->fresh();
         });
@@ -420,6 +582,11 @@ class OrderService
                 'refund_account_holder' => null,
             ]);
 
+            // Hủy/xóa PaymentRefundRequest đang PENDING nếu có
+            PaymentRefundRequest::where('order_id', $order->id)
+                ->where('status', 'PENDING')
+                ->delete();
+
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'from_status' => $order->order_status,
@@ -434,17 +601,17 @@ class OrderService
     }
 
     /**
-     * Nhân viên duyệt yêu cầu hủy đơn hàng
+     * Shop (Nhân viên / Admin) duyệt yêu cầu hủy đơn hàng
      */
     public function approveCancelOrder(Order $order, int $adminId, ?string $refundNote = null): Order
     {
         return DB::transaction(function () use ($order, $adminId, $refundNote) {
-            if (! in_array($order->order_status, ['PENDING', 'CONFIRMED'])) {
+            if (! in_array($order->order_status, ['PENDING', 'PREPARING', 'CONFIRMED'], true)) {
                 throw new \Exception('Không thể hủy đơn hàng ở trạng thái hiện tại.');
             }
 
             $oldStatus = $order->order_status;
-            $reason = $order->cancel_request_reason ?: 'Nhân viên đã duyệt hủy theo yêu cầu của khách hàng';
+            $reason = $order->cancel_request_reason ?: 'Shop đã duyệt hủy theo yêu cầu của khách hàng';
 
             // Hoàn tiền nếu đơn đã thanh toán
             $paidPayment = $order->payments->firstWhere('status', 'PAID');
@@ -452,16 +619,38 @@ class OrderService
                 $this->refundPayment($paidPayment);
             }
 
-            $order->update([
+            // Đồng bộ cập nhật PaymentRefundRequest nếu có
+            PaymentRefundRequest::where('order_id', $order->id)
+                ->where('status', 'PENDING')
+                ->update([
+                    'status' => 'APPROVED',
+                    'approved_by' => $adminId,
+                    'approved_at' => now(),
+                    'admin_note' => $refundNote ?? 'Shop đã duyệt hủy đơn và hoàn tiền',
+                ]);
+
+            $orderUpdateData = [
                 'order_status' => 'CANCELLED',
                 'cancel_request_status' => 'APPROVED',
                 'cancel_reason' => $reason,
                 'cancelled_by' => $adminId,
                 'cancelled_at' => now(),
                 'refund_note' => $refundNote,
-            ]);
+            ];
 
-            $historyNote = 'Nhân viên đã duyệt yêu cầu hủy đơn hàng.'.($refundNote ? ' Ghi chú hoàn tiền: '.$refundNote : '');
+            if (! $paidPayment && $order->payment_status !== 'REFUNDED') {
+                $orderUpdateData['payment_status'] = 'FAILED';
+                \App\Models\Payment::where('order_id', $order->id)
+                    ->where('status', 'PENDING')
+                    ->update([
+                        'status' => 'FAILED',
+                        'note' => 'Đơn hàng đã bị hủy: '.$reason,
+                    ]);
+            }
+
+            $order->update($orderUpdateData);
+
+            $historyNote = 'Shop đã duyệt yêu cầu hủy đơn hàng.'.($refundNote ? ' Ghi chú hoàn tiền: '.$refundNote : '');
 
             OrderStatusHistory::create([
                 'order_id' => $order->id,
@@ -483,7 +672,7 @@ class OrderService
     }
 
     /**
-     * Nhân viên từ chối yêu cầu hủy đơn hàng
+     * Shop (Nhân viên / Admin) từ chối yêu cầu hủy đơn hàng
      */
     public function rejectCancelOrder(Order $order, int $adminId, string $rejectionReason): Order
     {
@@ -501,16 +690,109 @@ class OrderService
                 'cancel_rejection_reason' => $rejectionReason,
             ]);
 
+            // Đồng bộ cập nhật PaymentRefundRequest nếu có
+            PaymentRefundRequest::where('order_id', $order->id)
+                ->where('status', 'PENDING')
+                ->update([
+                    'status' => 'REJECTED',
+                    'approved_by' => $adminId,
+                    'rejected_at' => now(),
+                    'admin_note' => 'Yêu cầu hủy đơn bị từ chối: '.$rejectionReason,
+                ]);
+
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'from_status' => $order->order_status,
                 'to_status' => $order->order_status,
                 'changed_by' => $adminId,
-                'note' => 'Nhân viên từ chối yêu cầu hủy đơn. Lý do: '.$rejectionReason,
+                'note' => 'Từ chối yêu cầu hủy đơn. Lý do: '.$rejectionReason,
                 'changed_at' => now(),
             ]);
 
             return $order->fresh();
+        });
+    }
+
+    /**
+     * Shop (Nhân viên / Admin) chủ động từ chối đơn hàng đang chờ xác nhận (PENDING).
+     * Bắt buộc có lý do từ chối để thông báo minh bạch cho khách hàng.
+     */
+    public function rejectOrderByShop(Order $order, int $userId, string $reason): Order
+    {
+        return DB::transaction(function () use ($order, $userId, $reason) {
+            $currentOrder = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($currentOrder->order_status !== 'PENDING') {
+                throw new \Exception('Chỉ có thể từ chối đơn hàng đang ở trạng thái chờ xác nhận.');
+            }
+
+            $cleanReason = trim($reason);
+            if (blank($cleanReason)) {
+                throw new \Exception('Vui lòng nhập lý do từ chối đơn hàng.');
+            }
+
+            $formattedReason = 'Cửa hàng từ chối: ' . $cleanReason;
+            $oldStatus = $currentOrder->order_status;
+
+            $updateData = [
+                'order_status' => 'CANCELLED',
+                'cancel_reason' => $formattedReason,
+                'cancelled_by' => $userId,
+                'cancelled_at' => now(),
+            ];
+
+            // Nếu đơn hàng chưa thanh toán (COD hoặc chuyển khoản/thẻ chưa trả tiền), đánh dấu FAILED
+            if ($currentOrder->payment_status !== 'PAID' && $currentOrder->payment_status !== 'REFUNDED') {
+                $updateData['payment_status'] = 'FAILED';
+                Payment::where('order_id', $currentOrder->id)
+                    ->where('status', 'PENDING')
+                    ->update([
+                        'status' => 'FAILED',
+                        'note' => 'Đơn hàng bị cửa hàng từ chối: ' . $cleanReason,
+                    ]);
+            }
+
+            $currentOrder->update($updateData);
+
+            $user = \App\Models\User::find($userId);
+            $userName = $user ? ($user->full_name ?? $user->name ?? 'Nhân viên') : 'Nhân viên';
+
+            OrderStatusHistory::create([
+                'order_id' => $currentOrder->id,
+                'from_status' => $oldStatus,
+                'to_status' => 'CANCELLED',
+                'changed_by' => $userId,
+                'note' => "{$userName} đã từ chối tiếp nhận đơn hàng. Lý do: {$cleanReason}",
+                'changed_at' => now(),
+            ]);
+
+            // Hoàn lại tồn kho và voucher
+            if (! $currentOrder->stock_restored) {
+                $this->restoreStock($currentOrder);
+                $this->restoreVoucherUsage($currentOrder);
+                $currentOrder->update(['stock_restored' => true]);
+            }
+
+            // Nếu đơn đã thanh toán online thành công, tự động tạo yêu cầu hoàn tiền cho Admin
+            if ($currentOrder->payment_status === 'PAID') {
+                $payment = $currentOrder->payments->where('status', 'PAID')->first() ?? $currentOrder->latestPayment;
+                if ($payment) {
+                    PaymentRefundRequest::firstOrCreate(
+                        ['order_id' => $currentOrder->id, 'status' => 'PENDING'],
+                        [
+                            'payment_id' => $payment->id,
+                            'requested_by' => $userId,
+                            'amount' => $currentOrder->total_amount,
+                            'reason' => 'Cửa hàng từ chối đơn hàng đã thanh toán: ' . $cleanReason,
+                            'bank_name' => $currentOrder->refund_bank_name ?? 'MB',
+                            'bank_account' => $currentOrder->refund_bank_account ?? '',
+                            'account_holder' => $currentOrder->refund_account_holder ?? '',
+                        ]
+                    );
+                }
+            }
+
+            return $currentOrder->fresh();
         });
     }
 
@@ -530,7 +812,7 @@ class OrderService
 
             $updateData = ['order_status' => $newStatus];
 
-            if ($newStatus === 'CONFIRMED') {
+            if (in_array($newStatus, ['CONFIRMED', 'PREPARING'], true) && is_null($order->confirmed_at)) {
                 $updateData['confirmed_at'] = now();
             } elseif ($newStatus === 'SHIPPING') {
                 $updateData['shipped_at'] = now();
@@ -551,6 +833,14 @@ class OrderService
 
                 if ($paidPayment) {
                     $this->refundPayment($paidPayment);
+                } elseif ($order->payment_status !== 'REFUNDED') {
+                    $updateData['payment_status'] = 'FAILED';
+                    \App\Models\Payment::where('order_id', $order->id)
+                        ->where('status', 'PENDING')
+                        ->update([
+                            'status' => 'FAILED',
+                            'note' => 'Đơn hàng đã bị hủy: '.$actualNote,
+                        ]);
                 }
             } elseif ($newStatus === 'RETURNED') {
                 if ($order->hasPendingReturnRequest()) {
@@ -742,6 +1032,14 @@ class OrderService
 
         if (! in_array($newStatus, $allowedTransitions[$oldStatus])) {
             throw new \Exception("Không thể chuyển đơn hàng từ '{$oldStatus}' sang '{$newStatus}'.");
+        }
+
+        if ($order->payment_status === 'FAILED' && in_array($newStatus, ['CONFIRMED', 'PREPARING'], true)) {
+            throw new \Exception('Đơn hàng có giao dịch thanh toán thất bại, nhân viên/admin không được phép xác nhận đơn.');
+        }
+
+        if ($order->payment_method !== 'COD' && $order->payment_status !== 'PAID' && in_array($newStatus, ['CONFIRMED', 'PREPARING'], true)) {
+            throw new \Exception('Đơn hàng trực tuyến chưa được thanh toán, nhân viên/admin không thể xác nhận đơn.');
         }
 
         if (! $order->canTransitionTo($newStatus)) {

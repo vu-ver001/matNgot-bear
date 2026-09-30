@@ -75,21 +75,29 @@ class CartItem extends Model
     }
 
     /**
-     * Ảnh đại diện thực tế (ưu tiên ảnh của biến thể nếu có).
+     * Ảnh đại diện thực tế (ưu tiên ảnh của biến thể nếu có, sau đó đến ảnh trong CSDL của sản phẩm).
+     * Trả về null nếu sản phẩm không có ảnh trong cơ sở dữ liệu.
      */
-    public function getEffectiveImageAttribute(): string
+    public function getEffectiveImageAttribute(): ?string
     {
         if ($this->variant && !empty($this->variant->image_url)) {
             return $this->variant->image_url;
         }
 
         if ($this->product) {
-            $primary = $this->product->images->firstWhere('is_primary', true) ?? $this->product->images->first();
-            if ($primary && !empty($primary->image_url)) {
-                return $primary->image_url;
+            if ($this->product->relationLoaded('images')) {
+                $primary = $this->product->images->firstWhere('is_primary', true) ?? $this->product->images->first();
+                if ($primary && !empty($primary->image_url)) {
+                    return $primary->image_url;
+                }
+            } else {
+                $primary = $this->product->images()->firstWhere('is_primary', true) ?? $this->product->images()->first();
+                if ($primary && !empty($primary->image_url)) {
+                    return $primary->image_url;
+                }
             }
         }
 
-        return '/images/products/butterbear-chef.jpg';
+        return null;
     }
 }

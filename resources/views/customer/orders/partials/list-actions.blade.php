@@ -1,5 +1,5 @@
 @if ($canPayOnline)
-    <a href="{{ $order->payment_method === 'CARD' ? route('customer.payment.vnpay.redirect', $order) : ($order->payment_method === 'E_WALLET' ? route('customer.payment.momo.redirect', $order) : route('customer.payment.qr', $order)) }}">
+    <a href="{{ $order->payment_method === 'CARD' ? route('customer.payment.vnpay.redirect', $order) : route('customer.payment.qr', $order) }}">
         <i class="fa-solid fa-credit-card" aria-hidden="true"></i> Thanh toán
     </a>
     <button type="button" @click="openActions = false; openChangePayment = true">
