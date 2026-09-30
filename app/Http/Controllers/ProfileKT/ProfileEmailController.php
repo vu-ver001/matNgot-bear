@@ -16,18 +16,24 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
+// Chức năng: Quản lý đổi email tài khoản qua mã xác nhận OTP (ProfileKT)
 class ProfileEmailController extends Controller
 {
-    private const CODE_EXPIRES_SECONDS = 300;
+    // Thời hạn hiệu lực của mã OTP đổi email là 300 giây (5 phút)
+    private const CODE_EXPIRES_SECONDS = 60;
 
     public function __construct(private readonly OtpService $otpService) {}
 
+    /**
+     * Gửi mã OTP 6 số đến email mới của người dùng.
+     */
     public function sendCode(Request $request): RedirectResponse|JsonResponse
     {
         $request->merge([
             'email' => Str::lower(trim((string) $request->input('email'))),
         ]);
 
+        // Kiểm tra email mới: đúng định dạng, khác email cũ và chưa ai sử dụng
         $data = $request->validate([
             'email' => [
                 'required',
@@ -45,11 +51,13 @@ class ProfileEmailController extends Controller
             'email.unique' => 'Email này đã được sử dụng.',
         ]);
 
+        // Xóa yêu cầu đổi email cũ của user này nếu có
         EmailChangeCode::query()
             ->where('user_id', $request->user()->id)
             ->where('email', '!=', $data['email'])
             ->delete();
 
+        // Tạo mã OTP, lưu DB và gửi email đến địa chỉ mới
         $this->otpService->issueCode(
             EmailChangeCode::class,
             $data['email'],
@@ -70,6 +78,9 @@ class ProfileEmailController extends Controller
         return back()->with('status', 'email-change-code-sent');
     }
 
+    /**
+     * Xác minh mã OTP và chính thức cập nhật email mới vào bảng users.
+     */
     public function verifyCode(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
@@ -89,8 +100,10 @@ class ProfileEmailController extends Controller
             ]);
         }
 
+        // Kiểm tra mã OTP do người dùng nhập
         $this->otpService->verifyCode(EmailChangeCode::class, $changeRequest->email, $data['code']);
 
+        // Cập nhật email mới và xóa mã OTP trong transaction
         DB::transaction(function () use ($request, $changeRequest): void {
             $emailWasTaken = User::query()
                 ->where('email', $changeRequest->email)
@@ -121,6 +134,9 @@ class ProfileEmailController extends Controller
         return back()->with('status', 'email-updated');
     }
 
+    /**
+     * Hủy bỏ yêu cầu đổi email đang chờ xác nhận.
+     */
     public function cancel(Request $request): RedirectResponse|JsonResponse
     {
         EmailChangeCode::query()

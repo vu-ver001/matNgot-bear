@@ -1,4 +1,4 @@
-// Tương tác dùng chung của chức năng Hồ sơ cho Customer, Staff và Admin.
+// [Chức năng: ProfileKT] Xử lý hiển thị Toast thông báo trạng thái (tự động ẩn sau 4.2 giây)
 document.querySelectorAll('[data-account-toast]').forEach((toast) => {
     const closeButton = toast.querySelector('[data-account-toast-close]');
     const hideToast = () => toast.classList.remove('is-visible');
@@ -29,6 +29,7 @@ document.querySelectorAll('[data-account-toast]').forEach((toast) => {
     });
 });
 
+// [Chức năng: ProfileKT] Xử lý chọn ảnh đại diện, mở modal kéo/chỉnh tọa độ và xuất ảnh tròn bằng Canvas
 const avatarInput = document.querySelector('[data-profile-avatar-input]');
 
 if (avatarInput) {
@@ -245,6 +246,7 @@ if (avatarInput) {
     });
 }
 
+// [Chức năng: ProfileKT] Quản lý chế độ chỉnh sửa thông tin cá nhân và xử lý đổi email xác thực OTP
 const profileEditor = document.querySelector('[data-profile-editor]');
 
 if (profileEditor) {

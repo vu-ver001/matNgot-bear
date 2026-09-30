@@ -7,8 +7,12 @@ use App\Models\User;
 use App\Models\WishlistItem;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
+// Chức năng: Xử lý nghiệp vụ danh sách yêu thích Wishlist (WishlistKT)
 class WishlistService
 {
+    /**
+     * Lấy danh sách sản phẩm yêu thích của người dùng kèm đánh giá trung bình và sắp xếp.
+     */
     public function getWishlist(User $user, int $perPage = 12, string $sort = 'latest'): LengthAwarePaginator
     {
         $query = WishlistItem::query()
@@ -24,6 +28,7 @@ class WishlistService
                     ->orderBy('sort_order'),
             ]);
 
+        // Sắp xếp theo giá (ưu tiên sale_price nếu có) hoặc sản phẩm lưu mới nhất
         if ($sort === 'price_asc' || $sort === 'price_desc') {
             $price = Product::query()
                 ->selectRaw('COALESCE(sale_price, price)')
@@ -39,6 +44,9 @@ class WishlistService
             ->through(fn (WishlistItem $item) => $this->formatItem($item));
     }
 
+    /**
+     * Xóa 1 sản phẩm khỏi danh sách yêu thích.
+     */
     public function removeProduct(User $user, Product $product): bool
     {
         return WishlistItem::query()
@@ -47,6 +55,9 @@ class WishlistService
             ->delete() > 0;
     }
 
+    /**
+     * Xóa sạch toàn bộ sản phẩm trong danh sách yêu thích của người dùng.
+     */
     public function clearWishlist(User $user): int
     {
         return WishlistItem::query()
@@ -55,6 +66,8 @@ class WishlistService
     }
 
     /**
+     * Chuẩn hóa cấu trúc dữ liệu sản phẩm yêu thích trả về cho View hoặc JSON API.
+     *
      * @return array<string, mixed>
      */
     private function formatItem(WishlistItem $item): array

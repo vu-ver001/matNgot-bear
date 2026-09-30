@@ -16,10 +16,15 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as GoogleUser;
 use Throwable;
 
+// Chức năng: Đăng nhập bằng tài khoản Google (OAuth2) (LoginKT)
 class GoogleAuthController extends Controller
 {
+    /**
+     * [Giao diện] Chuyển hướng người dùng sang trang đăng nhập/chọn tài khoản của Google.
+     */
     public function redirect(): RedirectResponse
     {
+        // Kiểm tra xem cấu hình Google Client ID/Secret trong .env đã đầy đủ chưa
         if (! $this->isConfigured()) {
             return $this->loginError('Đăng nhập Google chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
         }
@@ -27,26 +32,34 @@ class GoogleAuthController extends Controller
         return Socialite::driver('google')->redirect();
     }
 
+    /**
+     * Xử lý dữ liệu callback từ Google: đăng nhập tài khoản có sẵn hoặc tự động đăng ký mới.
+     */
     public function callback(Request $request): RedirectResponse
     {
+        // Kiểm tra cấu hình Google OAuth
         if (! $this->isConfigured()) {
             return $this->loginError('Đăng nhập Google chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
         }
 
         try {
+            // Lấy thông tin tài khoản người dùng từ Google qua Socialite
             /** @var GoogleUser $googleUser */
             $googleUser = Socialite::driver('google')->user();
             $email = Str::lower(trim((string) $googleUser->getEmail()));
             $googleId = trim((string) $googleUser->getId());
 
+            // Kiểm tra email và google ID hợp lệ từ Google
             if ($googleId === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
                 return $this->loginError('Google không cung cấp email hợp lệ cho tài khoản này.');
             }
 
+            // Kiểm tra email đã được xác minh bên phía Google hay chưa
             if (! $this->hasVerifiedEmail($googleUser)) {
                 return $this->loginError('Email Google chưa được xác minh nên không thể đăng nhập.');
             }
 
+            // Tìm kiếm hoặc tạo mới tài khoản trong database (dùng transaction)
             $user = DB::transaction(function () use ($googleUser, $googleId, $email): User {
                 $user = User::query()
                     ->where('google_id', $googleId)
@@ -60,6 +73,7 @@ class GoogleAuthController extends Controller
                         ->first();
                 }
 
+                // Nếu tài khoản đã tồn tại: liên kết thêm google_id vào tài khoản
                 if ($user) {
                     if ($user->google_id !== null && ! hash_equals($user->google_id, $googleId)) {
                         throw ValidationException::withMessages([
@@ -77,6 +91,7 @@ class GoogleAuthController extends Controller
                     return $user;
                 }
 
+                // Nếu chưa có tài khoản: Tạo tài khoản Khách hàng (CUSTOMER) mới
                 return User::query()->create([
                     'full_name' => $this->displayName($googleUser, $email),
                     'email' => $email,
@@ -97,17 +112,23 @@ class GoogleAuthController extends Controller
             return $this->loginError('Không thể đăng nhập bằng Google. Vui lòng thử lại.');
         }
 
+        // Chặn đăng nhập nếu tài khoản đang bị khóa
         if ($user->status === User::STATUS_BLOCKED) {
             return $this->loginError('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ hỗ trợ.');
         }
 
+        // Ghi nhận thời gian đăng nhập và kích hoạt phiên đăng nhập
         $user->recordLogin();
         Auth::login($user);
         $request->session()->regenerate();
 
+        // Chuyển hướng theo vai trò người dùng (Admin / Staff / Customer)
         return redirect()->intended(route(RoleRedirect::routeName($user), absolute: false));
     }
 
+    /**
+     * Kiểm tra các biến môi trường cấu hình Google OAuth trong file .env đã đầy đủ chưa.
+     */
     private function isConfigured(): bool
     {
         return filled(config('services.google.client_id'))
@@ -115,6 +136,9 @@ class GoogleAuthController extends Controller
             && filled(config('services.google.redirect'));
     }
 
+    /**
+     * Kiểm tra cờ xác thực email từ dữ liệu Google trả về.
+     */
     private function hasVerifiedEmail(GoogleUser $googleUser): bool
     {
         return filter_var(
@@ -123,6 +147,9 @@ class GoogleAuthController extends Controller
         );
     }
 
+    /**
+     * Lấy tên hiển thị từ Google hoặc dùng phần tên trước @ của email nếu Google không có tên.
+     */
     private function displayName(GoogleUser $googleUser, string $email): string
     {
         $name = trim((string) $googleUser->getName());
@@ -130,6 +157,9 @@ class GoogleAuthController extends Controller
         return Str::limit($name !== '' ? $name : Str::before($email, '@'), 100, '');
     }
 
+    /**
+     * Chuyển hướng về trang đăng nhập kèm thông báo lỗi.
+     */
     private function loginError(string $message): RedirectResponse
     {
         return redirect()->route('login')->withErrors(['email' => $message]);

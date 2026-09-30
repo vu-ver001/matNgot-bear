@@ -1,3 +1,4 @@
+{{-- Giao diện: Tin nhắn / Hỗ trợ trực tiếp khách hàng (ChatKT) --}}
 @extends('layouts.customer-account', ['title' => 'Tin nhắn / Hỗ trợ', 'flush' => true])
 
 @section('content')
@@ -6,9 +7,9 @@
     data-customer-chat
     data-poll-url="{{ route('customer.messages.poll') }}"
 >
-    {{-- CỘT TRÁI: KHUNG TRÒ CHUYỆN CHÍNH --}}
+    {{-- CỘT TRÁI: Khung trò chuyện chính (lịch sử tin nhắn, ô nhập tin nhắn và đính kèm ảnh) --}}
     <div class="customer-chat-main">
-        {{-- HEADER --}}
+        {{-- Header trạng thái trực tuyến của Mật Ngọt Bear Support --}}
         <div class="customer-chat-header">
             <div class="customer-chat-header__avatar-wrap">
                 <img

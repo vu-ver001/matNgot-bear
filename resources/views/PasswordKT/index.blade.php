@@ -1,11 +1,16 @@
+{{-- Giao diện: Đổi mật khẩu tài khoản (PasswordKT) --}}
+{{-- Tích hợp popup Quên mật khẩu qua OTP ngay tại trang này --}}
 @php
     $user = auth()->user();
+    // Tự động gán layout tương ứng với vai trò (Customer hoặc Staff/Admin)
     $layout = match ($user->role) {
         \App\Models\User::ROLE_ADMIN => 'admin-dashboard-layout',
         \App\Models\User::ROLE_STAFF => 'staff-dashboard-layout',
         default => 'customer-account-layout',
     };
+    // Lấy túi lỗi riêng của form đổi mật khẩu
     $passwordErrors = $errors->getBag('updatePassword');
+    // Mở popup quên mật khẩu nếu có lỗi từ form quên mật khẩu
     $resetModalOpen = $errors->getBag('default')->any();
     $passwordToast = match (session('status')) {
         'password-updated' => 'Đổi mật khẩu thành công.',
@@ -55,6 +60,7 @@
         </header>
 
         <div class="password-grid">
+            {{-- [CỘT TRÁI] Form nhập mật khẩu hiện tại và thiết lập mật khẩu mới --}}
             <section class="password-card password-form-card" aria-label="Biểu mẫu đổi mật khẩu">
                 <div class="password-form-header">
                     <span class="password-form-badge">
@@ -75,6 +81,7 @@
                     @csrf
                     @method('PUT')
 
+                    {{-- Ô Mật khẩu hiện tại kèm nút Quên mật khẩu mở modal popup --}}
                     <div class="password-field">
                         <div class="password-field-header">
                             <label for="current_password">Mật khẩu hiện tại <span class="password-star">*</span></label>
@@ -106,6 +113,7 @@
                         @endif
                     </div>
 
+                    {{-- Ô Mật khẩu mới kèm thanh đo độ mạnh (Chưa nhập / Yếu / Trung bình / Khá / Mạnh) --}}
                     <div class="password-field">
                         <label for="new_password">Mật khẩu mới <span class="password-star">*</span></label>
                         <div @class(['password-input-wrap', 'has-error' => $passwordErrors->has('password')])>
@@ -125,6 +133,7 @@
                             </button>
                         </div>
 
+                        {{-- Thanh đo độ mạnh mật khẩu trực quan theo thời gian thực --}}
                         <div class="password-strength" data-password-strength data-level="empty" aria-live="polite">
                             <div class="password-strength-copy">
                                 <span>Độ mạnh mật khẩu:</span>
@@ -140,6 +149,7 @@
                         @endif
                     </div>
 
+                    {{-- Ô Xác nhận lại mật khẩu mới --}}
                     <div class="password-field">
                         <label for="new_password_confirmation">Xác nhận mật khẩu mới <span class="password-star">*</span></label>
                         <div class="password-input-wrap">
@@ -159,6 +169,7 @@
                         </div>
                     </div>
 
+                    {{-- Nút Lưu mật khẩu mới --}}
                     <button type="submit" class="password-submit" data-password-submit>
                         @include('PasswordKT.partials.icon', ['name' => 'shield'])
                         <span data-password-submit-label>Lưu mật khẩu mới</span>
@@ -166,6 +177,7 @@
                 </form>
             </section>
 
+            {{-- [CỘT PHẢI] Tiêu chuẩn bảo mật mật khẩu và checklist 4 tiêu chí --}}
             <aside class="password-card password-security-card" aria-labelledby="password-security-title">
                 <header class="password-card-heading">
                     @include('PasswordKT.partials.icon', ['name' => 'shield'])
@@ -180,6 +192,7 @@
                     <p>Tuyệt đối không chia sẻ mật khẩu hoặc mã OTP xác nhận cho bất kỳ ai.</p>
                 </div>
 
+                {{-- Checklist 4 tiêu chuẩn mật khẩu an toàn --}}
                 <div class="password-requirements-box">
                     <span class="password-requirements-caption">Tiêu chuẩn mật khẩu an toàn:</span>
                     <ul class="password-requirements" aria-label="Gợi ý tạo mật khẩu mạnh">
@@ -212,6 +225,7 @@
             </aside>
         </div>
 
+        {{-- [MODAL] Hộp thoại popup Quên mật khẩu qua OTP (tái sử dụng form passwordResetKT) --}}
         <div
             class="password-reset-modal"
             data-password-reset-modal

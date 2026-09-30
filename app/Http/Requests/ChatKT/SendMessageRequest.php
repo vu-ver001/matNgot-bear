@@ -4,6 +4,7 @@ namespace App\Http\Requests\ChatKT;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+// Chức năng: Validate dữ liệu gửi tin nhắn của khách hàng (ChatKT)
 class SendMessageRequest extends FormRequest
 {
     public function authorize(): bool
@@ -11,6 +12,9 @@ class SendMessageRequest extends FormRequest
         return $this->user() !== null;
     }
 
+    /**
+     * Ràng buộc: Nội dung tối đa 2000 ký tự, tối đa 10 ảnh đính kèm (mỗi ảnh tối đa 5MB), đơn hàng tùy chọn.
+     */
     public function rules(): array
     {
         return [

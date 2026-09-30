@@ -7,6 +7,7 @@ use App\Support\PasswordKT\PasswordRulesKT;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+// Chức năng: Validate dữ liệu hoàn tất đăng ký tài khoản khách hàng (RegistrationKT)
 class RegisterCustomerRequest extends FormRequest
 {
     public function authorize(): bool
@@ -14,6 +15,9 @@ class RegisterCustomerRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Tiền xử lý dữ liệu: cắt khoảng trắng họ tên, email viết thường, phone rỗng chuyển về null.
+     */
     protected function prepareForValidation(): void
     {
         $phone = trim((string) $this->input('phone'));
@@ -25,6 +29,9 @@ class RegisterCustomerRequest extends FormRequest
         ]);
     }
 
+    /**
+     * Quy tắc kiểm tra: Họ tên hợp lệ, email chưa tồn tại, SĐT đúng định dạng, mật khẩu đạt chuẩn bảo mật.
+     */
     public function rules(): array
     {
         return [
@@ -41,6 +48,9 @@ class RegisterCustomerRequest extends FormRequest
         ];
     }
 
+    /**
+     * Thông báo lỗi tiếng Việt tương ứng.
+     */
     public function messages(): array
     {
         return array_merge([

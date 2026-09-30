@@ -10,10 +10,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+// Chức năng: Quản lý danh sách sản phẩm yêu thích của khách hàng (WishlistKT)
 class WishlistController extends Controller
 {
     public function __construct(private readonly WishlistService $wishlistService) {}
 
+    /**
+     * [Giao diện / API] Xem danh sách sản phẩm yêu thích (hỗ trợ phân trang và sắp xếp).
+     */
     public function index(Request $request): JsonResponse|View
     {
         $validated = $request->validate([
@@ -21,12 +25,14 @@ class WishlistController extends Controller
             'sort' => ['sometimes', 'in:latest,price_asc,price_desc'],
         ]);
 
+        // Lấy danh sách sản phẩm yêu thích qua service
         $wishlist = $this->wishlistService->getWishlist(
             $request->user(),
             $validated['per_page'] ?? 12,
             $validated['sort'] ?? 'latest',
         );
 
+        // Nếu là yêu cầu web HTML: trả về view tab tài khoản hoặc trang wishlist độc lập
         if (! $request->expectsJson()) {
             if ($request->query('view') === 'account') {
                 return view('customer.wishlistKT.account', compact('wishlist'));
@@ -35,6 +41,7 @@ class WishlistController extends Controller
             return view('customer.wishlistKT.index', compact('wishlist'));
         }
 
+        // Nếu là yêu cầu AJAX JSON: trả về danh sách items kèm phân trang
         return response()->json([
             'success' => true,
             'message' => $wishlist->isEmpty()
@@ -52,6 +59,9 @@ class WishlistController extends Controller
         ]);
     }
 
+    /**
+     * Xóa một sản phẩm khỏi danh sách yêu thích.
+     */
     public function destroy(Request $request, Product $product): JsonResponse|RedirectResponse
     {
         $removed = $this->wishlistService->removeProduct($request->user(), $product);
@@ -72,6 +82,7 @@ class WishlistController extends Controller
             return back()->with('success', 'Đã xóa sản phẩm khỏi danh sách yêu thích.');
         }
 
+        // Lấy số lượng sản phẩm yêu thích còn lại để cập nhật badge trái tim trên header
         $remainingCount = \App\Models\WishlistItem::where('user_id', $request->user()->id)->count();
 
         return response()->json([
@@ -85,6 +96,9 @@ class WishlistController extends Controller
         ]);
     }
 
+    /**
+     * Xóa toàn bộ sản phẩm khỏi danh sách yêu thích.
+     */
     public function clear(Request $request): JsonResponse|RedirectResponse
     {
         $removedCount = $this->wishlistService->clearWishlist($request->user());

@@ -12,15 +12,17 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
+// Chức năng: Quản lý thông tin cá nhân của người dùng (ProfileKT)
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * [Giao diện] Hiển thị trang hồ sơ cá nhân (ProfileKT/index.blade.php).
      */
     public function edit(Request $request): View
     {
         return view('ProfileKT.index', [
             'user' => $request->user(),
+            // Kiểm tra xem người dùng có yêu cầu đổi email nào đang chờ xác nhận không
             'emailChangeRequest' => EmailChangeCode::query()
                 ->where('user_id', $request->user()->id)
                 ->first(),
@@ -28,12 +30,13 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile information.
+     * Cập nhật thông tin cá nhân (Họ tên, SĐT, Địa chỉ, Avatar).
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
 
+        // Chặn người dùng tự ý đổi email trực tiếp qua form update mà không xác minh OTP
         $submittedEmail = mb_strtolower(trim((string) $request->input('email')));
         $hasUnconfirmedEmail = EmailChangeCode::query()
             ->where('user_id', $user->id)
@@ -53,17 +56,20 @@ class ProfileController extends Controller
         $oldAvatar = $user->avatar;
         $newAvatar = null;
 
+        // Xử lý upload ảnh đại diện mới vào thư mục storage/app/public/avatars
         if ($request->hasFile('avatar')) {
             $newAvatar = $request->file('avatar')->store('avatars', 'public');
             $profileData['avatar'] = $newAvatar;
         }
 
+        // Kiểm tra xem có trường dữ liệu nào thực sự thay đổi không
         $profileHasChanges = collect($profileData)->contains(
             fn (mixed $value, string $field): bool => $user->getAttribute($field) !== $value,
         );
 
         $user->fill($profileData);
 
+        // Nếu không có gì thay đổi thì thông báo cho người dùng biết
         if (! $profileHasChanges) {
             return Redirect::route('profile.edit')
                 ->with('status', 'profile-no-changes')
@@ -73,6 +79,7 @@ class ProfileController extends Controller
         try {
             $user->save();
         } catch (\Throwable $exception) {
+            // Xóa ảnh mới tải lên nếu quá trình lưu DB thất bại
             if ($newAvatar) {
                 Storage::disk('public')->delete($newAvatar);
             }
@@ -80,6 +87,7 @@ class ProfileController extends Controller
             throw $exception;
         }
 
+        // Xóa ảnh avatar cũ khỏi bộ nhớ nếu đã đổi ảnh mới thành công
         if ($newAvatar && $oldAvatar && str_starts_with($oldAvatar, 'avatars/')) {
             Storage::disk('public')->delete($oldAvatar);
         }
@@ -88,7 +96,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Xóa vĩnh viễn tài khoản người dùng (yêu cầu nhập đúng mật khẩu hiện tại).
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -98,10 +106,11 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Đăng xuất và xóa tài khoản trong DB
         Auth::logout();
-
         $user->delete();
 
+        // Hủy toàn bộ session và token CSRF
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

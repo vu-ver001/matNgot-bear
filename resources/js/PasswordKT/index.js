@@ -1,3 +1,4 @@
+// [Chức năng: PasswordKT] Xử lý đo độ mạnh mật khẩu theo thời gian thực và quản lý modal Quên mật khẩu
 import { calculatePasswordStrength, requirementChecks } from '../auth/sharedKT/password-rules.js';
 
 const setupPasswordPage = () => {
@@ -11,6 +12,7 @@ const setupPasswordPage = () => {
     const strength = page.querySelector('[data-password-strength]');
     const strengthLabel = page.querySelector('[data-password-strength-label]');
 
+    // Kiểm tra 4 tiêu chí mật khẩu an toàn và tính toán độ mạnh mật khẩu trong thời gian thực
     const updateStrength = () => {
         const value = passwordInput?.value ?? '';
 
@@ -39,6 +41,7 @@ const setupPasswordPage = () => {
     const changePasswordButton = page.querySelector('[data-password-submit]');
     const changePasswordLabel = page.querySelector('[data-password-submit-label]');
 
+    // Hiển thị trạng thái "Đang cập nhật..." khi người dùng nhấn gửi form đổi mật khẩu
     changePasswordForm?.addEventListener('submit', () => {
         if (!changePasswordForm.checkValidity() || changePasswordForm.dataset.submitting === 'true') {
             return;
@@ -52,6 +55,7 @@ const setupPasswordPage = () => {
         }
     });
 
+    // Quản lý mở / đóng modal popup Quên mật khẩu qua OTP
     const modal = page.querySelector('[data-password-reset-modal]');
     const openButtons = page.querySelectorAll('[data-password-reset-open]');
     const closeButtons = page.querySelectorAll('[data-password-reset-close]');

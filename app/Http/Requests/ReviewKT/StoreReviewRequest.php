@@ -4,6 +4,7 @@ namespace App\Http\Requests\ReviewKT;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+// Chức năng: Validate dữ liệu gửi đánh giá sản phẩm mới (ReviewKT)
 class StoreReviewRequest extends FormRequest
 {
     public function authorize(): bool
@@ -11,6 +12,9 @@ class StoreReviewRequest extends FormRequest
         return $this->user() !== null;
     }
 
+    /**
+     * Ràng buộc: Số sao (1-5), Nội dung nhận xét (tối đa 1000 ký tự), Tối đa 5 ảnh (JPG, PNG, WEBP, tối đa 5MB).
+     */
     public function rules(): array
     {
         if ($this->has('items')) {
