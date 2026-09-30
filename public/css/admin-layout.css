@@ -39,7 +39,7 @@
     --shadow-card: 0 10px 30px rgba(109, 76, 65, 0.08);
     --shadow-hover: 0 16px 40px rgba(109, 76, 65, 0.14);
 
-    --sidebar-width: 270px;
+    --sidebar-width: 250px;
     --sidebar-collapsed-width: 72px;
 }
 
@@ -640,7 +640,7 @@ html.admin-sidebar-collapsed .admin-main,
 }
 
 .admin-content {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
     flex: 1 1 auto;
     min-width: 0;
     width: 100%;
