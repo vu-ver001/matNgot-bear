@@ -377,15 +377,15 @@ class PaymentController extends Controller
     }
 
     /**
-     * Export payment transactions to CSV file with UTF-8 BOM.
+     * Xuất báo cáo giao dịch thanh toán định dạng Excel (.xls) chuẩn bảng biểu, mở trực tiếp trên Windows & Mac không lỗi font (như trang nhân viên).
      */
     public function export(Request $request): StreamedResponse
     {
         $query = $this->buildFilteredQuery($request);
-        $fileName = 'bao_cao_thanh_toan_' . Carbon::now()->format('Ymd_His') . '.csv';
+        $fileName = 'bao_cao_thanh_toan_' . Carbon::now()->format('Ymd_His') . '.xls';
 
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
             'Pragma' => 'no-cache',
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
@@ -394,43 +394,52 @@ class PaymentController extends Controller
 
         return response()->stream(function () use ($query) {
             $handle = fopen('php://output', 'w');
-            fputs($handle, "\xEF\xBB\xBF");
-
-            fputcsv($handle, [
-                'STT',
-                'Mã GD',
-                'Mã Đơn Hàng',
-                'Khách Hàng',
-                'Số Điện Thoại',
-                'Phương Thức',
-                'Số Tiền (VNĐ)',
-                'Mã Tham Chiếu NH / Cổng',
-                'Trạng Thái',
-                'Thời Gian Tạo',
-                'Thời Gian Thanh Toán',
-                'Người Duyệt',
-                'Đối Soát COD',
-                'Nhận Tiền Về TK',
-                'Ghi Chú',
-            ], ',', '"', '\\');
-
-            $cleanText = function (?string $text): string {
-                if ($text === null || trim($text) === '') {
-                    return '—';
-                }
-                $cleaned = preg_replace('/[\r\n\t]+/', ', ', trim($text));
-                $cleaned = preg_replace('/\s+/', ' ', $cleaned);
-                return trim($cleaned, " ,");
-            };
+            fwrite($handle, "<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">\r\n");
+            fwrite($handle, "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\r\n");
+            fwrite($handle, "<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Báo Cáo Thanh Toán</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->\r\n");
+            fwrite($handle, "<style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+                th { background-color: #F5EBE1; color: #5C3219; font-weight: bold; border: 1px solid #D4C5B3; padding: 8px; font-size: 11pt; text-align: center; }
+                td { border: 1px solid #E8DECB; padding: 6px; font-size: 10.5pt; vertical-align: middle; }
+                .text { mso-number-format: \"\\@\"; }
+                .number { mso-number-format: \"\\#\\,\\#\\#0\"; text-align: right; }
+                .center { text-align: center; }
+            </style></head><body>\r\n");
+            fwrite($handle, "<table border=\"1\">\r\n");
+            fwrite($handle, "<thead><tr>
+                <th>STT</th>
+                <th>Mã GD</th>
+                <th>Mã Đơn Hàng</th>
+                <th>Khách Hàng / Người Nhận</th>
+                <th>Số Điện Thoại</th>
+                <th>Phương Thức</th>
+                <th>Số Tiền (VNĐ)</th>
+                <th>Mã Tham Chiếu NH / Cổng</th>
+                <th>Trạng Thái</th>
+                <th>Thời Gian Tạo</th>
+                <th>Thời Gian Thanh Toán</th>
+                <th>Người Duyệt / Xác Nhận</th>
+                <th>Đối Soát COD</th>
+                <th>Nhận Tiền Về TK</th>
+                <th>Ghi Chú</th>
+            </tr></thead><tbody>\r\n");
 
             $stt = 0;
             $totalAmount = 0;
+            $totalPaid = 0;
+            $totalPending = 0;
 
-            $query->chunk(100, function ($payments) use ($handle, &$stt, &$totalAmount, $cleanText) {
+            $query->chunk(100, function ($payments) use ($handle, &$stt, &$totalAmount, &$totalPaid, &$totalPending) {
                 foreach ($payments as $payment) {
                     $stt++;
                     $amount = (float) $payment->amount;
                     $totalAmount += $amount;
+
+                    if ($payment->status === 'PAID') {
+                        $totalPaid += $amount;
+                    } elseif ($payment->status === 'PENDING') {
+                        $totalPending += $amount;
+                    }
 
                     $methodLabel = match ($payment->method) {
                         'BANK_TRANSFER' => 'Chuyển khoản (VietQR / SePAY)',
@@ -448,49 +457,51 @@ class PaymentController extends Controller
                         default => $payment->status,
                     };
 
-                    $phoneRaw = $payment->order?->recipient_phone ?? $payment->order?->customer?->phone ?? '';
-                    $phoneFormatted = ! empty($phoneRaw) ? '="' . preg_replace('/[^0-9+]/', '', $phoneRaw) . '"' : '—';
-                    $gdCode = '="PAY-' . str_pad($payment->id, 5, '0', STR_PAD_LEFT) . '"';
-                    $orderCode = $payment->order?->order_code ? '="' . $payment->order->order_code . '"' : '—';
+                    $statusColor = match ($payment->status) {
+                        'PAID' => '#059669',
+                        'PENDING' => '#D97706',
+                        'FAILED' => '#DC2626',
+                        'REFUNDED' => '#7C3AED',
+                        default => '#374151',
+                    };
 
-                    fputcsv($handle, [
-                        $stt,
-                        $gdCode,
-                        $orderCode,
-                        $cleanText($payment->order?->recipient_name ?? $payment->order?->customer?->full_name ?? 'Khách vãng lai'),
-                        $phoneFormatted,
-                        $methodLabel,
-                        round($amount),
-                        $payment->transaction_ref ? '="' . $payment->transaction_ref . '"' : '—',
-                        $statusLabel,
-                        $payment->created_at ? $payment->created_at->format('d/m/Y H:i:s') : '—',
-                        $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i:s') : '—',
-                        $cleanText($payment->confirmedByUser?->full_name ?? ($payment->status === 'PAID' ? 'Hệ thống tự động' : '—')),
-                        $payment->cod_reconciled_at ? 'Đã đối soát (' . $payment->cod_reconciled_at->format('d/m/Y H:i') . ')' : 'Chưa đối soát',
-                        $payment->cod_settled_at ? 'Đã nhận về TK (' . $payment->cod_settled_at->format('d/m/Y H:i') . ')' : 'Chưa nhận',
-                        $cleanText($payment->note),
-                    ], ',', '"', '\\');
+                    $phoneRaw = $payment->order?->recipient_phone ?? $payment->order?->customer?->phone ?? '—';
+                    $gdCode = 'PAY-' . str_pad($payment->id, 5, '0', STR_PAD_LEFT);
+                    $orderCode = $payment->order?->order_code ?? '—';
+                    $recipientName = $payment->order?->recipient_name ?? $payment->order?->customer?->full_name ?? 'Khách vãng lai';
+                    $confirmedBy = $payment->confirmedByUser?->full_name ?? ($payment->status === 'PAID' ? 'Hệ thống tự động' : '—');
+                    $codReconciled = $payment->cod_reconciled_at ? 'Đã đối soát (' . $payment->cod_reconciled_at->format('d/m/Y H:i') . ')' : '—';
+                    $codSettled = $payment->cod_settled_at ? 'Đã nhận về TK (' . $payment->cod_settled_at->format('d/m/Y H:i') . ')' : '—';
+
+                    $row = "<tr>";
+                    $row .= "<td class=\"center\">{$stt}</td>";
+                    $row .= "<td class=\"text center\">{$gdCode}</td>";
+                    $row .= "<td class=\"text center\"><strong>{$orderCode}</strong></td>";
+                    $row .= "<td>" . htmlspecialchars($recipientName) . "</td>";
+                    $row .= "<td class=\"text center\">" . htmlspecialchars($phoneRaw) . "</td>";
+                    $row .= "<td>" . htmlspecialchars($methodLabel) . "</td>";
+                    $row .= "<td class=\"number\">" . number_format($amount, 0, ',', '.') . "</td>";
+                    $row .= "<td class=\"text center\">" . htmlspecialchars($payment->transaction_ref ?: '—') . "</td>";
+                    $row .= "<td class=\"center\" style=\"color: {$statusColor}; font-weight: bold;\">" . htmlspecialchars($statusLabel) . "</td>";
+                    $row .= "<td class=\"center\">" . ($payment->created_at ? $payment->created_at->format('d/m/Y H:i:s') : '—') . "</td>";
+                    $row .= "<td class=\"center\">" . ($payment->paid_at ? $payment->paid_at->format('d/m/Y H:i:s') : '—') . "</td>";
+                    $row .= "<td>" . htmlspecialchars($confirmedBy) . "</td>";
+                    $row .= "<td class=\"center\">" . htmlspecialchars($codReconciled) . "</td>";
+                    $row .= "<td class=\"center\">" . htmlspecialchars($codSettled) . "</td>";
+                    $row .= "<td>" . htmlspecialchars($payment->note ?: '—') . "</td>";
+                    $row .= "</tr>\r\n";
+
+                    fwrite($handle, $row);
                 }
             });
 
             // Dòng tổng kết
-            fputcsv($handle, [
-                'TỔNG CỘNG',
-                '',
-                '',
-                "Tổng số: {$stt} giao dịch",
-                '',
-                '',
-                $totalAmount,
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-            ], ',', '"', '\\');
+            fwrite($handle, "</tbody><tfoot><tr style=\"font-weight: bold; background-color: #FAF6EE;\">");
+            fwrite($handle, "<td colspan=\"3\" class=\"center\">TỔNG CỘNG</td>");
+            fwrite($handle, "<td colspan=\"3\">Tổng số giao dịch: <strong>{$stt}</strong></td>");
+            fwrite($handle, "<td class=\"number\" style=\"font-size: 11pt; color: #B45309;\">" . number_format($totalAmount, 0, ',', '.') . "</td>");
+            fwrite($handle, "<td colspan=\"8\">Thực thu (Đã thanh toán): <strong>" . number_format($totalPaid, 0, ',', '.') . " VNĐ</strong> | Đang chờ: <strong>" . number_format($totalPending, 0, ',', '.') . " VNĐ</strong></td>");
+            fwrite($handle, "</tr></tfoot></table></body></html>\r\n");
 
             fclose($handle);
         }, 200, $headers);

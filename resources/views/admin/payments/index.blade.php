@@ -81,7 +81,8 @@
                 </a>
                 
                 <a href="{{ route('admin.payments.export', request()->query()) }}" 
-                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50/50 text-[#3A1E11] font-bold text-xs shadow-2xs transition">
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50/50 text-[#3A1E11] font-bold text-xs shadow-2xs transition"
+                   title="Tải báo cáo Excel (.xls) mở trực tiếp trên Windows & Mac không lỗi font">
                     <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
                     <span>Xuất Báo Cáo</span>
                 </a>
