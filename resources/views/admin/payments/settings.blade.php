@@ -24,7 +24,7 @@
                 <span class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5C3219] to-[#8C5835] text-white flex items-center justify-center text-lg shadow-sm">
                     ⚙️
                 </span>
-                <span>Cấu Hình Cổng &amp; API Thanh Toán</span>
+                <span style="font-size:28px;">Cấu Hình Cổng &amp; API Thanh Toán</span>
             </h1>
             <p class="text-xs sm:text-sm text-[#786B61] mt-1">
                 Chỉ Admin (Chủ shop) có quyền thay đổi thông tin số tài khoản ngân hàng VietQR, API SePAY và Webhook.

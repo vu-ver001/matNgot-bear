@@ -78,7 +78,11 @@
                              x-text="isExpired ? 'Trạng thái phiên' : 'Thời gian thanh toán còn lại'">Thời gian thanh toán còn lại</div>
                         <div class="text-lg sm:text-xl font-black font-mono tracking-wider transition-colors duration-200"
                              :class="isExpired ? 'text-rose-300' : 'text-[#F6D89B]'"
-                                    {{-- Body content --}}
+                             x-text="formattedTime">15:00</div>
+                    </div>
+                </div>
+
+                {{-- Body content --}}
                 <div class="p-4 sm:p-6 lg:p-7 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start">
                     
                     {{-- Left Column: QR Code Image & Scan Guide --}}
