@@ -918,7 +918,7 @@
                         <div class="variant-thumb-wrap" id="var-thumb-${idx}" onclick="triggerVariantFile(${idx})" 
                              title="${isInherited ? 'Đang dùng chung ảnh theo màu ' + escapeHtml(v.color) + ' (Bấm để chọn ảnh riêng)' : (isImgCovered ? 'Bấm để đổi ảnh riêng cho phân loại này' : 'Bắt buộc: Bấm để chọn ảnh cho nhóm màu này')}" 
                              style="${!isImgCovered ? 'border: 1.5px dashed #E53935; background: #FFEBEE;' : (isInherited ? 'border: 1.5px solid #2E7D32; background: #F1F8E9;' : '')}">
-                            <img src="${thumbSrc}" class="variant-thumb-img" id="var-img-preview-${idx}">
+                            <img src="${thumbSrc}" class="variant-thumb-img" id="var-img-preview-${idx}" onerror="this.onerror=null; this.src='${PLACEHOLDER_THUMB}';">
                             ${isInherited ? '<span class="inherited-badge" title="Tự động kế thừa ảnh theo màu" style="position:absolute; bottom:2px; right:2px; background:#2E7D32; color:#fff; font-size:8px; padding:1px 3px; border-radius:3px; font-weight:800; z-index:2;"><i class="fa-solid fa-link"></i></span>' : ''}
                             <div class="variant-thumb-overlay">
                                 <i class="fa-solid fa-camera"></i>

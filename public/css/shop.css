@@ -575,6 +575,15 @@
     cursor: not-allowed;
 }
 
+.shop-page-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 40px;
+    font-size: 14px;
+}
+
 @media (max-width: 992px) {
     .promise-badges-row { grid-template-columns: repeat(2, 1fr); }
     .catalog-layout { grid-template-columns: 1fr; }

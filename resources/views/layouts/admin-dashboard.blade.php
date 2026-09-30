@@ -18,7 +18,11 @@
             Swal.fire = function(...args) {
                 let options = {};
                 if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
-                    options = Object.assign({ heightAuto: false, scrollbarPadding: false, returnFocus: false }, args[0]);
+                    const isToast = !!args[0].toast;
+                    const defaults = isToast 
+                        ? { scrollbarPadding: false } 
+                        : { heightAuto: false, scrollbarPadding: false, returnFocus: false };
+                    options = Object.assign(defaults, args[0]);
                 } else if (args.length >= 2) {
                     options = {
                         title: args[0],

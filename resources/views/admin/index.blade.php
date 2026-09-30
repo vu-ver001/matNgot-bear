@@ -1845,26 +1845,56 @@
 
         function renderPaginationControls(paginator) {
             const container = document.getElementById('products-pagination-controls');
-            let html = '';
+            if (!container) return;
+            if (!paginator || paginator.last_page <= 1) {
+                container.innerHTML = '';
+                return;
+            }
 
-            // Prev Button
-            html +=
-                `<button class="page-btn" ${paginator.current_page === 1 ? 'disabled' : ''} onclick="loadProducts(${paginator.current_page - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+            const current = paginator.current_page;
+            const last = paginator.last_page;
+            let pages = [];
 
-            // Page numbers
-            for (let i = 1; i <= paginator.last_page; i++) {
-                if (i === 1 || i === paginator.last_page || (i >= paginator.current_page - 1 && i <= paginator
-                        .current_page + 1)) {
-                    html +=
-                        `<button class="page-btn ${i === paginator.current_page ? 'active' : ''}" onclick="loadProducts(${i})">${i}</button>`;
-                } else if (i === paginator.current_page - 2 || i === paginator.current_page + 2) {
-                    html += `<span style="padding: 0 4px; color: var(--text-light);">...</span>`;
+            if (last <= 7) {
+                for (let i = 1; i <= last; i++) pages.push(i);
+            } else {
+                if (current <= 4) {
+                    for (let i = 1; i <= 5; i++) pages.push(i);
+                    pages.push('...');
+                    pages.push(last);
+                } else if (current >= last - 3) {
+                    pages.push(1);
+                    pages.push('...');
+                    for (let i = last - 4; i <= last; i++) pages.push(i);
+                } else {
+                    pages.push(1);
+                    pages.push('...');
+                    pages.push(current - 1);
+                    pages.push(current);
+                    pages.push(current + 1);
+                    pages.push('...');
+                    pages.push(last);
                 }
             }
 
+            let html = '';
+
+            // Prev Button
+            html += `<button class="page-btn" ${current === 1 ? 'disabled' : ''} onclick="loadProducts(${current - 1})" aria-label="Trang trước"><i class="fa-solid fa-chevron-left"></i></button>`;
+
+            // Page items
+            pages.forEach(item => {
+                if (item === '...') {
+                    html += `<span style="padding: 0 6px; color: var(--text-light, #A8988A); font-weight: 900; letter-spacing: 2px; user-select: none;">···</span>`;
+                } else if (item === current) {
+                    html += `<button class="page-btn active" style="pointer-events: none;">${item}</button>`;
+                } else {
+                    html += `<button class="page-btn" onclick="loadProducts(${item})">${item}</button>`;
+                }
+            });
+
             // Next Button
-            html +=
-                `<button class="page-btn" ${paginator.current_page === paginator.last_page ? 'disabled' : ''} onclick="loadProducts(${paginator.current_page + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+            html += `<button class="page-btn" ${current === last ? 'disabled' : ''} onclick="loadProducts(${current + 1})" aria-label="Trang sau"><i class="fa-solid fa-chevron-right"></i></button>`;
 
             container.innerHTML = html;
         }
