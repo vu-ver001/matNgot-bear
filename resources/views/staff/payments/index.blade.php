@@ -213,13 +213,13 @@
                     {{-- 1. Ô tra cứu --}}
                     <div class="flex items-center gap-2 flex-1 min-w-[260px]">
                         <label class="text-xs font-bold text-[#5C3219] whitespace-nowrap shrink-0">Tra cứu:</label>
-                        <div class="relative flex-1">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 text-xs">
+                        <div class="relative flex-1 flex items-center">
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-400 pointer-events-none text-xs">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}"
                                    placeholder="Mã đơn / Mã GD / Tên khách / SĐT..."
-                                   class="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-[#EBDDCD] bg-[#FAF8F5] focus:bg-white focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E] text-[#2C1408] transition">
+                                   class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#EBDDCD] bg-[#FAF8F5] focus:bg-white focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E] text-[#2C1408] transition">
                         </div>
                     </div>
 

@@ -49,21 +49,10 @@ RUN composer install \
     --no-scripts \
     --optimize-autoloader
 
-FROM node:22-bookworm-slim AS frontend-build
-
-WORKDIR /var/www/html
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
-COPY resources ./resources
-COPY public ./public
-COPY vite.config.js postcss.config.js tailwind.config.js ./
-RUN npm run build
-
 FROM php-base AS app
 
 COPY --from=composer-deps /var/www/html/vendor ./vendor
 COPY . .
-COPY --from=frontend-build /var/www/html/public/build ./public/build
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # The repository may contain a Windows junction at public/storage. It is

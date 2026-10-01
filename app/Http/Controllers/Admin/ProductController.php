@@ -236,10 +236,16 @@ class ProductController extends Controller
             if ($request->hasFile('image_files')) {
                 $files = array_slice($request->file('image_files'), 0, 9);
                 $primaryIndex = (int) $request->input('primary_index', 0);
+                $destPath = public_path('uploads/products');
+                if (!file_exists($destPath)) {
+                    mkdir($destPath, 0755, true);
+                }
 
                 foreach ($files as $index => $file) {
-                    $mime = $file->getMimeType() ?: 'image/jpeg';
-                    $imageUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+                    $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                    $filename = time() . '_' . uniqid() . '.' . $ext;
+                    $file->move($destPath, $filename);
+                    $imageUrl = '/uploads/products/' . $filename;
                     $isPrimary = ($index === $primaryIndex);
 
                     if ($isPrimary) {
@@ -272,13 +278,19 @@ class ProductController extends Controller
                 // Bản đồ ảnh theo màu sắc để tự động kế thừa ảnh giữa các kích thước cùng màu
                 $colorImageMap = [];
 
-                // Bước 1: Lưu file tải lên dưới dạng base64 hoặc lưu URL ảnh hợp lệ cho từng dòng và từng nhóm màu
+                // Bước 1: Lưu file tải lên vào thư mục uploads/products/variants hoặc lưu URL ảnh hợp lệ
                 foreach ($variantsInput as $vIndex => $vData) {
                     $cKey = mb_strtolower(trim($vData['color'] ?? ''));
                     if ($request->hasFile("variant_images.{$vIndex}")) {
                         $varFile = $request->file("variant_images.{$vIndex}");
-                        $mime = $varFile->getMimeType() ?: 'image/jpeg';
-                        $savedUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($varFile->getRealPath()));
+                        $varDestPath = public_path('uploads/products/variants');
+                        if (!file_exists($varDestPath)) {
+                            mkdir($varDestPath, 0755, true);
+                        }
+                        $varExt = $varFile->getClientOriginalExtension() ?: 'jpg';
+                        $varFilename = time() . '_var_' . uniqid() . '.' . $varExt;
+                        $varFile->move($varDestPath, $varFilename);
+                        $savedUrl = '/uploads/products/variants/' . $varFilename;
                         $colorImageMap[$vIndex] = $savedUrl;
                         if ($cKey !== '' && !isset($colorImageMap[$cKey])) {
                             $colorImageMap[$cKey] = $savedUrl;
@@ -399,10 +411,16 @@ class ProductController extends Controller
                 $existingCount = $product->images()->count();
                 $remainingSlots = max(0, 9 - $existingCount);
                 $files = array_slice($request->file('image_files'), 0, $remainingSlots);
+                $destPath = public_path('uploads/products');
+                if (!file_exists($destPath)) {
+                    mkdir($destPath, 0755, true);
+                }
 
                 foreach ($files as $index => $file) {
-                    $mime = $file->getMimeType() ?: 'image/jpeg';
-                    $imageUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+                    $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                    $filename = time() . '_' . uniqid() . '.' . $ext;
+                    $file->move($destPath, $filename);
+                    $imageUrl = '/uploads/products/' . $filename;
 
                     $isPrimary = ($primaryType === 'new' && $index === $primaryIndex);
 
@@ -438,13 +456,19 @@ class ProductController extends Controller
                 // Bản đồ ảnh theo màu sắc để tự động kế thừa ảnh giữa các kích thước cùng màu
                 $colorImageMap = [];
 
-                // Bước 1: Lưu file tải lên dưới dạng base64 hoặc lấy URL ảnh hợp lệ cho từng dòng và từng nhóm màu
+                // Bước 1: Lưu file tải lên vào thư mục uploads/products/variants hoặc lấy URL ảnh hợp lệ
                 foreach ($variantsInput as $vIndex => $vData) {
                     $cKey = mb_strtolower(trim($vData['color'] ?? ''));
                     if ($request->hasFile("variant_images.{$vIndex}")) {
                         $varFile = $request->file("variant_images.{$vIndex}");
-                        $mime = $varFile->getMimeType() ?: 'image/jpeg';
-                        $savedUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($varFile->getRealPath()));
+                        $varDestPath = public_path('uploads/products/variants');
+                        if (!file_exists($varDestPath)) {
+                            mkdir($varDestPath, 0755, true);
+                        }
+                        $varExt = $varFile->getClientOriginalExtension() ?: 'jpg';
+                        $varFilename = time() . '_var_' . uniqid() . '.' . $varExt;
+                        $varFile->move($varDestPath, $varFilename);
+                        $savedUrl = '/uploads/products/variants/' . $varFilename;
                         $colorImageMap[$vIndex] = $savedUrl;
                         if ($cKey !== '' && !isset($colorImageMap[$cKey])) {
                             $colorImageMap[$cKey] = $savedUrl;
