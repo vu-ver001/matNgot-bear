@@ -1,3 +1,4 @@
+{{-- Giao diện: Trang danh sách sản phẩm yêu thích (WishlistKT) --}}
 @extends('layouts.customer')
 
 @section('title', 'Danh sách yêu thích - Mật Ngọt Bear')
@@ -15,6 +16,7 @@
             data-wishlist-root
             data-total-items="{{ $wishlist->total() }}"
         >
+            {{-- [HERO BANNER] Tiêu đề và hình ảnh không gian yêu thích --}}
             <header
                 class="wishlist-hero"
                 style="--wishlist-hero-image: url('{{ asset('images/wishlist/banner-watercolor-small.png') }}')"
@@ -29,6 +31,7 @@
                 </div>
             </header>
 
+            {{-- [KHU VỰC SẢN PHẨM] Thanh công cụ sắp xếp, lưới thẻ sản phẩm và phân trang --}}
             <section class="wishlist-products" aria-labelledby="wishlist-products-title">
                 <div class="wishlist-toolbar">
                     <div>
@@ -36,6 +39,7 @@
                         <p><strong data-wishlist-total>{{ $wishlist->total() }}</strong> sản phẩm trong bộ sưu tập</p>
                     </div>
 
+                    {{-- Các nút thao tác: Chọn sắp xếp theo giá / mới nhất, nút Xóa tất cả --}}
                     <div class="wishlist-toolbar-actions">
                         @if ($wishlist->isNotEmpty())
                             <form method="GET" action="{{ route('customer.wishlist.index') }}" data-wishlist-sort-control>
@@ -65,6 +69,7 @@
                     </div>
                 </div>
 
+                {{-- [LƯỚI SẢN PHẨM] Hiển thị các thẻ gấu bông đã yêu thích --}}
                 <div
                     @class(['wishlist-grid', 'hidden' => $wishlist->isEmpty()])
                     data-wishlist-grid
@@ -74,10 +79,12 @@
                     @endforeach
                 </div>
 
+                {{-- [TRẠNG THÁI TRỐNG] Hiển thị khi danh sách chưa có sản phẩm nào --}}
                 <div @class(['hidden' => $wishlist->isNotEmpty()]) data-wishlist-empty>
                     @include('customer.wishlistKT.partials.empty-state')
                 </div>
 
+                {{-- Phân trang danh sách yêu thích --}}
                 @if ($wishlist->hasPages())
                     <div class="wishlist-pagination" data-wishlist-pagination>
                         {{ $wishlist->withQueryString()->links() }}
@@ -85,6 +92,7 @@
                 @endif
             </section>
 
+            {{-- Thông báo Toast nổi phản hồi thao tác xóa/xóa tất cả --}}
             <div
                 class="account-toast"
                 data-wishlist-toast

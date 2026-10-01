@@ -10,10 +10,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
+// Chức năng: Đăng nhập & Đăng xuất tài khoản (LoginKT)
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Hiển thị trang đăng nhập.
+     * [Giao diện] Hiển thị trang đăng nhập (auth/loginKT/index.blade.php).
      */
     public function create(Request $request): View
     {
@@ -27,20 +28,21 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Xử lý yêu cầu đăng nhập.
+     * Xử lý đăng nhập: xác thực thông tin, ghi nhận thời gian và chuyển hướng theo vai trò.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->user()->recordLogin();
+
         $request->session()->regenerate();
 
         return redirect()->intended(route(RoleRedirect::routeName($request->user()), absolute: false));
     }
 
     /**
-     * Đăng xuất và hủy phiên đăng nhập hiện tại.
+     * Xử lý đăng xuất: đăng xuất tài khoản, hủy session và làm mới token CSRF.
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -54,7 +56,7 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Chỉ cho phép quay lại đường dẫn bên trong website hiện tại.
+     * Kiểm tra đường dẫn chuyển hướng chỉ nằm trong website (chống lỗi Open Redirect).
      */
     private function safeRedirectPath(mixed $redirect): ?string
     {

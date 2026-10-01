@@ -1,9 +1,11 @@
+<!-- {{-- GIAO DIỆN: Trang Đăng nhập (/login)  --}} -->
 @extends('layouts.auth')
 
 @section('title', 'Đăng nhập')
 @section('card-class', 'auth-card--login')
 
 @section('content')
+    <!-- {{-- 1. Tiêu đề và lời chào đầu form --}} -->
     <header class="auth-heading">
         <h1><span aria-hidden="true">👋</span> Chào mừng trở lại!</h1>
         <p>Đăng nhập để tiếp tục hành trình cùng Mật Ngọt Bear</p>
@@ -13,9 +15,11 @@
         <div class="auth-status" role="status">{{ session('status') }}</div>
     @endif
 
+    <!-- {{-- 2. Form gửi thông tin email và mật khẩu --}} -->
     <form method="POST" action="{{ route('login') }}" class="auth-form">
         @csrf
 
+        <!-- {{-- Ô nhập Email --}} -->
         <div class="auth-field">
             <label for="email">Email</label>
             <div @class(['auth-input-wrap', 'has-error' => $errors->has('email')])>
@@ -27,6 +31,7 @@
             @enderror
         </div>
 
+        <!-- {{-- Ô nhập Mật khẩu kèm icon con mắt ẩn/hiện mật khẩu --}} -->
         <div class="auth-field">
             <label for="password">Mật khẩu</label>
             <div @class(['auth-input-wrap', 'has-error' => $errors->has('password')])>
@@ -42,6 +47,7 @@
             @enderror
         </div>
 
+        <!-- {{-- Ghi nhớ đăng nhập và liên kết Quên mật khẩu --}} -->
         <div class="auth-form-options flex justify-between gap-4">
             <label class="auth-checkbox flex cursor-pointer items-center gap-2" for="remember_me">
                 <input type="hidden" name="remember" value="0">
@@ -54,12 +60,14 @@
             @endif
         </div>
 
+        <!-- {{-- Nút bấm Đăng nhập --}} -->
         <button type="submit" class="auth-submit flex w-full items-center justify-center gap-2">
             <x-auth.sharedKT.icon name="paw" />
             <span>Đăng nhập</span>
         </button>
     </form>
 
+    <!-- {{-- 3. Nút Đăng nhập bằng tài khoản Google (OAuth 2.0) --}} -->
     <div class="auth-divider flex items-center gap-4" aria-hidden="true">
         <span></span><small>hoặc</small><span></span>
     </div>
@@ -69,6 +77,7 @@
         <span>Tiếp tục với Google</span>
     </a>
 
+    <!-- {{-- 4. Chân trang: Liên kết dẫn sang trang Đăng ký tài khoản --}} -->
     <p class="auth-footer">
         Chưa có tài khoản?
         <a href="{{ route('register') }}">Đăng ký ngay <span aria-hidden="true">→</span></a>

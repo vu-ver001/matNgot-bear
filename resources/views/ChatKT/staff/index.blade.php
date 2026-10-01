@@ -1,3 +1,4 @@
+{{-- Giao diện: Bàn làm việc Hỗ trợ khách hàng đa luồng dành cho Nhân viên & Quản trị viên (ChatKT) --}}
 @extends($layout, ['currentPage' => 'support', 'contentClass' => 'staff-support-page-content'])
 
 @section('page-title', 'Hỗ Trợ Khách Hàng')
@@ -11,10 +12,10 @@
         data-poll-url="{{ route($routePrefix . '.poll', $selectedCase) }}"
     @endif
 >
-    {{-- BỐ CỤC 3 CỘT THEO MOCKUP (2 CỘT KHI CHƯA CHỌN CASE ĐỂ TRẢI NGHIỆM THOÁNG VÀ ĐẸP MẮT) --}}
+    {{-- BỐ CỤC 3 CỘT: Cột 1 (Danh sách ca) - Cột 2 (Khung chat chính) - Cột 3 (Thông tin khách & Đơn hàng) --}}
     <div class="staff-support-grid {{ $selectedCase ? 'has-selected-case' : 'is-empty-selection' }}">
         {{-- ==========================================
-             CỘT 1: DANH SÁCH CASE (BÊN TRÁI)
+             CỘT 1: DANH SÁCH CASE HỖ TRỢ (BÊN TRÁI)
              ========================================== --}}
         <div class="staff-support-col-cases">
             {{-- 3 TABS TRẠNG THÁI: TẤT CẢ - CHƯA XỬ LÝ - ĐANG XỬ LÝ --}}

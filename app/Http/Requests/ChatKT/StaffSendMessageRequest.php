@@ -4,6 +4,7 @@ namespace App\Http\Requests\ChatKT;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+// Chức năng: Validate dữ liệu gửi tin nhắn của Nhân viên / Admin (ChatKT)
 class StaffSendMessageRequest extends FormRequest
 {
     public function authorize(): bool
@@ -12,6 +13,9 @@ class StaffSendMessageRequest extends FormRequest
         return $user !== null && in_array($user->role, [\App\Models\User::ROLE_STAFF, \App\Models\User::ROLE_ADMIN], true);
     }
 
+    /**
+     * Ràng buộc: Nội dung tối đa 2000 ký tự, tối đa 10 ảnh đính kèm (mỗi ảnh tối đa 5MB), đơn hàng tùy chọn.
+     */
     public function rules(): array
     {
         return [

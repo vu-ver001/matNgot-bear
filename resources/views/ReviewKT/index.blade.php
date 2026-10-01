@@ -1,10 +1,11 @@
+{{-- Giao diện: Quản lý đánh giá sản phẩm của tôi (ReviewKT) --}}
 @php
     $pageTitle = 'Đánh giá của tôi';
 @endphp
 
 <x-customer-account-layout :title="$pageTitle" :flush="true">
     <div class="my-reviews-page">
-        {{-- 1. HERO BANNER --}}
+        {{-- [HERO BANNER] Tiêu đề trang và thông điệp cảm ơn ấm áp --}}
         <header
             class="my-reviews-hero"
             style="--my-reviews-banner: url('{{ asset('images/ReviewKT/my-reviews-banner.png') }}')"

@@ -7,6 +7,7 @@ use App\Support\PasswordKT\PasswordRulesKT;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+// Chức năng: Validate yêu cầu đặt lại mật khẩu mới (PasswordResetKT)
 class ResetPasswordRequest extends FormRequest
 {
     public function authorize(): bool
@@ -14,6 +15,9 @@ class ResetPasswordRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Chuẩn hóa email trước khi kiểm tra (chuyển chữ thường, xóa khoảng trắng).
+     */
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -21,6 +25,9 @@ class ResetPasswordRequest extends FormRequest
         ]);
     }
 
+    /**
+     * Quy tắc kiểm tra: Email tồn tại trong hệ thống, mật khẩu mới đúng chuẩn bảo mật và xác nhận khớp.
+     */
     public function rules(): array
     {
         return [
@@ -31,10 +38,14 @@ class ResetPasswordRequest extends FormRequest
                 'max:150',
                 Rule::exists(User::class, 'email'),
             ],
+            // Mật khẩu mới bắt buộc, xác nhận lại (confirmed) và tuân thủ PasswordRulesKT (8+ ký tự, chữ hoa, số, ký tự đặc biệt)
             'password' => ['required', 'confirmed', PasswordRulesKT::rule()],
         ];
     }
 
+    /**
+     * Thông báo lỗi tiếng Việt tương ứng.
+     */
     public function messages(): array
     {
         return array_merge([

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+// Chức năng: Validate yêu cầu gửi mã OTP quên mật khẩu (PasswordResetKT)
 class SendPasswordResetCodeRequest extends FormRequest
 {
     public function authorize(): bool
@@ -13,6 +14,9 @@ class SendPasswordResetCodeRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Chuẩn hóa email trước khi validate (chuyển chữ thường, xóa khoảng trắng).
+     */
     protected function prepareForValidation(): void
     {
         $this->merge([

@@ -1,3 +1,4 @@
+{{-- Giao diện: Danh sách sản phẩm yêu thích trong Trang tài khoản khách hàng (WishlistKT) --}}
 @php
     $wishlistToastMessage = session('error') ?? session('success');
     $wishlistToastIsError = session()->has('error');
@@ -9,6 +10,7 @@
         data-wishlist-root
         data-total-items="{{ $wishlist->total() }}"
     >
+        {{-- [HERO BANNER] Tiêu đề và hình ảnh không gian yêu thích --}}
         <header
             class="wishlist-hero"
             style="--wishlist-hero-image: url('{{ asset('images/wishlist/banner-watercolor-small.png') }}')"
@@ -23,6 +25,7 @@
             </div>
         </header>
 
+        {{-- [KHU VỰC SẢN PHẨM] Thanh công cụ sắp xếp, lưới thẻ sản phẩm và phân trang --}}
         <section class="wishlist-products" aria-labelledby="wishlist-products-title">
             <div class="wishlist-toolbar">
                 <div>
