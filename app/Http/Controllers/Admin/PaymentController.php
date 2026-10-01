@@ -512,7 +512,7 @@ class PaymentController extends Controller
      */
     private function buildFilteredQuery(Request $request)
     {
-        $query = Payment::with([
+        $query = Payment::whereHas('order')->with([
             'order.customer',
             'order.details.product',
             'confirmedByUser',
