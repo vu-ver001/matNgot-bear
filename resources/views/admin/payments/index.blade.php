@@ -81,7 +81,8 @@
                 </a>
                 
                 <a href="{{ route('admin.payments.export', request()->query()) }}" 
-                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50/50 text-[#3A1E11] font-bold text-xs shadow-2xs transition">
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#EBDDCD] hover:border-emerald-600 hover:bg-emerald-50/50 text-[#3A1E11] font-bold text-xs shadow-2xs transition"
+                   title="Tải báo cáo Excel (.xls) mở trực tiếp trên Windows & Mac không lỗi font">
                     <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
                     <span>Xuất Báo Cáo</span>
                 </a>
@@ -207,7 +208,7 @@
         {{-- Main Table Container --}}
         <div class="bg-white rounded-2xl border border-[#EBDDCD] shadow-xs overflow-hidden">
             {{-- Status Tabs --}}
-            <div class="border-b border-[#F0E6D8] bg-[#FAF8F5] px-4 pt-2.5 overflow-x-auto">
+            <div class="border-b border-[#F0E6D8] bg-[#FAF8F5] px-4 py-2.5 overflow-x-auto">
                 <div class="flex items-center gap-1.5 min-w-max pb-2.5">
                     @php
                         $statusTabs = [
@@ -243,13 +244,13 @@
                     {{-- Keyword Search --}}
                     <div class="lg:col-span-4">
                         <label class="block text-[11px] font-bold text-[#5C3219] mb-1">Tìm kiếm giao dịch</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-400 text-xs">
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-400 pointer-events-none text-xs">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}"
                                    placeholder="Mã đơn / Mã GD / Tên / SĐT..."
-                                   class="w-full pl-8 pr-2.5 py-1.5 text-xs rounded-lg border border-[#EBDDCD] focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E] placeholder-gray-400">
+                                   class="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-[#EBDDCD] focus:border-[#E08A1E] focus:ring-1 focus:ring-[#E08A1E] placeholder-gray-400 text-[#5C3219] bg-white">
                         </div>
                     </div>
 
