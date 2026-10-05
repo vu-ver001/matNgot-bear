@@ -246,6 +246,7 @@
                     Hiển thị tất cả kết quả...
                 </div>
 
+                <!-- sắp xếp theo mới nhất,... -->
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <label for="catalog-sort-select" style="font-size: 13px; font-weight: 700; color: var(--text-muted);">Sắp xếp theo:</label>
                     <div class="select-sort-wrapper">
@@ -464,7 +465,7 @@
 
         const params = new URLSearchParams({
             page: currentPage,
-            per_page: 9,
+            per_page: 9,   // cấu hình 9 sp/ trang chi tiết sp
             sort: sort
         });
 
@@ -478,7 +479,7 @@
         if (inStock) params.append('in_stock', '1');
 
         try {
-            const res = await fetch(`/api/products?${params.toString()}`);
+            const res = await fetch(`/api/products?${params.toString()}`);  // gửi request ngầm gọi api lấy dữ liệu 
             const data = await res.json();
 
             if (data.success) {
@@ -609,17 +610,21 @@
         }
     }
 
+ // tự động vẽ các nút 1,2,3
     function renderCatalogPagination(meta) {
         const wrap = document.getElementById('catalog-pagination-wrap');
         if (!wrap) return;
+            // Nếu tổng số trang <= 1 (tức là chỉ có <= 9 sản phẩm), thì KHÔNG CẦN hiển thị phân trang
         if (!meta || meta.last_page <= 1) {
             wrap.innerHTML = '';
             return;
         }
 
         let html = '';
+        // nút mũi tên lùi (<)
         html += `<button class="shop-page-btn" ${meta.current_page === 1 ? 'disabled' : ''} onclick="applyFilters(${meta.current_page - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
 
+        //  // Vòng lặp for chạy từ trang 1 đến trang cuối (meta.last_page) để tạo các nút 1, 2, 3...
         for (let i = 1; i <= meta.last_page; i++) {
             if (i === 1 || i === meta.last_page || (i >= meta.current_page - 1 && i <= meta.current_page + 1)) {
                 html += `<button class="shop-page-btn ${i === meta.current_page ? 'active' : ''}" onclick="applyFilters(${i})">${i}</button>`;
@@ -627,7 +632,7 @@
                 html += `<span style="padding: 0 4px; color: var(--text-light); font-weight: 800;">...</span>`;
             }
         }
-
+        // nút mũi tên tiến (>) --  nếu trang hiện tại là trang cuối thì nút này sẽ bị ẩn đi
         html += `<button class="shop-page-btn" ${meta.current_page === meta.last_page ? 'disabled' : ''} onclick="applyFilters(${meta.current_page + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
         wrap.innerHTML = html;
     }
