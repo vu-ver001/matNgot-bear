@@ -44,7 +44,6 @@
             </div>
 
             {{-- Ô TÌM KIẾM --}}
-            {{-- Ô TÌM KIẾM --}}
             <form action="{{ route($routePrefix . '.index') }}" method="GET" class="staff-support-search-wrap" data-staff-search-form>
                 <input type="hidden" name="tab" value="{{ $statusTab }}">
                 <div class="staff-support-search-box">

@@ -308,12 +308,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const showTime = true;
 
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = renderMessageHtml(msg, { 
-            groupPos, 
-            showAvatar, 
-            showTime, 
+        tempDiv.innerHTML = renderMessageHtml(msg, {
+            groupPos,
+            showAvatar,
+            showTime,
             timestamp: newTimeSec,
-            isLastSelf: isSelf 
+            isLastSelf: isSelf
         }).trim();
         const newRow = tempDiv.firstElementChild;
         chatBody.appendChild(newRow);
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
         previewContainer.style.display = 'flex';
     };
-
+    // Lệnh kích hoạt mở cửa sổ Finder
     btnImage?.addEventListener('click', () => {
         fileInput?.click();
     });
