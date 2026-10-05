@@ -137,6 +137,8 @@
     $initialSalePrice = $product->lowest_sale_price;
     $initialIsOnSale = $product->is_on_sale && ($initialSalePrice !== null && $initialSalePrice !== '' && is_numeric($initialSalePrice)) && (float)$initialSalePrice >= 0 && (float)$initialSalePrice < $initialPrice;
     $initialIsUpcoming = false;
+
+    // tính % //
     $initialDiscountPct = ($initialIsOnSale && $initialPrice > 0) ? round((($initialPrice - (float)$initialSalePrice) / $initialPrice) * 100) : 0;
     $initialEffectivePrice = $initialIsOnSale ? (float)$initialSalePrice : $initialPrice;
     $initialRemainingSec = $initialIsOnSale ? $product->flash_sale_remaining_seconds : 0;
@@ -504,12 +506,12 @@
                     @endif
                 </div>
 
-                <!-- Center: Progress Bars Breakdown -->
+                <!-- thanh phần trăm màu cam-->
                 <div class="review-bars-breakdown">
                     @for($star = 5; $star >= 1; $star--)
                         @php
                             $starCount = $ratingCounts[$star] ?? 0;
-                            $starPct = $product->reviews_count > 0 ? round(($starCount / $product->reviews_count) * 100) : ($star === 5 ? 100 : 0);
+                            $starPct = ($product->reviews_count > 0) ? round(($starCount / $product->reviews_count) * 100) : 0;
                         @endphp
                         <div class="review-bar-row">
                             <span class="bar-label">{{ $star }} <i class="fa-solid fa-star" style="color: var(--honey); font-size: 11px;"></i></span>
@@ -1476,6 +1478,7 @@
 
             if (bestVar) {
                 if (bestVar.isOnSale) {
+                    // tự động cập nhật lại % khi khách đổi size //
                     const discountPct = (bestVar.regularPrice > 0 && bestVar.salePrice !== null) ? Math.round(((bestVar.regularPrice - bestVar.salePrice) / bestVar.regularPrice) * 100) : 0;
                     const remSec = bestVar.saleEndAt ? Math.max(0, Math.floor((bestVar.saleEndAt - now) / 1000)) : 0;
                     renderPriceDisplay(bestVar.regularPrice, bestVar.salePrice, discountPct, true, false, null, remSec);

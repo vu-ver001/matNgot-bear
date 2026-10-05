@@ -19,6 +19,8 @@ class ProductController extends Controller
 {
     /**
      * Danh sách sản phẩm kèm category và images (Hỗ trợ cả Web View và JSON API).
+     * 127-140: pt ql sp
+     * 95-106: sao tbinh
      */
     public function index(Request $request): View|JsonResponse
     {
@@ -124,6 +126,7 @@ class ProductController extends Controller
             default       => $query->orderByDesc('created_at'),
         };
 
+        //Mặc định phân trang 8 sản phẩm/trang trong trang Quản trị Admin
         $perPage = (int) $request->input('per_page', 8);
         $paginator = $query->paginate($perPage);
 

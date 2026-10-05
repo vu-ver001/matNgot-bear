@@ -13,7 +13,9 @@ class ProductController extends Controller
 {
     /**
      * Hiển thị Trang chủ (Home Page).
+     * 17-53:  pt tchu
      */
+
     public function home(): View
     {
         $categories = Category::query()
@@ -63,8 +65,8 @@ class ProductController extends Controller
             ->orderBy('name')
             ->get();
 
-        $selectedCategory = $request->filled('category_id') 
-            ? Category::find($request->input('category_id')) 
+        $selectedCategory = $request->filled('category_id')
+            ? Category::find($request->input('category_id'))
             : null;
 
         $voucher = null;

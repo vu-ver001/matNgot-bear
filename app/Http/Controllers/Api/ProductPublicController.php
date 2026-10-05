@@ -11,7 +11,8 @@ use Illuminate\Http\Request;
 class ProductPublicController extends Controller
 {
     /**
-     * Danh sách sản phẩm (Search, Filter, Sort, Phân trang) cho Khách hàng.
+     * Danh sách sản phẩm (Search, Filter, Sort, Phân trang) cho Khách hàng. 
+     * 217-200: pt ct sp
      */
     public function index(Request $request): JsonResponse
     {
@@ -25,7 +26,7 @@ class ProductPublicController extends Controller
                 'variants' => fn($q) => $q->where('status', 'ACTIVE'),
             ]);
 
-        // 1. Tìm kiếm từ khóa (Chỉ tìm theo TÊN sản phẩm)
+        // 1. Tìm kiếm từ khóa (Chỉ tìm theo TÊN sản phẩm). 304-400:tìm kiếm tchu
         if ($request->filled('search')) {
             $keyword = trim($request->input('search'));
             $keywordNoAccent = self::removeVietnameseAccents($keyword);
@@ -86,6 +87,7 @@ class ProductPublicController extends Controller
             }
         }
 
+        // phần lọc chỗ chi tiết sp
         // 2. Lọc theo danh mục
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->input('category_id'));
@@ -169,15 +171,15 @@ class ProductPublicController extends Controller
             $query->where(function ($q) use ($matchedSizes, $sizeInput) {
                 if (!empty($matchedSizes)) {
                     $q->whereIn('size', $matchedSizes)
-                      ->orWhereHas('variants', function ($vq) use ($matchedSizes) {
-                          $vq->whereIn('size', $matchedSizes);
-                      });
+                        ->orWhereHas('variants', function ($vq) use ($matchedSizes) {
+                            $vq->whereIn('size', $matchedSizes);
+                        });
                 }
                 if ($sizeInput) {
                     $q->orWhere('size', 'like', "%{$sizeInput}%")
-                      ->orWhereHas('variants', function ($vq) use ($sizeInput) {
-                          $vq->where('size', 'like', "%{$sizeInput}%");
-                      });
+                        ->orWhereHas('variants', function ($vq) use ($sizeInput) {
+                            $vq->where('size', 'like', "%{$sizeInput}%");
+                        });
                 }
             });
         }
@@ -214,8 +216,8 @@ class ProductPublicController extends Controller
         };
 
 
-        // Phân trang (mặc định 12 sản phẩm/trang)
-        $perPage = (int) $request->input('per_page', 12);
+        // Phân trang (mặc định 9 sản phẩm/trang)
+        $perPage = (int) $request->input('per_page', 9);
         $paginator = $query->paginate($perPage);
 
         return response()->json([
@@ -328,7 +330,7 @@ class ProductPublicController extends Controller
             $name = $p->name ?? '';
             $desc = $p->description ?? '';
             $catName = $p->category->name ?? '';
-            
+
             $nameLower = mb_strtolower($name, 'UTF-8');
             $nameNoAccent = self::removeVietnameseAccents($name);
             $descNoAccent = self::removeVietnameseAccents($desc);
@@ -367,16 +369,16 @@ class ProductPublicController extends Controller
             $p->search_score = $score;
             return $p;
         })->filter(fn($p) => $p->search_score > 0)
-          ->sortByDesc('search_score')
-          ->take(8)
-          ->values();
+            ->sortByDesc('search_score')
+            ->take(8)
+            ->values();
 
         $results = $matched->map(function ($p) {
             $primaryImg = $p->images->firstWhere('is_primary', true) ?? $p->images->first();
             $regPrice = (float) $p->lowest_price;
             $sPrice = ($p->lowest_sale_price !== null) ? (float) $p->lowest_sale_price : null;
             $effectivePrice = ($sPrice !== null && $sPrice >= 0 && $sPrice < $regPrice) ? $sPrice : $regPrice;
-            
+
             return [
                 'id'              => $p->id,
                 'name'            => $p->name,
@@ -428,7 +430,7 @@ class ProductPublicController extends Controller
     {
         if (!$sizeStr) return null;
         $str = mb_strtolower(trim($sizeStr), 'UTF-8');
-        
+
         if (preg_match('/(\d+)\s*m\s*(\d*)/u', $str, $m)) {
             $meter = (int) $m[1];
             $dec = $m[2] !== '' ? (int) $m[2] : 0;
@@ -437,11 +439,11 @@ class ProductPublicController extends Controller
             }
             return $meter * 100 + $dec;
         }
-        
+
         if (preg_match('/(\d+)/u', $str, $m)) {
             return (int) $m[1];
         }
-        
+
         return null;
     }
 }

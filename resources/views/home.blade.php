@@ -408,7 +408,7 @@
         });
     </script>
 
-    <!-- 2. TRUST BADGES -->
+    <!-- 2. 4 cam kết dịch vụ -->
     <section class="trust-badges-section">
         <div class="trust-grid">
             <div class="trust-item">
@@ -453,7 +453,7 @@
         </div>
     </section>
 
-    <!-- 3. FEATURED CATEGORIES SHOWCASE -->
+    <!-- 3. danh mục nổi bật -->
     <section class="section-container">
         <div class="section-header">
             <div>
@@ -481,7 +481,7 @@
         </div>
     </section>
 
-    <!-- 4. BEST SELLERS SECTION -->
+    <!-- 4. Mục Sản Phẩm Bán Chạy Nhất -->
     <section class="section-container" style="background: var(--bg-surface); border-radius: var(--radius-xl);">
         <div class="section-header">
             <div>
@@ -560,7 +560,7 @@
         </div>
     </section>
 
-    <!-- 5. GIFT PROMO CALLOUT BANNER (BUTTER BEAR THEME) -->
+    <!-- 5. dvu tặng quà độc quyền -->
     <div class="section-container" style="padding-top: 1rem; padding-bottom: 1rem;">
         <div class="gift-promo-banner">
             <div class="gift-promo-content">
@@ -576,7 +576,7 @@
         </div>
     </div>
 
-    <!-- 6. NEW ARRIVALS -->
+    <!-- 6. hàng mới về -->
     <section class="section-container">
         <div class="section-header">
             <div>

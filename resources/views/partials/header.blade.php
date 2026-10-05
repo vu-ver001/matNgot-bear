@@ -11,7 +11,7 @@
         </div>
     </a>
 
-    <!-- Central Search Bar with Live Suggestions Dropdown -->
+    <!--from tìm kiếm -->
     <form action="{{ route('products.index') }}#catalog-layout" method="GET" class="header-search-form" id="headerSearchForm">
         <div class="search-input-wrapper">
             <input 
@@ -28,7 +28,7 @@
             </button>
         </div>
 
-        <!-- Live Search Suggestions Dropdown -->
+        <!-- khung gợi ý sản phẩm -->
         <div class="header-search-dropdown" id="headerSearchDropdown">
             <div class="search-dropdown-header">
                 <span><i class="fa-solid fa-paw" style="color: var(--honey-dark);"></i> Gợi ý theo tên sản phẩm</span>
