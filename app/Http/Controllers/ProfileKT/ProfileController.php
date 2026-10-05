@@ -7,7 +7,6 @@ use App\Http\Requests\ProfileKT\ProfileUpdateRequest;
 use App\Models\EmailChangeCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -93,27 +92,5 @@ class ProfileController extends Controller
         }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
-
-    /**
-     * Xóa vĩnh viễn tài khoản người dùng (yêu cầu nhập đúng mật khẩu hiện tại).
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-
-        // Đăng xuất và xóa tài khoản trong DB
-        Auth::logout();
-        $user->delete();
-
-        // Hủy toàn bộ session và token CSRF
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
     }
 }
