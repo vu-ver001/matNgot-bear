@@ -28,7 +28,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhook/*',
             'payment/*',
             'payment/vnpay/*',
-            'payment/momo/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

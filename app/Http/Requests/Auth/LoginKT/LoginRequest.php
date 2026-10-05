@@ -11,21 +11,15 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+// Chức năng: Kiểm tra dữ liệu form Đăng nhập - Giao diện: Trang /login
 class LoginRequest extends FormRequest
 {
-    /**
-     * Xác định người gửi có được phép thực hiện yêu cầu này hay không.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Khai báo các quy tắc kiểm tra dữ liệu đăng nhập.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+    // Quy tắc kiểm tra: Email hợp lệ và Mật khẩu bắt buộc nhập
     public function rules(): array
     {
         return [
@@ -34,6 +28,7 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    // Chuẩn hóa email: Xóa khoảng trắng thừa và chuyển hết thành chữ thường trước khi kiểm tra
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -41,6 +36,7 @@ class LoginRequest extends FormRequest
         ]);
     }
 
+    // Thông báo lỗi tiếng Việt tương ứng trên giao diện
     public function messages(): array
     {
         return [
@@ -51,23 +47,20 @@ class LoginRequest extends FormRequest
         ];
     }
 
-    /**
-     * Kiểm tra email, mật khẩu và trạng thái tài khoản.
-     *
-     * @throws ValidationException
-     */
+    // Kiểm tra đăng nhập: đối chiếu email/mật khẩu trong CSDL và kiểm tra tài khoản có bị khóa không
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            RateLimiter::hit($this->throttleKey()); // Tăng số lần thử sai
 
             throw ValidationException::withMessages([
                 'email' => 'Email hoặc mật khẩu không chính xác.',
             ]);
         }
 
+        // Chặn nếu tài khoản ở trạng thái Bị khóa (BLOCKED)
         if ($this->user()->status !== User::STATUS_ACTIVE) {
             Auth::guard('web')->logout();
             RateLimiter::hit($this->throttleKey());
@@ -77,14 +70,11 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Đăng nhập đúng: Xóa bộ đếm số lần thử sai
         RateLimiter::clear($this->throttleKey());
     }
 
-    /**
-     * Ngăn người dùng thử đăng nhập sai quá nhiều lần.
-     *
-     * @throws ValidationException
-     */
+    // Chặn người dùng nếu nhập sai quá 5 lần trong 1 phút (chống tấn công dò pass)
     public function ensureIsNotRateLimited(): void
     {
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {

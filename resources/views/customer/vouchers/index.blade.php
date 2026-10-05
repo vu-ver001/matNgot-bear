@@ -475,13 +475,11 @@
                                     <div class="flex items-center gap-1.5 text-[10.5px] text-[#7D6B5D] flex-wrap">
                                         <span class="flex items-center gap-1">
                                             <i class="fa-solid fa-user-check text-[9px] {{ ($isAuthenticated && $voucher->customer_reached_limit) ? 'text-rose-500' : 'text-[#8C7A6B]' }}"></i>
-                                            <span>Lượt dùng: <strong class="text-[#2B1810]">{{ $voucher->limit_per_user ? ($voucher->limit_per_user . ' lượt') : 'Không giới hạn' }}</strong></span>
+                                            <span>Mỗi khách: <strong class="text-[#2B1810]">{{ $voucher->limit_per_user ? ($voucher->limit_per_user . ' lượt') : 'Không giới hạn' }}</strong></span>
                                         </span>
-                                        @if($isAuthenticated)
+                                        @if($isAuthenticated && $voucher->limit_per_user !== null)
                                             <span class="px-1.5 py-0.5 rounded text-[9.5px] font-semibold {{ $voucher->customer_reached_limit ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200' }}">
-                                                @if($voucher->limit_per_user === null)
-                                                    Không giới hạn
-                                                @elseif($voucher->customer_reached_limit)
+                                                @if($voucher->customer_reached_limit)
                                                     Bạn đã hết lượt
                                                 @else
                                                     Bạn còn {{ max(0, $voucher->limit_per_user - $voucher->customer_used_count) }} lượt

@@ -1,4 +1,7 @@
+<!-- {{-- Giao diện: Quản lý thông tin hồ sơ cá nhân (ProfileKT) --}} -->
+<!-- {{-- Dùng chung cho cả 3 vai trò: Customer (layout tài khoản), Staff & Admin (layout dashboard) --}} -->
 @php
+    // Chữ cái đầu tiên của họ tên để làm avatar mặc định khi chưa tải ảnh
     $initial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(trim($user->full_name), 0, 1));
     $isActive = $user->status === \App\Models\User::STATUS_ACTIVE;
     $roleLabel = match ($user->role) {
@@ -9,8 +12,10 @@
     };
     $statusLabel = $isActive ? 'Hoạt động' : 'Bị khóa';
     $registrationMethod = $user->google_id ? 'Google' : 'Email';
+    // Tự động mở chế độ chỉnh sửa nếu có lỗi form hoặc đang có yêu cầu đổi email
     $startInEditMode = session('profile-editing', false) || $errors->any() || $emailChangeRequest !== null;
     $emailStartsEditable = $errors->has('email') && ! session('profile-email-locked', false);
+    // Chuẩn bị thông điệp toast phản hồi thao tác
     $profileToast = match (session('status')) {
         'profile-updated' => ['type' => 'success', 'message' => 'Cập nhật hồ sơ thành công.'],
         'email-change-code-sent' => ['type' => 'success', 'message' => 'Mã xác nhận đã được gửi đến email mới.'],
@@ -19,6 +24,7 @@
         'profile-no-changes' => ['type' => 'info', 'message' => 'Thông tin chưa có thay đổi.'],
         default => null,
     };
+    // Tự động chọn khung layout tương ứng với vai trò của user
     $profileLayout = match ($user->role) {
         \App\Models\User::ROLE_ADMIN => 'admin-dashboard-layout',
         \App\Models\User::ROLE_STAFF => 'staff-dashboard-layout',
@@ -37,6 +43,7 @@
         data-profile-email-pending="{{ $emailChangeRequest ? 'true' : 'false' }}"
         data-profile-current-email="{{ $user->email }}"
     >
+        <!-- {{-- Thông báo Toast nổi góc màn hình khi cập nhật/đổi email --}} -->
         <div
             @class([
                 'account-toast',
@@ -53,6 +60,7 @@
             <button type="button" data-account-toast-close aria-label="Đóng thông báo">×</button>
         </div>
 
+        <!-- {{-- [HERO BANNER] Hiển thị banner, ảnh đại diện tròn và thông tin tóm tắt --}} -->
         <section
             class="profile-hero"
             aria-labelledby="profile-user-name"
@@ -121,6 +129,7 @@
 
         </section>
 
+        <!-- {{-- [MODAL] Căn chỉnh vị trí ảnh đại diện tròn trước khi gửi lên máy chủ --}} -->
         <div
             class="profile-avatar-editor"
             data-profile-avatar-editor
@@ -158,10 +167,12 @@
         </div>
 
         <div class="profile-card-grid">
+            <!-- {{-- [THẺ 1] Thông tin cá nhân có thể chỉnh sửa --}} -->
             <section class="profile-card" aria-labelledby="personal-information-title">
                 <header class="profile-card-header">
                     @include('ProfileKT.partials.user-icon')
                     <h2 id="personal-information-title">Thông tin cá nhân</h2>
+                    <!-- {{-- Nút bật chế độ chỉnh sửa thông tin --}} -->
                     <button
                         type="button"
                         class="profile-edit-button"
@@ -175,6 +186,7 @@
                     </button>
                 </header>
 
+                <!-- {{-- Các form gửi yêu cầu đổi email ngầm: gửi OTP, xác minh OTP, hủy --}} -->
                 <form id="profile-email-code-form" method="POST" action="{{ route('profile.email.code') }}">
                     @csrf
                 </form>
@@ -189,6 +201,7 @@
                     @method('DELETE')
                 </form>
 
+                <!-- {{-- Form chính lưu thông tin cá nhân (Họ tên, SĐT, Địa chỉ, Avatar) --}} -->
                 <form
                     id="profile-update-form"
                     method="POST"
@@ -199,6 +212,7 @@
                     @csrf
                     @method('PATCH')
 
+                    <!-- {{-- Trường Họ và tên --}} -->
                     <div class="profile-form-row">
                         <label for="full_name">Họ và tên <span aria-hidden="true">*</span></label>
                         <div>
@@ -221,6 +235,7 @@
                         </div>
                     </div>
 
+                    <!-- {{-- Trường Số điện thoại --}} -->
                     <div class="profile-form-row">
                         <label for="phone">Số điện thoại</label>
                         <div>
@@ -242,6 +257,7 @@
                         </div>
                     </div>
 
+                    <!-- {{-- Trường Email + Nút Gửi mã xác nhận đổi email --}} -->
                     <div class="profile-form-row">
                         <label for="email">Email <span aria-hidden="true">*</span></label>
                         <div>
@@ -282,6 +298,7 @@
                         </div>
                     </div>
 
+                    <!-- {{-- Khối nhập 6 chữ số OTP xác nhận đổi email --}} -->
                     <div
                         class="profile-form-row profile-email-verification"
                         data-profile-email-verification
@@ -314,7 +331,7 @@
                                     <p class="profile-email-note">
                                         Mã đã gửi tới
                                         <strong data-profile-pending-email>{{ $emailChangeRequest?->email }}</strong>
-                                        và có hiệu lực trong 5 phút.
+                                        và có hiệu lực trong 60s.
                                     </p>
                                 </div>
                             </div>
@@ -326,6 +343,7 @@
                         </div>
                     </div>
 
+                    <!-- {{-- Trường Địa chỉ --}} -->
                     <div class="profile-form-row">
                         <label for="address">Địa chỉ</label>
                         <div>
@@ -346,6 +364,7 @@
                         </div>
                     </div>
 
+                    <!-- {{-- Các nút thao tác Lưu thay đổi và Hủy chỉnh sửa --}} -->
                     <div
                         class="profile-form-actions"
                         data-profile-edit-only
@@ -364,6 +383,7 @@
                 </form>
             </section>
 
+            <!-- {{-- [THẺ 2] Thông tin tài khoản hệ thống (chỉ xem) --}} -->
             <section class="profile-card" aria-labelledby="account-information-title">
                 <header class="profile-card-header">
                     <svg viewBox="0 0 24 24" aria-hidden="true">

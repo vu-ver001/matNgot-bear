@@ -5,8 +5,12 @@ namespace App\Http\Requests\ProfileKT;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
+// Chức năng: Validate dữ liệu cập nhật hồ sơ cá nhân (ProfileKT)
 class ProfileUpdateRequest extends FormRequest
 {
+    /**
+     * Tiền xử lý dữ liệu trước khi kiểm tra (cắt khoảng trắng, chuyển rỗng thành null).
+     */
     protected function prepareForValidation(): void
     {
         $phone = trim((string) $this->input('phone'));
@@ -20,11 +24,7 @@ class ProfileUpdateRequest extends FormRequest
         ]);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+
     public function rules(): array
     {
         return [

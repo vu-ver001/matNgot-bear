@@ -8,6 +8,7 @@ use App\Models\Review;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
+// Chức năng: Xử lý nghiệp vụ đánh giá sản phẩm và đơn hàng (ReviewKT)
 class ReviewService
 {
     /**

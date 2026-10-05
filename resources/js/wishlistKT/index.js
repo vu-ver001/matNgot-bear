@@ -1,3 +1,4 @@
+// [Chức năng: WishlistKT] Xử lý tương tác danh sách yêu thích: xóa sản phẩm bằng AJAX, cập nhật badge và Toast
 const wishlistRoot = document.querySelector('[data-wishlist-root]');
 
 if (wishlistRoot) {
@@ -12,12 +13,14 @@ if (wishlistRoot) {
     let totalItems = Number(wishlistRoot.dataset.totalItems || 0);
     let toastTimer;
 
+    // Cập nhật tổng số lượng hiển thị trên thanh công cụ
     const updateTotal = () => {
         wishlistRoot.querySelectorAll('[data-wishlist-total]').forEach((element) => {
             element.textContent = String(totalItems);
         });
     };
 
+    // Hiển thị Toast thông báo nổi góc màn hình
     const showToast = (message, isError = false) => {
         if (!toast) return;
 
@@ -42,6 +45,7 @@ if (wishlistRoot) {
         showToast(toast.dataset.initialMessage, toast.dataset.initialError === 'true');
     }
 
+    // Xử lý xóa sản phẩm bằng AJAX khi người dùng bấm vào nút trái tim đỏ
     wishlistRoot.addEventListener('submit', async (event) => {
         const form = event.target.closest('[data-wishlist-remove-form]');
 

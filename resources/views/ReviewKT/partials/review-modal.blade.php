@@ -1,3 +1,5 @@
+{{-- Component: Modal popup Viết / Chỉnh sửa đánh giá sản phẩm (ReviewKT) --}}
+{{-- Chuẩn luồng Shopee: hỗ trợ đánh giá đồng thời nhiều sản phẩm trong cùng một đơn hàng --}}
 <div
     id="review-modal"
     class="review-modal"
@@ -7,6 +9,7 @@
     aria-labelledby="review-modal-title"
     hidden
 >
+    {{-- Lớp nền mờ khi mở modal --}}
     <div class="review-modal__backdrop" data-review-close tabindex="-1"></div>
 
     <div class="review-modal__dialog" role="document">

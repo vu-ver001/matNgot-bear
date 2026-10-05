@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+// Chức năng: Validate yêu cầu gửi mã xác nhận OTP đăng ký (RegistrationKT)
 class SendRegistrationCodeRequest extends FormRequest
 {
     public function authorize(): bool
@@ -13,6 +14,9 @@ class SendRegistrationCodeRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Chuẩn hóa email trước khi validate (chuyển chữ thường, xóa khoảng trắng).
+     */
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -20,6 +24,9 @@ class SendRegistrationCodeRequest extends FormRequest
         ]);
     }
 
+    /**
+     * Quy tắc kiểm tra: Email bắt buộc, đúng định dạng, tối đa 150 ký tự và chưa từng được đăng ký.
+     */
     public function rules(): array
     {
         return [
@@ -33,6 +40,9 @@ class SendRegistrationCodeRequest extends FormRequest
         ];
     }
 
+    /**
+     * Thông báo lỗi tiếng Việt cho trường email.
+     */
     public function messages(): array
     {
         return [

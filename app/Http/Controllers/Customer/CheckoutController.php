@@ -429,7 +429,7 @@ class CheckoutController extends Controller
             'district' => 'nullable|string|max:100',
             'ward' => 'nullable|string|max:100',
             'note' => 'nullable|string|max:500',
-            'payment_method' => 'required|in:COD,BANK_TRANSFER,MOMO,VNPAY,E_WALLET,CARD',
+            'payment_method' => 'required|in:COD,BANK_TRANSFER,VNPAY,CARD',
             'shipping_method' => 'nullable|string|in:standard,fast,express',
             'shipping_fee' => 'nullable|numeric|min:0',
             'selected_items' => 'required|array|min:1',
@@ -507,11 +507,8 @@ class CheckoutController extends Controller
         // Map selected payment option to database enum
         $rawMethod = $validated['payment_method'];
         $dbPaymentMethod = match ($rawMethod) {
-            'MOMO' => 'E_WALLET',
-            'VNPAY' => 'CARD',
+            'VNPAY', 'CARD' => 'CARD',
             'BANK_TRANSFER' => 'BANK_TRANSFER',
-            'CARD' => 'CARD',
-            'E_WALLET' => 'E_WALLET',
             default => 'COD',
         };
 
@@ -543,12 +540,6 @@ class CheckoutController extends Controller
             // If VNPAY / CARD, redirect directly to official VNPAY Gateway (Visa/Mastercard/ATM/QR)
             if ($rawMethod === 'VNPAY' || $rawMethod === 'CARD') {
                 return redirect()->route('customer.payment.vnpay.redirect', $order->id);
-            }
-
-            // If MoMo / E_WALLET, redirect directly to MoMo Personal QR payment page
-            if (in_array($rawMethod, ['MOMO', 'E_WALLET'])) {
-                return redirect()->route('customer.payment.qr', $order->id)
-                    ->with('info', 'Đơn hàng #' . $order->order_code . ' đã tạo thành công! Vui lòng quét mã QR Ví MoMo để hoàn tất thanh toán.');
             }
 
             // If Bank Transfer, redirect to interactive payment gateway page

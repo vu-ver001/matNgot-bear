@@ -4,6 +4,7 @@ namespace App\Http\Requests\ReviewKT;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+// Chức năng: Validate dữ liệu cập nhật đánh giá sản phẩm (ReviewKT)
 class UpdateReviewRequest extends FormRequest
 {
     public function authorize(): bool
@@ -11,6 +12,9 @@ class UpdateReviewRequest extends FormRequest
         return $this->user() !== null;
     }
 
+    /**
+     * Ràng buộc: Số sao (1-5), Nhận xét (tối đa 1000 ký tự), Tối đa 5 ảnh (JPG, PNG, WEBP, tối đa 5MB).
+     */
     public function rules(): array
     {
         return [

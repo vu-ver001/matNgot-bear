@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+// Chức năng: Quản lý hộp thoại chat trực tiếp phía khách hàng (ChatKT)
 class ChatController extends Controller
 {
     public function __construct(
@@ -17,7 +18,7 @@ class ChatController extends Controller
     ) {}
 
     /**
-     * Hiển thị giao diện Tin nhắn / Hỗ trợ của Khách hàng.
+     * [Giao diện / API] Hiển thị hộp thoại chat, lịch sử tin nhắn, câu hỏi thường gặp FAQ và case hỗ trợ.
      */
     public function index(Request $request): View|JsonResponse
     {
@@ -106,6 +107,9 @@ class ChatController extends Controller
         $activeCase = $message->supportCase?->fresh(['assignedStaff']);
         $headerStatus = $this->chatService->getCustomerChatHeaderStatus($activeCase);
         $replyMessage = $message->relationLoaded('autoReply') ? $message->autoReply : null;
+
+        $conversation = $message->conversation ?? $this->chatService->getOrCreateCustomerConversation($customer);
+        $this->chatService->markMessagesAsReadForCustomer($conversation);
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([

@@ -2045,6 +2045,15 @@ class SupportChatTest extends TestCase
         $this->assertDatabaseHas('messages', [
             'content' => $data['reply']['content'],
         ]);
+
+        // Tin nhắn trả lời tự động được coi là đã đọc ngay tại thời điểm gửi (vì khách đang xem trực tiếp trong chat)
+        $chatService = app(ChatService::class);
+        $this->assertEquals(0, $chatService->countUnreadMessagesForCustomer($customer));
+
+        // Khách hàng rời trang chat vào trang Đơn hàng: Không bị hiện badge đỏ tin nhắn chưa đọc
+        $outsideResponse = $this->actingAs($customer)->get(route('customer.orders.index'));
+        $outsideResponse->assertOk();
+        $outsideResponse->assertDontSee('customer-account-badge', false);
     }
 
     public function test_customer_sending_faq_question_alias_triggers_automatic_reply(): void

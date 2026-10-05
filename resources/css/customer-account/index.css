@@ -603,7 +603,7 @@
 
 .account-toast {
     position: fixed;
-    z-index: 70;
+    z-index: 99999;
     top: 22px;
     right: 22px;
     display: flex;

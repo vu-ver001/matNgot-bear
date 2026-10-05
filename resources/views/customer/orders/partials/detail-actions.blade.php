@@ -13,7 +13,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <h4 class="text-sm sm:text-base font-bold text-[#2B1810]">Đơn hàng này chưa hoàn tất thanh toán</h4>
                     <span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold whitespace-nowrap">
-                        @if($order->payment_method === 'CARD') VNPAY @elseif($order->payment_method === 'E_WALLET') Ví MoMo @else VietQR @endif
+                        @if($order->payment_method === 'CARD') VNPAY @else VietQR @endif
                     </span>
                 </div>
                 <p class="text-xs text-[#7D6B5D] mt-0.5">Số tiền cần thanh toán: <strong class="text-amber-700 font-bold text-sm">{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>@if($order->paymentExpiresAt()) · Hạn thanh toán: <strong class="text-amber-800">{{ $order->paymentExpiresAt()->format('H:i - d/m/Y') }}</strong>@endif</p>

@@ -1741,7 +1741,7 @@
                                         <i class="fa-solid fa-credit-card text-[#E08A1E] w-4"></i>
                                         <span>Thanh toán áp dụng:</span>
                                     </span>
-                                    <span class="font-medium text-[#5C3317]">Mọi hình thức (COD, QR Ngân hàng, VNPay, MoMo)</span>
+                                    <span class="font-medium text-[#5C3317]">Mọi hình thức (COD, QR Ngân hàng, VNPay)</span>
                                 </div>
                             </div>
 

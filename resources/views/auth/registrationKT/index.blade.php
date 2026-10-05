@@ -1,9 +1,12 @@
+<!-- {{-- Giao diện: Đăng ký tài khoản khách hàng (RegistrationKT) --}} -->
+<!-- {{-- Quy trình gồm 3 bước: 1. Nhập email -> 2. Xác thực OTP email -> 3. Điền thông tin cá nhân --}} -->
 @extends('layouts.auth')
 
 @section('title', 'Đăng ký')
 @section('card-class', 'auth-card--register')
 
 @php
+    // Nếu có lỗi validation từ server ở bước nhập thông tin, tự động hiển thị bước details
     $initialRegisterStep = $errors->has('full_name') || $errors->has('phone') || $errors->has('password') || $errors->has('password_confirmation')
         ? 'details'
         : 'email';
@@ -15,6 +18,7 @@
         <p>Xác nhận email trước, sau đó hoàn tất thông tin của bạn.</p>
     </header>
 
+    <!-- {{-- Thanh tiến trình 3 bước trực quan --}} -->
     <ol class="register-progress" aria-label="Tiến trình đăng ký">
         <li data-register-progress-item="email"><span>1</span><small>Email</small></li>
         <li data-register-progress-item="otp"><span>2</span><small>Mã xác nhận</small></li>
@@ -32,6 +36,7 @@
     >
         @csrf
 
+        <!-- {{-- [BƯỚC 1] Nhập email và gửi mã xác nhận OTP --}} -->
         <section class="register-step" data-register-step="email">
             <div class="register-step__intro">
                 <span class="register-step__icon"><x-auth.sharedKT.icon name="mail" /></span>
@@ -70,6 +75,7 @@
 
         </section>
 
+        <!-- {{-- [BƯỚC 2] Nhập 6 số OTP từ email + đếm ngược 60s + nút gửi lại mã --}} -->
         <section class="register-step" data-register-step="otp" hidden>
             <button type="button" class="register-back" data-register-back="email">← Đổi email</button>
 
@@ -81,6 +87,7 @@
                 </div>
             </div>
 
+            <!-- {{-- 6 ô nhập mã OTP riêng biệt --}} -->
             <div class="register-otp" role="group" aria-label="Mã xác nhận gồm 6 chữ số">
                 @for ($index = 1; $index <= 6; $index++)
                     <input
@@ -95,6 +102,7 @@
                 @endfor
             </div>
 
+            <!-- {{-- Đồng hồ đếm ngược hiệu lực mã 60s --}} -->
             <p class="register-countdown" data-register-countdown aria-live="polite" hidden>
                 Mã có hiệu lực trong <strong data-register-countdown-value>01:00</strong>
             </p>
@@ -106,11 +114,14 @@
                 <span aria-hidden="true">→</span>
             </button>
 
+            <!-- {{-- Nút gửi lại mã OTP --}} -->
             <button type="button" class="register-resend" data-register-resend>Gửi lại mã</button>
 
         </section>
 
+        <!-- {{-- [BƯỚC 3] Điền thông tin cá nhân: Họ tên, Số điện thoại, Mật khẩu và nhấn Đăng ký --}} -->
         <section class="register-step" data-register-step="details" hidden>
+            <!-- {{-- Hộp tóm tắt email đã xác minh thành công --}} -->
             <div class="register-email-summary">
                 <span><x-auth.sharedKT.icon name="mail" /></span>
                 <div>
@@ -120,6 +131,7 @@
                 <button type="button" data-register-back="email">Sửa</button>
             </div>
 
+            <!-- {{-- Ô nhập Họ và tên --}} -->
             <div class="auth-field">
                 <label for="full_name">Họ và tên</label>
                 <div @class(['auth-input-wrap', 'has-error' => $errors->has('full_name')])>
@@ -131,6 +143,7 @@
                 @enderror
             </div>
 
+            <!-- {{-- Ô nhập Số điện thoại (tùy chọn) --}} -->
             <div class="auth-field">
                 <label for="phone">Số điện thoại <span>(tùy chọn)</span></label>
                 <div @class(['auth-input-wrap', 'has-error' => $errors->has('phone')])>
@@ -142,6 +155,7 @@
                 @enderror
             </div>
 
+            <!-- {{-- Ô nhập Mật khẩu kèm nút ẩn/hiện và hướng dẫn độ mạnh --}} -->
             <div class="auth-field">
                 <label for="register_password">Mật khẩu</label>
                 <div @class(['auth-input-wrap', 'has-error' => $errors->has('password')])>
@@ -159,6 +173,7 @@
                 <x-auth.sharedKT.password-rules target-input="register_password" />
             </div>
 
+            <!-- {{-- Ô Xác nhận mật khẩu --}} -->
             <div class="auth-field">
                 <label for="password_confirmation">Xác nhận mật khẩu</label>
                 <div @class(['auth-input-wrap', 'has-error' => $errors->has('password_confirmation')])>
@@ -174,8 +189,8 @@
                 @enderror
             </div>
 
+            <!-- {{-- Checkbox Đồng ý điều khoản sử dụng --}} -->
             <label class="auth-checkbox auth-terms flex cursor-pointer items-start gap-2" for="terms">
-                {{-- Hiện chỉ kiểm tra trên giao diện; bổ sung name và validation backend khi xử lý điều khoản. --}}
                 <input id="terms" type="checkbox" required>
                 <span>
                     Tôi đồng ý với <a href="#" data-placeholder-link>Điều khoản sử dụng</a>
@@ -183,6 +198,7 @@
                 </span>
             </label>
 
+            <!-- {{-- Nút Đăng ký hoàn tất --}} -->
             <button type="submit" class="auth-submit flex w-full items-center justify-center gap-2">
                 <x-auth.sharedKT.icon name="paw" />
                 <span>Đăng ký</span>
@@ -190,15 +206,18 @@
         </section>
     </form>
 
+    <!-- {{-- Phân cách hoặc --}} -->
     <div class="auth-divider flex items-center gap-4" aria-hidden="true">
         <span></span><small>hoặc</small><span></span>
     </div>
 
+    <!-- {{-- Đăng ký nhanh qua Google --}} -->
     <a href="{{ route('auth.google.redirect') }}" class="auth-google flex w-full items-center justify-center gap-3">
         <span class="auth-google__mark" aria-hidden="true">G</span>
         <span>Tiếp tục với Google</span>
     </a>
 
+    <!-- {{-- Liên kết chuyển sang trang Đăng nhập --}} -->
     <p class="auth-footer">
         Đã có tài khoản?
         <a href="{{ route('login') }}">Đăng nhập ngay <span aria-hidden="true">→</span></a>

@@ -1,15 +1,11 @@
 <?php
 
-use App\Http\Controllers\Auth\ConfirmablePasswordController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\LoginKT\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\LoginKT\GoogleAuthController;
 use App\Http\Controllers\Auth\PasswordResetKT\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetKT\PasswordResetOtpController;
 use App\Http\Controllers\Auth\RegistrationKT\RegisteredUserController;
 use App\Http\Controllers\Auth\RegistrationKT\RegistrationEmailVerificationController;
-use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -57,22 +53,6 @@ Route::post('forgot-password/reset', [NewPasswordController::class, 'store'])
     ->name('password.store');
 
 Route::middleware('auth')->group(function () {
-    Route::get('verify-email', EmailVerificationPromptController::class)
-        ->name('verification.notice');
-
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
-
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-        ->middleware('throttle:6,1')
-        ->name('verification.send');
-
-    Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
-        ->name('password.confirm');
-
-    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
-
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });

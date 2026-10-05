@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+// Chức năng: Quản lý đánh giá sản phẩm của khách hàng (ReviewKT)
 class ReviewController extends Controller
 {
     public function __construct(
@@ -21,7 +22,7 @@ class ReviewController extends Controller
     ) {}
 
     /**
-     * Trang "Đánh giá của tôi" cho khách hàng (2 tab: Chưa đánh giá & Đã đánh giá).
+     * [Giao diện] Trang "Đánh giá của tôi" cho khách hàng (gồm 2 tab: Chưa đánh giá & Đã đánh giá).
      */
     public function index(Request $request): View|JsonResponse
     {

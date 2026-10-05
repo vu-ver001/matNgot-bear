@@ -1239,10 +1239,13 @@ class ChatService
             'content' => $replyContent,
             'image_url' => null,
             'images' => null,
-            'is_read' => false,
-            'read_at' => null,
+            'is_read' => true,
+            'read_at' => now(),
             'sent_at' => now(),
         ]);
+
+        // Đánh dấu toàn bộ tin nhắn từ Shop tới khách hàng trong hội thoại này là đã đọc vì khách đang mở chat trực tiếp
+        $this->markMessagesAsReadForCustomer($conversation);
 
         // Đánh dấu tin nhắn câu hỏi FAQ của khách hàng vừa gửi là đã đọc (vì hệ thống đã tự động giải đáp)
         if ($triggerMessage) {
