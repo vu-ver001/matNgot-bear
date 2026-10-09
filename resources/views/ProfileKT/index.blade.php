@@ -80,7 +80,7 @@
                         aria-hidden="true"
                     >{{ $initial }}</span>
                 </div>
-
+                //  <!-- SVG icon máy ảnh -->
                 <label
                     for="avatar"
                     class="profile-camera-button"

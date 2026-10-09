@@ -734,7 +734,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
         previewContainer.style.display = 'flex';
     };
-
+    
+    // Lệnh kích hoạt mở cửa sổ Finder
     btnImage?.addEventListener('click', () => {
         fileInput?.click();
     });

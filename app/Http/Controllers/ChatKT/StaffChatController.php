@@ -27,6 +27,7 @@ class StaffChatController extends Controller
     {
         $user = $request->user();
         $statusTab = $request->query('tab', 'all');
+        // serch
         $search = $request->query('q');
 
         // Lấy case đang được chọn hiển thị trong khung chat (chỉ khi được chọn rõ ràng qua case_id hoặc customer_id)
@@ -52,7 +53,7 @@ class StaffChatController extends Controller
         SupportCase::doesntHave('messages')
             ->when($selectedCase, fn ($q) => $q->where('id', '!=', $selectedCase->id))
             ->delete();
-
+        // serch
         $counts = $this->chatService->getStaffCounts($search, $user);
         $cases = $this->chatService->getStaffCases($statusTab, $search, 30, $user);
 

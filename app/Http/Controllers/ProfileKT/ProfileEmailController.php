@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 // Chức năng: Quản lý đổi email tài khoản qua mã xác nhận OTP (ProfileKT)
 class ProfileEmailController extends Controller
 {
-    // Thời hạn hiệu lực của mã OTP đổi email là 300 giây (5 phút)
+    // Thời hạn hiệu lực của mã OTP đổi email là 60 giây 
     private const CODE_EXPIRES_SECONDS = 60;
 
     public function __construct(private readonly OtpService $otpService) {}
@@ -33,7 +33,6 @@ class ProfileEmailController extends Controller
             'email' => Str::lower(trim((string) $request->input('email'))),
         ]);
 
-        // Kiểm tra email mới: đúng định dạng, khác email cũ và chưa ai sử dụng
         $data = $request->validate([
             'email' => [
                 'required',
@@ -100,7 +99,6 @@ class ProfileEmailController extends Controller
             ]);
         }
 
-        // Kiểm tra mã OTP do người dùng nhập
         $this->otpService->verifyCode(EmailChangeCode::class, $changeRequest->email, $data['code']);
 
         // Cập nhật email mới và xóa mã OTP trong transaction

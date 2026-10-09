@@ -861,7 +861,7 @@ class ChatService
             }
         }
         // Tab "Tất cả" (all): Hiển thị tất cả cuộc trò chuyện mà không lọc theo staff
-
+       // Trong hàm getStaffCases(), câu lệnh Eloquent Query tìm kiếm linh hoạt trên 4 bảng dữ liệu:
         if ($search && trim($search) !== '') {
             $search = trim($search);
             $query->where(function ($q) use ($search) {

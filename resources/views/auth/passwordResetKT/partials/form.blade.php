@@ -7,9 +7,9 @@
     $confirmationId = $passwordResetPrefix.'_password_confirmation';
 @endphp
 
-{{-- Component Form: Quy trình 3 bước đặt lại mật khẩu qua OTP (PasswordResetKT) --}}
+<!-- {{-- Component Form: Quy trình 3 bước đặt lại mật khẩu qua OTP (PasswordResetKT) --}} -->
 <div class="password-reset-flow" data-password-reset-container>
-    {{-- Thanh tiến trình 3 bước trực quan --}}
+    <!-- {{-- Thanh tiến trình 3 bước trực quan --}} -->
     <ol class="register-progress" aria-label="Tiến trình đặt lại mật khẩu">
         <li data-password-reset-progress-item="email"><span>1</span><small>Email</small></li>
         <li data-password-reset-progress-item="otp"><span>2</span><small>Mã OTP</small></li>
@@ -27,7 +27,7 @@
     >
         @csrf
 
-        {{-- [BƯỚC 1] Nhập email đã đăng ký và gửi mã OTP --}}
+        <!-- {{-- [BƯỚC 1] Nhập email đã đăng ký và gửi mã OTP --}} -->
         <section class="register-step" data-password-reset-step="email">
             <div class="register-step__intro">
                 <span class="register-step__icon"><x-auth.sharedKT.icon name="mail" /></span>
@@ -61,7 +61,7 @@
             </button>
         </section>
 
-        {{-- [BƯỚC 2] Nhập 6 số OTP + đếm ngược 60 giây + gửi lại mã --}}
+        <!-- {{-- [BƯỚC 2] Nhập 6 số OTP + đếm ngược 60 giây + gửi lại mã --}} -->
         <section class="register-step" data-password-reset-step="otp" hidden>
             <button type="button" class="register-back" data-password-reset-back="email">← Đổi email</button>
 
@@ -73,7 +73,7 @@
                 </div>
             </div>
 
-            {{-- 6 ô nhập mã OTP --}}
+            <!-- {{-- 6 ô nhập mã OTP --}} -->
             <div class="register-otp" role="group" aria-label="Mã OTP gồm 6 chữ số">
                 @for ($index = 1; $index <= 6; $index++)
                     <input
@@ -88,7 +88,7 @@
                 @endfor
             </div>
 
-            {{-- Đếm ngược 60 giây hiệu lực OTP --}}
+            <!-- {{-- Đếm ngược 60 giây hiệu lực OTP --}} -->
             <p class="register-countdown" data-password-reset-countdown aria-live="polite" hidden>
                 Mã có hiệu lực trong <strong data-password-reset-countdown-value>01:00</strong>
             </p>
@@ -100,13 +100,13 @@
                 <span aria-hidden="true">→</span>
             </button>
 
-            {{-- Nút gửi lại mã OTP --}}
+            <!-- {{-- Nút gửi lại mã OTP --}} -->
             <button type="button" class="register-resend" data-password-reset-resend>Gửi lại mã</button>
         </section>
 
-        {{-- [BƯỚC 3] Nhập mật khẩu mới và xác nhận mật khẩu mới --}}
+        <!-- {{-- [BƯỚC 3] Nhập mật khẩu mới và xác nhận mật khẩu mới --}} -->
         <section class="register-step" data-password-reset-step="password" hidden>
-            {{-- Hộp tóm tắt email đã xác nhận --}}
+            <!-- {{-- Hộp tóm tắt email đã xác nhận --}} -->
             <div class="register-email-summary">
                 <span><x-auth.sharedKT.icon name="mail" /></span>
                 <div>
@@ -120,7 +120,7 @@
                 <p class="auth-error" role="alert">{{ $errors->first('email') }}</p>
             @endif
 
-            {{-- Ô nhập Mật khẩu mới --}}
+            <!-- {{-- Ô nhập Mật khẩu mới --}} -->
             <div class="auth-field">
                 <label for="{{ $passwordId }}">Mật khẩu mới</label>
                 <div @class(['auth-input-wrap', 'has-error' => $errors->has('password')])>
@@ -146,7 +146,7 @@
                 <x-auth.sharedKT.password-rules target-input="{{ $passwordId }}" />
             </div>
 
-            {{-- Ô Xác nhận mật khẩu mới --}}
+            <!-- {{-- Ô Xác nhận mật khẩu mới --}} -->
             <div class="auth-field">
                 <label for="{{ $confirmationId }}">Xác nhận mật khẩu mới</label>
                 <div @class(['auth-input-wrap', 'has-error' => $errors->has('password_confirmation')])>
@@ -169,7 +169,7 @@
                 @enderror
             </div>
 
-            {{-- Nút Đặt lại mật khẩu hoàn tất --}}
+            <!-- {{-- Nút Đặt lại mật khẩu hoàn tất --}} -->
             <button type="submit" class="auth-submit flex w-full items-center justify-center gap-2">
                 <x-auth.sharedKT.icon name="shield" />
                 <span>Đặt lại mật khẩu</span>
